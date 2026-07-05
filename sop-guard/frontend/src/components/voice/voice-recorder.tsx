@@ -231,6 +231,7 @@ export function VoiceRecorder({ onTranscript }: VoiceRecorderProps) {
           : "bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground"
         )}
         title={state === "idle" ? "Start voice input" : state === "listening" ? "Stop and use transcript" : "Starting..."}
+        aria-label={state === "idle" ? "Start voice input" : state === "listening" ? "Stop and use transcript" : "Starting voice input"}
       >
         {state === "listening" && (
           <motion.div

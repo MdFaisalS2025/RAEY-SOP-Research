@@ -148,11 +148,17 @@ def _proposal_to_response(p: ProposalRecord) -> ProposalResponse:
 
 
 @router.get("/api/governance/proposals")
-async def list_proposals(db: AsyncSession = Depends(get_db)):
+async def list_proposals(
+    limit: int = QueryParam(200, ge=1, le=1000),
+    offset: int = QueryParam(0, ge=0),
+    db: AsyncSession = Depends(get_db),
+):
     rows = (await db.execute(
         select(ProposalRecord)
         .options(selectinload(ProposalRecord.votes))
         .order_by(ProposalRecord.created_at.desc())
+        .limit(limit)
+        .offset(offset)
     )).scalars().all()
     return {"proposals": [_proposal_to_response(p).model_dump() for p in rows]}
 
@@ -248,9 +254,13 @@ async def cast_vote(proposal_id: int, req: VoteCreate, db: AsyncSession = Depend
 
 
 @router.get("/api/governance/attestations")
-async def list_attestations(db: AsyncSession = Depends(get_db)):
+async def list_attestations(
+    limit: int = QueryParam(200, ge=1, le=1000),
+    offset: int = QueryParam(0, ge=0),
+    db: AsyncSession = Depends(get_db),
+):
     rows = (await db.execute(
-        select(AttestationRecord).order_by(AttestationRecord.attested_at.desc())
+        select(AttestationRecord).order_by(AttestationRecord.attested_at.desc()).limit(limit).offset(offset)
     )).scalars().all()
     return {"attestations": [AttestationResponse.model_validate(r).model_dump() for r in rows]}
 
@@ -286,12 +296,15 @@ async def create_attestation(
 
 @router.get("/api/governance/acknowledgments")
 async def list_acknowledgments(
-    user_id: str | None = QueryParam(None), db: AsyncSession = Depends(get_db)
+    user_id: str | None = QueryParam(None),
+    limit: int = QueryParam(200, ge=1, le=1000),
+    offset: int = QueryParam(0, ge=0),
+    db: AsyncSession = Depends(get_db),
 ):
     stmt = select(AcknowledgmentRecord).order_by(AcknowledgmentRecord.acknowledged_at.desc())
     if user_id:
         stmt = stmt.where(AcknowledgmentRecord.user_id == user_id)
-    rows = (await db.execute(stmt)).scalars().all()
+    rows = (await db.execute(stmt.limit(limit).offset(offset))).scalars().all()
     return {"acknowledgments": [AcknowledgmentResponse.model_validate(r).model_dump() for r in rows]}
 
 

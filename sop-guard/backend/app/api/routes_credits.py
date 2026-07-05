@@ -39,17 +39,21 @@ async def create_credit(req: CreditCreate, db: AsyncSession = Depends(get_db)):
 @router.get("/api/credits")
 async def list_credits(
     user_id: str | None = QueryParam(None),
+    limit: int = QueryParam(100, ge=1, le=1000),
+    offset: int = QueryParam(0, ge=0),
     db: AsyncSession = Depends(get_db),
 ):
     stmt = select(CreditRecord).order_by(CreditRecord.created_at.desc())
     if user_id:
         stmt = stmt.where(CreditRecord.user_id == user_id)
-    rows = (await db.execute(stmt)).scalars().all()
+    rows = (await db.execute(stmt.limit(limit).offset(offset))).scalars().all()
 
-    total = sum(r.credits or 0.0 for r in rows) if user_id else None
     result = {"credits": [CreditResponse.model_validate(r).model_dump() for r in rows]}
     if user_id:
-        result["total_credits"] = total
+        # Sum over ALL of the user's records, not just this page - the
+        # displayed total must not shrink just because of pagination.
+        total_stmt = select(func.sum(CreditRecord.credits)).where(CreditRecord.user_id == user_id)
+        result["total_credits"] = (await db.execute(total_stmt)).scalar() or 0.0
     return result
 
 

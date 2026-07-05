@@ -345,7 +345,7 @@ function ReportConflictModal({
             <AlertCircle className="w-4 h-4 text-[#B45309] dark:text-amber-400" />
             <span className="font-semibold text-sm">Report New Conflict</span>
           </div>
-          <button onClick={onClose} className="text-[#64748B] hover:text-[#0B6BCB] transition-colors">
+          <button onClick={onClose} aria-label="Close report new conflict form" className="text-[#64748B] hover:text-[#0B6BCB] transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>

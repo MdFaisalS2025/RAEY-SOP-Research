@@ -106,7 +106,7 @@ export function OverrideModal({ open, onClose, contextType, contextId, contextLa
                     <h2 className="text-sm font-semibold text-[#1A2332]">Why are you overriding this?</h2>
                     <p className="text-xs text-[#64748B] mt-1">{contextLabel}</p>
                   </div>
-                  <button onClick={handleClose} className="text-[#64748B] hover:text-[#1A2332] transition-colors shrink-0">
+                  <button onClick={handleClose} aria-label="Close override dialog" className="text-[#64748B] hover:text-[#1A2332] transition-colors shrink-0">
                     <X className="w-4 h-4" />
                   </button>
                 </div>

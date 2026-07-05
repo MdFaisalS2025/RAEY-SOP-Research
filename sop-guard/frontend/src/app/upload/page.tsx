@@ -145,7 +145,7 @@ export default function UploadPage() {
                   <p className="text-sm font-medium truncate">{selectedFile.name}</p>
                   <p className="text-xs text-muted-foreground">{formatSize(selectedFile.size)} - {selectedFile.name.split('.').pop()?.toUpperCase()}</p>
                 </div>
-                <button onClick={reset} className="p-2 rounded-lg hover:bg-muted text-muted-foreground"><X className="w-4 h-4" /></button>
+                <button onClick={reset} aria-label="Remove selected file" className="p-2 rounded-lg hover:bg-muted text-muted-foreground"><X className="w-4 h-4" /></button>
               </div>
               <button onClick={handleUpload} className="press w-full py-3 rounded-xl bg-[#0B6BCB] hover:bg-[#0959AC] text-white font-medium transition-colors">
                 Upload & Process

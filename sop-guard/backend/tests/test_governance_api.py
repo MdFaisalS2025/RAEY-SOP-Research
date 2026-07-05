@@ -86,3 +86,24 @@ async def test_acknowledgment_roundtrip(client):
     listed = await client.get("/api/governance/acknowledgments?user_id=u1")
     assert listed.status_code == 200
     assert len(listed.json()["acknowledgments"]) == 1
+
+
+async def test_proposals_list_respects_limit(client):
+    """
+    list_proposals previously had no limit/offset - a growing proposals
+    table would be returned to the client in full on every request.
+    """
+    for i in range(5):
+        resp = await client.post("/api/governance/proposals", json={"title": f"Proposal {i}"})
+        assert resp.status_code == 200
+
+    limited = await client.get("/api/governance/proposals?limit=2")
+    assert limited.status_code == 200
+    assert len(limited.json()["proposals"]) == 2
+
+    paged = await client.get("/api/governance/proposals?limit=2&offset=2")
+    assert paged.status_code == 200
+    assert len(paged.json()["proposals"]) == 2
+
+    all_of_them = await client.get("/api/governance/proposals")
+    assert len(all_of_them.json()["proposals"]) == 5

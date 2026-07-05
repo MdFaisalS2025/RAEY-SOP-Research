@@ -103,7 +103,7 @@ function CertificateModal({
             <Shield className="w-5 h-5 text-[#0B6BCB]" />
             <span className="font-mono text-xs text-[#0B6BCB] uppercase tracking-widest">SOP-Guard Attestation Certificate</span>
           </div>
-          <button onClick={onClose} className="text-[#64748B] hover:text-[#0B6BCB] transition-colors">
+          <button onClick={onClose} aria-label="Close certificate" className="text-[#64748B] hover:text-[#0B6BCB] transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -224,7 +224,7 @@ function TestAttestationModal({
             <Shield className="w-5 h-5 text-[#0B6BCB]" />
             <span className="font-semibold text-sm">Test Attestation Flow</span>
           </div>
-          <button onClick={onClose} className="text-[#64748B] hover:text-[#0B6BCB] transition-colors">
+          <button onClick={onClose} aria-label="Close test attestation flow" className="text-[#64748B] hover:text-[#0B6BCB] transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>

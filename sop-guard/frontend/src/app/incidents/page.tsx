@@ -216,7 +216,7 @@ function ReportModal({ onClose }: ReportModalProps) {
       >
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-[#1A2332]">Report New Incident</h3>
-          <button onClick={onClose} className="text-[#64748B] hover:text-[#334155] transition-colors">
+          <button onClick={onClose} aria-label="Close report new incident form" className="text-[#64748B] hover:text-[#334155] transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>

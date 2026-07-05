@@ -58,7 +58,7 @@ export function OnboardingTour() {
           animate={{ scale: 1, y: 0 }}
           className="relative w-full max-w-md p-8 rounded-2xl bg-card border border-border shadow-2xl text-center"
         >
-          <button onClick={dismiss} className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-foreground">
+          <button onClick={dismiss} aria-label="Dismiss onboarding tour" className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-foreground">
             <X className="w-5 h-5" />
           </button>
 

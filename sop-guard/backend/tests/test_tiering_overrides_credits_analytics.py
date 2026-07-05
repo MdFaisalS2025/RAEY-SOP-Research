@@ -215,6 +215,27 @@ async def test_credit_create_user_total_and_leaderboard(client):
     assert board[0]["total_credits"] == pytest.approx(3.0)
 
 
+async def test_credits_list_limit_does_not_shrink_total(client):
+    """
+    total_credits must sum ALL of a user's records even when the returned
+    page (limit) is smaller than their full history - pagination changes
+    what's displayed, not the aggregate.
+    """
+    for i in range(4):
+        r = await client.post("/api/credits", json={
+            "user_id": "u5", "user_name": "User Five",
+            "activity_type": "scenario_completed", "activity_title": f"Drill {i}",
+            "credits": 1.0,
+        })
+        assert r.status_code == 200
+
+    limited = await client.get("/api/credits?user_id=u5&limit=2")
+    assert limited.status_code == 200
+    data = limited.json()
+    assert len(data["credits"]) == 2
+    assert data["total_credits"] == pytest.approx(4.0)
+
+
 # ── Analytics ──────────────────────────────────────────────────
 
 

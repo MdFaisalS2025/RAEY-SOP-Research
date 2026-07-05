@@ -174,7 +174,12 @@ class LLMGenerator:
             )
             result["inline_citations"] = []
             result["followup_questions"] = []
-            result["abstained"] = False
+            # Respect the mock generator's own abstention decision (set when
+            # no chunk cleared its relevance floor) instead of hardcoding
+            # False here - overwriting it unconditionally meant a query that
+            # the mock generator correctly refused to answer would still be
+            # reported as a confident, non-abstained response.
+            result["abstained"] = result.get("abstained", False)
             return result
 
         # Build numbered citation context from chunks
@@ -289,7 +294,12 @@ Answer:"""
             result["reasoning_trace"].append(f"LLM failed ({e}), used mock fallback")
             result["inline_citations"] = []
             result["followup_questions"] = []
-            result["abstained"] = False
+            # Respect the mock generator's own abstention decision (set when
+            # no chunk cleared its relevance floor) instead of hardcoding
+            # False here - overwriting it unconditionally meant a query that
+            # the mock generator correctly refused to answer would still be
+            # reported as a confident, non-abstained response.
+            result["abstained"] = result.get("abstained", False)
             return result
 
     async def _call_llm(self, prompt: str) -> str:

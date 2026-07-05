@@ -131,11 +131,18 @@ def expand_query(query: str, max_variants: int = 6) -> list[str]:
     if expanded != q_lower:
         variants.append(expanded)
 
-    # 2. Synonym expansion
+    # 2. Synonym expansion. Iterate groups/synonyms in a fixed (sorted)
+    # order rather than raw set order: Python's string hashing is
+    # randomized per-process by default, so iterating a set directly here
+    # would make which synonym variants get generated - and therefore
+    # retrieval results and abstention decisions - depend on the process's
+    # random hash seed instead of the query text. Same query in, same
+    # variants out, every time.
     for group in SYNONYM_GROUPS:
-        for term in group:
+        sorted_group = sorted(group)
+        for term in sorted_group:
             if term in q_lower:
-                for synonym in group:
+                for synonym in sorted_group:
                     if synonym != term and synonym not in q_lower:
                         new_variant = q_lower.replace(term, synonym)
                         if new_variant not in variants:

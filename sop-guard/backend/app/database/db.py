@@ -4,15 +4,36 @@ Supports PostgreSQL (production) and SQLite (development).
 Research prototype. Not for clinical use.
 """
 
+import os
+
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 from typing import AsyncGenerator
 
 from app.config import settings
 
+_BACKEND_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+
+def _resolve_database_url(url: str) -> str:
+    """
+    Anchor a relative sqlite path to the backend project root, independent of
+    the process's current working directory. Without this, "./sop_guard.db"
+    resolves to a different file depending on whether the process was
+    started from the backend directory or the repo root (uvicorn via the
+    launch config uses the repo root as cwd), which previously caused two
+    sop_guard.db files to silently diverge into different demo states.
+    """
+    prefix = "sqlite+aiosqlite:///./"
+    if url.startswith(prefix):
+        db_filename = url[len(prefix):]
+        abs_path = os.path.join(_BACKEND_ROOT, db_filename).replace("\\", "/")
+        return f"sqlite+aiosqlite:///{abs_path}"
+    return url
+
 
 def _build_engine():
-    url = settings.DATABASE_URL
+    url = _resolve_database_url(settings.DATABASE_URL)
     connect_args = {}
 
     if "sqlite" in url:

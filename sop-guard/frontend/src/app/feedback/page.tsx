@@ -104,25 +104,44 @@ export default function FeedbackPage() {
         demo = true
       }
 
-      // Fetch activity
+      // Fetch activity. Normalized here because the API's field names
+      // (timestamp/user_name/sop_title) differ from the demo data's
+      // shorthand shape (time/user/sop) that the table below renders -
+      // leaving them unmapped meant every real-data row rendered blank.
       try {
         const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "") + "/api/activity")
         if (!res.ok) throw new Error("Failed")
         const data = await res.json()
         if (data.entries && data.entries.length > 0) {
-          setActivityEntries(data.entries)
+          setActivityEntries(data.entries.map((e: any) => ({
+            id: e.id,
+            time: e.timestamp ? new Date(e.timestamp).toLocaleString("en-US") : e.time,
+            user: e.user_name || e.user,
+            role: e.user_role || e.role,
+            action: e.action,
+            sop: e.sop_title || e.sop,
+            department: e.department,
+          })))
         }
       } catch {
         // keep demo data
       }
 
-      // Fetch SOP usage
+      // Fetch SOP usage. Same field-name normalization as activity above:
+      // the API returns sop_title, the table renders sop.title. Without
+      // mapping, the title column - and hence each row's key - was
+      // undefined for every real (non-demo) row.
       try {
         const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "") + "/api/sop-usage")
         if (!res.ok) throw new Error("Failed")
         const data = await res.json()
         if (data.usage && data.usage.length > 0) {
-          setSopUsage(data.usage)
+          setSopUsage(data.usage.map((s: any) => ({
+            title: s.sop_title || s.title,
+            views: s.views,
+            queries: s.queries,
+            last_accessed: s.last_accessed ? new Date(s.last_accessed).toLocaleString("en-US") : s.last_accessed,
+          })))
         }
       } catch {
         // keep demo data
@@ -349,7 +368,7 @@ export default function FeedbackPage() {
           <div className="space-y-2">
             {sopUsage.map((sop: any, idx: number) => (
               <div
-                key={sop.title}
+                key={sop.title || idx}
                 className="interactive-card flex items-center gap-4 p-3 rounded-xl bg-muted/30 dark:bg-white/[0.02] border border-border dark:border-white/[0.04] hover:bg-muted/50 dark:hover:bg-white/[0.04] transition-colors"
               >
                 <div className="w-7 h-7 rounded-full bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 flex items-center justify-center text-xs font-bold text-[#0B6BCB] shrink-0">

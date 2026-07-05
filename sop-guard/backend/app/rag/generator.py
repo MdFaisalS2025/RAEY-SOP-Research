@@ -8,8 +8,15 @@ Research prototype  - NOT for clinical use.
 import re
 from typing import Any
 
-# Minimum relevance score to consider a chunk useful
-_MIN_RELEVANCE = 0.01
+# Minimum relevance score to consider a chunk useful. Calibrated against the
+# corpus's own score distribution: verified out-of-scope queries (e.g. an
+# oncology question against a hospital SOP library with no oncology
+# content) score ~0.04-0.05 top-chunk relevance, while genuinely in-scope
+# queries typically score noticeably higher. This threshold intentionally
+# sits just above that out-of-scope band - a clinical safety tool should
+# err toward abstaining when uncertain rather than confidently answering
+# from the wrong SOP.
+_MIN_RELEVANCE = 0.05
 
 _DISCLAIMER = (
     "\n\n---\n"
@@ -61,6 +68,7 @@ class MockGenerator:
                 "citations": [],
                 "reasoning_trace": reasoning_trace,
                 "confidence": 0.1,
+                "abstained": True,
             }
 
         reasoning_trace.append(f"{len(good_chunks)} chunks above relevance threshold.")
@@ -120,6 +128,7 @@ class MockGenerator:
             "citations": citations,
             "reasoning_trace": reasoning_trace,
             "confidence": round(confidence, 2),
+            "abstained": False,
         }
 
     # ------------------------------------------------------------------

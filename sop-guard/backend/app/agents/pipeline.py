@@ -123,6 +123,7 @@ class SOPGuardPipeline:
                 retrieved_chunks=response_chunks,
                 reasoning_trace=reasoning,
                 query_type=query_type,
+                abstained=True,
             )
 
         # 3. Generate

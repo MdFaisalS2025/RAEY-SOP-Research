@@ -341,7 +341,7 @@ export default function LeadershipPage() {
           <SectionHeading title="Deviation and Exception Summary" subtitle="5 exception reports filed this quarter, 2 pattern alerts active" />
           <div className="bg-card border border-[#E2E8F0] shadow-sm rounded-xl overflow-hidden">
             <div className="overflow-x-auto">
-<table className="w-full text-[12px]">
+              <table className="w-full text-[12px]">
               <thead>
                 <tr className="bg-muted border-b border-[#E2E8F0]">
                   <th className="text-left px-4 py-2.5 text-[#64748B] font-semibold">Department</th>
@@ -370,7 +370,7 @@ export default function LeadershipPage() {
                 ))}
               </tbody>
             </table>
-</div>
+            </div>
           </div>
           <div className="flex items-center gap-4">
             <Link href="/exceptions" className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#0B6BCB] hover:text-[#0959AC] transition-colors">

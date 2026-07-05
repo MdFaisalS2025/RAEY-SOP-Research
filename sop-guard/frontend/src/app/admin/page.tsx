@@ -135,7 +135,7 @@ export default function AdminPage() {
           </div>
           <div className="rounded-2xl bg-card border border-[#E2E8F0] overflow-hidden">
             <div className="overflow-x-auto">
-<table className="w-full text-sm">
+              <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[#E2E8F0] text-xs text-muted-foreground uppercase tracking-wider">
                   <th className="p-4 text-left">Name</th>
@@ -185,7 +185,7 @@ export default function AdminPage() {
                 ))}
               </tbody>
             </table>
-</div>
+            </div>
           </div>
         </section>
 
@@ -387,7 +387,7 @@ export default function AdminPage() {
             {/* Escalation recipient table */}
             <div className="rounded-xl border border-[#E2E8F0] overflow-hidden">
               <div className="overflow-x-auto">
-<table className="w-full text-sm">
+                <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[#E2E8F0] text-xs text-muted-foreground uppercase tracking-wider">
                     <th className="p-3 text-left">Trigger</th>
@@ -421,7 +421,7 @@ export default function AdminPage() {
                   ))}
                 </tbody>
               </table>
-</div>
+              </div>
             </div>
 
             {/* Channel status */}
@@ -478,7 +478,7 @@ export default function AdminPage() {
           </div>
           <div className="rounded-2xl bg-card border border-[#E2E8F0] overflow-hidden">
             <div className="overflow-x-auto">
-<table className="w-full text-sm">
+              <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[#E2E8F0] text-xs text-muted-foreground uppercase tracking-wider">
                   <th className="p-4 text-left">Name</th>
@@ -521,7 +521,7 @@ export default function AdminPage() {
                 ))}
               </tbody>
             </table>
-</div>
+            </div>
           </div>
           <p className="text-xs text-muted-foreground px-1">
             Production: Connect to hospital LDAP/Active Directory for user management.

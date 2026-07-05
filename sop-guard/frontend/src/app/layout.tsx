@@ -3,6 +3,7 @@ import { Inter, Sora } from "next/font/google"
 import "@/styles/globals.css"
 import { AuthProvider } from "@/lib/auth-context"
 import { RoleProvider } from "@/lib/role-context"
+import { MotionConfigProvider } from "@/components/motion-config-provider"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 const sora = Sora({ subsets: ["latin"], variable: "--font-display", weight: ["500", "600", "700", "800"] })
@@ -29,9 +30,11 @@ export default function RootLayout({
         }} />
       </head>
       <body className={`${inter.className} antialiased`}>
-        <AuthProvider>
-          <RoleProvider>{children}</RoleProvider>
-        </AuthProvider>
+        <MotionConfigProvider>
+          <AuthProvider>
+            <RoleProvider>{children}</RoleProvider>
+          </AuthProvider>
+        </MotionConfigProvider>
       </body>
     </html>
   )

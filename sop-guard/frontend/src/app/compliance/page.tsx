@@ -475,7 +475,7 @@ export default function CompliancePage() {
           <h2 className="text-lg font-semibold font-display mb-3">SOPs Requiring Review</h2>
           <div className="rounded-2xl bg-card border border-[#E2E8F0] overflow-hidden">
             <div className="overflow-x-auto">
-<table className="w-full text-sm">
+              <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[#E2E8F0] text-xs text-[#64748B] uppercase tracking-wider">
                   <th className="p-4 text-left">SOP Title</th>
@@ -515,7 +515,7 @@ export default function CompliancePage() {
                 ))}
               </tbody>
             </table>
-</div>
+            </div>
           </div>
         </section>
 

@@ -389,7 +389,7 @@ function LibraryPageInner() {
         {!loading && viewMode === "table" ? (
           <div className="rounded-2xl border border-[#E2E8F0] overflow-hidden">
             <div className="overflow-x-auto">
-<table className="w-full text-sm">
+              <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[#E2E8F0] bg-card">
                   <th className="text-left p-3 font-medium text-[#64748B]">Title</th>
@@ -422,7 +422,7 @@ function LibraryPageInner() {
                 ))}
               </tbody>
             </table>
-</div>
+            </div>
           </div>
         ) : !loading && (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">

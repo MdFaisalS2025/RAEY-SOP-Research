@@ -193,7 +193,7 @@ export default function AuditPage() {
         {/* Audit table */}
         <div className="rounded-2xl bg-card border border-[#E2E8F0] overflow-hidden">
           <div className="overflow-x-auto">
-<table className="w-full text-sm">
+            <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[#E2E8F0] text-xs text-[#64748B] uppercase tracking-wider">
                 <th className="p-3 text-left">Event</th>
@@ -210,8 +210,17 @@ export default function AuditPage() {
                 <Fragment key={event.id}>
                   <tr
                     key={event.id}
-                    className="border-b border-[#EDF1F5] hover:bg-[#F8FAFC] transition-colors cursor-pointer"
+                    className="border-b border-[#EDF1F5] hover:bg-[#F8FAFC] transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#2563EB]"
                     onClick={() => setExpandedId(expandedId === event.id ? null : event.id)}
+                    role="button"
+                    tabIndex={0}
+                    aria-expanded={expandedId === event.id}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault()
+                        setExpandedId(expandedId === event.id ? null : event.id)
+                      }
+                    }}
                   >
                     <td className="p-3">
                       <span className={cn("px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap", eventBadgeClass(event.event_type))}>
@@ -291,7 +300,7 @@ export default function AuditPage() {
               )}
             </tbody>
           </table>
-</div>
+          </div>
         </div>
 
         {/* Export */}

@@ -145,9 +145,9 @@ const TRACER_ITEMS = [
 type FilterTab = "all" | "ready" | "needs_attention" | "at_risk"
 
 function readinessPctColor(pct: number) {
-  if (pct >= 90) return "text-[#15803D]"
-  if (pct >= 70) return "text-[#B45309]"
-  return "text-[#B91C1C]"
+  if (pct >= 90) return "text-[#15803D] dark:text-green-400"
+  if (pct >= 70) return "text-[#B45309] dark:text-amber-400"
+  return "text-[#B91C1C] dark:text-red-400"
 }
 
 function progressBarColor(pct: number) {
@@ -157,9 +157,9 @@ function progressBarColor(pct: number) {
 }
 
 const STATUS_META: Record<string, { label: string; className: string }> = {
-  ready: { label: "Ready", className: "bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]" },
-  needs_attention: { label: "Needs Attention", className: "bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]" },
-  at_risk: { label: "At Risk", className: "bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA]" },
+  ready: { label: "Ready", className: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30" },
+  needs_attention: { label: "Needs Attention", className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30" },
+  at_risk: { label: "At Risk", className: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30" },
 }
 
 function getSopTitle(sopId: string): string {
@@ -194,10 +194,10 @@ export default function SurveyPrepPage() {
   }
 
   const stats = [
-    { label: "Overall Readiness", value: "87%", color: "text-[#15803D]", bg: "bg-[#DCFCE7]" },
+    { label: "Overall Readiness", value: "87%", color: "text-[#15803D] dark:text-green-400", bg: "bg-[#DCFCE7] dark:bg-green-500/10" },
     { label: "Chapters Reviewed", value: "8/12", color: "text-[#0B6BCB]", bg: "bg-[#0B6BCB]/10" },
-    { label: "Open Gaps", value: "6", color: "text-[#B45309]", bg: "bg-[#FEF3C7]" },
-    { label: "Est. Survey Date", value: "Q1 2027", color: "text-[#334155]", bg: "bg-[#F1F5F9]" },
+    { label: "Open Gaps", value: "6", color: "text-[#B45309] dark:text-amber-400", bg: "bg-[#FEF3C7] dark:bg-amber-500/10" },
+    { label: "Est. Survey Date", value: "Q1 2027", color: "text-[#334155]", bg: "bg-muted" },
   ]
 
   const tabs: { key: FilterTab; label: string; count: number }[] = [
@@ -237,7 +237,7 @@ export default function SurveyPrepPage() {
         </div>
 
         {/* Disclaimer */}
-        <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-[#FEF3C7] border border-[#FDE68A] text-[#B45309] text-sm">
+        <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 text-sm">
           <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
           <span>
             Mock survey tool for internal preparation only. Not affiliated with or endorsed by The Joint Commission.
@@ -252,7 +252,7 @@ export default function SurveyPrepPage() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.07 }}
-              className={cn("bg-white border border-[#E2E8F0] rounded-xl p-4", s.bg)}
+              className={cn("bg-card border border-[#E2E8F0] rounded-xl p-4", s.bg)}
             >
               <p className={cn("text-2xl font-bold", s.color)}>{s.value}</p>
               <p className="text-xs text-[#64748B] mt-0.5">{s.label}</p>
@@ -270,7 +270,7 @@ export default function SurveyPrepPage() {
                 "px-4 py-1.5 rounded-lg text-sm font-medium transition-colors",
                 activeTab === t.key
                   ? "bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30"
-                  : "bg-white text-[#64748B] border border-[#E2E8F0] hover:bg-[#F1F5F9]"
+                  : "bg-card text-[#64748B] border border-[#E2E8F0] hover:bg-muted"
               )}
             >
               {t.label}
@@ -287,7 +287,7 @@ export default function SurveyPrepPage() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
-              className="bg-white border border-[#E2E8F0] rounded-xl p-5 space-y-3"
+              className="bg-card border border-[#E2E8F0] rounded-xl p-5 space-y-3"
             >
               {/* Header row */}
               <div className="flex items-start justify-between gap-2">
@@ -314,7 +314,7 @@ export default function SurveyPrepPage() {
               </div>
 
               {/* Progress bar */}
-              <div className="h-2 rounded-full bg-[#F1F5F9] overflow-hidden">
+              <div className="h-2 rounded-full bg-muted overflow-hidden">
                 <div
                   className={cn("h-full rounded-full transition-all", progressBarColor(chapter.readiness_pct))}
                   style={{ width: `${chapter.readiness_pct}%` }}
@@ -345,7 +345,7 @@ export default function SurveyPrepPage() {
                   <p className="text-xs text-[#94A3B8] mb-1.5">Open Gaps</p>
                   <ul className="space-y-1">
                     {chapter.gaps.map((gap, gi) => (
-                      <li key={gi} className="flex items-start gap-1.5 text-xs text-[#B91C1C]">
+                      <li key={gi} className="flex items-start gap-1.5 text-xs text-[#B91C1C] dark:text-red-400">
                         <span className="mt-1 w-1.5 h-1.5 rounded-full bg-[#B91C1C] shrink-0" />
                         {gap}
                       </li>
@@ -385,7 +385,7 @@ export default function SurveyPrepPage() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.08 }}
-                className="bg-white border border-[#E2E8F0] rounded-xl p-5 space-y-3"
+                className="bg-card border border-[#E2E8F0] rounded-xl p-5 space-y-3"
               >
                 <div>
                   <span className="text-xs text-[#64748B] border border-[#CBD5E1] rounded px-2 py-0.5">
@@ -417,7 +417,7 @@ export default function SurveyPrepPage() {
           className={cn(
             "w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all",
             exportState === "success"
-              ? "bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]"
+              ? "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30"
               : "bg-[#0B6BCB] hover:bg-[#0959AC] text-white"
           )}
         >

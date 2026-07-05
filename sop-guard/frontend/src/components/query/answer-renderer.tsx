@@ -135,8 +135,8 @@ export function AnswerRenderer({ text, citations, onCitationClick }: { text: str
         }
         if (block.type === "callout") {
           return (
-            <div key={i} className="flex items-start gap-3 p-4 rounded-xl bg-[#FEF3C7] border border-[#FDE68A]">
-              <AlertTriangle className="w-4 h-4 text-[#B45309] shrink-0 mt-0.5" />
+            <div key={i} className="flex items-start gap-3 p-4 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30">
+              <AlertTriangle className="w-4 h-4 text-[#B45309] dark:text-amber-400 shrink-0 mt-0.5" />
               <p className="text-[15px] leading-relaxed text-[#1A2332]">{renderInline(block.text, ctx)}</p>
             </div>
           )
@@ -148,7 +148,7 @@ export function AnswerRenderer({ text, citations, onCitationClick }: { text: str
           return (
             <dl key={i} className="rounded-xl border border-[#E2E8F0] divide-y divide-[#EDF1F5] overflow-hidden">
               {block.pairs.map((p, j) => (
-                <div key={j} className="flex flex-col sm:flex-row sm:items-baseline gap-0.5 sm:gap-4 px-4 py-3 odd:bg-[#F1F5F9] even:bg-transparent">
+                <div key={j} className="flex flex-col sm:flex-row sm:items-baseline gap-0.5 sm:gap-4 px-4 py-3 odd:bg-muted even:bg-transparent">
                   <dt className="text-[13px] font-semibold uppercase tracking-wide text-[#64748B] sm:w-36 shrink-0">{p.label}</dt>
                   <dd className="text-[16px] leading-snug text-[#1A2332] font-medium">{renderInline(p.value, ctx)}</dd>
                 </div>

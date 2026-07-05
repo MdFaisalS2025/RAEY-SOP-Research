@@ -63,9 +63,9 @@ const STATUS_LABEL: Record<KpiStatus, string> = {
 }
 
 const STATUS_TEXT: Record<KpiStatus, string> = {
-  green: "text-[#15803D]",
-  amber: "text-[#B45309]",
-  red: "text-[#B91C1C]",
+  green: "text-[#15803D] dark:text-green-400",
+  amber: "text-[#B45309] dark:text-amber-400",
+  red: "text-[#B91C1C] dark:text-red-400",
 }
 
 function TrendIcon({ trend }: { trend: KpiTrend }) {
@@ -99,9 +99,9 @@ const ATTENTION_ITEMS = [
 ]
 
 const FRESHNESS_BARS = [
-  { label: "2024 or newer", count: 5, color: "bg-[#15803D]", text: "text-[#15803D]" },
-  { label: "2022 - 2023", count: 2, color: "bg-[#B45309]", text: "text-[#B45309]" },
-  { label: "Older", count: 1, color: "bg-[#B91C1C]", text: "text-[#B91C1C]" },
+  { label: "2024 or newer", count: 5, color: "bg-[#15803D]", text: "text-[#15803D] dark:text-green-400" },
+  { label: "2022 - 2023", count: 2, color: "bg-[#B45309]", text: "text-[#B45309] dark:text-amber-400" },
+  { label: "Older", count: 1, color: "bg-[#B91C1C]", text: "text-[#B91C1C] dark:text-red-400" },
 ]
 
 const EXCEPTION_ROWS = [
@@ -145,7 +145,7 @@ export default function LeadershipPage() {
       <AppShell>
       <div className="px-4 md:px-6 lg:px-8 py-6">
         <div className="max-w-2xl mx-auto mt-16">
-          <div className="bg-white border border-[#E2E8F0] shadow-sm rounded-xl p-8 text-center space-y-3">
+          <div className="bg-card border border-[#E2E8F0] shadow-sm rounded-xl p-8 text-center space-y-3">
             <div className="w-12 h-12 rounded-xl bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 flex items-center justify-center mx-auto">
               <ShieldCheck className="w-6 h-6 text-[#0B6BCB]" />
             </div>
@@ -173,7 +173,7 @@ export default function LeadershipPage() {
 
   return (
     <AppShell>
-    <div className="bg-[#F7F9FB] px-4 md:px-6 lg:px-8 py-6">
+    <div className="bg-background px-4 md:px-6 lg:px-8 py-6">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
         <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -193,11 +193,11 @@ export default function LeadershipPage() {
         {/* Section 1: Board Scorecard */}
         <section className="space-y-3">
           <SectionHeading title="Board Scorecard" subtitle="Seven key indicators tracked against target for the current quarter" />
-          <div className="bg-white border border-[#E2E8F0] shadow-sm rounded-xl overflow-hidden">
+          <div className="bg-card border border-[#E2E8F0] shadow-sm rounded-xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-[12px] min-w-[760px]">
                 <thead>
-                  <tr className="bg-[#F1F5F9] border-b border-[#E2E8F0]">
+                  <tr className="bg-muted border-b border-[#E2E8F0]">
                     <th className="text-left px-4 py-2.5 text-[#64748B] font-semibold">Metric</th>
                     <th className="text-right px-4 py-2.5 text-[#64748B] font-semibold">Current</th>
                     <th className="text-right px-4 py-2.5 text-[#64748B] font-semibold">Target</th>
@@ -257,7 +257,7 @@ export default function LeadershipPage() {
                 key={item.title}
                 href={item.href}
                 className={cn(
-                  "block bg-white border border-[#E2E8F0] shadow-sm rounded-xl p-4 border-l-4 hover:bg-[#F8FAFC] transition-colors group",
+                  "block bg-card border border-[#E2E8F0] shadow-sm rounded-xl p-4 border-l-4 hover:bg-[#F8FAFC] transition-colors group",
                   item.severity === "red" ? "border-l-[#B91C1C]" : "border-l-[#B45309]"
                 )}
               >
@@ -265,7 +265,7 @@ export default function LeadershipPage() {
                   <AlertTriangle
                     className={cn(
                       "w-4 h-4 shrink-0 mt-0.5",
-                      item.severity === "red" ? "text-[#B91C1C]" : "text-[#B45309]"
+                      item.severity === "red" ? "text-[#B91C1C] dark:text-red-400" : "text-[#B45309] dark:text-amber-400"
                     )}
                   />
                   <p className="text-[13px] font-semibold text-[#1A2332] leading-snug">{item.title}</p>
@@ -284,7 +284,7 @@ export default function LeadershipPage() {
         <section className="space-y-3">
           <SectionHeading title="Evidence Freshness" subtitle="How current is the guidance underpinning active SOPs" />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            <div className="bg-white border border-[#E2E8F0] shadow-sm rounded-xl p-5 space-y-4">
+            <div className="bg-card border border-[#E2E8F0] shadow-sm rounded-xl p-5 space-y-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 flex items-center justify-center shrink-0">
                   <FlaskConical className="w-5 h-5 text-[#0B6BCB]" />
@@ -306,7 +306,7 @@ export default function LeadershipPage() {
                           {bar.count} SOP{bar.count !== 1 ? "s" : ""}
                         </span>
                       </div>
-                      <div className="h-2 bg-[#F1F5F9] rounded-full overflow-hidden">
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
                         <div className={cn("h-full rounded-full", bar.color)} style={{ width: `${pct}%` }} />
                       </div>
                     </div>
@@ -316,10 +316,10 @@ export default function LeadershipPage() {
             </div>
             <Link
               href="/evidence-watch"
-              className="block bg-white border border-[#E2E8F0] shadow-sm border-l-4 border-l-[#B91C1C] rounded-xl p-5 hover:bg-[#F8FAFC] transition-colors group"
+              className="block bg-card border border-[#E2E8F0] shadow-sm border-l-4 border-l-[#B91C1C] rounded-xl p-5 hover:bg-[#F8FAFC] transition-colors group"
             >
               <div className="flex items-start gap-2 mb-2">
-                <AlertTriangle className="w-4 h-4 text-[#B91C1C] shrink-0 mt-0.5" />
+                <AlertTriangle className="w-4 h-4 text-[#B91C1C] dark:text-red-400 shrink-0 mt-0.5" />
                 <p className="text-[13px] font-semibold text-[#1A2332]">1 SOP based on superseded guidance</p>
               </div>
               <p className="text-[12px] text-[#64748B] mb-1">
@@ -339,10 +339,10 @@ export default function LeadershipPage() {
         {/* Section 4: Deviation and Exception Summary */}
         <section className="space-y-3">
           <SectionHeading title="Deviation and Exception Summary" subtitle="5 exception reports filed this quarter, 2 pattern alerts active" />
-          <div className="bg-white border border-[#E2E8F0] shadow-sm rounded-xl overflow-hidden">
+          <div className="bg-card border border-[#E2E8F0] shadow-sm rounded-xl overflow-hidden">
             <table className="w-full text-[12px]">
               <thead>
-                <tr className="bg-[#F1F5F9] border-b border-[#E2E8F0]">
+                <tr className="bg-muted border-b border-[#E2E8F0]">
                   <th className="text-left px-4 py-2.5 text-[#64748B] font-semibold">Department</th>
                   <th className="text-right px-4 py-2.5 text-[#64748B] font-semibold">Exceptions</th>
                   <th className="text-left px-4 py-2.5 text-[#64748B] font-semibold">Pattern Detected</th>
@@ -356,7 +356,7 @@ export default function LeadershipPage() {
                     <td className="px-4 py-2.5 text-right text-[#334155] font-semibold">{row.exceptions}</td>
                     <td className="px-4 py-2.5">
                       {row.pattern ? (
-                        <span className="inline-flex items-center gap-1.5 text-[#B45309] font-semibold">
+                        <span className="inline-flex items-center gap-1.5 text-[#B45309] dark:text-amber-400 font-semibold">
                           <span className="w-1.5 h-1.5 rounded-full bg-[#B45309]" />
                           Yes
                         </span>
@@ -387,7 +387,7 @@ export default function LeadershipPage() {
           <SectionHeading title="Quarterly Governance Activity" subtitle="Formal governance actions recorded this quarter" />
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {GOVERNANCE_TILES.map(({ label, value, icon: Icon }) => (
-              <div key={label} className="bg-white border border-[#E2E8F0] shadow-sm rounded-xl p-4">
+              <div key={label} className="bg-card border border-[#E2E8F0] shadow-sm rounded-xl p-4">
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <p className="text-[11px] text-[#94A3B8] uppercase tracking-widest font-semibold mb-1">{label}</p>
@@ -408,7 +408,7 @@ export default function LeadershipPage() {
             className={cn(
               "flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-semibold border transition-colors",
               exportState === "done"
-                ? "bg-[#DCFCE7] border-[#BBF7D0] text-[#15803D]"
+                ? "bg-[#DCFCE7] dark:bg-green-500/10 border-[#BBF7D0] dark:border-green-500/30 text-[#15803D] dark:text-green-400"
                 : "bg-[#0B6BCB] border-[#0B6BCB] text-white hover:bg-[#0959AC]",
               exportState === "loading" && "opacity-70 cursor-wait"
             )}

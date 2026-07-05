@@ -128,49 +128,49 @@ const PATTERN_ALERTS = [
 const INCIDENT_TYPE_META: Record<string, { label: string; className: string }> = {
   near_miss: {
     label: "Near Miss",
-    className: "bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]",
+    className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30",
   },
   adverse_event: {
     label: "Adverse Event",
-    className: "bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA]",
+    className: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30",
   },
   sentinel_event: {
     label: "Sentinel Event",
-    className: "bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA]",
+    className: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30",
   },
 }
 
 const SEVERITY_META: Record<string, { label: string; className: string }> = {
   high: {
     label: "High",
-    className: "bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]",
+    className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30",
   },
   critical: {
     label: "Critical",
-    className: "bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA]",
+    className: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30",
   },
   medium: {
     label: "Medium",
-    className: "bg-white text-[#64748B] border border-[#CBD5E1]",
+    className: "bg-card text-[#64748B] border border-[#CBD5E1]",
   },
   low: {
     label: "Low",
-    className: "bg-white text-[#94A3B8] border border-[#EDF1F5]",
+    className: "bg-card text-[#94A3B8] border border-[#EDF1F5]",
   },
 }
 
 const REVIEW_STATUS_META: Record<string, { label: string; className: string }> = {
   pending: {
     label: "Pending",
-    className: "bg-white text-[#64748B] border border-[#CBD5E1]",
+    className: "bg-card text-[#64748B] border border-[#CBD5E1]",
   },
   in_review: {
     label: "In Review",
-    className: "bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]",
+    className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30",
   },
   completed: {
     label: "Completed",
-    className: "bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]",
+    className: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30",
   },
 }
 
@@ -189,9 +189,9 @@ function ReportModal({ onClose }: ReportModalProps) {
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="bg-white border border-[#E2E8F0] rounded-2xl p-8 w-full max-w-sm text-center"
+          className="bg-card border border-[#E2E8F0] rounded-2xl p-8 w-full max-w-sm text-center"
         >
-          <CheckCircle className="w-12 h-12 text-[#15803D] mx-auto mb-3" />
+          <CheckCircle className="w-12 h-12 text-[#15803D] dark:text-green-400 mx-auto mb-3" />
           <h3 className="text-lg font-semibold text-[#1A2332] mb-2">Report Submitted</h3>
           <p className="text-sm text-[#64748B] mb-4">
             Your incident report has been submitted. Relevant SOPs will be flagged for review.
@@ -212,7 +212,7 @@ function ReportModal({ onClose }: ReportModalProps) {
       <motion.div
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="bg-white border border-[#E2E8F0] rounded-2xl p-6 w-full max-w-lg space-y-4 max-h-[90vh] overflow-y-auto"
+        className="bg-card border border-[#E2E8F0] rounded-2xl p-6 w-full max-w-lg space-y-4 max-h-[90vh] overflow-y-auto"
       >
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-[#1A2332]">Report New Incident</h3>
@@ -224,7 +224,7 @@ function ReportModal({ onClose }: ReportModalProps) {
         <div className="space-y-3">
           <div>
             <label className="text-xs text-[#64748B] mb-1 block">Incident Type</label>
-            <select className="w-full bg-white border border-[#E2E8F0] rounded-xl px-3 py-2 text-sm text-[#1A2332] focus:outline-none focus:border-[#0B6BCB]/50">
+            <select className="w-full bg-card border border-[#E2E8F0] rounded-xl px-3 py-2 text-sm text-[#1A2332] focus:outline-none focus:border-[#0B6BCB]/50">
               <option value="near_miss">Near Miss</option>
               <option value="adverse_event">Adverse Event</option>
               <option value="sentinel_event">Sentinel Event</option>
@@ -235,12 +235,12 @@ function ReportModal({ onClose }: ReportModalProps) {
               <label className="text-xs text-[#64748B] mb-1 block">Date / Time</label>
               <input
                 type="datetime-local"
-                className="w-full bg-white border border-[#E2E8F0] rounded-xl px-3 py-2 text-sm text-[#1A2332] focus:outline-none focus:border-[#0B6BCB]/50"
+                className="w-full bg-card border border-[#E2E8F0] rounded-xl px-3 py-2 text-sm text-[#1A2332] focus:outline-none focus:border-[#0B6BCB]/50"
               />
             </div>
             <div>
               <label className="text-xs text-[#64748B] mb-1 block">Severity</label>
-              <select className="w-full bg-white border border-[#E2E8F0] rounded-xl px-3 py-2 text-sm text-[#1A2332] focus:outline-none focus:border-[#0B6BCB]/50">
+              <select className="w-full bg-card border border-[#E2E8F0] rounded-xl px-3 py-2 text-sm text-[#1A2332] focus:outline-none focus:border-[#0B6BCB]/50">
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
                 <option value="high">High</option>
@@ -250,7 +250,7 @@ function ReportModal({ onClose }: ReportModalProps) {
           </div>
           <div>
             <label className="text-xs text-[#64748B] mb-1 block">Department</label>
-            <select className="w-full bg-white border border-[#E2E8F0] rounded-xl px-3 py-2 text-sm text-[#1A2332] focus:outline-none focus:border-[#0B6BCB]/50">
+            <select className="w-full bg-card border border-[#E2E8F0] rounded-xl px-3 py-2 text-sm text-[#1A2332] focus:outline-none focus:border-[#0B6BCB]/50">
               <option>ICU</option>
               <option>Emergency</option>
               <option>Oncology</option>
@@ -265,12 +265,12 @@ function ReportModal({ onClose }: ReportModalProps) {
             <textarea
               rows={3}
               placeholder="Describe what happened..."
-              className="w-full bg-white border border-[#E2E8F0] rounded-xl px-3 py-2 text-sm text-[#1A2332] focus:outline-none focus:border-[#0B6BCB]/50 resize-none"
+              className="w-full bg-card border border-[#E2E8F0] rounded-xl px-3 py-2 text-sm text-[#1A2332] focus:outline-none focus:border-[#0B6BCB]/50 resize-none"
             />
           </div>
           <div>
             <label className="text-xs text-[#64748B] mb-1 block">Related SOP</label>
-            <select className="w-full bg-white border border-[#E2E8F0] rounded-xl px-3 py-2 text-sm text-[#1A2332] focus:outline-none focus:border-[#0B6BCB]/50">
+            <select className="w-full bg-card border border-[#E2E8F0] rounded-xl px-3 py-2 text-sm text-[#1A2332] focus:outline-none focus:border-[#0B6BCB]/50">
               <option value="">-- Select SOP (optional) --</option>
               {MOCK_SOPS.map((sop) => (
                 <option key={sop.sop_id} value={sop.sop_id}>
@@ -284,7 +284,7 @@ function ReportModal({ onClose }: ReportModalProps) {
             <textarea
               rows={2}
               placeholder="What was done immediately after the incident..."
-              className="w-full bg-white border border-[#E2E8F0] rounded-xl px-3 py-2 text-sm text-[#1A2332] focus:outline-none focus:border-[#0B6BCB]/50 resize-none"
+              className="w-full bg-card border border-[#E2E8F0] rounded-xl px-3 py-2 text-sm text-[#1A2332] focus:outline-none focus:border-[#0B6BCB]/50 resize-none"
             />
           </div>
         </div>
@@ -298,7 +298,7 @@ function ReportModal({ onClose }: ReportModalProps) {
           </button>
           <button
             onClick={onClose}
-            className="px-4 py-2.5 rounded-xl bg-[#F1F5F9] text-[#64748B] text-sm font-medium hover:bg-[#F1F5F9] transition-colors"
+            className="px-4 py-2.5 rounded-xl bg-muted text-[#64748B] text-sm font-medium hover:bg-muted transition-colors"
           >
             Cancel
           </button>
@@ -329,10 +329,10 @@ export default function IncidentsPage() {
   }
 
   const stats = [
-    { label: "Incidents This Month", value: "12", color: "text-[#B91C1C]", bg: "bg-[#FEE2E2]" },
-    { label: "Linked to SOPs", value: "9", color: "text-[#B45309]", bg: "bg-[#FEF3C7]" },
+    { label: "Incidents This Month", value: "12", color: "text-[#B91C1C] dark:text-red-400", bg: "bg-[#FEE2E2] dark:bg-red-500/10" },
+    { label: "Linked to SOPs", value: "9", color: "text-[#B45309] dark:text-amber-400", bg: "bg-[#FEF3C7] dark:bg-amber-500/10" },
     { label: "SOPs Under Review", value: "3", color: "text-[#0B6BCB]", bg: "bg-[#0B6BCB]/10" },
-    { label: "Closed Loop", value: "6", color: "text-[#15803D]", bg: "bg-[#DCFCE7]" },
+    { label: "Closed Loop", value: "6", color: "text-[#15803D] dark:text-green-400", bg: "bg-[#DCFCE7] dark:bg-green-500/10" },
   ]
 
   return (
@@ -345,8 +345,8 @@ export default function IncidentsPage() {
         {/* Header */}
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-[#FEE2E2] flex items-center justify-center shrink-0">
-              <AlertOctagon className="w-6 h-6 text-[#B91C1C]" />
+            <div className="w-12 h-12 rounded-2xl bg-[#FEE2E2] dark:bg-red-500/10 flex items-center justify-center shrink-0">
+              <AlertOctagon className="w-6 h-6 text-[#B91C1C] dark:text-red-400" />
             </div>
             <div>
               <h1 className="text-2xl font-semibold text-[#1A2332] font-display">
@@ -381,31 +381,31 @@ export default function IncidentsPage() {
               step: "1",
               label: "Incident Reported",
               desc: "Staff submits safety event or near-miss",
-              color: "text-[#B91C1C]",
-              bg: "bg-[#FEE2E2]",
-              border: "border-[#FECACA]",
+              color: "text-[#B91C1C] dark:text-red-400",
+              bg: "bg-[#FEE2E2] dark:bg-red-500/10",
+              border: "border-[#FECACA] dark:border-red-500/30",
             },
             {
               step: "2",
               label: "SOP Auto-Suggested",
               desc: "System identifies relevant SOPs by keyword match",
-              color: "text-[#B45309]",
-              bg: "bg-[#FEF3C7]",
-              border: "border-[#FDE68A]",
+              color: "text-[#B45309] dark:text-amber-400",
+              bg: "bg-[#FEF3C7] dark:bg-amber-500/10",
+              border: "border-[#FDE68A] dark:border-amber-500/30",
             },
             {
               step: "3",
               label: "Review Initiated",
               desc: "Committee reviews SOP for necessary updates",
-              color: "text-[#15803D]",
-              bg: "bg-[#DCFCE7]",
-              border: "border-[#BBF7D0]",
+              color: "text-[#15803D] dark:text-green-400",
+              bg: "bg-[#DCFCE7] dark:bg-green-500/10",
+              border: "border-[#BBF7D0] dark:border-green-500/30",
             },
           ].map((item) => (
             <div
               key={item.step}
               className={cn(
-                "bg-white border rounded-xl p-4 flex items-start gap-3",
+                "bg-card border rounded-xl p-4 flex items-start gap-3",
                 item.border
               )}
             >
@@ -434,7 +434,7 @@ export default function IncidentsPage() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.07 }}
-              className={cn("bg-white border border-[#E2E8F0] rounded-xl p-4", s.bg)}
+              className={cn("bg-card border border-[#E2E8F0] rounded-xl p-4", s.bg)}
             >
               <p className={cn("text-2xl font-bold", s.color)}>{s.value}</p>
               <p className="text-xs text-[#64748B] mt-0.5">{s.label}</p>
@@ -459,7 +459,7 @@ export default function IncidentsPage() {
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.06 }}
-                  className="bg-white border border-[#E2E8F0] rounded-xl p-5 space-y-3"
+                  className="bg-card border border-[#E2E8F0] rounded-xl p-5 space-y-3"
                 >
                   {/* Top row */}
                   <div className="flex items-start justify-between gap-3">
@@ -562,7 +562,7 @@ export default function IncidentsPage() {
                   {/* Footer actions */}
                   <div className="flex items-center gap-2 flex-wrap pt-1">
                     {proposalDone ? (
-                      <span className="flex items-center gap-1 text-xs text-[#15803D] bg-[#DCFCE7] border border-[#BBF7D0] rounded-full px-2.5 py-0.5">
+                      <span className="flex items-center gap-1 text-xs text-[#15803D] dark:text-green-400 bg-[#DCFCE7] dark:bg-green-500/10 border border-[#BBF7D0] dark:border-green-500/30 rounded-full px-2.5 py-0.5">
                         <CheckCircle className="w-3 h-3" /> Proposal Created
                       </span>
                     ) : (
@@ -573,7 +573,7 @@ export default function IncidentsPage() {
                         <Plus className="w-3 h-3" /> Create Proposal
                       </button>
                     )}
-                    <button className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-white/[0.04] text-[#64748B] hover:bg-[#F1F5F9] border border-[#E2E8F0] transition-colors">
+                    <button className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-white/[0.04] text-[#64748B] hover:bg-muted border border-[#E2E8F0] transition-colors">
                       <ExternalLink className="w-3 h-3" /> View Linked SOP
                     </button>
                     <button
@@ -599,10 +599,10 @@ export default function IncidentsPage() {
                 initial={{ opacity: 0, x: -8 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.08 }}
-                className="flex items-start gap-3 px-4 py-3 rounded-xl bg-[#FEF3C7] border border-[#FDE68A]"
+                className="flex items-start gap-3 px-4 py-3 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30"
               >
-                <AlertTriangle className="w-4 h-4 text-[#B45309] shrink-0 mt-0.5" />
-                <p className="text-sm text-[#B45309]">{alert.text}</p>
+                <AlertTriangle className="w-4 h-4 text-[#B45309] dark:text-amber-400 shrink-0 mt-0.5" />
+                <p className="text-sm text-[#B45309] dark:text-amber-400">{alert.text}</p>
               </motion.div>
             ))}
           </div>

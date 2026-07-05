@@ -23,7 +23,7 @@ export function EvidenceMeter({ items }: { items: EvidenceLike[] }) {
   ]
 
   return (
-    <div className="p-3 rounded-xl bg-[#F1F5F9] border border-[#E2E8F0] mb-3">
+    <div className="p-3 rounded-xl bg-muted border border-[#E2E8F0] mb-3">
       <p className="text-[12px] font-medium text-[#1A2332] mb-2">
         Evidence Alignment: {aligned} of {total} external sources align with internal SOPs
       </p>
@@ -63,11 +63,11 @@ export function EvidenceQualityTags({
 }) {
   let tag: { label: string; className: string }
   if (strength === "high") {
-    tag = { label: "High-Quality Evidence", className: "text-[#15803D] border-[#BBF7D0] bg-[#DCFCE7]" }
+    tag = { label: "High-Quality Evidence", className: "text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30 bg-[#DCFCE7] dark:bg-green-500/10" }
   } else if (strength === "moderate") {
-    tag = { label: "Guideline / Consensus", className: "text-[#475569] border-[#CBD5E1] bg-white" }
+    tag = { label: "Guideline / Consensus", className: "text-[#475569] border-[#CBD5E1] bg-card" }
   } else {
-    tag = { label: "Expert Opinion", className: "text-[#475569] border-[#CBD5E1] bg-white" }
+    tag = { label: "Expert Opinion", className: "text-[#475569] border-[#CBD5E1] bg-card" }
   }
 
   // New research: published within 12 months of 2026-07

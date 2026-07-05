@@ -11,7 +11,7 @@ export function FollowupChips({
 }) {
   if (!questions || questions.length === 0) return null
   return (
-    <div className="p-5 rounded-2xl bg-white border border-[#E2E8F0] shadow-sm">
+    <div className="p-5 rounded-2xl bg-card border border-[#E2E8F0] shadow-sm">
       <p className="text-xs font-semibold uppercase tracking-wide text-[#64748B] mb-3">Related questions</p>
       <div className="space-y-2">
         {questions.map((q, i) => (

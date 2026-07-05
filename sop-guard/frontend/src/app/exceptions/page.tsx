@@ -89,17 +89,17 @@ const MOCK_EXCEPTIONS: ExceptionReport[] = [
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
 const SEVERITY_META: Record<string, { label: string; cls: string }> = {
-  critical: { label: "Critical", cls: "bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA]" },
-  high: { label: "High", cls: "bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]" },
-  medium: { label: "Medium", cls: "bg-white text-[#475569] border border-[#CBD5E1]" },
-  low: { label: "Low", cls: "bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]" },
+  critical: { label: "Critical", cls: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30" },
+  high: { label: "High", cls: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30" },
+  medium: { label: "Medium", cls: "bg-card text-[#475569] border border-[#CBD5E1]" },
+  low: { label: "Low", cls: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30" },
 }
 
 const STATUS_META: Record<string, { label: string; cls: string }> = {
-  open: { label: "Open", cls: "bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA]" },
-  under_review: { label: "Under Review", cls: "bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]" },
-  resolved: { label: "Resolved", cls: "bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]" },
-  escalated: { label: "Escalated", cls: "bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA]" },
+  open: { label: "Open", cls: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30" },
+  under_review: { label: "Under Review", cls: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30" },
+  resolved: { label: "Resolved", cls: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30" },
+  escalated: { label: "Escalated", cls: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30" },
 }
 
 const DEVIATION_LABELS: Record<string, string> = {
@@ -134,7 +134,7 @@ function ExceptionCard({ exc }: { exc: ExceptionReport }) {
   return (
     <motion.div
       layout
-      className="rounded-2xl bg-white border border-[#E2E8F0] overflow-hidden"
+      className="rounded-2xl bg-card border border-[#E2E8F0] overflow-hidden"
     >
       {/* Card header */}
       <div className="p-5">
@@ -177,14 +177,14 @@ function ExceptionCard({ exc }: { exc: ExceptionReport }) {
         <div className="flex flex-wrap gap-3 mt-3">
           <div className={cn("flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border",
             exc.patient_harm
-              ? "bg-[#FEE2E2] text-[#B91C1C] border-[#FECACA]"
-              : "bg-[#DCFCE7] text-[#15803D] border-[#BBF7D0]"
+              ? "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30"
+              : "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30"
           )}>
             {exc.patient_harm ? <XCircle className="w-3.5 h-3.5" /> : <CheckCircle className="w-3.5 h-3.5" />}
             {exc.patient_harm ? "Patient Harm Reported" : "No Patient Harm"}
           </div>
           {exc.sop_update_required && (
-            <div className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border bg-[#FEF3C7] text-[#B45309] border-[#FDE68A]">
+            <div className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30">
               <AlertTriangle className="w-3.5 h-3.5" />
               SOP Update Required
             </div>
@@ -219,7 +219,7 @@ function ExceptionCard({ exc }: { exc: ExceptionReport }) {
               {exc.follow_up_required && (
                 <div>
                   <p className="text-xs font-medium text-muted-foreground mb-1">Follow-up Required</p>
-                  <p className="text-sm text-[#B45309]">{exc.follow_up_required}</p>
+                  <p className="text-sm text-[#B45309] dark:text-amber-400">{exc.follow_up_required}</p>
                 </div>
               )}
               {exc.reviewed_by && (
@@ -231,7 +231,7 @@ function ExceptionCard({ exc }: { exc: ExceptionReport }) {
               {exc.resolution && (
                 <div>
                   <p className="text-xs font-medium text-muted-foreground mb-1">Resolution</p>
-                  <p className="text-sm text-[#15803D]">{exc.resolution}</p>
+                  <p className="text-sm text-[#15803D] dark:text-green-400">{exc.resolution}</p>
                 </div>
               )}
               <div className="flex flex-wrap gap-2 pt-1">
@@ -241,12 +241,12 @@ function ExceptionCard({ exc }: { exc: ExceptionReport }) {
                   </button>
                 )}
                 {exc.status !== "resolved" && (
-                  <button className="text-xs px-3 py-1.5 rounded-lg bg-[#DCFCE7] text-[#15803D] hover:bg-[#DCFCE7] transition-colors font-medium border border-[#BBF7D0]">
+                  <button className="text-xs px-3 py-1.5 rounded-lg bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 hover:bg-[#DCFCE7] dark:bg-green-500/10 transition-colors font-medium border border-[#BBF7D0] dark:border-green-500/30">
                     Mark Resolved
                   </button>
                 )}
                 {!exc.sop_update_required && exc.status !== "resolved" && (
-                  <button className="text-xs px-3 py-1.5 rounded-lg bg-[#FEF3C7] text-[#B45309] hover:bg-[#FDE68A] transition-colors font-medium border border-[#FDE68A]">
+                  <button className="text-xs px-3 py-1.5 rounded-lg bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 hover:bg-[#FDE68A] transition-colors font-medium border border-[#FDE68A] dark:border-amber-500/30">
                     Flag for SOP Update
                   </button>
                 )}
@@ -267,7 +267,7 @@ function SubmitForm({ onClose }: { onClose: () => void }) {
   if (submitted) {
     return (
       <div className="flex flex-col items-center gap-3 py-8">
-        <CheckCircle className="w-10 h-10 text-[#15803D]" />
+        <CheckCircle className="w-10 h-10 text-[#15803D] dark:text-green-400" />
         <p className="text-sm font-medium">Exception report submitted successfully.</p>
         <p className="text-xs text-muted-foreground">It will be reviewed by the Compliance Officer within 24 hours.</p>
         <button onClick={onClose} className="mt-2 text-xs px-4 py-2 rounded-lg bg-[#0B6BCB] text-white hover:bg-[#0B6BCB] transition-colors">
@@ -288,7 +288,7 @@ function SubmitForm({ onClose }: { onClose: () => void }) {
           <input
             required
             placeholder="e.g. IC-PPE-001"
-            className="w-full rounded-lg bg-[#F1F5F9] border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/60"
+            className="w-full rounded-lg bg-muted border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/60"
           />
         </div>
         <div>
@@ -296,14 +296,14 @@ function SubmitForm({ onClose }: { onClose: () => void }) {
           <input
             required
             type="datetime-local"
-            className="w-full rounded-lg bg-[#F1F5F9] border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/60"
+            className="w-full rounded-lg bg-muted border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/60"
           />
         </div>
         <div>
           <label className="text-xs text-muted-foreground block mb-1">Deviation Type</label>
           <select
             required
-            className="w-full rounded-lg bg-white border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/60"
+            className="w-full rounded-lg bg-card border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/60"
           >
             <option value="">Select type...</option>
             <option value="equipment_unavailable">Equipment Unavailable</option>
@@ -318,7 +318,7 @@ function SubmitForm({ onClose }: { onClose: () => void }) {
           <label className="text-xs text-muted-foreground block mb-1">Patient Harm?</label>
           <select
             required
-            className="w-full rounded-lg bg-white border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/60"
+            className="w-full rounded-lg bg-card border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/60"
           >
             <option value="">Select...</option>
             <option value="no">No patient harm</option>
@@ -332,7 +332,7 @@ function SubmitForm({ onClose }: { onClose: () => void }) {
           required
           rows={3}
           placeholder="Describe what happened and why the SOP could not be followed..."
-          className="w-full rounded-lg bg-[#F1F5F9] border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/60 resize-none"
+          className="w-full rounded-lg bg-muted border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/60 resize-none"
         />
       </div>
       <div>
@@ -341,7 +341,7 @@ function SubmitForm({ onClose }: { onClose: () => void }) {
           required
           rows={2}
           placeholder="Describe what was done to mitigate risk..."
-          className="w-full rounded-lg bg-[#F1F5F9] border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/60 resize-none"
+          className="w-full rounded-lg bg-muted border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/60 resize-none"
         />
       </div>
       <div className="flex gap-3 pt-1">
@@ -354,7 +354,7 @@ function SubmitForm({ onClose }: { onClose: () => void }) {
         <button
           type="button"
           onClick={onClose}
-          className="px-4 py-2.5 rounded-xl bg-[#F1F5F9] hover:bg-[#F1F5F9] text-sm transition-colors"
+          className="px-4 py-2.5 rounded-xl bg-muted hover:bg-muted text-sm transition-colors"
         >
           Cancel
         </button>
@@ -374,10 +374,10 @@ export default function ExceptionsPage() {
   const underReview = MOCK_EXCEPTIONS.filter((e) => e.status === "under_review").length
 
   const stats = [
-    { label: "Open Reports", value: open, icon: XCircle, color: "text-[#B91C1C]", bg: "bg-[#FEE2E2]" },
-    { label: "Resolved", value: resolved, icon: CheckCircle, color: "text-[#15803D]", bg: "bg-[#DCFCE7]" },
-    { label: "Critical", value: critical, icon: AlertTriangle, color: "text-[#B91C1C]", bg: "bg-[#FEE2E2]" },
-    { label: "Pending Review", value: underReview, icon: Clock, color: "text-[#B45309]", bg: "bg-[#FEF3C7]" },
+    { label: "Open Reports", value: open, icon: XCircle, color: "text-[#B91C1C] dark:text-red-400", bg: "bg-[#FEE2E2] dark:bg-red-500/10" },
+    { label: "Resolved", value: resolved, icon: CheckCircle, color: "text-[#15803D] dark:text-green-400", bg: "bg-[#DCFCE7] dark:bg-green-500/10" },
+    { label: "Critical", value: critical, icon: AlertTriangle, color: "text-[#B91C1C] dark:text-red-400", bg: "bg-[#FEE2E2] dark:bg-red-500/10" },
+    { label: "Pending Review", value: underReview, icon: Clock, color: "text-[#B45309] dark:text-amber-400", bg: "bg-[#FEF3C7] dark:bg-amber-500/10" },
   ]
 
   return (
@@ -387,8 +387,8 @@ export default function ExceptionsPage() {
 
         {/* Header */}
         <div className="flex items-start gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-[#FEE2E2] flex items-center justify-center shrink-0">
-            <Shield className="w-6 h-6 text-[#B91C1C]" />
+          <div className="w-12 h-12 rounded-2xl bg-[#FEE2E2] dark:bg-red-500/10 flex items-center justify-center shrink-0">
+            <Shield className="w-6 h-6 text-[#B91C1C] dark:text-red-400" />
           </div>
           <div>
             <h1 className="text-2xl font-semibold">SOP Exceptions and Deviations</h1>
@@ -399,13 +399,13 @@ export default function ExceptionsPage() {
         </div>
 
         {/* Research Prototype disclaimer */}
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEE2E2] border border-[#FECACA] text-[#B91C1C] text-sm">
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400 text-sm">
           <AlertTriangle className="w-4 h-4 shrink-0" />
           <span><strong>Research Prototype - Not for Clinical Use.</strong> For demonstration only.</span>
         </div>
 
         {/* 24-hour notice */}
-        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-[#FEF3C7] border border-[#FDE68A] text-[#B45309] text-sm">
+        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 text-sm">
           <Clock className="w-4 h-4 shrink-0" />
           <span>
             <strong>Policy Notice:</strong> All deviations from approved SOPs must be documented and reviewed within 24 hours per institutional policy.
@@ -420,7 +420,7 @@ export default function ExceptionsPage() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.07 }}
-              className="rounded-2xl bg-white border border-[#E2E8F0] p-4 flex items-center gap-3"
+              className="rounded-2xl bg-card border border-[#E2E8F0] p-4 flex items-center gap-3"
             >
               <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", s.bg)}>
                 <s.icon className={cn("w-5 h-5", s.color)} />
@@ -451,7 +451,7 @@ export default function ExceptionsPage() {
         </section>
 
         {/* Submit new exception */}
-        <div className="rounded-2xl bg-white border border-[#E2E8F0] p-5">
+        <div className="rounded-2xl bg-card border border-[#E2E8F0] p-5">
           {!showForm ? (
             <div className="flex items-center justify-between">
               <div>

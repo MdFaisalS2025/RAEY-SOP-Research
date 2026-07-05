@@ -152,7 +152,7 @@ export default function ImpactMapPage() {
                   "text-xs px-3 py-1.5 rounded-lg border transition-colors font-medium",
                   selectedSopId === sop.sop_id
                     ? "bg-[#0B6BCB]/10 text-[#0B6BCB] border-[#0B6BCB]/30"
-                    : "bg-[#F1F5F9] text-[#64748B] border-[#E2E8F0] hover:bg-[#F1F5F9]"
+                    : "bg-muted text-[#64748B] border-[#E2E8F0] hover:bg-muted"
                 )}
               >
                 {sop.sop_id}
@@ -172,14 +172,14 @@ export default function ImpactMapPage() {
             {/* References (this SOP depends on) */}
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <ArrowLeft className="w-4 h-4 text-[#B45309]" />
-                <span className="text-sm font-medium text-[#B45309]">
+                <ArrowLeft className="w-4 h-4 text-[#B45309] dark:text-amber-400" />
+                <span className="text-sm font-medium text-[#B45309] dark:text-amber-400">
                   References ({impact.references.length})
                 </span>
               </div>
               <p className="text-xs text-[#94A3B8] mb-3">SOPs this SOP mentions or depends on</p>
               {impact.references.length === 0 ? (
-                <div className="bg-white border border-[#E2E8F0] rounded-xl p-4 text-xs text-[#94A3B8]">
+                <div className="bg-card border border-[#E2E8F0] rounded-xl p-4 text-xs text-[#94A3B8]">
                   No references - this SOP is self-contained
                 </div>
               ) : (
@@ -187,9 +187,9 @@ export default function ImpactMapPage() {
                   {impact.references.map((sopId) => (
                     <div
                       key={sopId}
-                      className="bg-white border border-[#FDE68A] rounded-xl p-3"
+                      className="bg-card border border-[#FDE68A] dark:border-amber-500/30 rounded-xl p-3"
                     >
-                      <p className="text-xs font-medium text-[#B45309]">{sopId}</p>
+                      <p className="text-xs font-medium text-[#B45309] dark:text-amber-400">{sopId}</p>
                       <p className="text-xs text-[#64748B] mt-1 leading-snug">{getSopTitle(sopId)}</p>
                       <p className="text-[10px] text-[#94A3B8] mt-1">{getSopDept(sopId)}</p>
                     </div>
@@ -205,15 +205,15 @@ export default function ImpactMapPage() {
                 <span className="text-sm font-medium text-[#0B6BCB]">Selected SOP</span>
               </div>
               <p className="text-xs text-[#94A3B8] mb-3">The SOP being analyzed</p>
-              <div className="bg-white border-2 border-[#0B6BCB]/50 rounded-xl p-4">
+              <div className="bg-card border-2 border-[#0B6BCB]/50 rounded-xl p-4">
                 <p className="text-xs font-semibold text-[#0B6BCB] mb-1">{selectedSopId}</p>
                 <p className="text-xs text-[#1A2332] font-medium leading-snug">
                   {getSopTitle(selectedSopId)}
                 </p>
                 <p className="text-[10px] text-[#94A3B8] mt-1">{getSopDept(selectedSopId)}</p>
                 {impact.referenced_by.length > 0 && (
-                  <div className="mt-3 p-2 rounded-lg bg-[#FEF3C7] border border-[#FDE68A]">
-                    <p className="text-xs text-[#B45309] font-medium">
+                  <div className="mt-3 p-2 rounded-lg bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30">
+                    <p className="text-xs text-[#B45309] dark:text-amber-400 font-medium">
                       If this SOP changes, {impact.referenced_by.length} other SOP
                       {impact.referenced_by.length > 1 ? "s" : ""} may need review
                     </p>
@@ -225,14 +225,14 @@ export default function ImpactMapPage() {
             {/* Referenced By (SOPs that depend on this) */}
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <ArrowRight className="w-4 h-4 text-[#B91C1C]" />
-                <span className="text-sm font-medium text-[#B91C1C]">
+                <ArrowRight className="w-4 h-4 text-[#B91C1C] dark:text-red-400" />
+                <span className="text-sm font-medium text-[#B91C1C] dark:text-red-400">
                   Referenced By ({impact.referenced_by.length})
                 </span>
               </div>
               <p className="text-xs text-[#94A3B8] mb-3">SOPs that depend on this SOP</p>
               {impact.referenced_by.length === 0 ? (
-                <div className="bg-white border border-[#E2E8F0] rounded-xl p-4 text-xs text-[#94A3B8]">
+                <div className="bg-card border border-[#E2E8F0] rounded-xl p-4 text-xs text-[#94A3B8]">
                   No other SOPs reference this one
                 </div>
               ) : (
@@ -240,9 +240,9 @@ export default function ImpactMapPage() {
                   {impact.referenced_by.map((sopId) => (
                     <div
                       key={sopId}
-                      className="bg-white border border-[#FECACA] rounded-xl p-3"
+                      className="bg-card border border-[#FECACA] dark:border-red-500/30 rounded-xl p-3"
                     >
-                      <p className="text-xs font-medium text-[#B91C1C]">{sopId}</p>
+                      <p className="text-xs font-medium text-[#B91C1C] dark:text-red-400">{sopId}</p>
                       <p className="text-xs text-[#64748B] mt-1 leading-snug">{getSopTitle(sopId)}</p>
                       <p className="text-[10px] text-[#94A3B8] mt-1">{getSopDept(sopId)}</p>
                     </div>
@@ -283,7 +283,7 @@ export default function ImpactMapPage() {
                 return (
                   <div
                     key={sopId}
-                    className="bg-white border border-[#E2E8F0] rounded-xl p-4 flex items-start justify-between gap-4"
+                    className="bg-card border border-[#E2E8F0] rounded-xl p-4 flex items-start justify-between gap-4"
                   >
                     <div className="flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -294,8 +294,8 @@ export default function ImpactMapPage() {
                           className={cn(
                             "text-xs px-2 py-0.5 rounded-full font-medium",
                             priority === "high"
-                              ? "bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA]"
-                              : "bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]"
+                              ? "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30"
+                              : "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30"
                           )}
                         >
                           {priority === "high" ? "High Priority" : "Medium Priority"}
@@ -313,7 +313,7 @@ export default function ImpactMapPage() {
                       className={cn(
                         "shrink-0 flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium transition-colors",
                         taskCreated[sopId]
-                          ? "bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]"
+                          ? "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30"
                           : "bg-[#0B6BCB]/10 text-[#0B6BCB] hover:bg-[#0B6BCB]/20 border border-[#0B6BCB]/30"
                       )}
                     >
@@ -337,7 +337,7 @@ export default function ImpactMapPage() {
         {/* Full Impact Scan */}
         <section>
           <h2 className="text-lg font-medium text-[#1A2332] mb-3">Full Impact Scan</h2>
-          <div className="bg-white border border-[#E2E8F0] rounded-xl p-5 space-y-4">
+          <div className="bg-card border border-[#E2E8F0] rounded-xl p-5 space-y-4">
             {scanState === "idle" && (
               <div className="flex items-center justify-between">
                 <p className="text-sm text-[#64748B]">
@@ -375,19 +375,19 @@ export default function ImpactMapPage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="space-y-3"
               >
-                <div className="flex items-center gap-2 text-sm text-[#15803D]">
+                <div className="flex items-center gap-2 text-sm text-[#15803D] dark:text-green-400">
                   <CheckCircle className="w-4 h-4" /> Scan complete
                 </div>
                 <div className="grid sm:grid-cols-2 gap-3">
-                  <div className="rounded-xl bg-[#FEF3C7] border border-[#FDE68A] p-3">
-                    <p className="text-[#B45309] text-sm font-medium">
+                  <div className="rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 p-3">
+                    <p className="text-[#B45309] dark:text-amber-400 text-sm font-medium">
                       3 SOPs require cross-reference review
                     </p>
                     <p className="text-xs text-[#64748B] mt-1">
                       IC-PPE-001, IC-CL-005, ICU-SEP-002 have mutual dependencies
                     </p>
                   </div>
-                  <div className="rounded-xl bg-[#F1F5F9] border border-[#E2E8F0] p-3">
+                  <div className="rounded-xl bg-muted border border-[#E2E8F0] p-3">
                     <p className="text-[#334155] text-sm font-medium">
                       2 shared clinical topics may be affected
                     </p>

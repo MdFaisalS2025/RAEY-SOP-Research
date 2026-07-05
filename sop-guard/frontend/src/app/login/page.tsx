@@ -11,12 +11,12 @@ import { cn } from "@/lib/utils"
 import type { UserRole } from "@/lib/governance-types"
 
 const ROLE_COLORS: Record<UserRole, { bg: string; text: string; border: string }> = {
-  system_admin:       { bg: "bg-[#F1F5F9]",   text: "text-[#475569]", border: "border-[#CBD5E1]" },
-  compliance_officer: { bg: "bg-[#FEF3C7]",   text: "text-[#B45309]", border: "border-[#FDE68A]" },
-  legal_risk:         { bg: "bg-[#FEE2E2]",   text: "text-[#B91C1C]", border: "border-[#FECACA]" },
-  committee_member:   { bg: "bg-[#DCFCE7]",   text: "text-[#15803D]", border: "border-[#BBF7D0]" },
-  department_admin:   { bg: "bg-[#F1F5F9]",   text: "text-[#475569]", border: "border-[#CBD5E1]" },
-  nurse_educator:     { bg: "bg-[#F1F5F9]",   text: "text-[#475569]", border: "border-[#CBD5E1]" },
+  system_admin:       { bg: "bg-muted",   text: "text-[#475569]", border: "border-[#CBD5E1]" },
+  compliance_officer: { bg: "bg-[#FEF3C7] dark:bg-amber-500/10",   text: "text-[#B45309] dark:text-amber-400", border: "border-[#FDE68A] dark:border-amber-500/30" },
+  legal_risk:         { bg: "bg-[#FEE2E2] dark:bg-red-500/10",   text: "text-[#B91C1C] dark:text-red-400", border: "border-[#FECACA] dark:border-red-500/30" },
+  committee_member:   { bg: "bg-[#DCFCE7] dark:bg-green-500/10",   text: "text-[#15803D] dark:text-green-400", border: "border-[#BBF7D0] dark:border-green-500/30" },
+  department_admin:   { bg: "bg-muted",   text: "text-[#475569]", border: "border-[#CBD5E1]" },
+  nurse_educator:     { bg: "bg-muted",   text: "text-[#475569]", border: "border-[#CBD5E1]" },
   physician:          { bg: "bg-[#0B6BCB]/10", text: "text-[#0B6BCB]", border: "border-[#0B6BCB]/30" },
   nurse:              { bg: "bg-[#0D9488]/10", text: "text-[#0D9488]", border: "border-[#0D9488]/30" },
 }
@@ -95,10 +95,10 @@ function LoginPageInner() {
   }
 
   return (
-    <div className="min-h-screen flex bg-[#F7F9FB]">
+    <div className="min-h-screen flex bg-background">
       {/* Left panel */}
       <div
-        className="hidden lg:flex flex-col w-[42%] min-h-screen bg-[#F1F5F9] border-r border-[#E2E8F0] relative overflow-hidden"
+        className="hidden lg:flex flex-col w-[42%] min-h-screen bg-muted border-r border-[#E2E8F0] relative overflow-hidden"
         style={{
           backgroundImage:
             "linear-gradient(rgba(11,107,203,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(11,107,203,0.04) 1px, transparent 1px)",
@@ -176,8 +176,8 @@ function LoginPageInner() {
           </div>
 
           {/* Disclaimer */}
-          <div className="mt-8 rounded-lg border border-[#FDE68A] bg-[#FEF3C7] px-4 py-3">
-            <p className="text-[11px] text-[#B45309] leading-relaxed font-medium">
+          <div className="mt-8 rounded-lg border border-[#FDE68A] dark:border-amber-500/30 bg-[#FEF3C7] dark:bg-amber-500/10 px-4 py-3">
+            <p className="text-[11px] text-[#B45309] dark:text-amber-400 leading-relaxed font-medium">
               Research Prototype - Not for Clinical Use. All data shown is simulated for demonstration
               purposes only.
             </p>
@@ -202,7 +202,7 @@ function LoginPageInner() {
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="flex items-center gap-2.5 mb-5 px-4 py-3 rounded-xl bg-[#DCFCE7] border border-[#BBF7D0] text-[#15803D] text-sm font-medium"
+              className="flex items-center gap-2.5 mb-5 px-4 py-3 rounded-xl bg-[#DCFCE7] dark:bg-green-500/10 border border-[#BBF7D0] dark:border-green-500/30 text-[#15803D] dark:text-green-400 text-sm font-medium"
             >
               <CheckCircle2 className="w-4 h-4 shrink-0" />
               You have been signed out.
@@ -229,7 +229,7 @@ function LoginPageInner() {
                 placeholder="staff_id"
                 autoComplete="username"
                 required
-                className="bg-white border border-[#CBD5E1] rounded-lg px-4 py-3 text-[#1A2332] placeholder:text-[#94A3B8] caret-[#0B6BCB] focus:border-[#0B6BCB] focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/50 text-sm transition-colors"
+                className="bg-card border border-[#CBD5E1] rounded-lg px-4 py-3 text-[#1A2332] placeholder:text-[#94A3B8] caret-[#0B6BCB] focus:border-[#0B6BCB] focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/50 text-sm transition-colors"
               />
             </div>
             <div className="flex flex-col gap-1.5">
@@ -244,7 +244,7 @@ function LoginPageInner() {
                 placeholder="••••••••"
                 autoComplete="current-password"
                 required
-                className="bg-white border border-[#CBD5E1] rounded-lg px-4 py-3 text-[#1A2332] placeholder:text-[#94A3B8] caret-[#0B6BCB] focus:border-[#0B6BCB] focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/50 text-sm transition-colors"
+                className="bg-card border border-[#CBD5E1] rounded-lg px-4 py-3 text-[#1A2332] placeholder:text-[#94A3B8] caret-[#0B6BCB] focus:border-[#0B6BCB] focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/50 text-sm transition-colors"
               />
             </div>
 
@@ -252,7 +252,7 @@ function LoginPageInner() {
               <motion.p
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="text-[#B91C1C] text-sm px-1"
+                className="text-[#B91C1C] dark:text-red-400 text-sm px-1"
               >
                 {error}
               </motion.p>
@@ -288,7 +288,7 @@ function LoginPageInner() {
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.06, duration: 0.3 }}
-                  className="flex flex-col gap-2 p-3 rounded-xl bg-white border border-[#E2E8F0] shadow-sm hover:border-[#0B6BCB]/30 hover:shadow-md transition-all duration-200 group"
+                  className="flex flex-col gap-2 p-3 rounded-xl bg-card border border-[#E2E8F0] shadow-sm hover:border-[#0B6BCB]/30 hover:shadow-md transition-all duration-200 group"
                 >
                   <div className="flex items-start gap-2.5">
                     {/* Initials avatar */}
@@ -342,7 +342,7 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#F7F9FB] flex items-center justify-center">
+        <div className="min-h-screen bg-background flex items-center justify-center">
           <div className="w-8 h-8 rounded-full border-2 border-[#0B6BCB]/20 border-t-[#0B6BCB] animate-spin" />
         </div>
       }

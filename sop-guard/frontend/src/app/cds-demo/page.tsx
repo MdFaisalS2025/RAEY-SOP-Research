@@ -53,8 +53,8 @@ function mockCards(medication: string, dose: string): CDSCard[] {
 
 const indicatorConfig: Record<Indicator, { strip: string; chip: string; icon: typeof Info; label: string }> = {
   info: { strip: "bg-[#0B6BCB]", chip: "bg-[#0B6BCB]/10 text-[#0B6BCB] border-[#0B6BCB]/30", icon: Info, label: "Info" },
-  warning: { strip: "bg-[#F59E0B]", chip: "bg-[#FEF3C7] text-[#B45309] border-[#FDE68A]", icon: AlertTriangle, label: "Warning" },
-  critical: { strip: "bg-[#DC2626]", chip: "bg-[#FEE2E2] text-[#B91C1C] border-[#FECACA]", icon: ShieldAlert, label: "Critical" },
+  warning: { strip: "bg-[#F59E0B]", chip: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30", icon: AlertTriangle, label: "Warning" },
+  critical: { strip: "bg-[#DC2626]", chip: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30", icon: ShieldAlert, label: "Critical" },
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -123,19 +123,19 @@ export default function CDSDemoPage() {
         </div>
 
         {/* Disclaimer */}
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEF3C7] border border-[#FDE68A] text-[#B45309] text-sm">
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 text-sm">
           <AlertTriangle className="w-4 h-4 shrink-0" />
           <span>Demonstration against a simulated EMR. Production use requires hospital EHR integration.</span>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-6">
           {/* Left: simulated EMR */}
-          <div className="rounded-xl border border-[#CBD5E1] bg-white shadow-sm overflow-hidden">
+          <div className="rounded-xl border border-[#CBD5E1] bg-card shadow-sm overflow-hidden">
             <div className="bg-[#475569] px-4 py-2.5">
               <p className="text-sm font-semibold text-white">Simulated EMR - Order Entry</p>
             </div>
             <div className="p-5 space-y-4">
-              <p className="text-xs text-[#64748B] border border-[#E2E8F0] bg-[#F7F9FB] rounded px-3 py-2">
+              <p className="text-xs text-[#64748B] border border-[#E2E8F0] bg-background rounded px-3 py-2">
                 Patient: Bed 12, sepsis, NEWS2 7
               </p>
               <div className="space-y-1.5">
@@ -144,7 +144,7 @@ export default function CDSDemoPage() {
                   id="cds-med"
                   value={medication}
                   onChange={e => setMedication(e.target.value)}
-                  className="w-full rounded-lg border border-[#CBD5E1] bg-white px-3 py-2 text-sm text-[#1A2332] focus:outline-none focus:border-[#0B6BCB]"
+                  className="w-full rounded-lg border border-[#CBD5E1] bg-card px-3 py-2 text-sm text-[#1A2332] focus:outline-none focus:border-[#0B6BCB]"
                 >
                   {MEDICATIONS.map(m => (
                     <option key={m} value={m}>{m}</option>
@@ -159,7 +159,7 @@ export default function CDSDemoPage() {
                   value={dose}
                   onChange={e => setDose(e.target.value)}
                   placeholder="e.g. 0.1 mcg/kg/min"
-                  className="w-full rounded-lg border border-[#CBD5E1] bg-white px-3 py-2 text-sm text-[#1A2332] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#0B6BCB]"
+                  className="w-full rounded-lg border border-[#CBD5E1] bg-card px-3 py-2 text-sm text-[#1A2332] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#0B6BCB]"
                 />
               </div>
               <button
@@ -177,12 +177,12 @@ export default function CDSDemoPage() {
           <div className="space-y-3">
             <h2 className="text-sm font-semibold text-[#1A2332]">EMR Sidebar - Guidance Cards</h2>
             {!cards && !loading && (
-              <div className="rounded-xl border border-dashed border-[#CBD5E1] bg-[#F1F5F9] p-8 text-center text-sm text-[#64748B]">
+              <div className="rounded-xl border border-dashed border-[#CBD5E1] bg-muted p-8 text-center text-sm text-[#64748B]">
                 Sign an order to see protocol guidance.
               </div>
             )}
             {loading && (
-              <div className="rounded-xl border border-[#E2E8F0] bg-white p-8 text-center text-sm text-[#64748B] flex items-center justify-center gap-2">
+              <div className="rounded-xl border border-[#E2E8F0] bg-card p-8 text-center text-sm text-[#64748B] flex items-center justify-center gap-2">
                 <Loader2 className="w-4 h-4 animate-spin" /> Checking protocols
               </div>
             )}
@@ -190,7 +190,7 @@ export default function CDSDemoPage() {
               const cfg = indicatorConfig[card.indicator]
               const Icon = cfg.icon
               return (
-                <div key={i} className="rounded-xl border border-[#E2E8F0] bg-white shadow-sm overflow-hidden flex">
+                <div key={i} className="rounded-xl border border-[#E2E8F0] bg-card shadow-sm overflow-hidden flex">
                   <div className={cn("w-1.5 shrink-0", cfg.strip)} />
                   <div className="p-4 space-y-2 flex-1">
                     <div className="flex items-center gap-2">
@@ -217,7 +217,7 @@ export default function CDSDemoPage() {
         </div>
 
         {/* How this works */}
-        <section className="rounded-2xl bg-white border border-[#E2E8F0] shadow-sm">
+        <section className="rounded-2xl bg-card border border-[#E2E8F0] shadow-sm">
           <button
             onClick={() => setHowOpen(!howOpen)}
             className="w-full flex items-center justify-between px-5 py-4 text-sm font-semibold text-[#1A2332]"
@@ -244,14 +244,14 @@ export default function CDSDemoPage() {
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <p className="text-xs font-semibold text-[#64748B] mb-1.5">Request</p>
-                  <pre className="rounded-lg bg-[#F1F5F9] border border-[#E2E8F0] p-3 text-xs text-[#1A2332] font-mono overflow-x-auto">
+                  <pre className="rounded-lg bg-muted border border-[#E2E8F0] p-3 text-xs text-[#1A2332] font-mono overflow-x-auto">
 {`POST /cds-services/sop-guard-protocol-check
 ${JSON.stringify(requestBody, null, 2)}`}
                   </pre>
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-[#64748B] mb-1.5">Response</p>
-                  <pre className="rounded-lg bg-[#F1F5F9] border border-[#E2E8F0] p-3 text-xs text-[#1A2332] font-mono overflow-x-auto">
+                  <pre className="rounded-lg bg-muted border border-[#E2E8F0] p-3 text-xs text-[#1A2332] font-mono overflow-x-auto">
 {lastResponse ?? "Sign an order to populate the response."}
                   </pre>
                 </div>

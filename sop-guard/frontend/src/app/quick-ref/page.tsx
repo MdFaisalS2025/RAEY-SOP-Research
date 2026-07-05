@@ -116,7 +116,7 @@ const QUICK_REF_MAP: Record<string, QuickRefContent> = {
 
 function QRPlaceholder({ sopId }: { sopId: string }) {
   return (
-    <div className="w-14 h-14 rounded-lg bg-[#F1F5F9] border border-[#E2E8F0] flex flex-col items-center justify-center shrink-0">
+    <div className="w-14 h-14 rounded-lg bg-muted border border-[#E2E8F0] flex flex-col items-center justify-center shrink-0">
       <div className="grid grid-cols-3 gap-0.5">
         {Array.from({ length: 9 }).map((_, i) => (
           <div key={i} className={cn("w-2.5 h-2.5 rounded-[1px]", Math.random() > 0.4 ? "bg-[#94A3B8]" : "bg-transparent")} />
@@ -135,9 +135,9 @@ function QuickRefCard({ sop, index }: { sop: EnhancedSOP; index: number }) {
 
   const riskColor =
     sop.risk_classification === "critical"
-      ? "border-[#FECACA]"
+      ? "border-[#FECACA] dark:border-red-500/30"
       : sop.risk_classification === "high"
-      ? "border-[#FDE68A]"
+      ? "border-[#FDE68A] dark:border-amber-500/30"
       : "border-[#E2E8F0]"
 
   return (
@@ -146,7 +146,7 @@ function QuickRefCard({ sop, index }: { sop: EnhancedSOP; index: number }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
       className={cn(
-"rounded-2xl bg-white border shadow-sm p-5 flex flex-col gap-3 print:break-inside-avoid print:shadow-none",
+"rounded-2xl bg-card border shadow-sm p-5 flex flex-col gap-3 print:break-inside-avoid print:shadow-none",
         riskColor
       )}
     >
@@ -172,9 +172,9 @@ function QuickRefCard({ sop, index }: { sop: EnhancedSOP; index: number }) {
 
       {/* Emergency threshold */}
       {content.emergencyThreshold && (
-        <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-[#FEE2E2] border border-[#FECACA]">
-          <AlertTriangle className="w-3.5 h-3.5 text-[#B91C1C] shrink-0 mt-0.5" />
-          <p className="text-xs text-[#B91C1C] font-medium">{content.emergencyThreshold}</p>
+        <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30">
+          <AlertTriangle className="w-3.5 h-3.5 text-[#B91C1C] dark:text-red-400 shrink-0 mt-0.5" />
+          <p className="text-xs text-[#B91C1C] dark:text-red-400 font-medium">{content.emergencyThreshold}</p>
         </div>
       )}
 
@@ -246,7 +246,7 @@ Print bedside cards - verify against the full SOP first
           </div>
           <button
             onClick={() => window.print()}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#F1F5F9] hover:bg-[#E2E8F0] text-sm font-medium transition-colors shrink-0"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-muted hover:bg-[#E2E8F0] text-sm font-medium transition-colors shrink-0"
           >
             <Printer className="w-4 h-4" />
             Print All
@@ -254,7 +254,7 @@ Print bedside cards - verify against the full SOP first
         </div>
 
         {/* Research Prototype disclaimer */}
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEE2E2] border border-[#FECACA] text-[#B91C1C] text-sm print:hidden">
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400 text-sm print:hidden">
           <AlertTriangle className="w-4 h-4 shrink-0" />
           <span>
             <strong>Research Prototype - Not for Clinical Use.</strong> Follow your institution&apos;s approved SOPs.
@@ -269,7 +269,7 @@ Print bedside cards - verify against the full SOP first
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search cards by keyword, SOP ID, department..."
-              className="w-full rounded-xl bg-[#F1F5F9] border border-[#E2E8F0] pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/40 placeholder:text-[#64748B]"
+              className="w-full rounded-xl bg-muted border border-[#E2E8F0] pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/40 placeholder:text-[#64748B]"
             />
           </div>
           <div className="relative">
@@ -277,7 +277,7 @@ Print bedside cards - verify against the full SOP first
             <select
               value={dept}
               onChange={(e) => setDept(e.target.value)}
-              className="rounded-xl bg-[#F1F5F9] border border-[#E2E8F0] pl-9 pr-8 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/40 appearance-none"
+              className="rounded-xl bg-muted border border-[#E2E8F0] pl-9 pr-8 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/40 appearance-none"
             >
               {DEPARTMENTS.map((d) => (
                 <option key={d} value={d}>{d}</option>
@@ -293,7 +293,7 @@ Print bedside cards - verify against the full SOP first
 
         {/* Cards grid */}
         {filtered.length === 0 ? (
-          <div className="rounded-2xl bg-white border border-[#E2E8F0] p-12 text-center text-[#64748B] text-sm">
+          <div className="rounded-2xl bg-card border border-[#E2E8F0] p-12 text-center text-[#64748B] text-sm">
             No cards match your search.
           </div>
         ) : (
@@ -305,7 +305,7 @@ Print bedside cards - verify against the full SOP first
         )}
 
         {/* Print style note */}
-        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-[#F1F5F9] border border-[#E2E8F0] text-xs text-[#64748B] print:hidden">
+        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-muted border border-[#E2E8F0] text-xs text-[#64748B] print:hidden">
           <Printer className="w-3.5 h-3.5 shrink-0" />
           <span>
             Print All exports index-card format. Production: QR codes link to the full SOP.

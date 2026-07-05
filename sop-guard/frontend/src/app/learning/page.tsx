@@ -28,8 +28,8 @@ interface LeaderboardEntry {
 
 const ACTIVITY_CONFIG: Record<CreditRecord["activity_type"], { label: string; icon: typeof BookOpen; className: string }> = {
   scenario_completed: { label: "Scenario Training", icon: BookOpen, className: "bg-[#0B6BCB]/10 text-[#0B6BCB] border-[#0B6BCB]/30" },
-  sop_reviewed: { label: "SOP Reviewed", icon: ShieldCheck, className: "bg-[#DCFCE7] text-[#15803D] border-[#BBF7D0]" },
-  committee_participation: { label: "Committee Participation", icon: Users, className: "bg-[#FEF3C7] text-[#B45309] border-[#FDE68A]" },
+  sop_reviewed: { label: "SOP Reviewed", icon: ShieldCheck, className: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30" },
+  committee_participation: { label: "Committee Participation", icon: Users, className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30" },
 }
 
 const CURRENT_USER_ID = "demo-user"
@@ -82,7 +82,7 @@ export default function LearningPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEE2E2] border border-[#FECACA] text-[#B91C1C] text-sm">
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400 text-sm">
           <AlertTriangle className="w-4 h-4 shrink-0" />
           <span><strong>Research Prototype. Not for Clinical Use.</strong> Credit totals are illustrative, not accredited CE/CPD hours.</span>
         </div>
@@ -97,7 +97,7 @@ export default function LearningPage() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <motion.div
                 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-                className="rounded-2xl bg-white border border-[#E2E8F0] p-4 flex items-center gap-3"
+                className="rounded-2xl bg-card border border-[#E2E8F0] p-4 flex items-center gap-3"
               >
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-[#0B6BCB]/10">
                   <Award className="w-5 h-5 text-[#0B6BCB]" />
@@ -109,33 +109,33 @@ export default function LearningPage() {
               </motion.div>
               <motion.div
                 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06 }}
-                className="rounded-2xl bg-white border border-[#E2E8F0] p-4 flex items-center gap-3"
+                className="rounded-2xl bg-card border border-[#E2E8F0] p-4 flex items-center gap-3"
               >
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-[#DCFCE7]">
-                  <BookOpen className="w-5 h-5 text-[#15803D]" />
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-[#DCFCE7] dark:bg-green-500/10">
+                  <BookOpen className="w-5 h-5 text-[#15803D] dark:text-green-400" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-[#15803D]">{countByType("scenario_completed")}</p>
+                  <p className="text-2xl font-bold text-[#15803D] dark:text-green-400">{countByType("scenario_completed")}</p>
                   <p className="text-xs text-[#64748B]">Scenarios Completed</p>
                 </div>
               </motion.div>
               <motion.div
                 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}
-                className="rounded-2xl bg-white border border-[#E2E8F0] p-4 flex items-center gap-3"
+                className="rounded-2xl bg-card border border-[#E2E8F0] p-4 flex items-center gap-3"
               >
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-[#FEF3C7]">
-                  <ShieldCheck className="w-5 h-5 text-[#B45309]" />
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-[#FEF3C7] dark:bg-amber-500/10">
+                  <ShieldCheck className="w-5 h-5 text-[#B45309] dark:text-amber-400" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-[#B45309]">{countByType("sop_reviewed")}</p>
+                  <p className="text-2xl font-bold text-[#B45309] dark:text-amber-400">{countByType("sop_reviewed")}</p>
                   <p className="text-xs text-[#64748B]">SOPs Reviewed</p>
                 </div>
               </motion.div>
               <motion.div
                 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }}
-                className="rounded-2xl bg-white border border-[#E2E8F0] p-4 flex items-center gap-3"
+                className="rounded-2xl bg-card border border-[#E2E8F0] p-4 flex items-center gap-3"
               >
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-[#F1F5F9]">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-muted">
                   <Users className="w-5 h-5 text-[#64748B]" />
                 </div>
                 <div>
@@ -150,7 +150,7 @@ export default function LearningPage() {
               <section className="space-y-3">
                 <h2 className="text-lg font-semibold font-display">Recent Activity</h2>
                 {records.length === 0 ? (
-                  <div className="rounded-2xl bg-white border border-[#E2E8F0] p-6 text-sm text-[#64748B] text-center">
+                  <div className="rounded-2xl bg-card border border-[#E2E8F0] p-6 text-sm text-[#64748B] text-center">
                     No credit-earning activity yet. Complete a scenario, review a SOP, or participate in a committee vote to start earning credits.
                   </div>
                 ) : (
@@ -161,7 +161,7 @@ export default function LearningPage() {
                       return (
                         <div
                           key={r.id}
-                          className="flex items-center gap-3 rounded-xl bg-white border border-[#E2E8F0] p-3"
+                          className="flex items-center gap-3 rounded-xl bg-card border border-[#E2E8F0] p-3"
                         >
                           <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center border shrink-0", config.className)}>
                             <Icon className="w-4 h-4" />
@@ -183,10 +183,10 @@ export default function LearningPage() {
               {/* Leaderboard */}
               <section className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <Trophy className="w-4 h-4 text-[#B45309]" />
+                  <Trophy className="w-4 h-4 text-[#B45309] dark:text-amber-400" />
                   <h2 className="text-lg font-semibold font-display">Leaderboard</h2>
                 </div>
-                <div className="rounded-2xl bg-white border border-[#E2E8F0] overflow-hidden">
+                <div className="rounded-2xl bg-card border border-[#E2E8F0] overflow-hidden">
                   {leaderboard.length === 0 ? (
                     <div className="p-6 text-sm text-[#64748B] text-center">No engagement data yet.</div>
                   ) : (
@@ -202,7 +202,7 @@ export default function LearningPage() {
                         >
                           <span className={cn(
                             "w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0",
-                            i === 0 ? "bg-[#FEF3C7] text-[#B45309]" : "bg-[#F1F5F9] text-[#64748B]"
+                            i === 0 ? "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400" : "bg-muted text-[#64748B]"
                           )}>
                             {i + 1}
                           </span>
@@ -224,7 +224,7 @@ export default function LearningPage() {
           </>
         )}
 
-        <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-[#F1F5F9] border border-[#E2E8F0] text-[#334155] text-sm">
+        <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-muted border border-[#E2E8F0] text-[#334155] text-sm">
           <GraduationCap className="w-4 h-4 shrink-0 mt-0.5" />
           <span>Connect to a hospital CE/CPD accreditation system for production credit issuance.</span>
         </div>

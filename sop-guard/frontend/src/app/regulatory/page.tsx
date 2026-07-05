@@ -83,16 +83,16 @@ const FRAMEWORK_TABS: Framework[] = ["All", "TJC", "CMS", "OSHA", "State"]
 const FRAMEWORK_COLORS: Record<string, string> = {
   TJC: "bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30",
   CMS: "bg-[#0D9488]/10 text-[#0D9488] border border-[#0D9488]/30",
-  OSHA: "bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]",
-  State: "bg-white text-[#475569] border border-[#CBD5E1]",
-  Other: "bg-white text-[#64748B] border border-[#CBD5E1]",
+  OSHA: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30",
+  State: "bg-card text-[#475569] border border-[#CBD5E1]",
+  Other: "bg-card text-[#64748B] border border-[#CBD5E1]",
 }
 
 const STATUS_META: Record<string, { label: string; cls: string; icon: typeof CheckCircle }> = {
-  compliant: { label: "Compliant", cls: "bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]", icon: CheckCircle },
-  needs_review: { label: "Needs Review", cls: "bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]", icon: Clock },
-  non_compliant: { label: "Non-Compliant", cls: "bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA]", icon: AlertTriangle },
-  not_assessed: { label: "Not Assessed", cls: "bg-white text-[#64748B] border border-[#CBD5E1]", icon: Clock },
+  compliant: { label: "Compliant", cls: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30", icon: CheckCircle },
+  needs_review: { label: "Needs Review", cls: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30", icon: Clock },
+  non_compliant: { label: "Non-Compliant", cls: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30", icon: AlertTriangle },
+  not_assessed: { label: "Not Assessed", cls: "bg-card text-[#64748B] border border-[#CBD5E1]", icon: Clock },
 }
 
 // Compute compliance rates per framework from mock data
@@ -157,7 +157,7 @@ export default function RegulatoryPage() {
             className={cn(
               "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all shrink-0",
               exportState === "success"
-                ? "bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]"
+                ? "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30"
                 : "bg-[#0B6BCB] hover:bg-[#0959AC] text-white"
             )}
           >
@@ -169,7 +169,7 @@ export default function RegulatoryPage() {
         </div>
 
         {/* Research Prototype disclaimer */}
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEE2E2] border border-[#FECACA] text-[#B91C1C] text-sm">
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400 text-sm">
           <AlertTriangle className="w-4 h-4 shrink-0" />
           <span><strong>Research Prototype - Not for Clinical Use.</strong> For demonstration only. Verify against official regulatory sources.</span>
         </div>
@@ -188,7 +188,7 @@ export default function RegulatoryPage() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.07 }}
-              className="rounded-2xl bg-white border border-[#E2E8F0] p-4"
+              className="rounded-2xl bg-card border border-[#E2E8F0] p-4"
             >
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
@@ -198,12 +198,12 @@ export default function RegulatoryPage() {
                   </span>
                 </div>
                 <span className={cn("text-2xl font-bold tabular-nums",
-                  rate >= 90 ? "text-[#15803D]" : rate >= 70 ? "text-[#B45309]" : "text-[#B91C1C]"
+                  rate >= 90 ? "text-[#15803D] dark:text-green-400" : rate >= 70 ? "text-[#B45309] dark:text-amber-400" : "text-[#B91C1C] dark:text-red-400"
                 )}>
                   {rate}%
                 </span>
               </div>
-              <div className="h-2 rounded-full bg-[#F1F5F9] overflow-hidden">
+              <div className="h-2 rounded-full bg-muted overflow-hidden">
                 <div
                   className={cn("h-full rounded-full transition-all",
                     rate >= 90 ? "bg-[#15803D]" : rate >= 70 ? "bg-[#B45309]" : "bg-[#B91C1C]"
@@ -218,7 +218,7 @@ export default function RegulatoryPage() {
 
         {/* Alert: standards needing review */}
         {needsReview.length > 0 && (
-          <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-[#FEF3C7] border border-[#FDE68A] text-[#B45309] text-sm">
+          <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 text-sm">
             <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
             <span>
               <strong>{needsReview.length} standard{needsReview.length > 1 ? "s" : ""} require review:</strong>{" "}
@@ -237,7 +237,7 @@ export default function RegulatoryPage() {
                 "px-4 py-1.5 rounded-xl text-sm font-medium transition-colors",
                 activeTab === tab
                   ? "bg-[#0B6BCB] text-white"
-                  : "bg-[#F1F5F9] text-muted-foreground hover:bg-[#F1F5F9] hover:text-foreground"
+                  : "bg-muted text-muted-foreground hover:bg-muted hover:text-foreground"
               )}
             >
               {tab}
@@ -248,7 +248,7 @@ export default function RegulatoryPage() {
         {/* Standards list */}
         <div className="space-y-4">
           {filtered.length === 0 && (
-            <div className="rounded-2xl bg-white border border-[#E2E8F0] p-8 text-center text-muted-foreground text-sm">
+            <div className="rounded-2xl bg-card border border-[#E2E8F0] p-8 text-center text-muted-foreground text-sm">
               No standards found for this framework.
             </div>
           )}
@@ -262,8 +262,8 @@ export default function RegulatoryPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
                 className={cn(
-                  "rounded-2xl bg-white border border-[#E2E8F0] p-5",
-                  std.compliance_status === "needs_review" && "border-[#FDE68A]"
+                  "rounded-2xl bg-card border border-[#E2E8F0] p-5",
+                  std.compliance_status === "needs_review" && "border-[#FDE68A] dark:border-amber-500/30"
                 )}
               >
                 <div className="flex flex-col md:flex-row md:items-start gap-4">
@@ -273,7 +273,7 @@ export default function RegulatoryPage() {
                       <span className={cn("text-xs px-2 py-0.5 rounded-full font-semibold", FRAMEWORK_COLORS[std.framework])}>
                         {std.framework}
                       </span>
-                      <code className="text-xs font-mono text-[#334155] bg-[#F1F5F9] px-2 py-0.5 rounded">
+                      <code className="text-xs font-mono text-[#334155] bg-muted px-2 py-0.5 rounded">
                         {std.standard_code}
                       </code>
                       <span className={cn("flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full font-semibold", stMeta.cls)}>
@@ -292,7 +292,7 @@ export default function RegulatoryPage() {
                           <span
                             key={sopId}
                             title={sopTitle(sopId)}
-                            className="text-xs px-2.5 py-1 rounded-lg bg-[#F1F5F9] border border-[#E2E8F0] text-foreground/80 hover:bg-[#F1F5F9] transition-colors cursor-default"
+                            className="text-xs px-2.5 py-1 rounded-lg bg-muted border border-[#E2E8F0] text-foreground/80 hover:bg-muted transition-colors cursor-default"
                           >
                             {sopId}
                           </span>
@@ -310,7 +310,7 @@ export default function RegulatoryPage() {
                     <div>
                       <p className="text-muted-foreground">Next survey due</p>
                       <p className={cn("font-medium",
-                        std.compliance_status === "needs_review" ? "text-[#B45309]" : "text-foreground"
+                        std.compliance_status === "needs_review" ? "text-[#B45309] dark:text-amber-400" : "text-foreground"
                       )}>
                         {std.next_survey_due}
                       </p>
@@ -323,7 +323,7 @@ export default function RegulatoryPage() {
         </div>
 
         {/* Frameworks legend */}
-        <div className="rounded-2xl bg-white border border-[#E2E8F0] p-4">
+        <div className="rounded-2xl bg-card border border-[#E2E8F0] p-4">
           <h3 className="text-sm font-medium mb-3">Regulatory Frameworks</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
             {[

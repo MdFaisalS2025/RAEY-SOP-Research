@@ -184,19 +184,19 @@ function statusBadge(status: TestStatus) {
   switch (status) {
     case "pass":
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#DCFCE7] border border-[#BBF7D0] text-[#15803D] text-xs font-semibold">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#DCFCE7] dark:bg-green-500/10 border border-[#BBF7D0] dark:border-green-500/30 text-[#15803D] dark:text-green-400 text-xs font-semibold">
           <CheckCircle2 className="w-3.5 h-3.5" /> Pass
         </span>
       )
     case "partial":
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FEF3C7] border border-[#FDE68A] text-[#B45309] text-xs font-semibold">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 text-xs font-semibold">
           <AlertCircle className="w-3.5 h-3.5" /> Partial
         </span>
       )
     case "fail":
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FEE2E2] border border-[#FECACA] text-[#B91C1C] text-xs font-semibold">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400 text-xs font-semibold">
           <XCircle className="w-3.5 h-3.5" /> Fail
         </span>
       )
@@ -205,10 +205,10 @@ function statusBadge(status: TestStatus) {
 
 function severityBadge(severity: Severity) {
   const map: Record<Severity, string> = {
-    critical: "bg-[#FEE2E2] border-[#FECACA] text-[#B91C1C]",
-    high: "bg-[#FEE2E2] border-[#FECACA] text-[#B91C1C]",
-    medium: "bg-[#FEF3C7] border-[#FDE68A] text-[#B45309]",
-    low: "bg-[#F1F5F9] border-[#CBD5E1] text-[#64748B]",
+    critical: "bg-[#FEE2E2] dark:bg-red-500/10 border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400",
+    high: "bg-[#FEE2E2] dark:bg-red-500/10 border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400",
+    medium: "bg-[#FEF3C7] dark:bg-amber-500/10 border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400",
+    low: "bg-muted border-[#CBD5E1] text-[#64748B]",
   }
   return (
     <span className={cn("inline-flex items-center px-2 py-0.5 rounded-md border text-xs font-medium", map[severity])}>
@@ -219,9 +219,9 @@ function severityBadge(severity: Severity) {
 
 function statusBg(status: TestStatus) {
   switch (status) {
-    case "pass": return "bg-[#DCFCE7] border-[#BBF7D0]"
-    case "partial": return "bg-[#FEF3C7] border-[#FDE68A]"
-    case "fail": return "bg-[#FEE2E2] border-[#FECACA]"
+    case "pass": return "bg-[#DCFCE7] dark:bg-green-500/10 border-[#BBF7D0] dark:border-green-500/30"
+    case "partial": return "bg-[#FEF3C7] dark:bg-amber-500/10 border-[#FDE68A] dark:border-amber-500/30"
+    case "fail": return "bg-[#FEE2E2] dark:bg-red-500/10 border-[#FECACA] dark:border-red-500/30"
   }
 }
 
@@ -254,7 +254,7 @@ function TestCard({ test }: { test: AdversarialTest }) {
       {/* Query */}
       <div>
         <p className="text-xs text-[#94A3B8] uppercase tracking-wide font-medium mb-1">Query</p>
-        <div className="px-4 py-3 rounded-xl bg-[#F1F5F9] border border-[#E2E8F0] font-mono text-sm text-[#1A2332] leading-relaxed">
+        <div className="px-4 py-3 rounded-xl bg-muted border border-[#E2E8F0] font-mono text-sm text-[#1A2332] leading-relaxed">
           {test.query}
         </div>
       </div>
@@ -268,11 +268,11 @@ function TestCard({ test }: { test: AdversarialTest }) {
       {/* Actual response */}
       <div className={cn("px-4 py-3 rounded-xl border", statusBg(test.status))}>
         <p className="text-xs font-semibold uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
-          {test.status === "pass" && <CheckCircle2 className="w-3.5 h-3.5 text-[#15803D]" />}
-          {test.status === "partial" && <AlertCircle className="w-3.5 h-3.5 text-[#B45309]" />}
-          {test.status === "fail" && <XCircle className="w-3.5 h-3.5 text-[#B91C1C]" />}
+          {test.status === "pass" && <CheckCircle2 className="w-3.5 h-3.5 text-[#15803D] dark:text-green-400" />}
+          {test.status === "partial" && <AlertCircle className="w-3.5 h-3.5 text-[#B45309] dark:text-amber-400" />}
+          {test.status === "fail" && <XCircle className="w-3.5 h-3.5 text-[#B91C1C] dark:text-red-400" />}
           <span className={cn(
-            test.status === "pass" ? "text-[#15803D]" : test.status === "partial" ? "text-[#B45309]" : "text-[#B91C1C]"
+            test.status === "pass" ? "text-[#15803D] dark:text-green-400" : test.status === "partial" ? "text-[#B45309] dark:text-amber-400" : "text-[#B91C1C] dark:text-red-400"
           )}>Actual Response Summary</span>
         </p>
         <p className="text-sm text-[#334155]">{test.actual_response_summary}</p>
@@ -296,7 +296,7 @@ function TestCard({ test }: { test: AdversarialTest }) {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="px-4 py-3 rounded-xl bg-white border border-[#E2E8F0] text-xs text-[#94A3B8] italic"
+            className="px-4 py-3 rounded-xl bg-card border border-[#E2E8F0] text-xs text-[#94A3B8] italic"
           >
             Full response expansion requires backend integration (v2 feature). Expected response would include source chunk citations, query type classification, and confidence scores.
           </motion.div>
@@ -337,8 +337,8 @@ export default function AdversarialPage() {
         {/* ── Header ── */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
           <div className="flex flex-wrap items-start gap-3 mb-3">
-            <div className="w-11 h-11 rounded-2xl bg-[#FEE2E2] border border-[#FECACA] flex items-center justify-center shrink-0">
-              <ShieldAlert className="w-5 h-5 text-[#B91C1C]" />
+            <div className="w-11 h-11 rounded-2xl bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 flex items-center justify-center shrink-0">
+              <ShieldAlert className="w-5 h-5 text-[#B91C1C] dark:text-red-400" />
             </div>
             <div className="flex-1 min-w-0">
               <h1 className="text-2xl font-bold font-display text-[#1A2332]">Adversarial Query Testing</h1>
@@ -357,19 +357,19 @@ export default function AdversarialPage() {
 
           {/* Badges */}
           <div className="flex flex-wrap gap-2 mt-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FEF3C7] border border-[#FDE68A] text-[#B45309] text-xs font-medium">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 text-xs font-medium">
               <span className="w-1.5 h-1.5 rounded-full bg-[#B45309]" />
               Research Prototype
             </span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FEE2E2] border border-[#FECACA] text-[#B91C1C] text-xs font-medium">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400 text-xs font-medium">
               <AlertTriangle className="w-3 h-3" />
               Research Prototype - Not for Clinical Use
             </span>
           </div>
 
           {/* Disclaimer */}
-          <div className="mt-4 flex items-start gap-2 px-4 py-3 rounded-xl bg-[#FEF3C7] border border-[#FDE68A] text-[#B45309] text-xs">
-            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-[#B45309]" />
+          <div className="mt-4 flex items-start gap-2 px-4 py-3 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 text-xs">
+            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-[#B45309] dark:text-amber-400" />
             <span>These are designed failure-mode tests, not clinical queries.</span>
           </div>
         </motion.div>
@@ -383,11 +383,11 @@ export default function AdversarialPage() {
         >
           {[
             { label: "Total Tests", value: total, color: "text-[#1A2332]" },
-            { label: "Passing", value: passCount, color: "text-[#15803D]" },
-            { label: "Partial", value: partialCount, color: "text-[#B45309]" },
-            { label: "Failing", value: failCount, color: "text-[#B91C1C]" },
+            { label: "Passing", value: passCount, color: "text-[#15803D] dark:text-green-400" },
+            { label: "Partial", value: partialCount, color: "text-[#B45309] dark:text-amber-400" },
+            { label: "Failing", value: failCount, color: "text-[#B91C1C] dark:text-red-400" },
           ].map((s) => (
-            <div key={s.label} className="p-4 rounded-2xl bg-white border border-[#0B6BCB]/10 text-center">
+            <div key={s.label} className="p-4 rounded-2xl bg-card border border-[#0B6BCB]/10 text-center">
               <p className={cn("text-3xl font-bold", s.color)}>{s.value}</p>
               <p className="text-xs text-[#94A3B8] mt-1">{s.label}</p>
             </div>
@@ -409,7 +409,7 @@ export default function AdversarialPage() {
                 "px-3 py-1.5 rounded-xl text-xs font-medium transition-colors border",
                 activeCategory === cat
                   ? "bg-[#0B6BCB]/10 border-[#0B6BCB]/30 text-[#0B6BCB]"
-                  : "bg-white border-[#E2E8F0] text-[#64748B] hover:text-[#1A2332] hover:border-[#CBD5E1]"
+                  : "bg-card border-[#E2E8F0] text-[#64748B] hover:text-[#1A2332] hover:border-[#CBD5E1]"
               )}
             >
               {CATEGORY_LABELS[cat] ?? cat}
@@ -436,7 +436,7 @@ export default function AdversarialPage() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="rounded-2xl bg-white border border-[#0B6BCB]/10 p-6 space-y-5"
+          className="rounded-2xl bg-card border border-[#0B6BCB]/10 p-6 space-y-5"
         >
           <h2 className="text-base font-semibold font-display text-[#1A2332] flex items-center gap-2">
             <FlaskConical className="w-4 h-4 text-[#0B6BCB]" />
@@ -449,7 +449,7 @@ export default function AdversarialPage() {
               <span>Pass rate: {Math.round((passCount / total) * 100)}%</span>
               <span>{passCount} pass · {partialCount} partial · {failCount} fail</span>
             </div>
-            <div className="h-3 rounded-full bg-[#F1F5F9] flex overflow-hidden">
+            <div className="h-3 rounded-full bg-muted flex overflow-hidden">
               <div className="bg-[#15803D] transition-all" style={{ width: `${(passCount / total) * 100}%` }} />
               <div className="bg-[#B45309] transition-all" style={{ width: `${(partialCount / total) * 100}%` }} />
               <div className="bg-[#B91C1C] transition-all" style={{ width: `${(failCount / total) * 100}%` }} />
@@ -466,26 +466,26 @@ export default function AdversarialPage() {
             <p className="text-xs font-semibold text-[#334155] uppercase tracking-wide">Key Findings</p>
 
             <div className="space-y-2">
-              <div className="flex items-start gap-3 p-3 rounded-xl bg-[#DCFCE7] border border-[#BBF7D0]">
-                <CheckCircle2 className="w-4 h-4 text-[#15803D] shrink-0 mt-0.5" />
+              <div className="flex items-start gap-3 p-3 rounded-xl bg-[#DCFCE7] dark:bg-green-500/10 border border-[#BBF7D0] dark:border-green-500/30">
+                <CheckCircle2 className="w-4 h-4 text-[#15803D] dark:text-green-400 shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-xs font-semibold text-[#15803D] mb-0.5">Strong</p>
+                  <p className="text-xs font-semibold text-[#15803D] dark:text-green-400 mb-0.5">Strong</p>
                   <p className="text-xs text-[#64748B]">Out-of-scope refusal, procedure sequence retrieval, prompt injection resistance, NEWS2 escalation routing</p>
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 p-3 rounded-xl bg-[#FEF3C7] border border-[#FDE68A]">
-                <AlertCircle className="w-4 h-4 text-[#B45309] shrink-0 mt-0.5" />
+              <div className="flex items-start gap-3 p-3 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30">
+                <AlertCircle className="w-4 h-4 text-[#B45309] dark:text-amber-400 shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-xs font-semibold text-[#B45309] mb-0.5">Partial / Needs Work</p>
+                  <p className="text-xs font-semibold text-[#B45309] dark:text-amber-400 mb-0.5">Partial / Needs Work</p>
                   <p className="text-xs text-[#64748B]">Outdated SOP detection (requires manual trigger), negation and co-reference resolution in contraindication queries</p>
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 p-3 rounded-xl bg-[#FEE2E2] border border-[#FECACA]">
-                <XCircle className="w-4 h-4 text-[#B91C1C] shrink-0 mt-0.5" />
+              <div className="flex items-start gap-3 p-3 rounded-xl bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30">
+                <XCircle className="w-4 h-4 text-[#B91C1C] dark:text-red-400 shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-xs font-semibold text-[#B91C1C] mb-0.5">Weak / Failure Mode</p>
+                  <p className="text-xs font-semibold text-[#B91C1C] dark:text-red-400 mb-0.5">Weak / Failure Mode</p>
                   <p className="text-xs text-[#64748B]">Numeric hallucination on values absent from retrieved chunks, medication queries for drugs not in the SOP set</p>
                 </div>
               </div>
@@ -510,9 +510,9 @@ export default function AdversarialPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.25 }}
-          className="flex items-start gap-3 px-4 py-3 rounded-xl bg-[#FEF3C7] border border-[#FDE68A] text-[#B45309] text-xs"
+          className="flex items-start gap-3 px-4 py-3 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 text-xs"
         >
-          <Info className="w-4 h-4 shrink-0 mt-0.5 text-[#B45309]" />
+          <Info className="w-4 h-4 shrink-0 mt-0.5 text-[#B45309] dark:text-amber-400" />
           <span>
             These test cases use synthetic SOP data. Designed to probe failure modes - not for clinical use.
             SOP-Guard v2.0 · Research Prototype Only.

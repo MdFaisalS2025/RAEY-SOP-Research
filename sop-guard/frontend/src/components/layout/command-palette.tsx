@@ -216,7 +216,7 @@ export function CommandPalette() {
       />
 
       {/* Panel */}
-      <div className="relative w-full max-w-xl bg-white dark:bg-[#0d1516] rounded-xl shadow-md border border-[#E2E8F0] dark:border-white/[0.08] overflow-hidden">
+      <div className="relative w-full max-w-xl bg-card dark:bg-[#0d1516] rounded-xl shadow-md border border-[#E2E8F0] dark:border-white/[0.08] overflow-hidden">
         {/* Search input */}
         <div className="flex items-center gap-2.5 px-4 py-3 border-b border-[#EDF1F5] dark:border-white/[0.06]">
           <Search className="w-4 h-4 text-[#94A3B8] shrink-0" />

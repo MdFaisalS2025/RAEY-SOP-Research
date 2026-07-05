@@ -404,8 +404,8 @@ export function TopNav() {
       : "Connecting..."
 
   const priorityColors: Record<string, string> = {
-    urgent: "text-[#B91C1C] dark:text-red-400",
-    high: "text-[#B45309] dark:text-amber-400",
+    urgent: "text-[#B91C1C] dark:text-red-400 dark:text-red-400",
+    high: "text-[#B45309] dark:text-amber-400 dark:text-amber-400",
     normal: "text-[#334155] dark:text-slate-300",
     low: "text-[#64748B] dark:text-slate-400",
   }
@@ -457,7 +457,7 @@ export function TopNav() {
                       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0B6BCB]/50 dark:focus-visible:ring-[#00E5FF]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                       active
                         ? "bg-[#0B6BCB]/10 text-[#0B6BCB] dark:text-[#00E5FF] dark:glow-cyan"
-                        : "text-[#64748B] dark:text-slate-400 hover:text-[#1A2332] dark:hover:text-white hover:bg-[#F1F5F9] dark:hover:bg-white/5"
+                        : "text-[#64748B] dark:text-slate-400 hover:text-[#1A2332] dark:hover:text-white hover:bg-muted dark:hover:bg-white/5"
                     )}
                   >
                     <item.icon className="w-4 h-4 shrink-0" />
@@ -485,7 +485,7 @@ export function TopNav() {
                         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0B6BCB]/50 dark:focus-visible:ring-[#00E5FF]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                         groupActive || isOpen
                           ? "text-[#0B6BCB] dark:text-[#00E5FF]"
-                          : "text-[#64748B] dark:text-slate-400 hover:text-[#1A2332] dark:hover:text-white hover:bg-[#F1F5F9] dark:hover:bg-white/5"
+                          : "text-[#64748B] dark:text-slate-400 hover:text-[#1A2332] dark:hover:text-white hover:bg-muted dark:hover:bg-white/5"
                       )}
                     >
                       <span>{group.label}</span>
@@ -503,7 +503,7 @@ export function TopNav() {
                     {isOpen && (
                       <div
                         role="menu"
-                        className="absolute left-0 top-full mt-1.5 z-50 w-[220px] bg-white dark:bg-[#0d1516] border border-[#E2E8F0] dark:border-white/[0.08] rounded-xl shadow-md dark:shadow-2xl dark:shadow-black/50 overflow-hidden py-1"
+                        className="absolute left-0 top-full mt-1.5 z-50 w-[220px] bg-card dark:bg-[#0d1516] border border-[#E2E8F0] dark:border-white/[0.08] rounded-xl shadow-md dark:shadow-2xl dark:shadow-black/50 overflow-hidden py-1"
                       >
                         {group.items.map((item) => {
                           const active = isActiveLink(item.href)
@@ -518,7 +518,7 @@ export function TopNav() {
                                 "flex items-center gap-2.5 px-3 py-2 text-[12px] font-medium transition-colors",
                                 active
                                   ? "text-[#0B6BCB] dark:text-teal-400 bg-[#0B6BCB]/5 dark:bg-transparent"
-                                  : "text-[#334155] dark:text-slate-300 hover:bg-[#F1F5F9] dark:hover:bg-white/[0.05] hover:text-[#1A2332] dark:hover:text-white"
+                                  : "text-[#334155] dark:text-slate-300 hover:bg-muted dark:hover:bg-white/[0.05] hover:text-[#1A2332] dark:hover:text-white"
                               )}
                             >
                               <item.icon
@@ -564,7 +564,7 @@ export function TopNav() {
               onClick={openCommandPalette}
               aria-label="Open search (Ctrl+K)"
               title="Search (Ctrl+K)"
-              className="hidden md:flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-[#E2E8F0] dark:border-white/10 bg-white dark:bg-[#11191b] text-[#64748B] dark:text-slate-400 hover:text-[#1A2332] dark:hover:text-white hover:border-[#CBD5E1] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0B6BCB]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              className="hidden md:flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-[#E2E8F0] dark:border-white/10 bg-card dark:bg-[#11191b] text-[#64748B] dark:text-slate-400 hover:text-[#1A2332] dark:hover:text-white hover:border-[#CBD5E1] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0B6BCB]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               <Search className="w-4 h-4" />
               <span className="text-[12px] font-medium">Search</span>
@@ -589,7 +589,7 @@ export function TopNav() {
               </button>
               {/* Notification dropdown */}
               {notifOpen && (
-                <div className="absolute right-0 top-full mt-1.5 z-50 w-[340px] bg-white dark:bg-[#0d1516] border border-[#E2E8F0] dark:border-white/[0.08] rounded-xl shadow-md dark:shadow-2xl dark:shadow-black/50 overflow-hidden">
+                <div className="absolute right-0 top-full mt-1.5 z-50 w-[340px] bg-card dark:bg-[#0d1516] border border-[#E2E8F0] dark:border-white/[0.08] rounded-xl shadow-md dark:shadow-2xl dark:shadow-black/50 overflow-hidden">
                   <div className="px-3 py-2.5 border-b border-[#EDF1F5] dark:border-white/[0.06] flex items-center justify-between">
                     <span className="text-[12px] font-semibold text-[#1A2332] dark:text-white/80">Notifications</span>
                     <div className="flex items-center gap-2">
@@ -634,7 +634,7 @@ export function TopNav() {
                         href={n.link ?? "#"}
                         onClick={() => setNotifOpen(false)}
                         className={cn(
-                          "flex flex-col gap-0.5 px-3 py-2.5 border-b border-l-2 border-[#EDF1F5] dark:border-white/[0.04] hover:bg-[#F1F5F9] dark:hover:bg-white/[0.04] transition-colors",
+                          "flex flex-col gap-0.5 px-3 py-2.5 border-b border-l-2 border-[#EDF1F5] dark:border-white/[0.04] hover:bg-muted dark:hover:bg-white/[0.04] transition-colors",
                           !n.read && "bg-[#0B6BCB]/[0.03] dark:bg-white/[0.02]",
                           n.effectiveTier === "interruptive" && "border-l-[#DC2626]",
                           n.effectiveTier === "banner" && "border-l-[#F59E0B]",
@@ -662,7 +662,7 @@ export function TopNav() {
                             {n.title}
                           </span>
                           {n.effectiveTier === "interruptive" && (
-                            <span className="ml-auto shrink-0 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA]">
+                            <span className="ml-auto shrink-0 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30">
                               Action needed
                             </span>
                           )}
@@ -672,7 +672,7 @@ export function TopNav() {
                     ))}
                   </div>
                   {budgetExceeded && (
-                    <div className="px-3 py-2 border-t border-[#EDF1F5] dark:border-white/[0.06] bg-[#F1F5F9] dark:bg-white/[0.03]">
+                    <div className="px-3 py-2 border-t border-[#EDF1F5] dark:border-white/[0.06] bg-muted dark:bg-white/[0.03]">
                       <p className="text-[10px] text-[#64748B] leading-snug">
                         Alert volume reduced for this session to reduce interruption fatigue.
                       </p>
@@ -705,7 +705,7 @@ export function TopNav() {
                     onClick={() => setProfileOpen((v) => !v)}
                     aria-label="Open profile menu"
                     aria-expanded={profileOpen}
-                    className="flex items-center gap-1.5 p-1 rounded-lg hover:bg-[#F1F5F9] dark:hover:bg-white/[0.05] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0B6BCB]/50"
+                    className="flex items-center gap-1.5 p-1 rounded-lg hover:bg-muted dark:hover:bg-white/[0.05] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0B6BCB]/50"
                   >
                     <div
                       className={cn(
@@ -729,7 +729,7 @@ export function TopNav() {
 
                   {/* Profile dropdown */}
                   {profileOpen && (
-                    <div className="absolute right-0 top-full mt-1.5 z-50 w-[220px] bg-white dark:bg-[#0d1516] border border-[#E2E8F0] dark:border-white/[0.08] rounded-xl shadow-md dark:shadow-2xl dark:shadow-black/50 overflow-hidden py-1">
+                    <div className="absolute right-0 top-full mt-1.5 z-50 w-[220px] bg-card dark:bg-[#0d1516] border border-[#E2E8F0] dark:border-white/[0.08] rounded-xl shadow-md dark:shadow-2xl dark:shadow-black/50 overflow-hidden py-1">
                       {/* User info */}
                       <div className="px-3 py-2.5 border-b border-[#EDF1F5] dark:border-white/[0.06]">
                         <div className="flex items-center gap-2.5 mb-1.5">
@@ -765,7 +765,7 @@ export function TopNav() {
                       <div className="py-1">
                         <button
                           onClick={() => setProfileOpen(false)}
-                          className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-[12px] text-[#334155] dark:text-slate-300 hover:bg-[#F1F5F9] dark:hover:bg-white/[0.05] hover:text-[#1A2332] dark:hover:text-white transition-colors"
+                          className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-[12px] text-[#334155] dark:text-slate-300 hover:bg-muted dark:hover:bg-white/[0.05] hover:text-[#1A2332] dark:hover:text-white transition-colors"
                         >
                           <RefreshCw className="w-3.5 h-3.5 text-[#94A3B8] dark:text-slate-500" />
                           Switch Profile
@@ -773,7 +773,7 @@ export function TopNav() {
                         <div className="h-px bg-[#EDF1F5] dark:bg-white/[0.06] my-1" />
                         <button
                           onClick={handleSignOut}
-                          className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-[12px] text-[#B91C1C] dark:text-red-400 hover:bg-[#FEE2E2] dark:hover:bg-red-500/10 hover:text-[#991B1B] dark:hover:text-red-300 transition-colors"
+                          className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-[12px] text-[#B91C1C] dark:text-red-400 dark:text-red-400 hover:bg-[#FEE2E2] dark:bg-red-500/10 dark:hover:bg-red-500/10 hover:text-[#991B1B] dark:hover:text-red-300 transition-colors"
                         >
                           <LogOut className="w-3.5 h-3.5" />
                           Sign Out
@@ -835,7 +835,7 @@ export function TopNav() {
                             "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0B6BCB]/50 dark:focus-visible:ring-[#00E5FF]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                             active
                               ? "bg-[#0B6BCB]/10 text-[#0B6BCB] dark:text-[#00E5FF] dark:glow-cyan"
-                              : "text-[#64748B] dark:text-slate-400 hover:text-[#1A2332] dark:hover:text-white hover:bg-[#F1F5F9] dark:hover:bg-white/5"
+                              : "text-[#64748B] dark:text-slate-400 hover:text-[#1A2332] dark:hover:text-white hover:bg-muted dark:hover:bg-white/5"
                           )}
                         >
                           <item.icon className="w-5 h-5 shrink-0" />
@@ -849,15 +849,15 @@ export function TopNav() {
                 {auth.user && (
                   <button
                     onClick={handleSignOut}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[#B91C1C] dark:text-red-400 hover:bg-[#FEE2E2] dark:hover:bg-red-500/10 transition-colors mt-2"
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[#B91C1C] dark:text-red-400 dark:text-red-400 hover:bg-[#FEE2E2] dark:bg-red-500/10 dark:hover:bg-red-500/10 transition-colors mt-2"
                   >
                     <LogOut className="w-5 h-5 shrink-0" />
                     <span>Sign Out</span>
                   </button>
                 )}
-                <div className="flex items-center gap-2 px-3 py-2 mt-3 rounded-lg bg-[#FEF3C7] border border-[#FDE68A]">
+                <div className="flex items-center gap-2 px-3 py-2 mt-3 rounded-lg bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30">
                   <div className="w-2 h-2 rounded-full bg-[#B45309] animate-pulse" />
-                  <span className="text-xs text-[#B45309] font-medium">Research Prototype</span>
+                  <span className="text-xs text-[#B45309] dark:text-amber-400 font-medium">Research Prototype</span>
                 </div>
               </nav>
             </motion.div>

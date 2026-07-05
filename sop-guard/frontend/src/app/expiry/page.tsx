@@ -33,22 +33,22 @@ function expiryStatus(days: number): ExpiryStatus {
 const STATUS_META: Record<ExpiryStatus, { label: string; badgeClass: string; rowClass: string }> = {
   expired: {
     label: "EXPIRED",
-    badgeClass: "bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA]",
+    badgeClass: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30",
     rowClass: "border-l-2 border-[#B91C1C]",
   },
   due_soon: {
     label: "DUE SOON",
-    badgeClass: "bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]",
+    badgeClass: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30",
     rowClass: "border-l-2 border-[#B45309]",
   },
   upcoming: {
     label: "UPCOMING",
-    badgeClass: "bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]",
+    badgeClass: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30",
     rowClass: "border-l-2 border-[#B45309]",
   },
   current: {
     label: "CURRENT",
-    badgeClass: "bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]",
+    badgeClass: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30",
     rowClass: "border-l-2 border-[#15803D]",
   },
 }
@@ -60,10 +60,10 @@ function daysLabel(days: number) {
 }
 
 function daysColor(days: number) {
-  if (days < 0) return "text-[#B91C1C]"
-  if (days <= 30) return "text-[#B45309]"
-  if (days <= 90) return "text-[#B45309]"
-  return "text-[#15803D]"
+  if (days < 0) return "text-[#B91C1C] dark:text-red-400"
+  if (days <= 30) return "text-[#B45309] dark:text-amber-400"
+  if (days <= 90) return "text-[#B45309] dark:text-amber-400"
+  return "text-[#15803D] dark:text-green-400"
 }
 
 // ─── Alert tier for staged escalation ────────────────────────────────────────
@@ -80,12 +80,12 @@ function getAlertTier(days: number): AlertTier {
 }
 
 const ALERT_TIER_META: Record<AlertTier, { label: string; badgeClass: string }> = {
-  current: { label: "Current", badgeClass: "bg-white text-[#64748B] border border-[#CBD5E1]" },
-  owner_notified: { label: "Owner Notified", badgeClass: "bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]" },
-  dept_notified: { label: "Dept Head Notified", badgeClass: "bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]" },
-  compliance_notified: { label: "Compliance Notified", badgeClass: "bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA]" },
-  cmo_escalation: { label: "CMO Escalation", badgeClass: "bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA]" },
-  expired_frozen: { label: "EXPIRED - SOP Frozen", badgeClass: "bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA]" },
+  current: { label: "Current", badgeClass: "bg-card text-[#64748B] border border-[#CBD5E1]" },
+  owner_notified: { label: "Owner Notified", badgeClass: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30" },
+  dept_notified: { label: "Dept Head Notified", badgeClass: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30" },
+  compliance_notified: { label: "Compliance Notified", badgeClass: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30" },
+  cmo_escalation: { label: "CMO Escalation", badgeClass: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30" },
+  expired_frozen: { label: "EXPIRED - SOP Frozen", badgeClass: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30" },
 }
 
 // Escalation steps for the timeline
@@ -103,7 +103,7 @@ const ESCALATION_STEPS = [
     action: "Notify Dept Head",
     tier: "dept_notified" as AlertTier,
     color: "bg-[#B45309]",
-    textColor: "text-[#B45309]",
+    textColor: "text-[#B45309] dark:text-amber-400",
     borderColor: "border-[#B45309]",
   },
   {
@@ -111,7 +111,7 @@ const ESCALATION_STEPS = [
     action: "Notify Compliance",
     tier: "compliance_notified" as AlertTier,
     color: "bg-[#B45309]",
-    textColor: "text-[#B45309]",
+    textColor: "text-[#B45309] dark:text-amber-400",
     borderColor: "border-[#B45309]",
   },
   {
@@ -119,7 +119,7 @@ const ESCALATION_STEPS = [
     action: "CMO Escalation",
     tier: "cmo_escalation" as AlertTier,
     color: "bg-[#B91C1C]",
-    textColor: "text-[#B91C1C]",
+    textColor: "text-[#B91C1C] dark:text-red-400",
     borderColor: "border-[#B91C1C]",
   },
   {
@@ -127,7 +127,7 @@ const ESCALATION_STEPS = [
     action: "Freeze SOP",
     tier: "expired_frozen" as AlertTier,
     color: "bg-[#7F1D1D]",
-    textColor: "text-[#B91C1C]",
+    textColor: "text-[#B91C1C] dark:text-red-400",
     borderColor: "border-[#7F1D1D]",
   },
 ]
@@ -154,10 +154,10 @@ export default function ExpiryPage() {
   }), [items])
 
   const stats = [
-    { label: "Expired", value: counts.expired, icon: AlertTriangle, color: "text-[#B91C1C]", bg: "bg-[#FEE2E2]" },
-    { label: "Expiring in 30 days", value: counts.due_soon, icon: Clock, color: "text-[#B45309]", bg: "bg-[#FEF3C7]" },
-    { label: "Expiring in 90 days", value: counts.upcoming, icon: CalendarClock, color: "text-[#B45309]", bg: "bg-[#FEF3C7]" },
-    { label: "Current", value: counts.current, icon: CheckCircle, color: "text-[#15803D]", bg: "bg-[#DCFCE7]" },
+    { label: "Expired", value: counts.expired, icon: AlertTriangle, color: "text-[#B91C1C] dark:text-red-400", bg: "bg-[#FEE2E2] dark:bg-red-500/10" },
+    { label: "Expiring in 30 days", value: counts.due_soon, icon: Clock, color: "text-[#B45309] dark:text-amber-400", bg: "bg-[#FEF3C7] dark:bg-amber-500/10" },
+    { label: "Expiring in 90 days", value: counts.upcoming, icon: CalendarClock, color: "text-[#B45309] dark:text-amber-400", bg: "bg-[#FEF3C7] dark:bg-amber-500/10" },
+    { label: "Current", value: counts.current, icon: CheckCircle, color: "text-[#15803D] dark:text-green-400", bg: "bg-[#DCFCE7] dark:bg-green-500/10" },
   ]
 
   // Determine the most critical active tier for highlighting
@@ -182,7 +182,7 @@ export default function ExpiryPage() {
         </div>
 
         {/* Research Prototype disclaimer */}
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEE2E2] border border-[#FECACA] text-[#B91C1C] text-sm">
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400 text-sm">
           <AlertTriangle className="w-4 h-4 shrink-0" />
           <span><strong>Research Prototype - Not for Clinical Use.</strong> For demonstration only. Always verify review dates against your live document management system.</span>
         </div>
@@ -204,7 +204,7 @@ export default function ExpiryPage() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.07 }}
-              className="rounded-2xl bg-white border border-[#E2E8F0] p-4 flex items-center gap-3"
+              className="rounded-2xl bg-card border border-[#E2E8F0] p-4 flex items-center gap-3"
             >
               <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", s.bg)}>
                 <s.icon className={cn("w-5 h-5", s.color)} />
@@ -218,7 +218,7 @@ export default function ExpiryPage() {
         </div>
 
         {/* Staged Alert Escalation Timeline */}
-        <section className="rounded-2xl bg-white border border-[#E2E8F0] p-5">
+        <section className="rounded-2xl bg-card border border-[#E2E8F0] p-5">
           <div className="mb-4">
             <h2 className="text-base font-semibold">Staged Escalation Protocol</h2>
             <p className="text-xs text-muted-foreground mt-0.5">TJC LD.04.03.07 - Automated notification escalation based on days until review due date</p>
@@ -245,7 +245,7 @@ export default function ExpiryPage() {
                     "w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all",
                     isActive
                       ? `${step.color} ${step.borderColor} shadow-lg`
-                      : "bg-[#F1F5F9] border-[#CBD5E1]"
+                      : "bg-muted border-[#CBD5E1]"
                   )}>
                     <span className={cn("text-xs font-bold", isActive ? "text-white" : "text-[#94A3B8]")}>{i + 1}</span>
                   </div>
@@ -265,7 +265,7 @@ export default function ExpiryPage() {
             <div className="mt-3 px-3 py-2 rounded-lg bg-[#F8FAFC] border border-[#EDF1F5]">
               <p className="text-xs text-muted-foreground">
                 Most critical SOP is at tier:{" "}
-                <span className={cn("font-semibold", ALERT_TIER_META[mostCriticalTier].badgeClass.includes("red") ? "text-[#B91C1C]" : "text-[#B45309]")}>
+                <span className={cn("font-semibold", ALERT_TIER_META[mostCriticalTier].badgeClass.includes("red") ? "text-[#B91C1C] dark:text-red-400" : "text-[#B45309] dark:text-amber-400")}>
                   {ALERT_TIER_META[mostCriticalTier].label}
                 </span>
               </p>
@@ -287,7 +287,7 @@ export default function ExpiryPage() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.04 }}
                   className={cn(
-                    "rounded-2xl bg-white border border-[#E2E8F0] p-5",
+                    "rounded-2xl bg-card border border-[#E2E8F0] p-5",
                     meta.rowClass
                   )}
                 >
@@ -343,7 +343,7 @@ export default function ExpiryPage() {
                         <button
                           disabled
                           title="Coming in v2"
-                          className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-[#F1F5F9] text-muted-foreground cursor-not-allowed opacity-50 font-medium"
+                          className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-muted text-muted-foreground cursor-not-allowed opacity-50 font-medium"
                         >
                           Assign Reviewer
                         </button>
@@ -357,7 +357,7 @@ export default function ExpiryPage() {
         </section>
 
         {/* Tier legend */}
-        <div className="rounded-2xl bg-white border border-[#E2E8F0] p-4">
+        <div className="rounded-2xl bg-card border border-[#E2E8F0] p-4">
           <h3 className="text-sm font-medium mb-3 text-muted-foreground">Alert Tier Reference</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
             {(["expired", "due_soon", "upcoming", "current"] as ExpiryStatus[]).map((s) => (
@@ -374,7 +374,7 @@ export default function ExpiryPage() {
         </div>
 
         {/* Notification Settings card */}
-        <div className="rounded-2xl bg-white border border-[#E2E8F0] p-5 space-y-4">
+        <div className="rounded-2xl bg-card border border-[#E2E8F0] p-5 space-y-4">
           <div className="flex items-center gap-2">
             <Bell className="w-4 h-4 text-muted-foreground" />
             <h3 className="text-sm font-semibold">Notification Settings</h3>

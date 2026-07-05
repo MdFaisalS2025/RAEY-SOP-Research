@@ -21,20 +21,20 @@ function FaithfulnessBadge({ score }: { score: number | undefined }) {
   const pct = Math.round(score * 100)
   if (score >= 0.85) {
     return (
-      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#15803D] bg-[#DCFCE7] border border-[#BBF7D0] rounded-full px-2.5 py-1">
+      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#15803D] dark:text-green-400 bg-[#DCFCE7] dark:bg-green-500/10 border border-[#BBF7D0] dark:border-green-500/30 rounded-full px-2.5 py-1">
         <ShieldCheck className="w-3.5 h-3.5" /> High faithfulness ({pct}%)
       </span>
     )
   }
   if (score >= 0.65) {
     return (
-      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#B45309] bg-[#FEF3C7] border border-[#FDE68A] rounded-full px-2.5 py-1">
+      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#B45309] dark:text-amber-400 bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 rounded-full px-2.5 py-1">
         <ShieldAlert className="w-3.5 h-3.5" /> Moderate faithfulness ({pct}%)
       </span>
     )
   }
   return (
-    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#B91C1C] bg-[#FEE2E2] border border-[#FECACA] rounded-full px-2.5 py-1">
+    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#B91C1C] dark:text-red-400 bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 rounded-full px-2.5 py-1">
       <ShieldX className="w-3.5 h-3.5" /> Low faithfulness ({pct}%)
     </span>
   )
@@ -54,7 +54,7 @@ function renderAnswerText(text: string) {
     }
     if (/^>\s+/.test(line)) {
       return (
-        <div key={i} className="my-2 px-4 py-2 bg-[#FEF3C7] border border-[#FDE68A] rounded-lg text-[#B45309] text-sm">
+        <div key={i} className="my-2 px-4 py-2 bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 rounded-lg text-[#B45309] dark:text-amber-400 text-sm">
           {line.replace(/^>\s+/, "")}
         </div>
       )
@@ -108,7 +108,7 @@ export default function AnswerPermalinkPage() {
         )}
 
         {status === "notfound" && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-8 bg-white border border-[#0B6BCB]/20 rounded-xl p-8 text-center shadow-sm">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-8 bg-card border border-[#0B6BCB]/20 rounded-xl p-8 text-center shadow-sm">
             <FileQuestion className="w-10 h-10 text-[#94A3B8] mx-auto mb-3" />
             <p className="text-[#1A2332] font-medium mb-1">This answer link is not available</p>
             <p className="text-sm text-[#64748B] mb-5">It may have expired or the link is incorrect.</p>
@@ -122,7 +122,7 @@ export default function AnswerPermalinkPage() {
         )}
 
         {status === "error" && (
-          <div className="mt-8 bg-white border border-[#FECACA] rounded-xl p-6 text-sm text-[#B91C1C]">
+          <div className="mt-8 bg-card border border-[#FECACA] dark:border-red-500/30 rounded-xl p-6 text-sm text-[#B91C1C] dark:text-red-400">
             Could not load this answer. Try again shortly.
           </div>
         )}
@@ -141,13 +141,13 @@ export default function AnswerPermalinkPage() {
               {record.created_at ? new Date(record.created_at).toLocaleString("en-US") : ""}
             </p>
 
-            <div className="bg-white border border-[#E2E8F0] rounded-xl shadow-sm p-6 mb-4">
+            <div className="bg-card border border-[#E2E8F0] rounded-xl shadow-sm p-6 mb-4">
               {renderAnswerText(record.answer)}
 
               {record.citations.length > 0 && (
                 <div className="mt-4 pt-4 border-t border-[#EDF1F5] flex flex-wrap gap-2">
                   {record.citations.map((c, i) => (
-                    <span key={i} className="text-xs text-[#475569] border border-[#CBD5E1] bg-white rounded px-2 py-0.5">
+                    <span key={i} className="text-xs text-[#475569] border border-[#CBD5E1] bg-card rounded px-2 py-0.5">
                       {c}
                     </span>
                   ))}
@@ -161,7 +161,7 @@ export default function AnswerPermalinkPage() {
               )}
             </div>
 
-            <div className="bg-[#FEF3C7] border border-[#FDE68A] rounded-xl px-4 py-3 text-sm text-[#B45309] mb-6">
+            <div className="bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 rounded-xl px-4 py-3 text-sm text-[#B45309] dark:text-amber-400 mb-6">
               Shared answer snapshot. Verify against the current SOP before clinical use.
             </div>
 

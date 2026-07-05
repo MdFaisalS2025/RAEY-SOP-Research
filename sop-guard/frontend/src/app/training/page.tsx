@@ -14,18 +14,18 @@ import { useRole } from "@/lib/role-context"
 import type { TrainingModule } from "@/lib/governance-types"
 
 const formatConfig: Record<TrainingModule["format"], { label: string; className: string }> = {
-  module: { label: "Module", className: "bg-white text-[#475569] border border-[#CBD5E1]" },
-  quiz: { label: "Quiz", className: "bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]" },
+  module: { label: "Module", className: "bg-card text-[#475569] border border-[#CBD5E1]" },
+  quiz: { label: "Quiz", className: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30" },
   checklist: { label: "Checklist", className: "bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30" },
-  video: { label: "Video", className: "bg-white text-[#475569] border border-[#CBD5E1]" },
-  attestation: { label: "Attestation", className: "bg-white text-[#475569] border border-[#CBD5E1]" },
+  video: { label: "Video", className: "bg-card text-[#475569] border border-[#CBD5E1]" },
+  attestation: { label: "Attestation", className: "bg-card text-[#475569] border border-[#CBD5E1]" },
 }
 
 const trainingStatusConfig: Record<TrainingModule["status"], { label: string; className: string }> = {
   active: { label: "Active", className: "bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30" },
-  completed: { label: "Completed", className: "bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]" },
-  overdue: { label: "Overdue", className: "bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA]" },
-  upcoming: { label: "Upcoming", className: "bg-white text-[#475569] border border-[#CBD5E1]" },
+  completed: { label: "Completed", className: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30" },
+  overdue: { label: "Overdue", className: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30" },
+  upcoming: { label: "Upcoming", className: "bg-card text-[#475569] border border-[#CBD5E1]" },
 }
 
 function completionRateBar(rate: number) {
@@ -36,10 +36,10 @@ function completionRateBar(rate: number) {
 }
 
 function completionTextColor(rate: number) {
-  if (rate >= 90) return "text-[#15803D]"
+  if (rate >= 90) return "text-[#15803D] dark:text-green-400"
   if (rate >= 70) return "text-[#0B6BCB]"
-  if (rate >= 50) return "text-[#B45309]"
-  return "text-[#B91C1C]"
+  if (rate >= 50) return "text-[#B45309] dark:text-amber-400"
+  return "text-[#B91C1C] dark:text-red-400"
 }
 
 function isPastDue(dateStr: string) {
@@ -142,9 +142,9 @@ export default function TrainingPage() {
 
   const stats = [
     { label: "Active Modules", value: "5", icon: BookOpen, color: "text-[#0B6BCB]", bg: "bg-[#0B6BCB]/10" },
-    { label: "Avg Completion Rate", value: "87%", icon: TrendingUp, color: "text-[#15803D]", bg: "bg-[#DCFCE7]" },
-    { label: "Overdue Learners", value: "102", icon: AlertTriangle, color: "text-[#B91C1C]", bg: "bg-[#FEE2E2]" },
-    { label: "Completed This Month", value: "186", icon: CheckCircle2, color: "text-[#64748B]", bg: "bg-[#F1F5F9]" },
+    { label: "Avg Completion Rate", value: "87%", icon: TrendingUp, color: "text-[#15803D] dark:text-green-400", bg: "bg-[#DCFCE7] dark:bg-green-500/10" },
+    { label: "Overdue Learners", value: "102", icon: AlertTriangle, color: "text-[#B91C1C] dark:text-red-400", bg: "bg-[#FEE2E2] dark:bg-red-500/10" },
+    { label: "Completed This Month", value: "186", icon: CheckCircle2, color: "text-[#64748B]", bg: "bg-muted" },
   ]
 
   return (
@@ -165,7 +165,7 @@ export default function TrainingPage() {
         </div>
 
         {/* Research disclaimer */}
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEE2E2] border border-[#FECACA] text-[#B91C1C] text-sm">
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400 text-sm">
           <AlertTriangle className="w-4 h-4 shrink-0" />
           <span><strong>Research Prototype. Not for Clinical Use.</strong> For demonstration only.</span>
         </div>
@@ -180,7 +180,7 @@ export default function TrainingPage() {
         </div>
 
         {/* How Training is Triggered - 3-step flow */}
-        <section className="rounded-2xl bg-white border border-[#E2E8F0] p-5">
+        <section className="rounded-2xl bg-card border border-[#E2E8F0] p-5">
           <div className="flex items-center gap-2 mb-4">
             <Zap className="w-4 h-4 text-[#0B6BCB]" />
             <h2 className="text-base font-semibold">How Training is Triggered</h2>
@@ -198,14 +198,14 @@ export default function TrainingPage() {
                 step: 2,
                 title: "Impact Assessment",
                 desc: "System identifies affected staff groups based on SOP department scope and auto-assignment rules",
-                color: "bg-[#FEF3C7] border-[#FDE68A] text-[#B45309]",
+                color: "bg-[#FEF3C7] dark:bg-amber-500/10 border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400",
                 dot: "bg-[#F59E0B]",
               },
               {
                 step: 3,
                 title: "Training Auto-Assigned",
                 desc: "Relevant training modules are assigned to staff groups with a completion deadline",
-                color: "bg-[#DCFCE7] border-[#BBF7D0] text-[#15803D]",
+                color: "bg-[#DCFCE7] dark:bg-green-500/10 border-[#BBF7D0] dark:border-green-500/30 text-[#15803D] dark:text-green-400",
                 dot: "bg-[#16A34A]",
               },
             ].map((item, i) => (
@@ -242,7 +242,7 @@ export default function TrainingPage() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.07 }}
-                className="rounded-2xl bg-white border border-[#E2E8F0] p-5 space-y-3"
+                className="rounded-2xl bg-card border border-[#E2E8F0] p-5 space-y-3"
               >
                 {/* Title row */}
                 <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -258,8 +258,8 @@ export default function TrainingPage() {
                   <span className={cn(
                     "px-2.5 py-0.5 rounded-full text-xs font-semibold shrink-0",
                     isActive
-                      ? "bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]"
-                      : "bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]"
+                      ? "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30"
+                      : "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30"
                   )}>
                     {isActive ? "Active" : "Completed"}
                   </span>
@@ -271,7 +271,7 @@ export default function TrainingPage() {
                 {/* Staff groups */}
                 <div className="flex flex-wrap gap-1.5">
                   {event.staff_groups_affected.map((g) => (
-                    <span key={g} className="px-2 py-0.5 rounded-md bg-[#F1F5F9] text-xs text-[#64748B] border border-[#E2E8F0]">
+                    <span key={g} className="px-2 py-0.5 rounded-md bg-muted text-xs text-[#64748B] border border-[#E2E8F0]">
                       <Users className="w-3 h-3 inline mr-1" />{g}
                     </span>
                   ))}
@@ -300,7 +300,7 @@ export default function TrainingPage() {
                 </div>
 
                 {/* Deadline */}
-                <p className={cn("text-xs flex items-center gap-1", deadlinePast ? "text-[#B91C1C]" : "text-[#64748B]")}>
+                <p className={cn("text-xs flex items-center gap-1", deadlinePast ? "text-[#B91C1C] dark:text-red-400" : "text-[#64748B]")}>
                   <Clock className="w-3 h-3" />
                   Deadline: {event.deadline}
                   {deadlinePast && " - OVERDUE"}
@@ -318,7 +318,7 @@ export default function TrainingPage() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.07 }}
-              className="rounded-2xl bg-white border border-[#E2E8F0] p-4 flex items-center gap-3"
+              className="rounded-2xl bg-card border border-[#E2E8F0] p-4 flex items-center gap-3"
             >
               <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", s.bg)}>
                 <s.icon className={cn("w-5 h-5", s.color)} />
@@ -340,12 +340,12 @@ export default function TrainingPage() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.06 }}
-              className="rounded-2xl bg-white border border-[#E2E8F0] p-5 space-y-4"
+              className="rounded-2xl bg-card border border-[#E2E8F0] p-5 space-y-4"
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <h3 className="text-base font-bold text-[#1A2332]">{module.title}</h3>
-                  <p className="text-sm text-[#B45309] mt-0.5">Triggered by: {module.triggered_by}</p>
+                  <p className="text-sm text-[#B45309] dark:text-amber-400 mt-0.5">Triggered by: {module.triggered_by}</p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <span className={cn("px-2.5 py-0.5 rounded-full text-xs font-medium", formatConfig[module.format].className)}>
@@ -360,14 +360,14 @@ export default function TrainingPage() {
               {/* Assigned groups chips */}
               <div className="flex flex-wrap gap-1.5">
                 {module.assigned_groups.map((g) => (
-                  <span key={g} className="px-2 py-0.5 rounded-md bg-[#F1F5F9] text-xs text-[#64748B] border border-[#E2E8F0]">
+                  <span key={g} className="px-2 py-0.5 rounded-md bg-muted text-xs text-[#64748B] border border-[#E2E8F0]">
                     <Users className="w-3 h-3 inline mr-1" />{g}
                   </span>
                 ))}
               </div>
 
               {/* Due date */}
-              <p className={cn("text-xs flex items-center gap-1", isPastDue(module.due_date) ? "text-[#B91C1C]" : "text-[#64748B]")}>
+              <p className={cn("text-xs flex items-center gap-1", isPastDue(module.due_date) ? "text-[#B91C1C] dark:text-red-400" : "text-[#64748B]")}>
                 <Clock className="w-3 h-3" />
                 Due: {module.due_date}
                 {isPastDue(module.due_date) && " - OVERDUE"}
@@ -391,10 +391,10 @@ export default function TrainingPage() {
 
               {/* Mini stats */}
               <div className="flex items-center gap-4 text-xs">
-                <span className="text-[#15803D]">&#10003; {module.completed} completed</span>
+                <span className="text-[#15803D] dark:text-green-400">&#10003; {module.completed} completed</span>
                 <span className="text-[#64748B]">{module.in_progress} in progress</span>
                 <span className="text-[#64748B]">&#9675; {module.not_started} not started</span>
-                <span className="text-[#B91C1C]">&#9888; {module.overdue} overdue</span>
+                <span className="text-[#B91C1C] dark:text-red-400">&#9888; {module.overdue} overdue</span>
               </div>
 
               {/* Action buttons */}
@@ -403,7 +403,7 @@ export default function TrainingPage() {
                   <PlayCircle className="w-3.5 h-3.5" /> View Details
                 </button>
                 {role === "nurse_educator" && (
-                  <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-[#FEF3C7] text-[#B45309] hover:bg-[#FDE68A] border border-[#FDE68A] transition-colors font-medium">
+                  <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 hover:bg-[#FDE68A] border border-[#FDE68A] dark:border-amber-500/30 transition-colors font-medium">
                     <Bell className="w-3.5 h-3.5" /> Send Reminder
                   </button>
                 )}
@@ -415,7 +415,7 @@ export default function TrainingPage() {
         {/* Department Completion Summary */}
         <section>
           <h2 className="text-lg font-semibold font-display mb-3">Department Completion Summary</h2>
-          <div className="rounded-2xl bg-white border border-[#E2E8F0] overflow-hidden">
+          <div className="rounded-2xl bg-card border border-[#E2E8F0] overflow-hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[#E2E8F0] text-xs text-[#64748B] uppercase tracking-wider">
@@ -428,9 +428,9 @@ export default function TrainingPage() {
               <tbody>
                 {MOCK_COMPLIANCE.map((dept) => {
                   const rate = dept.training_completion_rate
-                  const status = rate >= 90 ? { label: "On Track", cls: "bg-[#DCFCE7] text-[#15803D]" } :
-                    rate >= 70 ? { label: "At Risk", cls: "bg-[#FEF3C7] text-[#B45309]" } :
-                      { label: "Critical", cls: "bg-[#FEE2E2] text-[#B91C1C]" }
+                  const status = rate >= 90 ? { label: "On Track", cls: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400" } :
+                    rate >= 70 ? { label: "At Risk", cls: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400" } :
+                      { label: "Critical", cls: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400" }
                   return (
                     <tr key={dept.department} className="border-b border-[#EDF1F5] hover:bg-[#F8FAFC] transition-colors">
                       <td className="p-4 font-medium">{dept.department}</td>
@@ -457,7 +457,7 @@ export default function TrainingPage() {
         </section>
 
         {/* Configure Auto-Assignment Rules */}
-        <section className="rounded-2xl bg-white border border-[#E2E8F0] p-5 space-y-4">
+        <section className="rounded-2xl bg-card border border-[#E2E8F0] p-5 space-y-4">
           <div className="flex items-center justify-between gap-3">
             <div>
               <h2 className="text-base font-semibold">Configure Auto-Assignment Rules</h2>
@@ -468,11 +468,11 @@ export default function TrainingPage() {
             <div className="relative group">
               <button
                 disabled
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-[#F1F5F9] text-[#64748B] border border-[#E2E8F0] cursor-not-allowed opacity-60"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-muted text-[#64748B] border border-[#E2E8F0] cursor-not-allowed opacity-60"
               >
                 Add Rule
               </button>
-              <div className="absolute right-0 top-full mt-1.5 px-2.5 py-1.5 rounded-lg bg-[#F1F5F9] border border-[#E2E8F0] text-xs text-[#64748B] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+              <div className="absolute right-0 top-full mt-1.5 px-2.5 py-1.5 rounded-lg bg-muted border border-[#E2E8F0] text-xs text-[#64748B] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
                 Coming in v2
               </div>
             </div>
@@ -525,7 +525,7 @@ export default function TrainingPage() {
         </section>
 
         {/* LMS Integration note */}
-        <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-[#F1F5F9] border border-[#E2E8F0] text-[#334155] text-sm">
+        <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-muted border border-[#E2E8F0] text-[#334155] text-sm">
           <BookOpen className="w-4 h-4 shrink-0 mt-0.5" />
           <span>Connect to hospital LMS (HealthStream, Relias) for production training enrollment and tracking.</span>
         </div>

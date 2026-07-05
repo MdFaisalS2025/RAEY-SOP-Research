@@ -28,13 +28,13 @@ function QuorumIndicator({ approveCount, rejectCount, abstainCount, totalVoters 
   const quorumMet = voted >= required
 
   return (
-    <div className="space-y-3 p-4 rounded-xl bg-[#F1F5F9] border border-[#E2E8F0]">
+    <div className="space-y-3 p-4 rounded-xl bg-muted border border-[#E2E8F0]">
       {/* Tally */}
       <div className="flex gap-4 text-xs">
-        <span className="flex items-center gap-1 text-[#15803D] font-semibold">
+        <span className="flex items-center gap-1 text-[#15803D] dark:text-green-400 font-semibold">
           <Check className="w-3 h-3" /> Approved: {approveCount}
         </span>
-        <span className="flex items-center gap-1 text-[#B91C1C] font-semibold">
+        <span className="flex items-center gap-1 text-[#B91C1C] dark:text-red-400 font-semibold">
           <X className="w-3 h-3" /> Rejected: {rejectCount}
         </span>
         <span className="flex items-center gap-1 text-[#64748B] font-semibold">
@@ -73,25 +73,25 @@ function QuorumIndicator({ approveCount, rejectCount, abstainCount, totalVoters 
 
       {/* Status banner */}
       {approved && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#DCFCE7] border border-[#BBF7D0]">
-          <CheckCircle2 className="w-4 h-4 text-[#15803D] shrink-0" />
-          <span className="text-xs font-bold text-[#15803D] uppercase tracking-wide">QUORUM REACHED: Proposal Approved</span>
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#DCFCE7] dark:bg-green-500/10 border border-[#BBF7D0] dark:border-green-500/30">
+          <CheckCircle2 className="w-4 h-4 text-[#15803D] dark:text-green-400 shrink-0" />
+          <span className="text-xs font-bold text-[#15803D] dark:text-green-400 uppercase tracking-wide">QUORUM REACHED: Proposal Approved</span>
         </div>
       )}
       {rejected && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#FEE2E2] border border-[#FECACA]">
-          <X className="w-4 h-4 text-[#B91C1C] shrink-0" />
-          <span className="text-xs font-bold text-[#B91C1C] uppercase tracking-wide">QUORUM REACHED: Proposal Rejected</span>
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30">
+          <X className="w-4 h-4 text-[#B91C1C] dark:text-red-400 shrink-0" />
+          <span className="text-xs font-bold text-[#B91C1C] dark:text-red-400 uppercase tracking-wide">QUORUM REACHED: Proposal Rejected</span>
         </div>
       )}
       {!approved && !rejected && !quorumMet && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#FEF3C7] border border-[#FDE68A]">
-          <AlertTriangle className="w-3.5 h-3.5 text-[#B45309] shrink-0" />
-          <span className="text-xs text-[#B45309]">Quorum not yet met ({required} votes required)</span>
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30">
+          <AlertTriangle className="w-3.5 h-3.5 text-[#B45309] dark:text-amber-400 shrink-0" />
+          <span className="text-xs text-[#B45309] dark:text-amber-400">Quorum not yet met ({required} votes required)</span>
         </div>
       )}
       {!approved && !rejected && quorumMet && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#F1F5F9] border border-[#E2E8F0]">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted border border-[#E2E8F0]">
           <CheckCircle2 className="w-3.5 h-3.5 text-[#64748B] shrink-0" />
           <span className="text-xs text-[#334155]">Quorum met - voting in progress</span>
         </div>
@@ -103,31 +103,31 @@ function QuorumIndicator({ approveCount, rejectCount, abstainCount, totalVoters 
 // ── Helpers ────────────────────────────────────────────────────────────────
 function priorityBadge(priority: UpdateProposal["priority"]) {
   const map = {
-    critical: "bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA]",
-    high: "bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA]",
-    medium: "bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]",
-    low: "bg-white text-[#475569] border border-[#CBD5E1]",
+    critical: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30",
+    high: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30",
+    medium: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30",
+    low: "bg-card text-[#475569] border border-[#CBD5E1]",
   }
   return map[priority]
 }
 
 function statusBadge(status: UpdateProposal["status"]) {
   const map: Record<string, { cls: string; label: string }> = {
-    committee_review: { cls: "bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]", label: "Committee Review" },
-    legal_review: { cls: "bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]", label: "Legal Review" },
-    approved: { cls: "bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]", label: "Approved" },
-    rejected: { cls: "bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA]", label: "Rejected" },
+    committee_review: { cls: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30", label: "Committee Review" },
+    legal_review: { cls: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30", label: "Legal Review" },
+    approved: { cls: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30", label: "Approved" },
+    rejected: { cls: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30", label: "Rejected" },
   }
-  return map[status] ?? { cls: "bg-[#F1F5F9] text-[#64748B]", label: status }
+  return map[status] ?? { cls: "bg-muted text-[#64748B]", label: status }
 }
 
 function approverAvatar(approver: ApproverRecord) {
   const colors: Record<string, string> = {
-    approved: "bg-[#DCFCE7] text-[#15803D] border-[#BBF7D0]",
-    rejected: "bg-[#FEE2E2] text-[#B91C1C] border-[#FECACA]",
-    pending: "bg-white text-[#475569] border-[#CBD5E1]",
-    requested_changes: "bg-[#FEF3C7] text-[#B45309] border-[#FDE68A]",
-    abstained: "bg-white text-[#475569] border-[#CBD5E1]",
+    approved: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30",
+    rejected: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30",
+    pending: "bg-card text-[#475569] border-[#CBD5E1]",
+    requested_changes: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30",
+    abstained: "bg-card text-[#475569] border-[#CBD5E1]",
   }
   const initials = approver.user_name.split(" ").map(n => n[0]).filter(Boolean).slice(0, 2).join("").toUpperCase()
   return (
@@ -186,12 +186,12 @@ function CommitteeProposalCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.07 }}
-      className="rounded-2xl bg-white border border-[#E2E8F0] overflow-hidden"
+      className="rounded-2xl bg-card border border-[#E2E8F0] overflow-hidden"
     >
       {proposal.legal_review_required && (
-        <div className="flex items-center gap-2 px-4 py-2 bg-[#FEE2E2] border-b border-[#FECACA]">
-          <Scale className="w-3.5 h-3.5 text-[#B91C1C] shrink-0" />
-          <span className="text-xs font-semibold text-[#B91C1C] uppercase tracking-wide">Legal Review Required</span>
+        <div className="flex items-center gap-2 px-4 py-2 bg-[#FEE2E2] dark:bg-red-500/10 border-b border-[#FECACA] dark:border-red-500/30">
+          <Scale className="w-3.5 h-3.5 text-[#B91C1C] dark:text-red-400 shrink-0" />
+          <span className="text-xs font-semibold text-[#B91C1C] dark:text-red-400 uppercase tracking-wide">Legal Review Required</span>
         </div>
       )}
 
@@ -226,7 +226,7 @@ function CommitteeProposalCard({
         </div>
 
         {/* Evidence count */}
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#F1F5F9] border border-[#E2E8F0] text-xs text-[#64748B]">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted border border-[#E2E8F0] text-xs text-[#64748B]">
           <BookOpen className="w-3 h-3" />
           {proposal.evidence_source_ids.length} evidence source{proposal.evidence_source_ids.length !== 1 ? "s" : ""}
         </span>
@@ -262,11 +262,11 @@ function CommitteeProposalCard({
         {approvedByQuorum && (
           <div className="flex flex-wrap gap-2">
             {proposal.legal_review_required ? (
-              <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#F1F5F9] border border-[#CBD5E1] text-xs text-[#334155] font-semibold hover:bg-[#E2E8F0] transition-colors">
+              <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted border border-[#CBD5E1] text-xs text-[#334155] font-semibold hover:bg-[#E2E8F0] transition-colors">
                 <Scale className="w-3.5 h-3.5" /> Send to Legal
               </button>
             ) : (
-              <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#F1F5F9] border border-[#CBD5E1] text-xs text-[#334155] font-semibold hover:bg-[#E2E8F0] transition-colors">
+              <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted border border-[#CBD5E1] text-xs text-[#334155] font-semibold hover:bg-[#E2E8F0] transition-colors">
                 <GraduationCap className="w-3.5 h-3.5" /> Proceed to Training
               </button>
             )}
@@ -274,7 +274,7 @@ function CommitteeProposalCard({
         )}
         {rejectedByQuorum && (
           <div className="flex flex-wrap gap-2">
-            <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#DC2626]/20 border border-[#FECACA] text-xs text-[#B91C1C] font-semibold hover:bg-[#FECACA] transition-colors">
+            <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#DC2626]/20 border border-[#FECACA] dark:border-red-500/30 text-xs text-[#B91C1C] dark:text-red-400 font-semibold hover:bg-[#FECACA] transition-colors">
               <X className="w-3.5 h-3.5" /> Close Proposal
             </button>
           </div>
@@ -282,16 +282,16 @@ function CommitteeProposalCard({
 
         {/* Impact flags */}
         <div className="flex flex-wrap gap-2">
-          <span className="flex items-center gap-1 px-2 py-0.5 rounded bg-[#F1F5F9] border border-[#E2E8F0] text-[11px] text-[#334155]">
+          <span className="flex items-center gap-1 px-2 py-0.5 rounded bg-muted border border-[#E2E8F0] text-[11px] text-[#334155]">
             <Stethoscope className="w-3 h-3" /> Clinical
           </span>
           {proposal.legal_review_required && (
-            <span className="flex items-center gap-1 px-2 py-0.5 rounded bg-[#FEE2E2] border border-[#FECACA] text-[11px] text-[#B91C1C]">
+            <span className="flex items-center gap-1 px-2 py-0.5 rounded bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 text-[11px] text-[#B91C1C] dark:text-red-400">
               <Scale className="w-3 h-3" /> Legal
             </span>
           )}
           {proposal.training_triggered && (
-            <span className="flex items-center gap-1 px-2 py-0.5 rounded bg-[#F1F5F9] border border-[#E2E8F0] text-[11px] text-[#334155]">
+            <span className="flex items-center gap-1 px-2 py-0.5 rounded bg-muted border border-[#E2E8F0] text-[11px] text-[#334155]">
               <GraduationCap className="w-3 h-3" /> Training
             </span>
           )}
@@ -301,7 +301,7 @@ function CommitteeProposalCard({
         <div className="flex flex-wrap gap-2">
           <Link
             href={`/proposals/${proposal.id}`}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#E2E8F0] text-xs text-[#64748B] hover:bg-[#F1F5F9] transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#E2E8F0] text-xs text-[#64748B] hover:bg-muted transition-colors"
           >
             <BookOpen className="w-3 h-3" /> View Evidence
           </Link>
@@ -321,7 +321,7 @@ function CommitteeProposalCard({
               "inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[11px] transition-colors",
               myVote === 'approve'
                 ? "bg-[#16A34A] border-[#16A34A] text-white font-bold"
-                : "bg-[#DCFCE7] border-[#BBF7D0] text-[#15803D] hover:bg-[#16A34A]/25"
+                : "bg-[#DCFCE7] dark:bg-green-500/10 border-[#BBF7D0] dark:border-green-500/30 text-[#15803D] dark:text-green-400 hover:bg-[#16A34A]/25"
             )}
           >
             <Check className="w-3 h-3" /> Approve{myVote === 'approve' ? ' ✓' : ''}
@@ -332,7 +332,7 @@ function CommitteeProposalCard({
               "inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[11px] transition-colors",
               myVote === 'reject'
                 ? "bg-[#B91C1C] border-[#B91C1C] text-white font-bold"
-                : "bg-[#FEE2E2] border-[#FECACA] text-[#B91C1C] hover:bg-[#FECACA]"
+                : "bg-[#FEE2E2] dark:bg-red-500/10 border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400 hover:bg-[#FECACA]"
             )}
           >
             <X className="w-3 h-3" /> Reject{myVote === 'reject' ? ' ✓' : ''}
@@ -343,12 +343,12 @@ function CommitteeProposalCard({
               "inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[11px] transition-colors",
               myVote === 'abstain'
                 ? "bg-[#F59E0B] border-[#F59E0B] text-white font-bold"
-                : "bg-[#FEF3C7] border-[#FDE68A] text-[#B45309] hover:bg-[#F59E0B]/25"
+                : "bg-[#FEF3C7] dark:bg-amber-500/10 border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 hover:bg-[#F59E0B]/25"
             )}
           >
             <Zap className="w-3 h-3" /> Abstain{myVote === 'abstain' ? ' ✓' : ''}
           </button>
-          <button className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#F1F5F9] border border-[#E2E8F0] text-[11px] text-[#64748B] hover:bg-[#E2E8F0] transition-colors">
+          <button className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-muted border border-[#E2E8F0] text-[11px] text-[#64748B] hover:bg-[#E2E8F0] transition-colors">
             <ArrowUp className="w-3 h-3" /> Escalate
           </button>
         </div>
@@ -380,9 +380,9 @@ export default function CommitteePage() {
 
   const stats = [
     { label: "Awaiting Vote", value: activeProposals.length, color: "text-[#64748B]", icon: Vote },
-    { label: "Voted This Month", value: 1, color: "text-[#15803D]", icon: CheckCircle2 },
+    { label: "Voted This Month", value: 1, color: "text-[#15803D] dark:text-green-400", icon: CheckCircle2 },
     { label: "Next Meeting", value: "Jul 15, 2026", color: "text-[#0B6BCB]", isText: true, icon: Calendar },
-    { label: "Quorum", value: "3/5 present", color: "text-[#B45309]", isText: true, icon: Users },
+    { label: "Quorum", value: "3/5 present", color: "text-[#B45309] dark:text-amber-400", isText: true, icon: Users },
   ]
 
   // Evidence packets - evidence linked to active proposals
@@ -417,10 +417,10 @@ export default function CommitteePage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.04 }}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEF3C7] border border-[#FDE68A]"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30"
         >
-          <AlertTriangle className="w-4 h-4 text-[#B45309] shrink-0" />
-          <span className="text-xs text-[#B45309]">
+          <AlertTriangle className="w-4 h-4 text-[#B45309] dark:text-amber-400 shrink-0" />
+          <span className="text-xs text-[#B45309] dark:text-amber-400">
             Research Prototype - Not for Clinical Use. Votes here are for demonstration only.
           </span>
         </motion.div>
@@ -433,7 +433,7 @@ export default function CommitteePage() {
           className="grid grid-cols-2 lg:grid-cols-4 gap-4"
         >
           {stats.map(({ label, value, color, isText, icon: Icon }) => (
-            <div key={label} className="rounded-2xl bg-white border border-[#E2E8F0] p-4 space-y-2">
+            <div key={label} className="rounded-2xl bg-card border border-[#E2E8F0] p-4 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs text-[#64748B] font-medium">{label}</span>
                 <Icon className={cn("w-4 h-4", color)} />
@@ -455,13 +455,13 @@ export default function CommitteePage() {
                   <Vote className="w-5 h-5 text-[#0B6BCB]" />
                   Proposals Awaiting Review
                 </h2>
-                <span className="px-2.5 py-1 rounded-full bg-[#F1F5F9] border border-[#CBD5E1] text-xs text-[#334155] font-semibold">
+                <span className="px-2.5 py-1 rounded-full bg-muted border border-[#CBD5E1] text-xs text-[#334155] font-semibold">
                   {activeProposals.length} active
                 </span>
               </div>
 
               {activeProposals.length === 0 ? (
-                <div className="rounded-2xl bg-white border border-[#E2E8F0] p-10 text-center">
+                <div className="rounded-2xl bg-card border border-[#E2E8F0] p-10 text-center">
                   <Vote className="w-8 h-8 mx-auto mb-3 text-[#64748B] opacity-40" />
                   <p className="text-sm text-[#64748B]">No proposals currently awaiting review.</p>
                 </div>
@@ -481,7 +481,7 @@ export default function CommitteePage() {
             {/* Recent Decisions */}
             <section className="space-y-4">
               <h2 className="font-display text-lg font-bold text-[#1A2332] flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-[#15803D]" />
+                <CheckCircle2 className="w-5 h-5 text-[#15803D] dark:text-green-400" />
                 Recent Decisions
               </h2>
 
@@ -497,15 +497,15 @@ export default function CommitteePage() {
                         initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.06 }}
-                        className="flex items-start gap-4 p-4 rounded-xl bg-white border border-[#E2E8F0]"
+                        className="flex items-start gap-4 p-4 rounded-xl bg-card border border-[#E2E8F0]"
                       >
                         <div className={cn(
                           "w-8 h-8 rounded-full flex items-center justify-center shrink-0",
                           p.status === "approved" ? "bg-[#16A34A]/20" : "bg-[#DC2626]/20"
                         )}>
                           {p.status === "approved"
-                            ? <CheckCircle2 className="w-4 h-4 text-[#15803D]" />
-                            : <X className="w-4 h-4 text-[#B91C1C]" />
+                            ? <CheckCircle2 className="w-4 h-4 text-[#15803D] dark:text-green-400" />
+                            : <X className="w-4 h-4 text-[#B91C1C] dark:text-red-400" />
                           }
                         </div>
                         <div className="flex-1 min-w-0 space-y-1">
@@ -546,7 +546,7 @@ export default function CommitteePage() {
                       initial={{ opacity: 0, y: 16 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.06 }}
-                      className="rounded-xl bg-white border border-[#E2E8F0] p-4 flex items-start gap-3"
+                      className="rounded-xl bg-card border border-[#E2E8F0] p-4 flex items-start gap-3"
                     >
                       <div className="w-10 h-10 rounded-full bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 flex items-center justify-center text-[#0B6BCB] text-sm font-bold shrink-0">
                         {user.initials}
@@ -558,8 +558,8 @@ export default function CommitteePage() {
                         <span className={cn(
                           "inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold mt-1",
                           hasVoted
-                            ? "bg-[#DCFCE7] text-[#15803D]"
-                            : "bg-[#F1F5F9] text-[#64748B]"
+                            ? "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400"
+                            : "bg-muted text-[#64748B]"
                         )}>
                           {hasVoted ? <CheckCircle2 className="w-2.5 h-2.5" /> : <Clock className="w-2.5 h-2.5" />}
                           {hasVoted ? "Voted" : "Pending"}
@@ -574,7 +574,7 @@ export default function CommitteePage() {
 
           {/* Sidebar: Evidence Packets */}
           <div className="space-y-4">
-            <div className="rounded-2xl bg-white border border-[#E2E8F0] p-5 space-y-4">
+            <div className="rounded-2xl bg-card border border-[#E2E8F0] p-5 space-y-4">
               <div className="flex items-center gap-2">
                 <BookOpen className="w-4 h-4 text-[#0B6BCB]" />
                 <h3 className="font-display text-sm font-bold text-[#1A2332]">Evidence Packets</h3>
@@ -584,13 +584,13 @@ export default function CommitteePage() {
               <div className="space-y-3">
                 {evidencePackets.map((ev) => {
                   const alignMap: Record<string, string> = {
-                    aligned: "text-[#15803D]",
-                    partially_aligned: "text-[#B45309]",
-                    possible_update: "text-[#B45309]",
-                    conflict_detected: "text-[#B91C1C]",
+                    aligned: "text-[#15803D] dark:text-green-400",
+                    partially_aligned: "text-[#B45309] dark:text-amber-400",
+                    possible_update: "text-[#B45309] dark:text-amber-400",
+                    conflict_detected: "text-[#B91C1C] dark:text-red-400",
                   }
                   return (
-                    <div key={ev.id} className="rounded-xl bg-[#F1F5F9] border border-[#E2E8F0] p-3 space-y-2">
+                    <div key={ev.id} className="rounded-xl bg-muted border border-[#E2E8F0] p-3 space-y-2">
                       <p className="text-xs font-medium text-[#1A2332] leading-snug line-clamp-2">{ev.title}</p>
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-[10px] text-[#64748B]">{ev.source_name}</span>
@@ -612,15 +612,15 @@ export default function CommitteePage() {
             </div>
 
             {/* Quorum status */}
-            <div className="rounded-2xl bg-white border border-[#E2E8F0] p-5 space-y-3">
+            <div className="rounded-2xl bg-card border border-[#E2E8F0] p-5 space-y-3">
               <div className="flex items-center gap-2">
-                <ShieldAlert className="w-4 h-4 text-[#B45309]" />
+                <ShieldAlert className="w-4 h-4 text-[#B45309] dark:text-amber-400" />
                 <h3 className="font-display text-sm font-bold text-[#1A2332]">Quorum Status</h3>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-[#64748B]">Members Present</span>
-                  <span className="font-semibold text-[#B45309]">3 of 5</span>
+                  <span className="font-semibold text-[#B45309] dark:text-amber-400">3 of 5</span>
                 </div>
                 <div className="w-full h-2 rounded-full bg-[#E2E8F0] overflow-hidden">
                   <div className="h-full w-[60%] rounded-full bg-[#F59E0B]" />

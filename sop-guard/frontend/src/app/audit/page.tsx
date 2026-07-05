@@ -21,12 +21,12 @@ function formatTimestamp(ts: string) {
 
 function eventBadgeClass(eventType: AuditEventType) {
   if (eventType.startsWith("sop_")) return "bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30"
-  if (eventType.startsWith("proposal_") || eventType.startsWith("committee_")) return "bg-white text-[#475569] border border-[#CBD5E1]"
-  if (eventType.startsWith("training_") || eventType.startsWith("acknowledgment_")) return "bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]"
-  if (eventType.startsWith("legal_")) return "bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]"
-  if (eventType.startsWith("ai_")) return "bg-white text-[#475569] border border-[#CBD5E1]"
+  if (eventType.startsWith("proposal_") || eventType.startsWith("committee_")) return "bg-card text-[#475569] border border-[#CBD5E1]"
+  if (eventType.startsWith("training_") || eventType.startsWith("acknowledgment_")) return "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30"
+  if (eventType.startsWith("legal_")) return "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30"
+  if (eventType.startsWith("ai_")) return "bg-card text-[#475569] border border-[#CBD5E1]"
   // admin, user_login, export_generated, cross_reference
-  return "bg-white text-[#475569] border border-[#CBD5E1]"
+  return "bg-card text-[#475569] border border-[#CBD5E1]"
 }
 
 function eventLabel(eventType: AuditEventType) {
@@ -92,7 +92,7 @@ export default function AuditPage() {
     { label: "Events Today", value: "12", color: "text-[#0B6BCB]" },
     { label: "Total Events", value: String(MOCK_AUDIT.length), color: "text-[#1A2332]" },
     { label: "Event Types", value: String(uniqueEventTypes.length), color: "text-[#64748B]" },
-    { label: "Last Export", value: "Jun 28", color: "text-[#15803D]" },
+    { label: "Last Export", value: "Jun 28", color: "text-[#15803D] dark:text-green-400" },
   ]
 
   return (
@@ -113,7 +113,7 @@ export default function AuditPage() {
         </div>
 
         {/* Research disclaimer */}
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEE2E2] border border-[#FECACA] text-[#B91C1C] text-sm">
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400 text-sm">
           <AlertTriangle className="w-4 h-4 shrink-0" />
           <span><strong>Research Prototype. Not for Clinical Use.</strong> For demonstration only.</span>
         </div>
@@ -132,7 +132,7 @@ export default function AuditPage() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.07 }}
-              className="rounded-2xl bg-white border border-[#E2E8F0] p-4 text-center"
+              className="rounded-2xl bg-card border border-[#E2E8F0] p-4 text-center"
             >
               <p className={cn("text-2xl font-bold", s.color)}>{s.value}</p>
               <p className="text-xs text-[#64748B] mt-0.5">{s.label}</p>
@@ -148,13 +148,13 @@ export default function AuditPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search events, users, resources..."
-              className="w-full pl-9 pr-3 py-2 rounded-xl bg-white border border-[#E2E8F0] text-sm text-[#1A2332] placeholder:text-[#64748B] focus:outline-none focus:border-[#0B6BCB]/30"
+              className="w-full pl-9 pr-3 py-2 rounded-xl bg-card border border-[#E2E8F0] text-sm text-[#1A2332] placeholder:text-[#64748B] focus:outline-none focus:border-[#0B6BCB]/30"
             />
           </div>
           <select
             value={eventTypeFilter}
             onChange={(e) => setEventTypeFilter(e.target.value)}
-            className="px-3 py-2 rounded-xl bg-white border border-[#E2E8F0] text-sm text-[#1A2332] focus:outline-none focus:border-[#0B6BCB]/30"
+            className="px-3 py-2 rounded-xl bg-card border border-[#E2E8F0] text-sm text-[#1A2332] focus:outline-none focus:border-[#0B6BCB]/30"
           >
             <option value="all">All Event Types</option>
             {uniqueEventTypes.map((t) => (
@@ -164,14 +164,14 @@ export default function AuditPage() {
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
-            className="px-3 py-2 rounded-xl bg-white border border-[#E2E8F0] text-sm text-[#1A2332] focus:outline-none focus:border-[#0B6BCB]/30"
+            className="px-3 py-2 rounded-xl bg-card border border-[#E2E8F0] text-sm text-[#1A2332] focus:outline-none focus:border-[#0B6BCB]/30"
           >
             <option value="all">All Roles</option>
             {uniqueRoles.map((r) => (
               <option key={r} value={r}>{roleLabel[r] ?? r}</option>
             ))}
           </select>
-          <div className="flex items-center rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">
+          <div className="flex items-center rounded-xl border border-[#E2E8F0] bg-card overflow-hidden">
             {(["7d", "30d", "all"] as const).map((range) => (
               <button
                 key={range}
@@ -191,7 +191,7 @@ export default function AuditPage() {
         </div>
 
         {/* Audit table */}
-        <div className="rounded-2xl bg-white border border-[#E2E8F0] overflow-hidden">
+        <div className="rounded-2xl bg-card border border-[#E2E8F0] overflow-hidden">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[#E2E8F0] text-xs text-[#64748B] uppercase tracking-wider">
@@ -222,7 +222,7 @@ export default function AuditPage() {
                     </td>
                     <td className="p-3">
                       <p className="text-xs font-medium text-[#1A2332]">{event.user}</p>
-                      <span className="text-xs px-1.5 py-0.5 rounded bg-[#F1F5F9] text-[#64748B]">
+                      <span className="text-xs px-1.5 py-0.5 rounded bg-muted text-[#64748B]">
                         {roleLabel[event.user_role] ?? event.user_role}
                       </span>
                     </td>
@@ -236,7 +236,7 @@ export default function AuditPage() {
                     </td>
                     <td className="p-3 text-xs text-[#64748B] max-w-[140px]">
                       {event.compliance_impact ? (
-                        <span className="text-[#B45309] truncate block">{event.compliance_impact}</span>
+                        <span className="text-[#B45309] dark:text-amber-400 truncate block">{event.compliance_impact}</span>
                       ) : (
                         <span className="opacity-30">-</span>
                       )}
@@ -260,8 +260,8 @@ export default function AuditPage() {
                             <div className="p-4 border-b border-[#E2E8F0] grid md:grid-cols-2 gap-3 text-xs">
                               <div className="space-y-2">
                                 <p><span className="text-[#64748B]">Full Summary:</span> <span className="text-[#1A2332]">{event.action_summary}</span></p>
-                                {event.before_value && <p><span className="text-[#64748B]">Before:</span> <span className="text-[#B91C1C]">{event.before_value}</span></p>}
-                                {event.after_value && <p><span className="text-[#64748B]">After:</span> <span className="text-[#15803D]">{event.after_value}</span></p>}
+                                {event.before_value && <p><span className="text-[#64748B]">Before:</span> <span className="text-[#B91C1C] dark:text-red-400">{event.before_value}</span></p>}
+                                {event.after_value && <p><span className="text-[#64748B]">After:</span> <span className="text-[#15803D] dark:text-green-400">{event.after_value}</span></p>}
                                 {event.ip_address && <p><span className="text-[#64748B]">IP Address:</span> <span className="text-[#1A2332] font-mono">{event.ip_address}</span></p>}
                               </div>
                               <div className="space-y-2">
@@ -270,7 +270,7 @@ export default function AuditPage() {
                                   <p><span className="text-[#64748B]">Evidence:</span> <span className="text-[#0B6BCB]">{event.evidence_references.join(", ")}</span></p>
                                 )}
                                 {event.compliance_impact && (
-                                  <p><span className="text-[#64748B]">Compliance Impact:</span> <span className="text-[#B45309]">{event.compliance_impact}</span></p>
+                                  <p><span className="text-[#64748B]">Compliance Impact:</span> <span className="text-[#B45309] dark:text-amber-400">{event.compliance_impact}</span></p>
                                 )}
                               </div>
                             </div>
@@ -301,7 +301,7 @@ export default function AuditPage() {
               className={cn(
                 "flex items-center gap-2 px-8 py-3 rounded-xl text-sm font-semibold transition-all",
                 exportState === "success"
-                  ? "bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]"
+                  ? "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30"
                   : "bg-[#0B6BCB] hover:bg-[#0959AC] text-white"
               )}
             >
@@ -319,13 +319,13 @@ export default function AuditPage() {
                   initial={{ opacity: 0, y: -8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
-                  className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 rounded-xl bg-white border border-[#E2E8F0] overflow-hidden shadow-md"
+                  className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 rounded-xl bg-card border border-[#E2E8F0] overflow-hidden shadow-md"
                 >
                   {(["csv", "pdf", "json"] as const).map((fmt) => (
                     <button
                       key={fmt}
                       onClick={() => handleExport(fmt)}
-                      className="w-full px-6 py-2.5 text-sm text-[#1A2332] hover:bg-[#F1F5F9] transition-colors text-left uppercase font-medium"
+                      className="w-full px-6 py-2.5 text-sm text-[#1A2332] hover:bg-muted transition-colors text-left uppercase font-medium"
                     >
                       {fmt}
                     </button>

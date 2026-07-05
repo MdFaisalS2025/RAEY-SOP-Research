@@ -138,8 +138,8 @@ export default function BedsidePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F9FB] flex flex-col">
-      <header className="flex items-center justify-between px-6 py-4 bg-white border-b border-[#E2E8F0]">
+    <div className="min-h-screen bg-background flex flex-col">
+      <header className="flex items-center justify-between px-6 py-4 bg-card border-b border-[#E2E8F0]">
         <h1 className="text-xl font-semibold text-[#1A2332]">Bedside Lookup</h1>
         <div className="flex items-center gap-4">
           <button
@@ -181,7 +181,7 @@ export default function BedsidePage() {
             value={transcript}
             onChange={e => setTranscript(e.target.value)}
             placeholder="Ask a clinical question"
-            className="flex-1 text-2xl px-4 py-4 rounded-xl border border-[#CBD5E1] bg-white text-[#1A2332] focus:outline-none focus:ring-2 focus:ring-[#0B6BCB]/40 focus:border-[#0B6BCB]"
+            className="flex-1 text-2xl px-4 py-4 rounded-xl border border-[#CBD5E1] bg-card text-[#1A2332] focus:outline-none focus:ring-2 focus:ring-[#0B6BCB]/40 focus:border-[#0B6BCB]"
           />
           <button
             type="submit"
@@ -197,7 +197,7 @@ export default function BedsidePage() {
             <button
               key={q}
               onClick={() => { setTranscript(q); runQuery(q) }}
-              className="text-base px-4 py-3 rounded-xl bg-white border border-[#E2E8F0] text-[#1A2332] hover:border-[#0B6BCB]/40 hover:bg-[#0B6BCB]/5 transition-colors shadow-sm"
+              className="text-base px-4 py-3 rounded-xl bg-card border border-[#E2E8F0] text-[#1A2332] hover:border-[#0B6BCB]/40 hover:bg-[#0B6BCB]/5 transition-colors shadow-sm"
             >
               {q}
             </button>
@@ -210,17 +210,17 @@ export default function BedsidePage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="w-full bg-white border border-[#E2E8F0] rounded-2xl shadow-sm p-6"
+              className="w-full bg-card border border-[#E2E8F0] rounded-2xl shadow-sm p-6"
             >
               {answer.hasConflict && (
-                <div className="flex items-center gap-2 mb-4 px-4 py-2.5 bg-[#FEE2E2] border border-[#FECACA] rounded-lg text-[#B91C1C] font-medium text-lg">
+                <div className="flex items-center gap-2 mb-4 px-4 py-2.5 bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 rounded-lg text-[#B91C1C] dark:text-red-400 font-medium text-lg">
                   <AlertTriangle className="w-5 h-5 shrink-0" />
                   Conflicting guidance detected. Verify with your charge nurse.
                 </div>
               )}
 
               {answer.keyValue && (
-                <div className="mb-4 px-4 py-3 bg-[#DCFCE7] border border-[#BBF7D0] rounded-lg text-[#15803D] text-xl font-semibold">
+                <div className="mb-4 px-4 py-3 bg-[#DCFCE7] dark:bg-green-500/10 border border-[#BBF7D0] dark:border-green-500/30 rounded-lg text-[#15803D] dark:text-green-400 text-xl font-semibold">
                   {answer.keyValue}
                 </div>
               )}
@@ -236,7 +236,7 @@ export default function BedsidePage() {
               {speaking && (
                 <button
                   onClick={stopAudio}
-                  className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-[#B45309] bg-[#FEF3C7] border border-[#FDE68A] rounded-lg px-4 py-2"
+                  className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-[#B45309] dark:text-amber-400 bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 rounded-lg px-4 py-2"
                 >
                   <VolumeX className="w-4 h-4" /> Stop audio
                 </button>

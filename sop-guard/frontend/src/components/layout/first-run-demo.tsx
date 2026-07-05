@@ -47,7 +47,7 @@ export function FirstRunDemo() {
         <motion.div
           initial={{ scale: 0.95, y: 16 }}
           animate={{ scale: 1, y: 0 }}
-          className="relative w-full max-w-md rounded-2xl bg-white border border-[#E2E8F0] shadow-md p-6"
+          className="relative w-full max-w-md rounded-2xl bg-card border border-[#E2E8F0] shadow-md p-6"
         >
           <button
             onClick={dismiss}
@@ -79,13 +79,13 @@ export function FirstRunDemo() {
               <p className="text-sm text-[#64748B] leading-relaxed mb-3">
                 See how SOP-Guard answers a real clinical question with sources you can trace.
               </p>
-              <div className="bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg px-3 py-2.5 mb-4">
+              <div className="bg-muted border border-[#E2E8F0] rounded-lg px-3 py-2.5 mb-4">
                 <p className="text-[13px] text-[#1A2332] italic">&quot;{EXAMPLE_QUERY}&quot;</p>
               </div>
             </>
           )}
 
-          <div className="flex items-start gap-2 px-3 py-2.5 bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg mb-5">
+          <div className="flex items-start gap-2 px-3 py-2.5 bg-muted border border-[#E2E8F0] rounded-lg mb-5">
             <Clock className="w-4 h-4 text-[#64748B] shrink-0 mt-0.5" />
             <p className="text-[11px] text-[#64748B] leading-relaxed">
               This usually takes 8 to 12 minutes to look up manually. SOP-Guard answers in seconds.

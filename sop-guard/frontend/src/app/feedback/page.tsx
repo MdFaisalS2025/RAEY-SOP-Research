@@ -40,8 +40,8 @@ const actionIcon: Record<string, React.ReactNode> = {
   sop_viewed: <Eye className="w-4 h-4 text-[#0B6BCB]" />,
   query_submitted: <Search className="w-4 h-4 text-[#0B6BCB]" />,
   source_clicked: <Link className="w-4 h-4 text-[#0D9488]" />,
-  sop_uploaded: <Upload className="w-4 h-4 text-[#15803D]" />,
-  feedback_submitted: <MessageSquare className="w-4 h-4 text-[#B45309]" />,
+  sop_uploaded: <Upload className="w-4 h-4 text-[#15803D] dark:text-green-400" />,
+  feedback_submitted: <MessageSquare className="w-4 h-4 text-[#B45309] dark:text-amber-400" />,
 }
 
 const actionLabel: Record<string, string> = {
@@ -54,9 +54,9 @@ const actionLabel: Record<string, string> = {
 
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
-    new: "bg-[#FEF3C7] text-[#B45309] border-[#FDE68A]",
+    new: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30",
     reviewed: "bg-[#0B6BCB]/10 text-[#0B6BCB] border-[#0B6BCB]/30",
-    resolved: "bg-[#DCFCE7] text-[#15803D] border-[#BBF7D0]",
+    resolved: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30",
   }
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${styles[status] || styles.new}`}>
@@ -67,10 +67,10 @@ function StatusBadge({ status }: { status: string }) {
 
 function TypeBadge({ type }: { type: string }) {
   const styles: Record<string, string> = {
-    unsafe: "bg-[#FEE2E2] text-[#B91C1C] border-[#FECACA]",
-    incorrect: "bg-[#FEF3C7] text-[#B45309] border-[#FDE68A]",
+    unsafe: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30",
+    incorrect: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30",
     missing: "bg-[#0D9488]/10 text-[#0D9488] border-[#0D9488]/30",
-    "low confidence": "bg-white text-[#475569] border-[#CBD5E1]",
+    "low confidence": "bg-card text-[#475569] border-[#CBD5E1]",
   }
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${styles[type] || styles.missing}`}>
@@ -216,7 +216,7 @@ export default function FeedbackPage() {
 
   const summaryCards = [
     { label: "Total Queries", value: String(totalQueries), icon: Search, color: "text-[#0B6BCB]" },
-    { label: "Avg Confidence", value: `${(avgConfidence * 100).toFixed(0)}%`, icon: TrendingUp, color: "text-[#15803D]" },
+    { label: "Avg Confidence", value: `${(avgConfidence * 100).toFixed(0)}%`, icon: TrendingUp, color: "text-[#15803D] dark:text-green-400" },
     { label: "SOPs Viewed", value: String(sopsViewed), icon: Eye, color: "text-[#0B6BCB]" },
     { label: "Feedback Items", value: String(feedbackTotal), icon: MessageSquare, color: "text-[#0D9488]" },
   ]
@@ -226,14 +226,14 @@ export default function FeedbackPage() {
       <div className="p-6 max-w-6xl mx-auto space-y-6">
         {/* Demo notice */}
         {isDemo && (
-          <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEF3C7] border border-[#FDE68A] text-[#B45309] text-sm">
+          <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 text-sm">
             <AlertTriangle className="w-4 h-4 shrink-0" />
             <span>Backend unavailable -- showing demo data for demonstration purposes.</span>
           </div>
         )}
 
         {/* Research disclaimer */}
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#F1F5F9] border border-[#E2E8F0] text-[#64748B] text-xs">
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-muted border border-[#E2E8F0] text-[#64748B] text-xs">
           <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
           <span>Research Prototype -- Activity data is collected for system evaluation. Not intended for clinical decision-making.</span>
         </div>
@@ -266,7 +266,7 @@ export default function FeedbackPage() {
         {/* ─── Section 2: Needs Review Queue ─── */}
         <div className="p-5 rounded-2xl bg-card dark:bg-white/[0.03] backdrop-blur-sm border border-border dark:border-white/[0.06]">
           <div className="flex items-center gap-2 mb-4">
-            <AlertTriangle className="w-4 h-4 text-[#B45309]" />
+            <AlertTriangle className="w-4 h-4 text-[#B45309] dark:text-amber-400" />
             <h3 className="text-sm font-semibold text-foreground">Needs Review</h3>
             <span className="ml-auto text-xs text-muted-foreground">{reviewQueue.filter(r => r.status === "new").length} pending</span>
           </div>

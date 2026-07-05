@@ -15,9 +15,9 @@ import { useRole } from "@/lib/role-context"
 import type { AttestationRecord } from "@/lib/governance-types"
 
 function scoreColor(score: number) {
-  if (score >= 90) return "text-[#15803D]"
-  if (score >= 70) return "text-[#B45309]"
-  return "text-[#B91C1C]"
+  if (score >= 90) return "text-[#15803D] dark:text-green-400"
+  if (score >= 70) return "text-[#B45309] dark:text-amber-400"
+  return "text-[#B91C1C] dark:text-red-400"
 }
 
 function progressColor(score: number) {
@@ -27,10 +27,10 @@ function progressColor(score: number) {
 }
 
 const statusLabel: Record<string, { label: string; className: string }> = {
-  needs_update: { label: "Needs Update", className: "bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA]" },
-  under_review: { label: "Under Review", className: "bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]" },
-  approved: { label: "Approved", className: "bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]" },
-  draft: { label: "Draft", className: "bg-white text-[#475569] border border-[#CBD5E1]" },
+  needs_update: { label: "Needs Update", className: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30" },
+  under_review: { label: "Under Review", className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30" },
+  approved: { label: "Approved", className: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30" },
+  draft: { label: "Draft", className: "bg-card text-[#475569] border border-[#CBD5E1]" },
 }
 
 const roleLabel: Record<string, string> = {
@@ -95,10 +95,10 @@ function CertificateModal({
         initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.96 }}
-        className="relative w-full max-w-lg rounded-2xl bg-[#F1F5F9] border border-[#E2E8F0] shadow-md overflow-hidden"
+        className="relative w-full max-w-lg rounded-2xl bg-muted border border-[#E2E8F0] shadow-md overflow-hidden"
       >
         {/* Certificate header */}
-        <div className="bg-white border-b border-[#E2E8F0] px-6 py-4 flex items-center justify-between">
+        <div className="bg-card border-b border-[#E2E8F0] px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Shield className="w-5 h-5 text-[#0B6BCB]" />
             <span className="font-mono text-xs text-[#0B6BCB] uppercase tracking-widest">SOP-Guard Attestation Certificate</span>
@@ -149,7 +149,7 @@ function CertificateModal({
             </div>
             <div className="flex justify-between text-xs">
               <span className="text-[#94A3B8]">Status</span>
-              <span className="text-[#15803D] flex items-center gap-1">
+              <span className="text-[#15803D] dark:text-green-400 flex items-center gap-1">
                 <Check className="w-3 h-3" /> Legally Valid
               </span>
             </div>
@@ -157,10 +157,10 @@ function CertificateModal({
         </div>
 
         {/* Actions */}
-        <div className="px-6 py-4 border-t border-[#E2E8F0] flex items-center justify-between bg-white">
+        <div className="px-6 py-4 border-t border-[#E2E8F0] flex items-center justify-between bg-card">
           <button
             onClick={() => window.print()}
-            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-[#F1F5F9] text-[#334155] hover:bg-[#E2E8F0] transition-colors border border-[#E2E8F0]"
+            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-muted text-[#334155] hover:bg-[#E2E8F0] transition-colors border border-[#E2E8F0]"
           >
             <Printer className="w-3.5 h-3.5" /> Print Certificate
           </button>
@@ -217,9 +217,9 @@ function TestAttestationModal({
         initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.96 }}
-        className="relative w-full max-w-md rounded-2xl bg-[#F1F5F9] border border-[#E2E8F0] shadow-md overflow-hidden"
+        className="relative w-full max-w-md rounded-2xl bg-muted border border-[#E2E8F0] shadow-md overflow-hidden"
       >
-        <div className="bg-white border-b border-[#E2E8F0] px-6 py-4 flex items-center justify-between">
+        <div className="bg-card border-b border-[#E2E8F0] px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Shield className="w-5 h-5 text-[#0B6BCB]" />
             <span className="font-semibold text-sm">Test Attestation Flow</span>
@@ -238,7 +238,7 @@ function TestAttestationModal({
                 version <span className="text-[#0B6BCB] font-mono">{sopVersion}</span>.
               </p>
 
-              <div className="rounded-xl bg-[#FEF3C7] border border-[#FDE68A] p-4 text-xs text-[#B45309] leading-relaxed">
+              <div className="rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 p-4 text-xs text-[#B45309] dark:text-amber-400 leading-relaxed">
                 <p className="font-semibold mb-1">Legal Statement</p>
                 <p>
                   By clicking Attest, I confirm I have read, understood, and will comply with this policy
@@ -256,7 +256,7 @@ function TestAttestationModal({
                 </button>
                 <button
                   onClick={onClose}
-                  className="flex-1 py-2.5 rounded-xl bg-[#F1F5F9] text-[#334155] hover:bg-[#E2E8F0] text-sm font-medium transition-colors border border-[#E2E8F0]"
+                  className="flex-1 py-2.5 rounded-xl bg-muted text-[#334155] hover:bg-[#E2E8F0] text-sm font-medium transition-colors border border-[#E2E8F0]"
                 >
                   Cancel
                 </button>
@@ -264,14 +264,14 @@ function TestAttestationModal({
             </>
           ) : (
             <div className="text-center space-y-4 py-2">
-              <div className="w-14 h-14 rounded-full bg-[#DCFCE7] flex items-center justify-center mx-auto">
-                <Check className="w-7 h-7 text-[#15803D]" />
+              <div className="w-14 h-14 rounded-full bg-[#DCFCE7] dark:bg-green-500/10 flex items-center justify-center mx-auto">
+                <Check className="w-7 h-7 text-[#15803D] dark:text-green-400" />
               </div>
               <div>
                 <p className="font-semibold text-[#1A2332] text-base">Attestation Recorded</p>
                 <p className="text-xs text-[#64748B] mt-1">Your acknowledgment has been logged with a legal timestamp.</p>
               </div>
-              <div className="rounded-xl bg-white border border-[#E2E8F0] p-3 text-xs text-left space-y-1.5">
+              <div className="rounded-xl bg-card border border-[#E2E8F0] p-3 text-xs text-left space-y-1.5">
                 <div className="flex justify-between">
                   <span className="text-[#94A3B8]">Timestamp</span>
                   <span className="text-[#334155] font-mono">{formatAttestedAtLong(timestamp)}</span>
@@ -326,17 +326,17 @@ export default function CompliancePage() {
   }
 
   const stats = [
-    { label: "Overall Rate", value: `${MOCK_DASHBOARD_STATS.compliance_rate}%`, icon: TrendingUp, color: "text-[#15803D]", bg: "bg-[#DCFCE7]" },
-    { label: "Staff Overdue", value: "149", icon: Clock, color: "text-[#B91C1C]", bg: "bg-[#FEE2E2]" },
-    { label: "SOPs Needing Review", value: String(MOCK_DASHBOARD_STATS.sops_needs_review), icon: FileText, color: "text-[#B45309]", bg: "bg-[#FEF3C7]" },
-    { label: "Legal Flags", value: String(MOCK_DASHBOARD_STATS.legal_flags), icon: Flag, color: "text-[#B91C1C]", bg: "bg-[#FEE2E2]" },
+    { label: "Overall Rate", value: `${MOCK_DASHBOARD_STATS.compliance_rate}%`, icon: TrendingUp, color: "text-[#15803D] dark:text-green-400", bg: "bg-[#DCFCE7] dark:bg-green-500/10" },
+    { label: "Staff Overdue", value: "149", icon: Clock, color: "text-[#B91C1C] dark:text-red-400", bg: "bg-[#FEE2E2] dark:bg-red-500/10" },
+    { label: "SOPs Needing Review", value: String(MOCK_DASHBOARD_STATS.sops_needs_review), icon: FileText, color: "text-[#B45309] dark:text-amber-400", bg: "bg-[#FEF3C7] dark:bg-amber-500/10" },
+    { label: "Legal Flags", value: String(MOCK_DASHBOARD_STATS.legal_flags), icon: Flag, color: "text-[#B91C1C] dark:text-red-400", bg: "bg-[#FEE2E2] dark:bg-red-500/10" },
   ]
 
   const attestationStats = [
     { label: "Total Attestations This Month", value: attestations.length, color: "text-[#0B6BCB]" },
-    { label: "Legally Valid", value: attestations.filter((a) => a.is_valid).length, color: "text-[#15803D]" },
-    { label: "With Timestamp + IP", value: attestations.filter((a) => a.ip_address && a.attested_at).length, color: "text-[#15803D]" },
-    { label: "Exportable for Litigation", value: "Yes", color: "text-[#15803D]" },
+    { label: "Legally Valid", value: attestations.filter((a) => a.is_valid).length, color: "text-[#15803D] dark:text-green-400" },
+    { label: "With Timestamp + IP", value: attestations.filter((a) => a.ip_address && a.attested_at).length, color: "text-[#15803D] dark:text-green-400" },
+    { label: "Exportable for Litigation", value: "Yes", color: "text-[#15803D] dark:text-green-400" },
   ]
 
   return (
@@ -375,13 +375,13 @@ export default function CompliancePage() {
         </div>
 
         {/* Research disclaimer */}
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEE2E2] border border-[#FECACA] text-[#B91C1C] text-sm">
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400 text-sm">
           <AlertTriangle className="w-4 h-4 shrink-0" />
           <span><strong>Research Prototype. Not for Clinical Use.</strong> For demonstration only. All clinical decisions must follow institutional protocols.</span>
         </div>
 
         {/* Responsible AI note */}
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEF3C7] border border-[#FDE68A] text-[#B45309] text-sm">
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 text-sm">
           <AlertTriangle className="w-4 h-4 shrink-0" />
           <span>For audit preparation only. Verify all data against live records before regulatory submission.</span>
         </div>
@@ -394,7 +394,7 @@ export default function CompliancePage() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.07 }}
-              className="rounded-2xl bg-white border border-[#E2E8F0] p-4 flex items-center gap-3"
+              className="rounded-2xl bg-card border border-[#E2E8F0] p-4 flex items-center gap-3"
             >
               <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", s.bg)}>
                 <s.icon className={cn("w-5 h-5", s.color)} />
@@ -417,7 +417,7 @@ export default function CompliancePage() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
-                className="rounded-2xl bg-white border border-[#E2E8F0] p-4 space-y-3"
+                className="rounded-2xl bg-card border border-[#E2E8F0] p-4 space-y-3"
               >
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold text-sm">{dept.department}</h3>
@@ -434,27 +434,27 @@ export default function CompliancePage() {
                 </div>
                 {/* Mini stats */}
                 <div className="grid grid-cols-3 gap-1.5 text-xs">
-                  <div className="rounded-lg bg-[#F1F5F9] p-1.5 text-center">
+                  <div className="rounded-lg bg-muted p-1.5 text-center">
                     <p className="font-semibold text-[#1A2332]">{dept.total_sops}</p>
                     <p className="text-[#64748B]">Total SOPs</p>
                   </div>
-                  <div className="rounded-lg bg-[#F1F5F9] p-1.5 text-center">
-                    <p className="font-semibold text-[#15803D]">{dept.acknowledged}</p>
+                  <div className="rounded-lg bg-muted p-1.5 text-center">
+                    <p className="font-semibold text-[#15803D] dark:text-green-400">{dept.acknowledged}</p>
                     <p className="text-[#64748B]">Ack&apos;d</p>
                   </div>
-                  <div className="rounded-lg bg-[#F1F5F9] p-1.5 text-center">
-                    <p className="font-semibold text-[#B91C1C]">{dept.overdue_acknowledgments}</p>
+                  <div className="rounded-lg bg-muted p-1.5 text-center">
+                    <p className="font-semibold text-[#B91C1C] dark:text-red-400">{dept.overdue_acknowledgments}</p>
                     <p className="text-[#64748B]">Overdue</p>
                   </div>
-                  <div className="rounded-lg bg-[#F1F5F9] p-1.5 text-center">
+                  <div className="rounded-lg bg-muted p-1.5 text-center">
                     <p className="font-semibold text-[#0B6BCB]">{dept.training_completion_rate}%</p>
                     <p className="text-[#64748B]">Training</p>
                   </div>
-                  <div className="rounded-lg bg-[#F1F5F9] p-1.5 text-center">
-                    <p className="font-semibold text-[#B45309]">{dept.risk_flags}</p>
+                  <div className="rounded-lg bg-muted p-1.5 text-center">
+                    <p className="font-semibold text-[#B45309] dark:text-amber-400">{dept.risk_flags}</p>
                     <p className="text-[#64748B]">Risk Flags</p>
                   </div>
-                  <div className="rounded-lg bg-[#F1F5F9] p-1.5 text-center">
+                  <div className="rounded-lg bg-muted p-1.5 text-center">
                     <p className="font-semibold text-[#64748B]">{dept.open_proposals}</p>
                     <p className="text-[#64748B]">Proposals</p>
                   </div>
@@ -473,7 +473,7 @@ export default function CompliancePage() {
         {/* SOPs Requiring Review */}
         <section>
           <h2 className="text-lg font-semibold font-display mb-3">SOPs Requiring Review</h2>
-          <div className="rounded-2xl bg-white border border-[#E2E8F0] overflow-hidden">
+          <div className="rounded-2xl bg-card border border-[#E2E8F0] overflow-hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[#E2E8F0] text-xs text-[#64748B] uppercase tracking-wider">
@@ -498,14 +498,14 @@ export default function CompliancePage() {
                         {statusLabel[sop.status]?.label ?? sop.status}
                       </span>
                     </td>
-                    <td className="p-4 text-[#B45309] text-xs">{sop.review_due_date}</td>
+                    <td className="p-4 text-[#B45309] dark:text-amber-400 text-xs">{sop.review_due_date}</td>
                     <td className="p-4 text-[#64748B] text-xs">{sop.owner}</td>
                     <td className="p-4">
                       <div className="flex items-center gap-2">
                         <button className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-[#0B6BCB]/10 text-[#0B6BCB] hover:bg-[#0B6BCB]/20 transition-colors">
                           <Eye className="w-3 h-3" /> View SOP
                         </button>
-                        <button className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-[#F1F5F9] text-[#64748B] hover:bg-[#E2E8F0] transition-colors">
+                        <button className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-muted text-[#64748B] hover:bg-[#E2E8F0] transition-colors">
                           <GitBranch className="w-3 h-3" /> Create Proposal
                         </button>
                       </div>
@@ -535,7 +535,7 @@ export default function CompliancePage() {
           {/* Attestation stats row */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {attestationStats.map((s) => (
-              <div key={s.label} className="rounded-xl bg-white border border-[#E2E8F0] p-3">
+              <div key={s.label} className="rounded-xl bg-card border border-[#E2E8F0] p-3">
                 <p className={cn("text-xl font-bold", s.color)}>{s.value}</p>
                 <p className="text-xs text-[#64748B] mt-0.5">{s.label}</p>
               </div>
@@ -543,7 +543,7 @@ export default function CompliancePage() {
           </div>
 
           {/* "What is Legal Attestation?" info card */}
-          <div className="rounded-xl bg-white border border-[#E2E8F0] overflow-hidden">
+          <div className="rounded-xl bg-card border border-[#E2E8F0] overflow-hidden">
             <button
               onClick={() => setInfoExpanded((v) => !v)}
               className="w-full flex items-center justify-between px-4 py-3 text-sm text-[#334155] hover:bg-[#F8FAFC] transition-colors"
@@ -577,7 +577,7 @@ export default function CompliancePage() {
           </div>
 
           {/* Attestation records table */}
-          <div className="rounded-2xl bg-white border border-[#E2E8F0] overflow-hidden">
+          <div className="rounded-2xl bg-card border border-[#E2E8F0] overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm min-w-[860px]">
                 <thead>
@@ -597,7 +597,7 @@ export default function CompliancePage() {
                     <tr key={rec.id} className="border-b border-[#EDF1F5] hover:bg-[#F8FAFC] transition-colors">
                       <td className="p-4">
                         <p className="font-medium text-[#1A2332]">{rec.user_name}</p>
-                        <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded bg-[#F1F5F9] text-[#64748B] text-[10px] border border-[#E2E8F0]">
+                        <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded bg-muted text-[#64748B] text-[10px] border border-[#E2E8F0]">
                           {roleLabel[rec.user_role] ?? rec.user_role}
                         </span>
                       </td>
@@ -620,17 +620,17 @@ export default function CompliancePage() {
                       </td>
                       <td className="p-4">
                         {rec.is_valid ? (
-                          <span className="flex items-center gap-1 text-[#15803D] text-xs">
+                          <span className="flex items-center gap-1 text-[#15803D] dark:text-green-400 text-xs">
                             <Check className="w-3.5 h-3.5" /> Valid
                           </span>
                         ) : (
-                          <span className="text-[#B91C1C] text-xs">Invalid</span>
+                          <span className="text-[#B91C1C] dark:text-red-400 text-xs">Invalid</span>
                         )}
                       </td>
                       <td className="p-4">
                         <button
                           onClick={() => setCertRecord(rec)}
-                          className="text-xs px-2.5 py-1 rounded-lg bg-[#F1F5F9] text-[#334155] hover:bg-[#E2E8F0] transition-colors border border-[#E2E8F0]"
+                          className="text-xs px-2.5 py-1 rounded-lg bg-muted text-[#334155] hover:bg-[#E2E8F0] transition-colors border border-[#E2E8F0]"
                         >
                           View Certificate
                         </button>
@@ -651,7 +651,7 @@ export default function CompliancePage() {
             className={cn(
               "flex items-center gap-2 px-8 py-3 rounded-xl text-sm font-semibold transition-all",
               exportState === "success"
-                ? "bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]"
+                ? "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30"
                 : "bg-[#0B6BCB] hover:bg-[#0959AC] text-white"
             )}
           >

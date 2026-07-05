@@ -14,27 +14,27 @@ import { useRole } from "@/lib/role-context"
 import type { LegalRiskItem } from "@/lib/governance-types"
 
 const riskClassConfig: Record<LegalRiskItem["risk_classification"], { label: string; className: string }> = {
-  critical: { label: "Critical", className: "bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA]" },
-  high: { label: "High", className: "bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA]" },
-  medium: { label: "Medium", className: "bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]" },
-  low: { label: "Low", className: "bg-white text-[#475569] border border-[#CBD5E1]" },
+  critical: { label: "Critical", className: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30" },
+  high: { label: "High", className: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30" },
+  medium: { label: "Medium", className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30" },
+  low: { label: "Low", className: "bg-card text-[#475569] border border-[#CBD5E1]" },
 }
 
 const issueTypeConfig: Record<LegalRiskItem["issue_type"], string> = {
-  liability: "bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA]",
-  compliance: "bg-[#F1F5F9] text-[#64748B] border border-[#E2E8F0]",
-  regulatory: "bg-[#F1F5F9] text-[#64748B] border border-[#E2E8F0]",
-  privacy: "bg-[#F1F5F9] text-[#64748B] border border-[#E2E8F0]",
-  documentation: "bg-[#F1F5F9] text-[#64748B] border border-[#E2E8F0]",
-  consent: "bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]",
+  liability: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30",
+  compliance: "bg-muted text-[#64748B] border border-[#E2E8F0]",
+  regulatory: "bg-muted text-[#64748B] border border-[#E2E8F0]",
+  privacy: "bg-muted text-[#64748B] border border-[#E2E8F0]",
+  documentation: "bg-muted text-[#64748B] border border-[#E2E8F0]",
+  consent: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30",
 }
 
 const legalStatusConfig: Record<LegalRiskItem["status"], { label: string; className: string }> = {
-  open: { label: "Open", className: "bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA]" },
-  under_review: { label: "Under Review", className: "bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]" },
-  resolved: { label: "Resolved", className: "bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]" },
-  on_hold: { label: "On Hold", className: "bg-white text-[#475569] border border-[#CBD5E1]" },
-  escalated: { label: "Escalated", className: "bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA]" },
+  open: { label: "Open", className: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30" },
+  under_review: { label: "Under Review", className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30" },
+  resolved: { label: "Resolved", className: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30" },
+  on_hold: { label: "On Hold", className: "bg-card text-[#475569] border border-[#CBD5E1]" },
+  escalated: { label: "Escalated", className: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30" },
 }
 
 function isUrgent(dateStr?: string) {
@@ -58,10 +58,10 @@ export default function LegalPage() {
   }
 
   const stats = [
-    { label: "Open Issues", value: String(MOCK_LEGAL.filter((l) => l.status === "open").length), color: "text-[#B91C1C]", bg: "bg-[#FEE2E2]", icon: AlertTriangle },
-    { label: "Critical Items", value: String(riskCounts.critical), color: "text-[#B91C1C]", bg: "bg-[#FEE2E2]", icon: ShieldAlert },
-    { label: "Under Review", value: String(MOCK_LEGAL.filter((l) => l.status === "under_review").length), color: "text-[#B45309]", bg: "bg-[#FEF3C7]", icon: Clock },
-    { label: "Resolved This Quarter", value: "3", color: "text-[#15803D]", bg: "bg-[#DCFCE7]", icon: CheckCircle },
+    { label: "Open Issues", value: String(MOCK_LEGAL.filter((l) => l.status === "open").length), color: "text-[#B91C1C] dark:text-red-400", bg: "bg-[#FEE2E2] dark:bg-red-500/10", icon: AlertTriangle },
+    { label: "Critical Items", value: String(riskCounts.critical), color: "text-[#B91C1C] dark:text-red-400", bg: "bg-[#FEE2E2] dark:bg-red-500/10", icon: ShieldAlert },
+    { label: "Under Review", value: String(MOCK_LEGAL.filter((l) => l.status === "under_review").length), color: "text-[#B45309] dark:text-amber-400", bg: "bg-[#FEF3C7] dark:bg-amber-500/10", icon: Clock },
+    { label: "Resolved This Quarter", value: "3", color: "text-[#15803D] dark:text-green-400", bg: "bg-[#DCFCE7] dark:bg-green-500/10", icon: CheckCircle },
   ]
 
   return (
@@ -72,8 +72,8 @@ export default function LegalPage() {
 
         {/* Header */}
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-[#FEE2E2] flex items-center justify-center">
-            <Scale className="w-6 h-6 text-[#B91C1C]" />
+          <div className="w-12 h-12 rounded-2xl bg-[#FEE2E2] dark:bg-red-500/10 flex items-center justify-center">
+            <Scale className="w-6 h-6 text-[#B91C1C] dark:text-red-400" />
           </div>
           <div>
             <h1 className="text-2xl font-bold font-display">Legal &amp; Risk Center</h1>
@@ -82,13 +82,13 @@ export default function LegalPage() {
         </div>
 
         {/* Research disclaimer */}
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEE2E2] border border-[#FECACA] text-[#B91C1C] text-sm">
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400 text-sm">
           <AlertTriangle className="w-4 h-4 shrink-0" />
           <span><strong>Research Prototype. Not for Clinical Use.</strong> For demonstration only.</span>
         </div>
 
         {/* Important disclaimer */}
-        <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-[#FEE2E2] border border-[#FECACA] text-[#B91C1C] text-sm">
+        <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400 text-sm">
           <ShieldAlert className="w-5 h-5 shrink-0 mt-0.5" />
           <span>
             <strong>Important:</strong> This module is for internal governance tracking only. All legal determinations require review by qualified legal counsel.
@@ -103,7 +103,7 @@ export default function LegalPage() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.07 }}
-              className="rounded-2xl bg-white border border-[#E2E8F0] p-4 flex items-center gap-3"
+              className="rounded-2xl bg-card border border-[#E2E8F0] p-4 flex items-center gap-3"
             >
               <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", s.bg)}>
                 <s.icon className={cn("w-5 h-5", s.color)} />
@@ -118,7 +118,7 @@ export default function LegalPage() {
 
         {/* Permission check banner */}
         {!canEdit && (
-          <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-[#FEF3C7] border border-[#FDE68A] text-[#B45309] text-sm">
+          <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 text-sm">
             <Eye className="w-4 h-4 shrink-0" />
             <span><strong>Limited Access:</strong> You are viewing in read-only mode. Legal risk management requires Legal/Risk or Compliance Officer role.</span>
           </div>
@@ -138,7 +138,7 @@ export default function LegalPage() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.06 }}
-                className="rounded-2xl bg-white border border-[#E2E8F0] p-5 space-y-3"
+                className="rounded-2xl bg-card border border-[#E2E8F0] p-5 space-y-3"
               >
                 {/* Top row: badges + status */}
                 <div className="flex items-start justify-between gap-3">
@@ -160,7 +160,7 @@ export default function LegalPage() {
                   <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 text-[#0B6BCB] text-xs">
                     <FileText className="w-3 h-3" /> {item.sop_title}
                   </span>
-                  <span className="px-2.5 py-1 rounded-lg bg-[#F1F5F9] border border-[#E2E8F0] text-[#64748B] text-xs">
+                  <span className="px-2.5 py-1 rounded-lg bg-muted border border-[#E2E8F0] text-[#64748B] text-xs">
                     {item.department}
                   </span>
                 </div>
@@ -175,7 +175,7 @@ export default function LegalPage() {
 
                 {/* Resolution deadline */}
                 {item.resolution_required_by && (
-                  <p className={cn("text-xs flex items-center gap-1", isUrgent(item.resolution_required_by) ? "text-[#B91C1C] font-medium" : "text-[#64748B]")}>
+                  <p className={cn("text-xs flex items-center gap-1", isUrgent(item.resolution_required_by) ? "text-[#B91C1C] dark:text-red-400 font-medium" : "text-[#64748B]")}>
                     <Clock className="w-3 h-3" />
                     Resolution deadline: {item.resolution_required_by}
                     {isUrgent(item.resolution_required_by) && " - URGENT"}
@@ -209,13 +209,13 @@ export default function LegalPage() {
                 {/* Action buttons for legal_risk role */}
                 {canEdit && (
                   <div className="flex items-center gap-2 pt-1">
-                    <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-[#DCFCE7] text-[#15803D] hover:bg-[#BBF7D0] border border-[#BBF7D0] transition-colors font-medium">
+                    <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 hover:bg-[#BBF7D0] border border-[#BBF7D0] dark:border-green-500/30 transition-colors font-medium">
                       <CheckCircle className="w-3.5 h-3.5" /> Mark Resolved
                     </button>
-                    <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-[#FEE2E2] text-[#B91C1C] hover:bg-[#FECACA] border border-[#FECACA] transition-colors font-medium">
+                    <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 hover:bg-[#FECACA] border border-[#FECACA] dark:border-red-500/30 transition-colors font-medium">
                       <ShieldAlert className="w-3.5 h-3.5" /> Escalate
                     </button>
-                    <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-[#F1F5F9] text-[#64748B] hover:bg-[#E2E8F0] border border-[#E2E8F0] transition-colors font-medium">
+                    <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-muted text-[#64748B] hover:bg-[#E2E8F0] border border-[#E2E8F0] transition-colors font-medium">
                       <FileText className="w-3.5 h-3.5" /> Add Note
                     </button>
                   </div>
@@ -235,18 +235,18 @@ export default function LegalPage() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.07 }}
-                className="rounded-2xl bg-white border border-[#E2E8F0] p-4 space-y-2"
+                className="rounded-2xl bg-card border border-[#E2E8F0] p-4 space-y-2"
               >
                 <p className="text-sm font-semibold text-[#1A2332]">{proposal.title}</p>
                 <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded-full text-xs bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A] capitalize">
+                  <span className="px-2 py-0.5 rounded-full text-xs bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30 capitalize">
                     {proposal.status.replace(/_/g, " ")}
                   </span>
                   <span className="text-xs text-[#64748B]">{proposal.department}</span>
                 </div>
                 <p className="text-xs text-[#64748B] line-clamp-2">{proposal.reason}</p>
                 {canEdit && (
-                  <button className="text-xs px-3 py-1.5 rounded-lg bg-[#FEE2E2] text-[#B91C1C] hover:bg-[#FECACA] border border-[#FECACA] transition-colors font-medium">
+                  <button className="text-xs px-3 py-1.5 rounded-lg bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 hover:bg-[#FECACA] border border-[#FECACA] dark:border-red-500/30 transition-colors font-medium">
                     Begin Review
                   </button>
                 )}
@@ -258,7 +258,7 @@ export default function LegalPage() {
         {/* Risk Classification Summary */}
         <section>
           <h2 className="text-lg font-semibold font-display mb-3">Risk Classification Summary</h2>
-          <div className="rounded-2xl bg-white border border-[#E2E8F0] p-5 space-y-3">
+          <div className="rounded-2xl bg-card border border-[#E2E8F0] p-5 space-y-3">
             {(["critical", "high", "medium", "low"] as const).map((level) => {
               const count = riskCounts[level]
               const total = MOCK_LEGAL.length
@@ -270,9 +270,9 @@ export default function LegalPage() {
                 low: "bg-[#94A3B8]",
               }
               const textColors: Record<string, string> = {
-                critical: "text-[#B91C1C]",
-                high: "text-[#B91C1C]",
-                medium: "text-[#B45309]",
+                critical: "text-[#B91C1C] dark:text-red-400",
+                high: "text-[#B91C1C] dark:text-red-400",
+                medium: "text-[#B45309] dark:text-amber-400",
                 low: "text-[#64748B]",
               }
               return (

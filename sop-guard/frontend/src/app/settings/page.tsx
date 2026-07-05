@@ -338,7 +338,7 @@ export default function SettingsPage() {
                 )}
               >
                 <div className={cn(
-                  "w-5 h-5 rounded-full bg-white absolute top-0.5 transition-all",
+                  "w-5 h-5 rounded-full bg-card absolute top-0.5 transition-all",
                   demoMode ? "left-[22px]" : "left-0.5"
                 )} />
               </button>
@@ -375,7 +375,7 @@ export default function SettingsPage() {
                   )}
                 >
                   <div className={cn(
-                    "w-5 h-5 rounded-full bg-white absolute top-0.5 transition-all",
+                    "w-5 h-5 rounded-full bg-card absolute top-0.5 transition-all",
                     voiceEnabled ? "left-[22px]" : "left-0.5"
                   )} />
                 </button>

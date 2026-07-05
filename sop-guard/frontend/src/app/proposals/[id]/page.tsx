@@ -69,34 +69,34 @@ function WordDiffViewer({ oldText, newText, section, reason, evidenceRef }: {
   return (
     <div className="border border-[#E2E8F0] rounded-xl overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2 bg-white border-b border-[#E2E8F0]">
+      <div className="flex items-center justify-between px-4 py-2 bg-card border-b border-[#E2E8F0]">
         <span className="text-sm font-medium text-[#334155]">Section: {section}</span>
         <div className="flex gap-2">
-          <span className="text-xs bg-[#FEE2E2] text-[#B91C1C] px-2 py-0.5 rounded">
+          <span className="text-xs bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 px-2 py-0.5 rounded">
             − Removed
           </span>
-          <span className="text-xs bg-[#DCFCE7] text-[#15803D] px-2 py-0.5 rounded">
+          <span className="text-xs bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 px-2 py-0.5 rounded">
             + Added
           </span>
         </div>
       </div>
 
       {/* Change reason + evidence */}
-      <div className="px-4 py-2 bg-[#F1F5F9] text-xs text-[#64748B] border-b border-[#E2E8F0]">
-        <span className="text-[#B45309] font-medium">Reason:</span> {reason}
+      <div className="px-4 py-2 bg-muted text-xs text-[#64748B] border-b border-[#E2E8F0]">
+        <span className="text-[#B45309] dark:text-amber-400 font-medium">Reason:</span> {reason}
         {evidenceRef && <span className="ml-2 text-[#0B6BCB]">• Evidence: {evidenceRef}</span>}
       </div>
 
       {/* Unified diff view */}
-      <div className="p-4 bg-[#F7F9FB] font-mono text-sm leading-relaxed">
+      <div className="p-4 bg-background font-mono text-sm leading-relaxed">
         <p className="flex flex-wrap gap-1">
           {diff.map((item, idx) => (
             <span
               key={idx}
               className={cn(
                 "px-0.5 rounded",
-                item.type === 'removed' && "bg-[#FEE2E2] text-[#B91C1C] line-through",
-                item.type === 'added' && "bg-[#DCFCE7] text-[#15803D]",
+                item.type === 'removed' && "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 line-through",
+                item.type === 'added' && "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400",
                 item.type === 'unchanged' && "text-[#1A2332]"
               )}
             >
@@ -112,59 +112,59 @@ function WordDiffViewer({ oldText, newText, section, reason, evidenceRef }: {
 // ── Helpers ────────────────────────────────────────────────────────────────
 function priorityBadge(priority: UpdateProposal["priority"]) {
   const map = {
-    critical: "bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA]",
-    high: "bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA]",
-    medium: "bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]",
-    low: "bg-white text-[#475569] border border-[#CBD5E1]",
+    critical: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30",
+    high: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30",
+    medium: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30",
+    low: "bg-card text-[#475569] border border-[#CBD5E1]",
   }
   return map[priority]
 }
 
 function statusBadge(status: UpdateProposal["status"]) {
   const map: Record<string, { cls: string; label: string }> = {
-    committee_review: { cls: "bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]", label: "Committee Review" },
-    legal_review: { cls: "bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]", label: "Legal Review" },
-    approved: { cls: "bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]", label: "Approved" },
-    training_review: { cls: "bg-white text-[#475569] border border-[#CBD5E1]", label: "Training Review" },
-    draft: { cls: "bg-white text-[#475569] border border-[#CBD5E1]", label: "Draft" },
-    rejected: { cls: "bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA]", label: "Rejected" },
-    published: { cls: "bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]", label: "Published" },
+    committee_review: { cls: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30", label: "Committee Review" },
+    legal_review: { cls: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30", label: "Legal Review" },
+    approved: { cls: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30", label: "Approved" },
+    training_review: { cls: "bg-card text-[#475569] border border-[#CBD5E1]", label: "Training Review" },
+    draft: { cls: "bg-card text-[#475569] border border-[#CBD5E1]", label: "Draft" },
+    rejected: { cls: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30", label: "Rejected" },
+    published: { cls: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30", label: "Published" },
   }
-  return map[status] ?? { cls: "bg-[#F1F5F9] text-[#64748B]", label: status }
+  return map[status] ?? { cls: "bg-muted text-[#64748B]", label: status }
 }
 
 function approverStatusBadge(status: ApproverRecord["status"]) {
   const map: Record<string, { cls: string; label: string; icon: React.ReactNode }> = {
-    approved: { cls: "bg-[#DCFCE7] text-[#15803D]", label: "Approved", icon: <CheckCircle2 className="w-3.5 h-3.5" /> },
-    rejected: { cls: "bg-[#FEE2E2] text-[#B91C1C]", label: "Rejected", icon: <XCircle className="w-3.5 h-3.5" /> },
-    pending: { cls: "bg-[#F1F5F9] text-[#64748B]", label: "Pending", icon: <Clock className="w-3.5 h-3.5" /> },
-    requested_changes: { cls: "bg-[#FEF3C7] text-[#B45309]", label: "Changes Requested", icon: <AlertTriangle className="w-3.5 h-3.5" /> },
-    abstained: { cls: "bg-[#F1F5F9] text-[#64748B]", label: "Abstained", icon: <Clock className="w-3.5 h-3.5" /> },
+    approved: { cls: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400", label: "Approved", icon: <CheckCircle2 className="w-3.5 h-3.5" /> },
+    rejected: { cls: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400", label: "Rejected", icon: <XCircle className="w-3.5 h-3.5" /> },
+    pending: { cls: "bg-muted text-[#64748B]", label: "Pending", icon: <Clock className="w-3.5 h-3.5" /> },
+    requested_changes: { cls: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400", label: "Changes Requested", icon: <AlertTriangle className="w-3.5 h-3.5" /> },
+    abstained: { cls: "bg-muted text-[#64748B]", label: "Abstained", icon: <Clock className="w-3.5 h-3.5" /> },
   }
-  return map[status] ?? { cls: "bg-[#F1F5F9] text-[#64748B]", label: status, icon: null }
+  return map[status] ?? { cls: "bg-muted text-[#64748B]", label: status, icon: null }
 }
 
 function alignmentBadge(status: string) {
   const map: Record<string, string> = {
-    aligned: "bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]",
-    partially_aligned: "bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]",
-    possible_update: "bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]",
-    conflict_detected: "bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA]",
-    insufficient_evidence: "bg-[#F1F5F9] text-[#64748B]",
-    not_reviewed: "bg-[#F1F5F9] text-[#64748B]",
+    aligned: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30",
+    partially_aligned: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30",
+    possible_update: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30",
+    conflict_detected: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30",
+    insufficient_evidence: "bg-muted text-[#64748B]",
+    not_reviewed: "bg-muted text-[#64748B]",
   }
-  return map[status] ?? "bg-[#F1F5F9] text-[#64748B]"
+  return map[status] ?? "bg-muted text-[#64748B]"
 }
 
 function commentTypeBadge(type: ProposalComment["type"]) {
   const map: Record<string, string> = {
-    comment: "bg-[#F1F5F9] text-[#334155]",
-    request_change: "bg-[#FEF3C7] text-[#B45309]",
-    approval: "bg-[#DCFCE7] text-[#15803D]",
-    rejection: "bg-[#FEE2E2] text-[#B91C1C]",
-    escalation: "bg-[#FEE2E2] text-[#B91C1C]",
+    comment: "bg-muted text-[#334155]",
+    request_change: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400",
+    approval: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400",
+    rejection: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400",
+    escalation: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400",
   }
-  return map[type] ?? "bg-[#F1F5F9] text-[#334155]"
+  return map[type] ?? "bg-muted text-[#334155]"
 }
 
 function auditEventColor(type: AuditEventType) {
@@ -200,7 +200,7 @@ function OverviewTab({ proposal }: { proposal: UpdateProposal }) {
   return (
     <div className="space-y-6">
       {/* AI Recommendation */}
-      <div className="rounded-2xl bg-[#F1F5F9] border border-[#E2E8F0] p-5 space-y-2">
+      <div className="rounded-2xl bg-muted border border-[#E2E8F0] p-5 space-y-2">
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-[#64748B]" />
           <h3 className="text-sm font-semibold text-[#334155]">AI Recommendation</h3>
@@ -210,21 +210,21 @@ function OverviewTab({ proposal }: { proposal: UpdateProposal }) {
 
       {/* Impact summary */}
       <div className="grid sm:grid-cols-3 gap-4">
-        <div className="rounded-xl bg-[#F1F5F9] border border-[#E2E8F0] p-4 space-y-2">
+        <div className="rounded-xl bg-muted border border-[#E2E8F0] p-4 space-y-2">
           <div className="flex items-center gap-2">
             <Stethoscope className="w-4 h-4 text-[#64748B]" />
             <span className="text-xs font-semibold text-[#334155]">Clinical Impact</span>
           </div>
           <p className="text-xs text-[#64748B]">{proposal.clinical_impact}</p>
         </div>
-        <div className="rounded-xl bg-[#F1F5F9] border border-[#FDE68A] p-4 space-y-2">
+        <div className="rounded-xl bg-muted border border-[#FDE68A] dark:border-amber-500/30 p-4 space-y-2">
           <div className="flex items-center gap-2">
-            <Scale className="w-4 h-4 text-[#B45309]" />
-            <span className="text-xs font-semibold text-[#B45309]">Legal Impact</span>
+            <Scale className="w-4 h-4 text-[#B45309] dark:text-amber-400" />
+            <span className="text-xs font-semibold text-[#B45309] dark:text-amber-400">Legal Impact</span>
           </div>
           <p className="text-xs text-[#64748B]">{proposal.legal_impact}</p>
         </div>
-        <div className="rounded-xl bg-[#F1F5F9] border border-[#E2E8F0] p-4 space-y-2">
+        <div className="rounded-xl bg-muted border border-[#E2E8F0] p-4 space-y-2">
           <div className="flex items-center gap-2">
             <GraduationCap className="w-4 h-4 text-[#64748B]" />
             <span className="text-xs font-semibold text-[#334155]">Training Impact</span>
@@ -272,13 +272,13 @@ function EvidenceTab({ proposal }: { proposal: UpdateProposal }) {
 
   const strengthBadge = (s: string) => {
     const map: Record<string, string> = {
-      high: "bg-[#DCFCE7] text-[#15803D]",
-      moderate: "bg-[#FEF3C7] text-[#B45309]",
-      low: "bg-[#F1F5F9] text-[#64748B]",
-      insufficient: "bg-[#F1F5F9] text-[#64748B]",
-      expert_opinion: "bg-[#F1F5F9] text-[#334155]",
+      high: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400",
+      moderate: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400",
+      low: "bg-muted text-[#64748B]",
+      insufficient: "bg-muted text-[#64748B]",
+      expert_opinion: "bg-muted text-[#334155]",
     }
-    return map[s] ?? "bg-[#F1F5F9] text-[#64748B]"
+    return map[s] ?? "bg-muted text-[#64748B]"
   }
 
   return (
@@ -294,7 +294,7 @@ function EvidenceTab({ proposal }: { proposal: UpdateProposal }) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: i * 0.07 }}
-          className="rounded-2xl bg-[#F1F5F9] border border-[#E2E8F0] p-5 space-y-4"
+          className="rounded-2xl bg-muted border border-[#E2E8F0] p-5 space-y-4"
         >
           <div className="flex flex-wrap items-center gap-2">
             <span className={cn("px-2 py-0.5 rounded text-xs font-semibold uppercase", strengthBadge(ev.evidence_strength))}>
@@ -334,7 +334,7 @@ function EvidenceTab({ proposal }: { proposal: UpdateProposal }) {
           </div>
 
           {ev.clinical_relevance && (
-            <div className="rounded-lg bg-[#F1F5F9] border border-[#E2E8F0] px-3 py-2">
+            <div className="rounded-lg bg-muted border border-[#E2E8F0] px-3 py-2">
               <p className="text-xs text-[#334155]">
                 <span className="font-semibold">Clinical Relevance: </span>
                 {ev.clinical_relevance}
@@ -367,7 +367,7 @@ function CommitteeTab({ proposal }: { proposal: UpdateProposal }) {
         {proposal.approvers.map((approver) => {
           const info = approverStatusBadge(approver.status)
           return (
-            <div key={approver.user_id} className="flex items-start gap-4 p-4 rounded-xl bg-[#F1F5F9] border border-[#E2E8F0]">
+            <div key={approver.user_id} className="flex items-start gap-4 p-4 rounded-xl bg-muted border border-[#E2E8F0]">
               <div className="w-10 h-10 rounded-full bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 flex items-center justify-center text-[#0B6BCB] text-sm font-bold shrink-0">
                 {getInitials(approver.user_name)}
               </div>
@@ -393,7 +393,7 @@ function CommitteeTab({ proposal }: { proposal: UpdateProposal }) {
       </div>
 
       {/* Vote progress */}
-      <div className="rounded-xl bg-[#F1F5F9] border border-[#E2E8F0] p-4 space-y-3">
+      <div className="rounded-xl bg-muted border border-[#E2E8F0] p-4 space-y-3">
         <div className="flex items-center justify-between text-sm">
           <span className="text-[#64748B]">Vote Progress</span>
           <span className="font-bold text-[#1A2332]">{approvedCount} of {totalApprovers} approved</span>
@@ -423,26 +423,26 @@ function CommitteeTab({ proposal }: { proposal: UpdateProposal }) {
       {/* Role-based actions */}
       {role === "committee_member" && (
         <div className="flex flex-wrap gap-2 pt-4 border-t border-[#E2E8F0]">
-          <button className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#16A34A]/20 border border-[#BBF7D0] text-sm text-[#15803D] hover:bg-[#BBF7D0] transition-colors">
+          <button className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#16A34A]/20 border border-[#BBF7D0] dark:border-green-500/30 text-sm text-[#15803D] dark:text-green-400 hover:bg-[#BBF7D0] transition-colors">
             <Check className="w-4 h-4" /> Vote Approve
           </button>
-          <button className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#DC2626]/20 border border-[#FECACA] text-sm text-[#B91C1C] hover:bg-[#FECACA] transition-colors">
+          <button className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#DC2626]/20 border border-[#FECACA] dark:border-red-500/30 text-sm text-[#B91C1C] dark:text-red-400 hover:bg-[#FECACA] transition-colors">
             <X className="w-4 h-4" /> Vote Reject
           </button>
-          <button className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#F59E0B]/20 border border-[#FDE68A] text-sm text-[#B45309] hover:bg-[#FDE68A] transition-colors">
+          <button className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#F59E0B]/20 border border-[#FDE68A] dark:border-amber-500/30 text-sm text-[#B45309] dark:text-amber-400 hover:bg-[#FDE68A] transition-colors">
             <Zap className="w-4 h-4" /> Request Changes
           </button>
-          <button className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#F1F5F9] border border-[#CBD5E1] text-sm text-[#334155] hover:bg-[#E2E8F0] transition-colors">
+          <button className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-muted border border-[#CBD5E1] text-sm text-[#334155] hover:bg-[#E2E8F0] transition-colors">
             <ArrowUp className="w-4 h-4" /> Escalate to Legal
           </button>
         </div>
       )}
       {role === "legal_risk" && (
         <div className="flex flex-wrap gap-2 pt-4 border-t border-[#E2E8F0]">
-          <button className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#F1F5F9] border border-[#CBD5E1] text-sm text-[#334155] hover:bg-[#E2E8F0] transition-colors">
+          <button className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-muted border border-[#CBD5E1] text-sm text-[#334155] hover:bg-[#E2E8F0] transition-colors">
             <Scale className="w-4 h-4" /> Complete Legal Review
           </button>
-          <button className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#F59E0B]/20 border border-[#FDE68A] text-sm text-[#B45309] hover:bg-[#FDE68A] transition-colors">
+          <button className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#F59E0B]/20 border border-[#FDE68A] dark:border-amber-500/30 text-sm text-[#B45309] dark:text-amber-400 hover:bg-[#FDE68A] transition-colors">
             <Clock className="w-4 h-4" /> Place on Hold
           </button>
         </div>
@@ -454,7 +454,7 @@ function CommitteeTab({ proposal }: { proposal: UpdateProposal }) {
 function CommentThread({ comment, isReply = false }: { comment: ProposalComment; isReply?: boolean }) {
   return (
     <div className={cn("space-y-2", isReply && "ml-8 border-l border-[#E2E8F0] pl-4")}>
-      <div className="p-4 rounded-xl bg-[#F1F5F9] border border-[#E2E8F0] space-y-2">
+      <div className="p-4 rounded-xl bg-muted border border-[#E2E8F0] space-y-2">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs font-semibold text-[#1A2332]">{comment.author}</span>
           <span className="text-xs text-[#64748B]">{comment.author_role}</span>
@@ -495,7 +495,7 @@ function TimelineTab({ proposal }: { proposal: UpdateProposal }) {
 
               {/* Content */}
               <div className={cn("pb-6 flex-1 min-w-0", isLast && "pb-0")}>
-                <div className="rounded-xl bg-[#F1F5F9] border border-[#E2E8F0] p-4 space-y-1.5">
+                <div className="rounded-xl bg-muted border border-[#E2E8F0] p-4 space-y-1.5">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-xs font-semibold text-[#1A2332]">{entry.user}</span>
                     <span className="text-[10px] text-[#64748B] uppercase tracking-wide">{entry.user_role}</span>
@@ -523,28 +523,28 @@ function LegalRiskTab({ proposal }: { proposal: UpdateProposal }) {
   )
 
   const riskColors: Record<string, string> = {
-    critical: "bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA]",
-    high: "bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA]",
-    medium: "bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]",
-    low: "bg-[#F1F5F9] text-[#64748B]",
+    critical: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30",
+    high: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30",
+    medium: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30",
+    low: "bg-muted text-[#64748B]",
   }
 
   return (
     <div className="space-y-6">
       {/* Legal review status */}
       <div className="grid sm:grid-cols-2 gap-4">
-        <div className="rounded-xl bg-[#F1F5F9] border border-[#E2E8F0] p-4 space-y-2">
+        <div className="rounded-xl bg-muted border border-[#E2E8F0] p-4 space-y-2">
           <p className="text-xs text-[#64748B]">Legal Review Required</p>
           <div className={cn("inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-sm font-semibold",
             proposal.legal_review_required
-              ? "bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA]"
-              : "bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]"
+              ? "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30"
+              : "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30"
           )}>
             {proposal.legal_review_required ? <AlertTriangle className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
             {proposal.legal_review_required ? "Yes - Required" : "Not Required"}
           </div>
         </div>
-        <div className="rounded-xl bg-[#F1F5F9] border border-[#E2E8F0] p-4 space-y-2">
+        <div className="rounded-xl bg-muted border border-[#E2E8F0] p-4 space-y-2">
           <p className="text-xs text-[#64748B]">Risk Classification</p>
           <span className={cn("inline-flex px-3 py-1 rounded-lg text-sm font-bold uppercase", riskColors[proposal.risk_level])}>
             {proposal.risk_level}
@@ -553,10 +553,10 @@ function LegalRiskTab({ proposal }: { proposal: UpdateProposal }) {
       </div>
 
       {/* Legal impact */}
-      <div className="rounded-xl bg-[#F1F5F9] border border-[#FDE68A] p-4 space-y-2">
+      <div className="rounded-xl bg-muted border border-[#FDE68A] dark:border-amber-500/30 p-4 space-y-2">
         <div className="flex items-center gap-2">
-          <Scale className="w-4 h-4 text-[#B45309]" />
-          <p className="text-xs font-semibold text-[#B45309] uppercase tracking-wide">Legal Impact</p>
+          <Scale className="w-4 h-4 text-[#B45309] dark:text-amber-400" />
+          <p className="text-xs font-semibold text-[#B45309] dark:text-amber-400 uppercase tracking-wide">Legal Impact</p>
         </div>
         <p className="text-sm text-[#64748B] leading-relaxed">{proposal.legal_impact}</p>
       </div>
@@ -565,13 +565,13 @@ function LegalRiskTab({ proposal }: { proposal: UpdateProposal }) {
       {legalComments.length > 0 && (
         <div className="space-y-3">
           <h3 className="text-sm font-semibold text-[#1A2332] flex items-center gap-2">
-            <MessageSquare className="w-4 h-4 text-[#B45309]" />
+            <MessageSquare className="w-4 h-4 text-[#B45309] dark:text-amber-400" />
             Legal Reviewer Notes
           </h3>
           {legalComments.map(c => (
-            <div key={c.id} className="p-4 rounded-xl bg-[#FEF3C7] border border-[#FDE68A] space-y-1.5">
+            <div key={c.id} className="p-4 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 space-y-1.5">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-[#B45309]">{c.author}</span>
+                <span className="text-xs font-semibold text-[#B45309] dark:text-amber-400">{c.author}</span>
                 <span className="text-xs text-[#64748B]">{c.date}</span>
               </div>
               <p className="text-sm text-[#64748B]">{c.content}</p>
@@ -581,7 +581,7 @@ function LegalRiskTab({ proposal }: { proposal: UpdateProposal }) {
       )}
 
       {/* Disclaimer */}
-      <div className="rounded-xl bg-[#F1F5F9] border border-[#E2E8F0] px-4 py-3">
+      <div className="rounded-xl bg-muted border border-[#E2E8F0] px-4 py-3">
         <p className="text-xs text-[#64748B]/70 text-center italic">
           This platform does not provide legal advice. Legal determinations require qualified counsel.
         </p>
@@ -624,7 +624,7 @@ export default function ProposalDetailPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl bg-white border border-[#E2E8F0] p-6 space-y-4"
+          className="rounded-2xl bg-card border border-[#E2E8F0] p-6 space-y-4"
         >
           <div className="flex flex-wrap items-center gap-2">
             <span className={cn("px-2.5 py-1 rounded text-xs font-bold uppercase tracking-wide", priorityBadge(proposal.priority))}>
@@ -648,7 +648,7 @@ export default function ProposalDetailPage() {
               <Calendar className="w-3 h-3" />
               Due {proposal.due_date}
               {new Date(proposal.due_date) < new Date() && (
-                <span className="text-[#B91C1C] font-semibold">(Overdue)</span>
+                <span className="text-[#B91C1C] dark:text-red-400 font-semibold">(Overdue)</span>
               )}
             </span>
           </div>
@@ -663,9 +663,9 @@ export default function ProposalDetailPage() {
         </motion.div>
 
         {/* Disclaimer */}
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEF3C7] border border-[#FDE68A]">
-          <AlertTriangle className="w-4 h-4 text-[#B45309] shrink-0" />
-          <span className="text-xs text-[#B45309]">Research Prototype - Not for Clinical Use.</span>
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30">
+          <AlertTriangle className="w-4 h-4 text-[#B45309] dark:text-amber-400 shrink-0" />
+          <span className="text-xs text-[#B45309] dark:text-amber-400">Research Prototype - Not for Clinical Use.</span>
         </div>
 
         {/* Tabs */}

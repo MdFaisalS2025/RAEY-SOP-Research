@@ -201,7 +201,7 @@ export default function EvaluationPage() {
 
           {/* Badges */}
           <div className="flex flex-wrap gap-2 mt-3">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FEF3C7] border border-[#FDE68A] text-[#B45309] text-xs font-medium">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 text-xs font-medium">
               <span className="w-1.5 h-1.5 rounded-full bg-[#B45309]" />
               Research Prototype
             </span>
@@ -209,15 +209,15 @@ export default function EvaluationPage() {
               <span className="w-1.5 h-1.5 rounded-full bg-[#0B6BCB]" />
               Llama 3.3 70B via Groq
             </span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FEE2E2] border border-[#FECACA] text-[#B91C1C] text-xs font-medium">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400 text-xs font-medium">
               <AlertTriangle className="w-3 h-3" />
               Research Prototype - Not for Clinical Use
             </span>
           </div>
 
           {/* Disclaimer */}
-          <div className="mt-4 flex items-start gap-2 px-4 py-3 rounded-xl bg-[#FEF3C7] border border-[#FDE68A] text-[#B45309] text-xs">
-            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-[#B45309]" />
+          <div className="mt-4 flex items-start gap-2 px-4 py-3 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 text-xs">
+            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-[#B45309] dark:text-amber-400" />
             <span>Metrics shown are from controlled evaluation runs on synthetic SOP queries. Not from real clinical queries.</span>
           </div>
         </motion.div>
@@ -240,7 +240,7 @@ export default function EvaluationPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.08 + i * 0.04 }}
-                  className="p-5 rounded-2xl bg-white border border-[#0B6BCB]/10 hover:border-[#0B6BCB]/30 transition-colors"
+                  className="p-5 rounded-2xl bg-card border border-[#0B6BCB]/10 hover:border-[#0B6BCB]/30 transition-colors"
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div className="w-8 h-8 rounded-lg bg-[#0B6BCB]/10 flex items-center justify-center">
@@ -249,7 +249,7 @@ export default function EvaluationPage() {
                     {tile.trend !== "neutral" && (
                       <span className={cn(
                         "flex items-center gap-0.5 text-xs font-medium",
-                        trendIsGood ? "text-[#15803D]" : "text-[#B91C1C]"
+                        trendIsGood ? "text-[#15803D] dark:text-green-400" : "text-[#B91C1C] dark:text-red-400"
                       )}>
                         {tile.trend === "up"
                           ? <TrendingUp className="w-3.5 h-3.5" />
@@ -260,7 +260,7 @@ export default function EvaluationPage() {
                   </div>
                   <p className={cn(
                     "text-3xl font-bold mb-1",
-                    isHallucination ? "text-[#B91C1C]" : "text-[#0B6BCB]"
+                    isHallucination ? "text-[#B91C1C] dark:text-red-400" : "text-[#0B6BCB]"
                   )}>{tile.value}</p>
                   <p className="text-sm font-medium text-[#1A2332] mb-1">{tile.label}</p>
                   <p className="text-xs text-[#94A3B8]">{tile.description}</p>
@@ -273,7 +273,7 @@ export default function EvaluationPage() {
         {/* ── Section 2: Model Comparison Table ── */}
         <motion.div {...fade(0.1)}>
           <SectionTitle icon={BarChart3} title="Model Comparison Table" subtitle="Identical retrieval pipeline, generation model varies" />
-          <div className="rounded-2xl bg-white border border-[#0B6BCB]/10 overflow-hidden">
+          <div className="rounded-2xl bg-card border border-[#0B6BCB]/10 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -320,13 +320,13 @@ export default function EvaluationPage() {
                         </td>
                         <td className={cn(
                           "py-3 px-4 text-center",
-                          isBest(row.baseline) ? "text-[#15803D] font-bold" : "text-[#64748B]"
+                          isBest(row.baseline) ? "text-[#15803D] dark:text-green-400 font-bold" : "text-[#64748B]"
                         )}>
                           {row.baseline}
                         </td>
                         <td className={cn(
                           "py-3 px-4 text-center",
-                          isBest(row.naiveRag) ? "text-[#15803D] font-bold" : "text-[#94A3B8]"
+                          isBest(row.naiveRag) ? "text-[#15803D] dark:text-green-400 font-bold" : "text-[#94A3B8]"
                         )}>
                           {row.naiveRag}
                         </td>
@@ -342,7 +342,7 @@ export default function EvaluationPage() {
         {/* ── Section 3: Query Type Breakdown ── */}
         <motion.div {...fade(0.12)}>
           <SectionTitle icon={BarChart3} title="Query Type Breakdown" subtitle="Faithfulness and Retrieval Precision by query category" />
-          <div className="rounded-2xl bg-white border border-[#0B6BCB]/10 p-5 space-y-4">
+          <div className="rounded-2xl bg-card border border-[#0B6BCB]/10 p-5 space-y-4">
             {/* Legend */}
             <div className="flex gap-5 text-xs text-[#64748B] mb-2">
               <span className="flex items-center gap-1.5"><span className="w-3 h-2 rounded-sm bg-[#0B6BCB] inline-block" /> Faithfulness</span>
@@ -365,7 +365,7 @@ export default function EvaluationPage() {
                 </div>
                 {/* Faithfulness bar */}
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 h-2 rounded-full bg-[#F1F5F9]">
+                  <div className="flex-1 h-2 rounded-full bg-muted">
                     <div
                       className="h-full rounded-full bg-[#0B6BCB] transition-all duration-700"
                       style={{ width: `${row.faithfulness * 100}%` }}
@@ -374,7 +374,7 @@ export default function EvaluationPage() {
                 </div>
                 {/* Precision bar */}
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 h-2 rounded-full bg-[#F1F5F9]">
+                  <div className="flex-1 h-2 rounded-full bg-muted">
                     <div
                       className="h-full rounded-full bg-[#0D9488] transition-all duration-700"
                       style={{ width: `${row.precision * 100}%` }}
@@ -389,7 +389,7 @@ export default function EvaluationPage() {
         {/* ── Section 4: NEWS2 Integration Results ── */}
         <motion.div {...fade(0.14)}>
           <SectionTitle icon={Activity} title="NEWS2 Integration Results" subtitle="Escalation recommendation accuracy with vs without patient acuity context" />
-          <div className="rounded-2xl bg-white border border-[#0B6BCB]/10 overflow-hidden mb-4">
+          <div className="rounded-2xl bg-card border border-[#0B6BCB]/10 overflow-hidden mb-4">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -413,7 +413,7 @@ export default function EvaluationPage() {
                         <td className="py-3 px-5 text-[#334155] font-medium text-xs">{row.metric}</td>
                         <td className="py-3 px-4 text-center font-bold text-[#0B6BCB]">{row.withNews2}</td>
                         <td className="py-3 px-4 text-center text-[#64748B]">{row.withoutNews2}</td>
-                        <td className={cn("py-3 px-4 text-center font-semibold text-xs", isGood ? "text-[#15803D]" : "text-[#B91C1C]")}>
+                        <td className={cn("py-3 px-4 text-center font-semibold text-xs", isGood ? "text-[#15803D] dark:text-green-400" : "text-[#B91C1C] dark:text-red-400")}>
                           {deltaStr}
                         </td>
                       </tr>
@@ -434,7 +434,7 @@ export default function EvaluationPage() {
         {/* ── Section 5: Retrieval Architecture Analysis ── */}
         <motion.div {...fade(0.16)}>
           <SectionTitle icon={Target} title="Retrieval Architecture Analysis" subtitle="Chunk type distribution across the 120-query test set" />
-          <div className="rounded-2xl bg-white border border-[#0B6BCB]/10 p-5">
+          <div className="rounded-2xl bg-card border border-[#0B6BCB]/10 p-5">
             <div className="space-y-3">
               {CHUNK_TYPES.map((chunk, i) => (
                 <motion.div
@@ -445,7 +445,7 @@ export default function EvaluationPage() {
                   className="flex items-center gap-3"
                 >
                   <span className="font-mono text-xs text-[#64748B] w-36 shrink-0">{chunk.type}</span>
-                  <div className="flex-1 h-3 rounded-full bg-[#F1F5F9]">
+                  <div className="flex-1 h-3 rounded-full bg-muted">
                     <div
                       className={cn("h-full rounded-full transition-all duration-700", chunk.color)}
                       style={{ width: `${chunk.pct}%` }}
@@ -470,7 +470,7 @@ export default function EvaluationPage() {
 
         {/* ── Section 6: Evaluation Methodology ── */}
         <motion.div {...fade(0.18)}>
-          <div className="rounded-2xl bg-white border border-[#0B6BCB]/10 p-5">
+          <div className="rounded-2xl bg-card border border-[#0B6BCB]/10 p-5">
             <button
               onClick={() => setShowMethodology((v) => !v)}
               className="flex items-center gap-2 text-sm font-semibold text-[#1A2332] mb-1 hover:text-[#0B6BCB] transition-colors w-full text-left"

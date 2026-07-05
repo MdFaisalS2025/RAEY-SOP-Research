@@ -71,9 +71,9 @@ export default function AdminPage() {
       <AppShell>
         <div className="p-6 max-w-2xl mx-auto">
           <Breadcrumb items={[{ label: "Admin" }]} />
-          <div className="mt-16 flex flex-col items-center justify-center text-center space-y-4 rounded-2xl bg-white border border-[#E2E8F0] p-12">
-            <div className="w-16 h-16 rounded-2xl bg-[#FEE2E2] flex items-center justify-center">
-              <Lock className="w-8 h-8 text-[#B91C1C]" />
+          <div className="mt-16 flex flex-col items-center justify-center text-center space-y-4 rounded-2xl bg-card border border-[#E2E8F0] p-12">
+            <div className="w-16 h-16 rounded-2xl bg-[#FEE2E2] dark:bg-red-500/10 flex items-center justify-center">
+              <Lock className="w-8 h-8 text-[#B91C1C] dark:text-red-400" />
             </div>
             <h2 className="text-xl font-bold font-display">Access Restricted</h2>
             <p className="text-muted-foreground">This area requires System Administrator access.</p>
@@ -102,7 +102,7 @@ export default function AdminPage() {
 
         {/* Header */}
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center">
+          <div className="w-12 h-12 rounded-2xl bg-card flex items-center justify-center">
             <Settings className="w-6 h-6 text-[#64748B]" />
           </div>
           <div>
@@ -112,7 +112,7 @@ export default function AdminPage() {
         </div>
 
         {/* Research disclaimer */}
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEE2E2] border border-[#FECACA] text-[#B91C1C] text-sm">
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400 text-sm">
           <AlertTriangle className="w-4 h-4 shrink-0" />
           <span><strong>Research Prototype. Not for Clinical Use.</strong> For demonstration only.</span>
         </div>
@@ -124,16 +124,16 @@ export default function AdminPage() {
             <div className="relative group">
               <button
                 disabled
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-[#F1F5F9] text-muted-foreground border border-[#E2E8F0] cursor-not-allowed opacity-60"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-muted text-muted-foreground border border-[#E2E8F0] cursor-not-allowed opacity-60"
               >
                 <Plus className="w-3.5 h-3.5" /> Add Source
               </button>
-              <div className="absolute right-0 top-full mt-1.5 px-2.5 py-1.5 rounded-lg bg-[#F1F5F9] border border-[#E2E8F0] text-xs text-muted-foreground whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+              <div className="absolute right-0 top-full mt-1.5 px-2.5 py-1.5 rounded-lg bg-muted border border-[#E2E8F0] text-xs text-muted-foreground whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
                 Coming in v2
               </div>
             </div>
           </div>
-          <div className="rounded-2xl bg-white border border-[#E2E8F0] overflow-hidden">
+          <div className="rounded-2xl bg-card border border-[#E2E8F0] overflow-hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[#E2E8F0] text-xs text-muted-foreground uppercase tracking-wider">
@@ -157,14 +157,14 @@ export default function AdminPage() {
                     <td className="p-4 font-medium">{source.name}</td>
                     <td className="p-4 text-muted-foreground text-xs">{source.type}</td>
                     <td className="p-4">
-                      <span className="text-[#15803D] font-semibold">{source.trustScore}%</span>
+                      <span className="text-[#15803D] dark:text-green-400 font-semibold">{source.trustScore}%</span>
                     </td>
                     <td className="p-4">
                       <span className={cn(
                         "px-2 py-0.5 rounded-full text-xs font-medium",
                         source.status === "active"
-                          ? "bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]"
-                          : "bg-white text-[#64748B] border border-[#CBD5E1]"
+                          ? "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30"
+                          : "bg-card text-[#64748B] border border-[#CBD5E1]"
                       )}>
                         {source.status === "active" ? "Active" : "Paused"}
                       </span>
@@ -194,7 +194,7 @@ export default function AdminPage() {
             <h2 className="text-lg font-semibold font-display">SSO / Active Directory Configuration</h2>
           </div>
 
-          <div className="rounded-2xl bg-white border border-[#E2E8F0] p-5 space-y-5">
+          <div className="rounded-2xl bg-card border border-[#E2E8F0] p-5 space-y-5">
             {/* Protocol selector */}
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2 font-medium">Protocol</p>
@@ -314,13 +314,13 @@ export default function AdminPage() {
               <div className="flex gap-2">
                 <button
                   disabled
-                  className="px-3 py-1.5 rounded-lg text-xs bg-[#F1F5F9] text-muted-foreground border border-[#E2E8F0] cursor-not-allowed opacity-60"
+                  className="px-3 py-1.5 rounded-lg text-xs bg-muted text-muted-foreground border border-[#E2E8F0] cursor-not-allowed opacity-60"
                 >
                   Test Connection
                 </button>
                 <button
                   disabled
-                  className="px-3 py-1.5 rounded-lg text-xs bg-[#F1F5F9] text-muted-foreground border border-[#E2E8F0] cursor-not-allowed opacity-60"
+                  className="px-3 py-1.5 rounded-lg text-xs bg-muted text-muted-foreground border border-[#E2E8F0] cursor-not-allowed opacity-60"
                 >
                   Save Configuration
                 </button>
@@ -344,11 +344,11 @@ export default function AdminPage() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.06 }}
-                className="rounded-2xl bg-white border border-[#E2E8F0] p-4 space-y-3"
+                className="rounded-2xl bg-card border border-[#E2E8F0] p-4 space-y-3"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-[#F1F5F9] flex items-center justify-center">
+                    <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center">
                       <integration.icon className="w-5 h-5 text-muted-foreground" />
                     </div>
                     <div>
@@ -356,14 +356,14 @@ export default function AdminPage() {
                       <p className="text-xs text-muted-foreground">{integration.subtitle}</p>
                     </div>
                   </div>
-                  <span className="px-2.5 py-0.5 rounded-full text-xs bg-white text-[#64748B] border border-[#CBD5E1] shrink-0">
+                  <span className="px-2.5 py-0.5 rounded-full text-xs bg-card text-[#64748B] border border-[#CBD5E1] shrink-0">
                     Not Configured
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground/80">{integration.description}</p>
                 <button
                   disabled
-                  className="px-3 py-1.5 rounded-lg text-xs bg-[#F1F5F9] text-muted-foreground border border-[#E2E8F0] cursor-not-allowed opacity-60"
+                  className="px-3 py-1.5 rounded-lg text-xs bg-muted text-muted-foreground border border-[#E2E8F0] cursor-not-allowed opacity-60"
                 >
                   Connect
                 </button>
@@ -379,7 +379,7 @@ export default function AdminPage() {
             <h2 className="text-lg font-semibold font-display">Notification &amp; Alert Configuration</h2>
           </div>
 
-          <div className="rounded-2xl bg-white border border-[#E2E8F0] p-5 space-y-4">
+          <div className="rounded-2xl bg-card border border-[#E2E8F0] p-5 space-y-4">
             <p className="text-sm font-medium text-muted-foreground">Alert Recipients Configuration</p>
 
             {/* Escalation recipient table */}
@@ -408,7 +408,7 @@ export default function AdminPage() {
                         ) : (
                           <button
                             disabled
-                            className="text-xs px-2.5 py-1 rounded-lg bg-[#F1F5F9] text-muted-foreground border border-[#E2E8F0] cursor-not-allowed opacity-50"
+                            className="text-xs px-2.5 py-1 rounded-lg bg-muted text-muted-foreground border border-[#E2E8F0] cursor-not-allowed opacity-50"
                           >
                             Add recipient
                           </button>
@@ -440,11 +440,11 @@ export default function AdminPage() {
               <div className="relative group">
                 <button
                   disabled
-                  className="px-3 py-1.5 rounded-lg text-xs bg-[#F1F5F9] text-muted-foreground border border-[#E2E8F0] cursor-not-allowed opacity-60"
+                  className="px-3 py-1.5 rounded-lg text-xs bg-muted text-muted-foreground border border-[#E2E8F0] cursor-not-allowed opacity-60"
                 >
                   Configure Notifications
                 </button>
-                <div className="absolute left-0 top-full mt-1.5 px-2.5 py-1.5 rounded-lg bg-[#F1F5F9] border border-[#E2E8F0] text-xs text-muted-foreground whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                <div className="absolute left-0 top-full mt-1.5 px-2.5 py-1.5 rounded-lg bg-muted border border-[#E2E8F0] text-xs text-muted-foreground whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
                   Coming in v2
                 </div>
               </div>
@@ -463,16 +463,16 @@ export default function AdminPage() {
             <div className="relative group">
               <button
                 disabled
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-[#F1F5F9] text-muted-foreground border border-[#E2E8F0] cursor-not-allowed opacity-60"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-muted text-muted-foreground border border-[#E2E8F0] cursor-not-allowed opacity-60"
               >
                 <Plus className="w-3.5 h-3.5" /> Add User
               </button>
-              <div className="absolute right-0 top-full mt-1.5 px-2.5 py-1.5 rounded-lg bg-[#F1F5F9] border border-[#E2E8F0] text-xs text-muted-foreground whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+              <div className="absolute right-0 top-full mt-1.5 px-2.5 py-1.5 rounded-lg bg-muted border border-[#E2E8F0] text-xs text-muted-foreground whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
                 Connect to hospital AD
               </div>
             </div>
           </div>
-          <div className="rounded-2xl bg-white border border-[#E2E8F0] overflow-hidden">
+          <div className="rounded-2xl bg-card border border-[#E2E8F0] overflow-hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[#E2E8F0] text-xs text-muted-foreground uppercase tracking-wider">
@@ -501,14 +501,14 @@ export default function AdminPage() {
                       </div>
                     </td>
                     <td className="p-4 text-xs">
-                      <span className="px-2 py-0.5 rounded-full bg-[#F1F5F9] text-muted-foreground border border-[#E2E8F0]">
+                      <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-[#E2E8F0]">
                         {ROLE_LABELS[user.role] ?? user.role}
                       </span>
                     </td>
                     <td className="p-4 text-muted-foreground text-xs">{user.department}</td>
                     <td className="p-4 text-muted-foreground text-xs">{user.title}</td>
                     <td className="p-4">
-                      <span className="px-2 py-0.5 rounded-full text-xs bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]">
+                      <span className="px-2 py-0.5 rounded-full text-xs bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30">
                         Active
                       </span>
                     </td>
@@ -532,17 +532,17 @@ export default function AdminPage() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.06 }}
-                className="rounded-2xl bg-white border border-[#E2E8F0] p-4 flex items-center gap-3"
+                className="rounded-2xl bg-card border border-[#E2E8F0] p-4 flex items-center gap-3"
               >
                 <div className={cn(
                   "w-9 h-9 rounded-xl flex items-center justify-center",
-                  item.status === "online" ? "bg-[#DCFCE7]" :
-                    item.status === "demo" ? "bg-[#FEF3C7]" : "bg-[#FEE2E2]"
+                  item.status === "online" ? "bg-[#DCFCE7] dark:bg-green-500/10" :
+                    item.status === "demo" ? "bg-[#FEF3C7] dark:bg-amber-500/10" : "bg-[#FEE2E2] dark:bg-red-500/10"
                 )}>
                   <item.icon className={cn(
                     "w-5 h-5",
-                    item.status === "online" ? "text-[#15803D]" :
-                      item.status === "demo" ? "text-[#B45309]" : "text-[#B91C1C]"
+                    item.status === "online" ? "text-[#15803D] dark:text-green-400" :
+                      item.status === "demo" ? "text-[#B45309] dark:text-amber-400" : "text-[#B91C1C] dark:text-red-400"
                   )} />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -558,8 +558,8 @@ export default function AdminPage() {
                 </div>
                 <span className={cn(
                   "px-2 py-0.5 rounded-full text-xs font-medium shrink-0",
-                  item.status === "online" ? "bg-[#DCFCE7] text-[#15803D]" :
-                    item.status === "demo" ? "bg-[#FEF3C7] text-[#B45309]" : "bg-[#FEE2E2] text-[#B91C1C]"
+                  item.status === "online" ? "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400" :
+                    item.status === "demo" ? "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400" : "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400"
                 )}>
                   {item.status === "online" ? "Online" : item.status === "demo" ? "Demo Mode" : "Offline"}
                 </span>

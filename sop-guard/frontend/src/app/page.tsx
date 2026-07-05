@@ -81,9 +81,9 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F9FB] text-[#1A2332]">
+    <div className="min-h-screen bg-background text-[#1A2332]">
       {/* Hero */}
-      <section className="relative overflow-hidden bg-white border-b border-[#E2E8F0]">
+      <section className="relative overflow-hidden bg-card border-b border-[#E2E8F0]">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_10%,#0B6BCB0d,transparent_55%)]" />
 
         <div className="max-w-6xl mx-auto px-6 py-24 md:py-36 text-center relative">
@@ -128,13 +128,13 @@ export default function LandingPage() {
               </Link>
               <Link
                 href="/architecture"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-[#CBD5E1] bg-white hover:bg-[#F1F5F9] text-[#1A2332] font-semibold transition-colors"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-[#CBD5E1] bg-card hover:bg-muted text-[#1A2332] font-semibold transition-colors"
               >
                 View Architecture
               </Link>
               <Link
                 href="/library"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-[#CBD5E1] bg-white hover:bg-[#F1F5F9] text-[#1A2332] font-semibold transition-colors"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-[#CBD5E1] bg-card hover:bg-muted text-[#1A2332] font-semibold transition-colors"
               >
                 SOP Library
               </Link>
@@ -196,10 +196,10 @@ export default function LandingPage() {
                 key={item.title}
                 variants={fadeUp}
                 custom={i}
-                className="p-6 rounded-2xl bg-white border border-[#E2E8F0] shadow-sm hover:border-[#0B6BCB]/30 hover:scale-[1.01] hover:shadow-md transition-all duration-300"
+                className="p-6 rounded-2xl bg-card border border-[#E2E8F0] shadow-sm hover:border-[#0B6BCB]/30 hover:scale-[1.01] hover:shadow-md transition-all duration-300"
               >
-                <div className="w-12 h-12 rounded-xl bg-[#FEE2E2] flex items-center justify-center mb-4">
-                  <item.icon className="w-6 h-6 text-[#B91C1C]" />
+                <div className="w-12 h-12 rounded-xl bg-[#FEE2E2] dark:bg-red-500/10 flex items-center justify-center mb-4">
+                  <item.icon className="w-6 h-6 text-[#B91C1C] dark:text-red-400" />
                 </div>
                 <h3 className="text-lg font-semibold mb-2 text-[#1A2332]">{item.title}</h3>
                 <p className="text-sm text-[#64748B]">{item.desc}</p>
@@ -210,7 +210,7 @@ export default function LandingPage() {
       </section>
 
       {/* How it Works */}
-      <section className="py-24 px-6 bg-[#F1F5F9]">
+      <section className="py-24 px-6 bg-muted">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial="hidden"
@@ -282,18 +282,18 @@ export default function LandingPage() {
               const colorMap: Record<string, string> = {
                 teal: "bg-[#0B6BCB]/10 text-[#0B6BCB]",
                 blue: "bg-[#0B6BCB]/10 text-[#0B6BCB]",
-                green: "bg-[#DCFCE7] text-[#15803D]",
-                purple: "bg-[#F1F5F9] text-[#64748B]",
-                gray: "bg-[#F1F5F9] text-[#64748B]",
-                amber: "bg-[#FEF3C7] text-[#B45309]",
-                pink: "bg-[#F1F5F9] text-[#64748B]",
+                green: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400",
+                purple: "bg-muted text-[#64748B]",
+                gray: "bg-muted text-[#64748B]",
+                amber: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400",
+                pink: "bg-muted text-[#64748B]",
               }
               return (
                 <motion.div
                   key={f.title}
                   variants={fadeUp}
                   custom={i}
-                  className="p-6 rounded-2xl bg-white border border-[#E2E8F0] shadow-sm hover:border-[#0B6BCB]/30 hover:scale-[1.01] hover:shadow-md transition-all duration-300 group"
+                  className="p-6 rounded-2xl bg-card border border-[#E2E8F0] shadow-sm hover:border-[#0B6BCB]/30 hover:scale-[1.01] hover:shadow-md transition-all duration-300 group"
                 >
                   <div className={`w-12 h-12 rounded-xl ${colorMap[f.color]} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
                     <f.icon className="w-6 h-6" />
@@ -308,7 +308,7 @@ export default function LandingPage() {
       </section>
 
       {/* Research Contribution */}
-      <section className="py-24 px-6 bg-[#F1F5F9]">
+      <section className="py-24 px-6 bg-muted">
         <div className="max-w-4xl mx-auto text-center">
           <motion.div
             initial="hidden"
@@ -325,12 +325,12 @@ export default function LandingPage() {
             </motion.p>
 
             <motion.div variants={fadeUp} custom={2} className="grid sm:grid-cols-2 gap-6">
-              <div className="p-8 rounded-2xl bg-white border border-[#E2E8F0] shadow-sm">
+              <div className="p-8 rounded-2xl bg-card border border-[#E2E8F0] shadow-sm">
                 <div className="text-4xl font-bold text-[#0B6BCB] mb-2">98% / 46%</div>
                 <div className="text-sm text-[#334155]">Sensitivity / Specificity</div>
                 <div className="text-xs text-[#94A3B8] mt-1">120-case perturbation benchmark - see /evaluation</div>
               </div>
-              <div className="p-8 rounded-2xl bg-white border border-[#E2E8F0] shadow-sm">
+              <div className="p-8 rounded-2xl bg-card border border-[#E2E8F0] shadow-sm">
                 <div className="text-4xl font-bold text-[#0B6BCB] mb-2"><AnimatedCounter value={5} prefix="<" suffix="s" /></div>
                 <div className="text-sm text-[#334155]">End-to-End Response Time</div>
                 <div className="text-xs text-[#94A3B8] mt-1">(Including verification)</div>
@@ -362,7 +362,7 @@ export default function LandingPage() {
                   "px-4 py-2.5 rounded-xl text-sm font-medium border transition-all",
                   demoQuery === q
                     ? "bg-[#0B6BCB]/10 border-[#0B6BCB]/30 text-[#0B6BCB]"
-                    : "bg-white border-[#E2E8F0] text-[#64748B] hover:text-[#1A2332] hover:border-[#CBD5E1]"
+                    : "bg-card border-[#E2E8F0] text-[#64748B] hover:text-[#1A2332] hover:border-[#CBD5E1]"
                 )}
               >
                 {q}
@@ -387,13 +387,13 @@ export default function LandingPage() {
             )}
             {demoResult && !demoLoading && (
               <motion.div initial={{opacity:0, y:20}} animate={{opacity:1, y:0}} exit={{opacity:0}}
-                className="text-left max-w-3xl mx-auto p-6 rounded-2xl bg-white border border-[#E2E8F0] shadow-sm">
+                className="text-left max-w-3xl mx-auto p-6 rounded-2xl bg-card border border-[#E2E8F0] shadow-sm">
                 <div className="flex items-center gap-3 mb-4 flex-wrap">
                   <span className={cn(
                     "px-3 py-1 rounded-full text-xs font-semibold border",
-                    demoResult.confidence >= 0.7 ? "bg-[#DCFCE7] text-[#15803D] border-[#BBF7D0]"
-                      : demoResult.confidence >= 0.5 ? "bg-[#FEF3C7] text-[#B45309] border-[#FDE68A]"
-                      : "bg-[#FEE2E2] text-[#B91C1C] border-[#FECACA]"
+                    demoResult.confidence >= 0.7 ? "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30"
+                      : demoResult.confidence >= 0.5 ? "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30"
+                      : "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30"
                   )}>
                     {Math.round(demoResult.confidence * 100)}% confidence
                   </span>
@@ -404,10 +404,10 @@ export default function LandingPage() {
                     <span className={cn(
                       "px-3 py-1 rounded-full text-xs font-semibold border",
                       demoResult.verification_result.status === "passed"
-                        ? "bg-[#DCFCE7] text-[#15803D] border-[#BBF7D0]"
+                        ? "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30"
                         : demoResult.verification_result.status === "warning"
-                        ? "bg-[#FEF3C7] text-[#B45309] border-[#FDE68A]"
-                        : "bg-[#FEE2E2] text-[#B91C1C] border-[#FECACA]"
+                        ? "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30"
+                        : "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30"
                     )}>
                       {demoResult.verification_result.status === "passed" ? "Verified" : demoResult.verification_result.status === "warning" ? "Caution" : "Unverified"}
                     </span>
@@ -430,9 +430,9 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 px-6 border-t border-[#E2E8F0] bg-white">
+      <footer className="py-12 px-6 border-t border-[#E2E8F0] bg-card">
         <div className="max-w-6xl mx-auto text-center">
-          <div className="flex items-center justify-center gap-2 text-[#B45309] text-sm mb-4">
+          <div className="flex items-center justify-center gap-2 text-[#B45309] dark:text-amber-400 text-sm mb-4">
             <AlertTriangle className="w-4 h-4" />
             Research prototype. Not for clinical use.
           </div>

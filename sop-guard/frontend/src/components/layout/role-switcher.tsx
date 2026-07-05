@@ -12,9 +12,9 @@ const ROLE_TEXT_COLORS: Record<UserRole, string> = {
   physician: "text-[#0B6BCB]",
   nurse: "text-[#0D9488]",
   department_admin: "text-[#475569]",
-  compliance_officer: "text-[#B45309]",
-  committee_member: "text-[#15803D]",
-  legal_risk: "text-[#B91C1C]",
+  compliance_officer: "text-[#B45309] dark:text-amber-400",
+  committee_member: "text-[#15803D] dark:text-green-400",
+  legal_risk: "text-[#B91C1C] dark:text-red-400",
   nurse_educator: "text-[#475569]",
   system_admin: "text-[#475569]",
 }
@@ -73,7 +73,7 @@ export function RoleSwitcher() {
         aria-expanded={open}
         className={cn(
           "flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-all duration-200",
-          "bg-white border shadow-sm hover:bg-[#F1F5F9]",
+          "bg-card border shadow-sm hover:bg-muted",
           open
             ? "border-[#0B6BCB]/40"
             : "border-[#E2E8F0] hover:border-[#0B6BCB]/30",
@@ -111,7 +111,7 @@ export function RoleSwitcher() {
         <div
           className={cn(
             "absolute right-0 top-full mt-1.5 z-50 min-w-[240px]",
-            "bg-white border border-[#E2E8F0] rounded-xl shadow-md",
+            "bg-card border border-[#E2E8F0] rounded-xl shadow-md",
             "overflow-hidden py-1"
           )}
         >
@@ -129,7 +129,7 @@ export function RoleSwitcher() {
                 onClick={() => handleSwitch(user)}
                 className={cn(
                   "w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors duration-150",
-                  "hover:bg-[#F1F5F9] focus-visible:outline-none focus-visible:bg-[#F1F5F9]",
+                  "hover:bg-muted focus-visible:outline-none focus-visible:bg-muted",
                   isActive && "bg-[#0B6BCB]/10 border-l-2 border-[#0B6BCB]"
                 )}
               >

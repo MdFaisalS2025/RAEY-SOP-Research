@@ -97,10 +97,10 @@ const SOP_OUTCOMES = [
 
 function confidenceBadge(confidence: string) {
   if (confidence === "high")
-    return "bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]"
+    return "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30"
   if (confidence === "moderate")
-    return "bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]"
-  return "bg-white text-[#475569] border border-[#CBD5E1]"
+    return "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30"
+  return "bg-card text-[#475569] border border-[#CBD5E1]"
 }
 
 function confidenceLabel(confidence: string) {
@@ -140,9 +140,9 @@ export default function EffectivenessPage() {
 
   const stats = [
     { label: "SOPs with Outcome Data", value: "6", icon: BarChart2, color: "text-[#0B6BCB]", bg: "bg-[#0B6BCB]/10" },
-    { label: "Avg Error Reduction Post-Update", value: "28%", icon: TrendingDown, color: "text-[#15803D]", bg: "bg-[#DCFCE7]" },
-    { label: "Infection Rate Change (CLABSI)", value: "-24%", icon: Activity, color: "text-[#15803D]", bg: "bg-[#DCFCE7]" },
-    { label: "Staff Compliance Improvement", value: "+31%", icon: CheckCircle, color: "text-[#15803D]", bg: "bg-[#DCFCE7]" },
+    { label: "Avg Error Reduction Post-Update", value: "28%", icon: TrendingDown, color: "text-[#15803D] dark:text-green-400", bg: "bg-[#DCFCE7] dark:bg-green-500/10" },
+    { label: "Infection Rate Change (CLABSI)", value: "-24%", icon: Activity, color: "text-[#15803D] dark:text-green-400", bg: "bg-[#DCFCE7] dark:bg-green-500/10" },
+    { label: "Staff Compliance Improvement", value: "+31%", icon: CheckCircle, color: "text-[#15803D] dark:text-green-400", bg: "bg-[#DCFCE7] dark:bg-green-500/10" },
   ]
 
   return (
@@ -164,7 +164,7 @@ export default function EffectivenessPage() {
         </div>
 
         {/* Responsible AI note */}
-        <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-[#FEF3C7] border border-[#FDE68A] text-[#B45309] text-sm">
+        <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 text-sm">
           <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
           <span>
             Outcome data shown is simulated. In production, connect to hospital quality databases
@@ -180,7 +180,7 @@ export default function EffectivenessPage() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.07 }}
-              className="bg-white border border-[#E2E8F0] shadow-sm rounded-xl p-4 flex items-center gap-3"
+              className="bg-card border border-[#E2E8F0] shadow-sm rounded-xl p-4 flex items-center gap-3"
             >
               <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", s.bg)}>
                 <s.icon className={cn("w-5 h-5", s.color)} />
@@ -196,10 +196,10 @@ export default function EffectivenessPage() {
         {/* Outcome Tracking Table */}
         <section>
           <h2 className="text-lg font-medium text-[#1A2332] mb-3">SOP Outcome Tracking</h2>
-          <div className="bg-white border border-[#E2E8F0] shadow-sm rounded-xl overflow-hidden">
+          <div className="bg-card border border-[#E2E8F0] shadow-sm rounded-xl overflow-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-[#F1F5F9] border-b border-[#E2E8F0] text-xs text-[#64748B] uppercase tracking-wider">
+                <tr className="bg-muted border-b border-[#E2E8F0] text-xs text-[#64748B] uppercase tracking-wider">
                   <th className="p-4 text-left">SOP</th>
                   <th className="p-4 text-left">Metric</th>
                   <th className="p-4 text-left">Before</th>
@@ -225,7 +225,7 @@ export default function EffectivenessPage() {
                         <p className="font-medium text-[#1A2332] text-xs leading-snug max-w-[160px]">
                           {row.sop_title}
                         </p>
-                        <span className="inline-block mt-1 text-[10px] text-[#475569] border border-[#CBD5E1] bg-white rounded px-2 py-0.5">
+                        <span className="inline-block mt-1 text-[10px] text-[#475569] border border-[#CBD5E1] bg-card rounded px-2 py-0.5">
                           {row.sop_id}
                         </span>
                         <p className="text-[10px] text-[#94A3B8] mt-1">Updated {row.last_major_update}</p>
@@ -241,7 +241,7 @@ export default function EffectivenessPage() {
                         <span
                           className={cn(
                             "text-xl font-bold",
-                            isImproving ? "text-[#15803D]" : "text-[#B91C1C]"
+                            isImproving ? "text-[#15803D] dark:text-green-400" : "text-[#B91C1C] dark:text-red-400"
                           )}
                         >
                           {row.change_pct}%
@@ -276,7 +276,7 @@ export default function EffectivenessPage() {
         <section>
           <h2 className="text-lg font-medium text-[#1A2332] mb-3">Aggregate Impact Summary</h2>
           <div className="grid md:grid-cols-2 gap-4">
-            <div className="bg-white border border-[#E2E8F0] shadow-sm rounded-xl p-5 space-y-3">
+            <div className="bg-card border border-[#E2E8F0] shadow-sm rounded-xl p-5 space-y-3">
               <div className="flex items-center gap-2 text-[#0B6BCB] mb-1">
                 <Database className="w-4 h-4" />
                 <span className="text-sm font-medium text-[#1A2332]">Tracked Outcomes</span>
@@ -288,11 +288,11 @@ export default function EffectivenessPage() {
                 </div>
                 <div className="flex justify-between items-center border-b border-[#EDF1F5] pb-2">
                   <span className="text-[#64748B]">Total improvement events</span>
-                  <span className="text-[#15803D] font-medium">14 metrics</span>
+                  <span className="text-[#15803D] dark:text-green-400 font-medium">14 metrics</span>
                 </div>
                 <div className="flex justify-between items-center border-b border-[#EDF1F5] pb-2">
                   <span className="text-[#64748B]">Est. CLABSI reduction</span>
-                  <span className="text-[#15803D] font-medium">-24% (aligned with AHA 2025)</span>
+                  <span className="text-[#15803D] dark:text-green-400 font-medium">-24% (aligned with AHA 2025)</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-[#64748B]">Avg months tracked per SOP</span>
@@ -300,7 +300,7 @@ export default function EffectivenessPage() {
                 </div>
               </div>
             </div>
-            <div className="bg-white border border-[#E2E8F0] shadow-sm rounded-xl p-5">
+            <div className="bg-card border border-[#E2E8F0] shadow-sm rounded-xl p-5">
               <div className="flex items-center gap-2 mb-3">
                 <Info className="w-4 h-4 text-[#64748B]" />
                 <span className="text-sm font-medium text-[#1A2332]">AHA 2025 Research Benchmarks</span>
@@ -323,7 +323,7 @@ export default function EffectivenessPage() {
           <button
             disabled
             title="Connect to hospital quality database to enable this feature"
-            className="px-4 py-2 rounded-xl text-sm font-medium bg-[#F1F5F9] text-[#94A3B8] border border-[#E2E8F0] cursor-not-allowed opacity-60"
+            className="px-4 py-2 rounded-xl text-sm font-medium bg-muted text-[#94A3B8] border border-[#E2E8F0] cursor-not-allowed opacity-60"
           >
             + Add Outcome Metric
           </button>
@@ -331,7 +331,7 @@ export default function EffectivenessPage() {
         </div>
 
         {/* Methodology note (collapsible) */}
-        <div className="bg-white border border-[#E2E8F0] shadow-sm rounded-xl overflow-hidden">
+        <div className="bg-card border border-[#E2E8F0] shadow-sm rounded-xl overflow-hidden">
           <button
             onClick={() => setMethodologyOpen((v) => !v)}
             className="w-full flex items-center justify-between p-4 text-left hover:bg-[#F8FAFC] transition-colors"

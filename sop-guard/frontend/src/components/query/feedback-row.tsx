@@ -44,13 +44,13 @@ export function FeedbackRow({ queryText, answerId }: { queryText: string; answer
   }
 
   const options: { key: FeedbackChoice; label: string; icon: typeof ThumbsUp; active: string }[] = [
-    { key: "helpful", label: "Helpful", icon: ThumbsUp, active: "bg-[#DCFCE7] border-[#BBF7D0] text-[#15803D]" },
-    { key: "clarification", label: "Needs clarification", icon: MessageCircleQuestion, active: "bg-[#FEF3C7] border-[#FDE68A] text-[#B45309]" },
-    { key: "disagree", label: "Disagree", icon: ThumbsDown, active: "bg-[#FEE2E2] border-[#FECACA] text-[#B91C1C]" },
+    { key: "helpful", label: "Helpful", icon: ThumbsUp, active: "bg-[#DCFCE7] dark:bg-green-500/10 border-[#BBF7D0] dark:border-green-500/30 text-[#15803D] dark:text-green-400" },
+    { key: "clarification", label: "Needs clarification", icon: MessageCircleQuestion, active: "bg-[#FEF3C7] dark:bg-amber-500/10 border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400" },
+    { key: "disagree", label: "Disagree", icon: ThumbsDown, active: "bg-[#FEE2E2] dark:bg-red-500/10 border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400" },
   ]
 
   return (
-    <div className="p-4 rounded-2xl bg-white border border-[#E2E8F0] shadow-sm">
+    <div className="p-4 rounded-2xl bg-card border border-[#E2E8F0] shadow-sm">
       <div className="flex flex-wrap items-center gap-3">
         <span className="text-sm text-[#64748B]">Does this match your practice?</span>
         <div className="flex flex-wrap gap-2">
@@ -62,7 +62,7 @@ export function FeedbackRow({ queryText, answerId }: { queryText: string; answer
                 "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm border transition-colors duration-150",
                 choice === o.key
                   ? o.active
-                  : "border-[#E2E8F0] bg-white text-[#64748B] hover:text-[#1A2332] hover:border-[#CBD5E1]"
+                  : "border-[#E2E8F0] bg-card text-[#64748B] hover:text-[#1A2332] hover:border-[#CBD5E1]"
               )}
             >
               <o.icon className="w-4 h-4" />

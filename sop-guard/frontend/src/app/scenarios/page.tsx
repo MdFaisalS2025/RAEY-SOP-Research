@@ -339,9 +339,9 @@ const SCENARIOS: Scenario[] = [
 // ─── Feedback config ─────────────────────────────────────────────────────────
 
 const gradeConfig: Record<Grade, { label: string; box: string; text: string; icon: typeof CheckCircle2 }> = {
-  correct: { label: "Correct", box: "bg-[#DCFCE7] border-[#BBF7D0]", text: "text-[#15803D]", icon: CheckCircle2 },
-  partial: { label: "Partially correct", box: "bg-[#FEF3C7] border-[#FDE68A]", text: "text-[#B45309]", icon: AlertTriangle },
-  wrong: { label: "Not per protocol", box: "bg-[#FEE2E2] border-[#FECACA]", text: "text-[#B91C1C]", icon: XCircle },
+  correct: { label: "Correct", box: "bg-[#DCFCE7] dark:bg-green-500/10 border-[#BBF7D0] dark:border-green-500/30", text: "text-[#15803D] dark:text-green-400", icon: CheckCircle2 },
+  partial: { label: "Partially correct", box: "bg-[#FEF3C7] dark:bg-amber-500/10 border-[#FDE68A] dark:border-amber-500/30", text: "text-[#B45309] dark:text-amber-400", icon: AlertTriangle },
+  wrong: { label: "Not per protocol", box: "bg-[#FEE2E2] dark:bg-red-500/10 border-[#FECACA] dark:border-red-500/30", text: "text-[#B91C1C] dark:text-red-400", icon: XCircle },
 }
 
 const STORAGE_KEY = "sop-guard-scenario-scores"
@@ -506,14 +506,14 @@ export default function ScenariosPage() {
         </div>
 
         {/* Disclaimer */}
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEF3C7] border border-[#FDE68A] text-[#B45309] text-sm">
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 text-sm">
           <AlertTriangle className="w-4 h-4 shrink-0" />
           <span>Training simulation. Not a substitute for clinical judgment.</span>
         </div>
 
         {/* Practice mode toggle */}
         {!active && (
-          <div className="rounded-2xl bg-white border border-[#E2E8F0] shadow-sm p-4 space-y-2">
+          <div className="rounded-2xl bg-card border border-[#E2E8F0] shadow-sm p-4 space-y-2">
             <p className="text-sm font-bold text-[#1A2332]">Practice mode</p>
             <p className="text-xs text-[#64748B]">
               Blind recall asks you to commit to your own judgment before seeing any options. Clinicians who state their answer first are less prone to automation bias.
@@ -525,7 +525,7 @@ export default function ScenariosPage() {
                   "flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border text-sm font-medium transition-colors",
                   practiceMode === "guided"
                     ? "bg-[#0B6BCB] border-[#0B6BCB] text-white"
-                    : "bg-white border-[#E2E8F0] text-[#64748B] hover:border-[#0B6BCB]"
+                    : "bg-card border-[#E2E8F0] text-[#64748B] hover:border-[#0B6BCB]"
                 )}
               >
                 <Eye className="w-4 h-4" /> Guided
@@ -536,7 +536,7 @@ export default function ScenariosPage() {
                   "flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border text-sm font-medium transition-colors",
                   practiceMode === "blind"
                     ? "bg-[#0B6BCB] border-[#0B6BCB] text-white"
-                    : "bg-white border-[#E2E8F0] text-[#64748B] hover:border-[#0B6BCB]"
+                    : "bg-card border-[#E2E8F0] text-[#64748B] hover:border-[#0B6BCB]"
                 )}
               >
                 <PenLine className="w-4 h-4" /> Blind recall
@@ -555,12 +555,12 @@ export default function ScenariosPage() {
                 <button
                   key={s.id}
                   onClick={() => startScenario(s)}
-                  className="text-left rounded-2xl bg-white border border-[#E2E8F0] shadow-sm p-5 space-y-3 hover:border-[#0B6BCB] transition-colors"
+                  className="text-left rounded-2xl bg-card border border-[#E2E8F0] shadow-sm p-5 space-y-3 hover:border-[#0B6BCB] transition-colors"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <h3 className="text-sm font-bold text-[#1A2332]">{s.title}</h3>
                     {completed && (
-                      <span className="flex items-center gap-1 text-xs text-[#15803D] font-medium shrink-0">
+                      <span className="flex items-center gap-1 text-xs text-[#15803D] dark:text-green-400 font-medium shrink-0">
                         <CheckCircle2 className="w-3.5 h-3.5" /> Completed
                       </span>
                     )}
@@ -569,13 +569,13 @@ export default function ScenariosPage() {
                     <span className={cn(
                       "px-2 py-0.5 rounded-full text-xs font-medium border",
                       s.difficulty === "High"
-                        ? "bg-[#FEE2E2] text-[#B91C1C] border-[#FECACA]"
-                        : "bg-[#FEF3C7] text-[#B45309] border-[#FDE68A]"
+                        ? "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30"
+                        : "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30"
                     )}>
                       {s.difficulty}
                     </span>
                     {s.sops.map(id => (
-                      <span key={id} className="px-2 py-0.5 rounded-full text-xs bg-[#F1F5F9] text-[#64748B] border border-[#E2E8F0]">
+                      <span key={id} className="px-2 py-0.5 rounded-full text-xs bg-muted text-[#64748B] border border-[#E2E8F0]">
                         {id}
                       </span>
                     ))}
@@ -614,7 +614,7 @@ export default function ScenariosPage() {
             </div>
 
             {/* Situation panel */}
-            <div className="rounded-2xl bg-white border border-[#E2E8F0] shadow-sm p-5 space-y-4">
+            <div className="rounded-2xl bg-card border border-[#E2E8F0] shadow-sm p-5 space-y-4">
               <div>
                 <h2 className="text-base font-bold">{active.title}</h2>
                 <p className="text-sm text-[#64748B] mt-1">
@@ -623,9 +623,9 @@ export default function ScenariosPage() {
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {active.vitals.map(v => (
-                  <div key={v.label} className="rounded-lg border border-[#E2E8F0] bg-[#F7F9FB] px-3 py-2">
+                  <div key={v.label} className="rounded-lg border border-[#E2E8F0] bg-background px-3 py-2">
                     <p className="text-xs text-[#64748B]">{v.label}</p>
-                    <p className={cn("text-sm font-bold", v.abnormal ? "text-[#B91C1C]" : "text-[#1A2332]")}>
+                    <p className={cn("text-sm font-bold", v.abnormal ? "text-[#B91C1C] dark:text-red-400" : "text-[#1A2332]")}>
                       {v.value}
                     </p>
                   </div>
@@ -634,7 +634,7 @@ export default function ScenariosPage() {
             </div>
 
             {/* Question */}
-            <div className="rounded-2xl bg-white border border-[#E2E8F0] shadow-sm p-5 space-y-3">
+            <div className="rounded-2xl bg-card border border-[#E2E8F0] shadow-sm p-5 space-y-3">
               <h3 className="text-sm font-bold">{active.steps[stepIdx].question}</h3>
               <div className="space-y-2">
                 {active.steps[stepIdx].options.map((opt, i) => {
@@ -648,10 +648,10 @@ export default function ScenariosPage() {
                       className={cn(
                         "w-full text-left px-4 py-3 rounded-xl border text-sm transition-colors",
                         selected === null
-                          ? "bg-white border-[#E2E8F0] hover:border-[#0B6BCB] hover:bg-[#0B6BCB]/5"
+                          ? "bg-card border-[#E2E8F0] hover:border-[#0B6BCB] hover:bg-[#0B6BCB]/5"
                           : isPicked
                             ? cn(cfg.box, cfg.text, "font-medium")
-                            : "bg-white border-[#E2E8F0] text-[#64748B] opacity-60"
+                            : "bg-card border-[#E2E8F0] text-[#64748B] opacity-60"
                       )}
                     >
                       {opt.label}
@@ -698,11 +698,11 @@ export default function ScenariosPage() {
             .filter(d => d.opt.grade === "wrong")
           return (
             <div className="space-y-4">
-              <div className="rounded-2xl bg-white border border-[#E2E8F0] shadow-sm p-6 text-center space-y-2">
+              <div className="rounded-2xl bg-card border border-[#E2E8F0] shadow-sm p-6 text-center space-y-2">
                 <p className="text-sm text-[#64748B]">{active.title}</p>
                 <p className={cn(
                   "text-4xl font-bold",
-                  score === active.steps.length ? "text-[#15803D]" : score > 0 ? "text-[#B45309]" : "text-[#B91C1C]"
+                  score === active.steps.length ? "text-[#15803D] dark:text-green-400" : score > 0 ? "text-[#B45309] dark:text-amber-400" : "text-[#B91C1C] dark:text-red-400"
                 )}>
                   {score} / {active.steps.length}
                 </p>
@@ -710,7 +710,7 @@ export default function ScenariosPage() {
               </div>
 
               {/* Per-step recap */}
-              <div className="rounded-2xl bg-white border border-[#E2E8F0] shadow-sm p-5 space-y-3">
+              <div className="rounded-2xl bg-card border border-[#E2E8F0] shadow-sm p-5 space-y-3">
                 <h3 className="text-sm font-bold">Step recap</h3>
                 {active.steps.map((step, i) => {
                   const opt = step.options[picks[i]]
@@ -731,8 +731,8 @@ export default function ScenariosPage() {
 
               {/* Deviations */}
               {deviations.length > 0 && (
-                <div className="rounded-2xl bg-[#FEE2E2] border border-[#FECACA] p-5 space-y-2">
-                  <h3 className="text-sm font-bold text-[#B91C1C] flex items-center gap-1.5">
+                <div className="rounded-2xl bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 p-5 space-y-2">
+                  <h3 className="text-sm font-bold text-[#B91C1C] dark:text-red-400 flex items-center gap-1.5">
                     <AlertTriangle className="w-4 h-4" /> Deviations from protocol
                   </h3>
                   {deviations.map(d => (
@@ -753,13 +753,13 @@ export default function ScenariosPage() {
                 </button>
                 <button
                   onClick={nextScenario}
-                  className="px-4 py-2 rounded-lg text-sm font-medium bg-white border border-[#E2E8F0] text-[#1A2332] hover:bg-[#F1F5F9] transition-colors flex items-center gap-1.5"
+                  className="px-4 py-2 rounded-lg text-sm font-medium bg-card border border-[#E2E8F0] text-[#1A2332] hover:bg-muted transition-colors flex items-center gap-1.5"
                 >
                   Next scenario <ArrowRight className="w-4 h-4" />
                 </button>
                 <button
                   onClick={exitScenario}
-                  className="px-4 py-2 rounded-lg text-sm font-medium bg-white border border-[#E2E8F0] text-[#64748B] hover:bg-[#F1F5F9] transition-colors flex items-center gap-1.5"
+                  className="px-4 py-2 rounded-lg text-sm font-medium bg-card border border-[#E2E8F0] text-[#64748B] hover:bg-muted transition-colors flex items-center gap-1.5"
                 >
                   <ArrowLeft className="w-4 h-4" /> Back
                 </button>

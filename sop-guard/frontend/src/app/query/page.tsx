@@ -190,11 +190,11 @@ function mapResponse(query: string, response: any, startedAt: number): Assistant
 
 function AlignmentBadge({ status }: { status: string }) {
   const configs: Record<string, { label: string; className: string; icon?: typeof AlertTriangle }> = {
-    aligned: { label: "Aligned with SOP", className: "bg-[#DCFCE7] text-[#15803D] border-[#BBF7D0]" },
-    partially_aligned: { label: "Partially Aligned", className: "bg-[#FEF3C7] text-[#B45309] border-[#FDE68A]" },
-    possible_update: { label: "Possible Update Needed", className: "bg-[#FEF3C7] text-[#B45309] border-[#FDE68A]" },
-    conflict_detected: { label: "CONFLICT DETECTED", className: "bg-[#FEE2E2] text-[#B91C1C] border-[#FECACA]", icon: AlertTriangle },
-    not_reviewed: { label: "Not Reviewed", className: "bg-[#F1F5F9] text-[#64748B] border-[#E2E8F0]" },
+    aligned: { label: "Aligned with SOP", className: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30" },
+    partially_aligned: { label: "Partially Aligned", className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30" },
+    possible_update: { label: "Possible Update Needed", className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30" },
+    conflict_detected: { label: "CONFLICT DETECTED", className: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30", icon: AlertTriangle },
+    not_reviewed: { label: "Not Reviewed", className: "bg-muted text-[#64748B] border-[#E2E8F0]" },
   }
   const c = configs[status] ?? configs["not_reviewed"]
   return (
@@ -207,11 +207,11 @@ function AlignmentBadge({ status }: { status: string }) {
 
 function EvidenceStrengthBadge({ strength }: { strength: string }) {
   const map: Record<string, string> = {
-    high: "bg-[#DCFCE7] text-[#15803D] border-[#BBF7D0]",
-    moderate: "bg-[#FEF3C7] text-[#B45309] border-[#FDE68A]",
-    low: "bg-[#FEE2E2] text-[#B91C1C] border-[#FECACA]",
-    insufficient: "bg-[#F1F5F9] text-[#64748B] border-[#E2E8F0]",
-    expert_opinion: "bg-white text-[#475569] border-[#CBD5E1]",
+    high: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30",
+    moderate: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30",
+    low: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30",
+    insufficient: "bg-muted text-[#64748B] border-[#E2E8F0]",
+    expert_opinion: "bg-card text-[#475569] border-[#CBD5E1]",
   }
   return (
     <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border capitalize", map[strength] ?? map["insufficient"])}>
@@ -222,9 +222,9 @@ function EvidenceStrengthBadge({ strength }: { strength: string }) {
 
 function VerificationBadge({ status }: { status: "passed" | "warning" | "failed" }) {
   const config = {
-    passed: { icon: ShieldCheck, label: "Verified", className: "bg-[#DCFCE7] text-[#15803D] border-[#BBF7D0]" },
-    warning: { icon: ShieldAlert, label: "Caution", className: "bg-[#FEF3C7] text-[#B45309] border-[#FDE68A]" },
-    failed: { icon: ShieldX, label: "Unverified", className: "bg-[#FEE2E2] text-[#B91C1C] border-[#FECACA]" },
+    passed: { icon: ShieldCheck, label: "Verified", className: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30" },
+    warning: { icon: ShieldAlert, label: "Caution", className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30" },
+    failed: { icon: ShieldX, label: "Unverified", className: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30" },
   }
   const c = config[status]
   return (
@@ -239,9 +239,9 @@ function ConfidenceGauge({ confidence }: { confidence: number }) {
   const pct = Math.round(confidence * 100)
   const level = confidence >= 0.7 ? "high" : confidence >= 0.5 ? "medium" : "low"
   const colors = {
-    high: { ring: "text-[#15803D]", bg: "bg-[#DCFCE7]", label: "High Confidence", text: "text-[#15803D]", explanation: "Well supported by SOP evidence. All key details verified." },
-    medium: { ring: "text-[#B45309]", bg: "bg-[#FEF3C7]", label: "Medium Confidence", text: "text-[#B45309]", explanation: "Partially supported. Some details may need manual verification." },
-    low: { ring: "text-[#B91C1C]", bg: "bg-[#FEE2E2]", label: "Low Confidence", text: "text-[#B91C1C]", explanation: "Limited evidence found. Check the source SOP before acting." },
+    high: { ring: "text-[#15803D] dark:text-green-400", bg: "bg-[#DCFCE7] dark:bg-green-500/10", label: "High Confidence", text: "text-[#15803D] dark:text-green-400", explanation: "Well supported by SOP evidence. All key details verified." },
+    medium: { ring: "text-[#B45309] dark:text-amber-400", bg: "bg-[#FEF3C7] dark:bg-amber-500/10", label: "Medium Confidence", text: "text-[#B45309] dark:text-amber-400", explanation: "Partially supported. Some details may need manual verification." },
+    low: { ring: "text-[#B91C1C] dark:text-red-400", bg: "bg-[#FEE2E2] dark:bg-red-500/10", label: "Low Confidence", text: "text-[#B91C1C] dark:text-red-400", explanation: "Limited evidence found. Check the source SOP before acting." },
   }
   const c = colors[level]
   return (
@@ -265,15 +265,15 @@ function ConfidenceGauge({ confidence }: { confidence: number }) {
 
 function PipelineStages({ currentStage }: { currentStage: number }) {
   return (
-    <div className="p-6 rounded-2xl bg-white border border-[#E2E8F0]">
+    <div className="p-6 rounded-2xl bg-card border border-[#E2E8F0]">
       <h3 className="text-sm font-semibold mb-4">Processing Pipeline</h3>
       <div className="space-y-3">
         {pipelineStages.map((stage, i) => {
           const completed = i < currentStage
           const active = i === currentStage
           return (
-            <div key={i} className={cn("flex items-center gap-3 text-sm transition-all duration-300", completed ? "text-[#15803D]" : active ? "text-[#0B6BCB]" : "text-[#94A3B8]")}>
-              {completed ? <CheckCircle2 className="w-5 h-5 text-[#15803D] shrink-0" /> : active ? <Loader2 className="w-5 h-5 text-[#0B6BCB] animate-spin shrink-0" /> : <Circle className="w-5 h-5 shrink-0" />}
+            <div key={i} className={cn("flex items-center gap-3 text-sm transition-all duration-300", completed ? "text-[#15803D] dark:text-green-400" : active ? "text-[#0B6BCB]" : "text-[#94A3B8]")}>
+              {completed ? <CheckCircle2 className="w-5 h-5 text-[#15803D] dark:text-green-400 shrink-0" /> : active ? <Loader2 className="w-5 h-5 text-[#0B6BCB] animate-spin shrink-0" /> : <Circle className="w-5 h-5 shrink-0" />}
               <span className={cn("font-medium", active && "text-[#1A2332]")}>{stage.label}</span>
             </div>
           )
@@ -312,28 +312,28 @@ function mapReasoningToTimeline(reasoning: string) {
 }
 
 function news2RiskConfig(score: number) {
-  if (score >= 7) return { label: "HIGH RISK: Consider ICU", className: "bg-[#FEE2E2] text-[#B91C1C] border-[#FECACA]" }
-  if (score >= 5) return { label: "Medium Risk: Urgent Review", className: "bg-[#FEF3C7] text-[#B45309] border-[#FDE68A]" }
-  if (score >= 3) return { label: "Low-Medium Risk", className: "bg-[#FEF3C7] text-[#B45309] border-[#FDE68A]" }
-  return { label: "Low Risk", className: "bg-[#DCFCE7] text-[#15803D] border-[#BBF7D0]" }
+  if (score >= 7) return { label: "HIGH RISK: Consider ICU", className: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30" }
+  if (score >= 5) return { label: "Medium Risk: Urgent Review", className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30" }
+  if (score >= 3) return { label: "Low-Medium Risk", className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30" }
+  return { label: "Low Risk", className: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30" }
 }
 
 function FaithfulnessBadge({ score }: { score: number }) {
   const pct = Math.round(score * 100)
   if (score >= 0.9) return (
-    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border bg-[#DCFCE7] text-[#15803D] border-[#BBF7D0]">
+    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30">
       <ShieldCheck className="w-4 h-4" />
       High Faithfulness ({pct}%)
     </span>
   )
   if (score >= 0.7) return (
-    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border bg-[#FEF3C7] text-[#B45309] border-[#FDE68A]">
+    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30">
       <ShieldAlert className="w-4 h-4" />
       Moderate Faithfulness ({pct}%)
     </span>
   )
   return (
-    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border bg-[#FEE2E2] text-[#B91C1C] border-[#FECACA]">
+    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30">
       <ShieldX className="w-4 h-4" />
       Low Faithfulness - Verify Manually ({pct}%)
     </span>
@@ -359,7 +359,7 @@ function CopyLinkButton({ data }: { data: AssistantData }) {
   return (
     <button onClick={handleCopy}
       className={cn("inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border transition-all",
-        copied ? "bg-[#DCFCE7] border-[#BBF7D0] text-[#15803D]" : "border-[#E2E8F0] text-[#64748B] hover:text-[#1A2332] hover:border-[#CBD5E1]")}>
+        copied ? "bg-[#DCFCE7] dark:bg-green-500/10 border-[#BBF7D0] dark:border-green-500/30 text-[#15803D] dark:text-green-400" : "border-[#E2E8F0] text-[#64748B] hover:text-[#1A2332] hover:border-[#CBD5E1]")}>
       {copied ? <Check className="w-4 h-4" /> : <Link2 className="w-4 h-4" />}
       {copied === "link" ? "Link copied" : copied === "answer" ? "Answer copied" : "Copy link"}
     </button>
@@ -374,13 +374,13 @@ function CollapsedAssistant({ data }: { data: AssistantData }) {
   const plainText = data.answer.replace(/[#*>]/g, "").replace(/\[\d+\]/g, "").replace(/\s+/g, " ").trim()
   if (data.error) {
     return (
-      <div className="p-4 rounded-2xl bg-white border border-[#FECACA] text-sm text-[#B91C1C]">
+      <div className="p-4 rounded-2xl bg-card border border-[#FECACA] dark:border-red-500/30 text-sm text-[#B91C1C] dark:text-red-400">
         Backend unavailable for this question.
       </div>
     )
   }
   return (
-    <div className="p-5 rounded-2xl bg-white border border-[#E2E8F0]">
+    <div className="p-5 rounded-2xl bg-card border border-[#E2E8F0]">
       {expanded ? (
         <AnswerRenderer text={data.answer} citations={data.inlineCitations} />
       ) : (
@@ -464,15 +464,15 @@ function AssistantAnswer({
 
   if (data.error) {
     return (
-      <div className="p-6 rounded-2xl bg-white border border-[#FECACA]">
+      <div className="p-6 rounded-2xl bg-card border border-[#FECACA] dark:border-red-500/30">
         <div className="flex items-start gap-4">
-          <div className="w-10 h-10 rounded-xl bg-[#FEE2E2] flex items-center justify-center shrink-0">
-            <AlertTriangle className="w-5 h-5 text-[#B91C1C]" />
+          <div className="w-10 h-10 rounded-xl bg-[#FEE2E2] dark:bg-red-500/10 flex items-center justify-center shrink-0">
+            <AlertTriangle className="w-5 h-5 text-[#B91C1C] dark:text-red-400" />
           </div>
           <div>
             <p className="font-semibold text-[#1A2332] mb-1">Backend unavailable</p>
             <p className="text-[15px] text-[#64748B]">Could not reach the SOP-Guard backend. Make sure the Python server is running on port 8000, then try again.</p>
-            <p className="text-xs text-[#64748B] mt-3 font-mono bg-[#F1F5F9] px-3 py-2 rounded-lg inline-block">
+            <p className="text-xs text-[#64748B] mt-3 font-mono bg-muted px-3 py-2 rounded-lg inline-block">
               cd backend &amp;&amp; uvicorn app.main:app --reload
             </p>
           </div>
@@ -487,21 +487,21 @@ function AssistantAnswer({
       {/* Conflict Alert Banner */}
       {hasConflict && (
         <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-          className="p-4 rounded-2xl bg-[#FEE2E2] border border-[#FECACA] flex flex-col sm:flex-row sm:items-center gap-3">
+          className="p-4 rounded-2xl bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 flex flex-col sm:flex-row sm:items-center gap-3">
           <div className="flex items-start gap-3 flex-1">
-            <AlertTriangle className="w-5 h-5 text-[#B91C1C] shrink-0 mt-0.5" />
+            <AlertTriangle className="w-5 h-5 text-[#B91C1C] dark:text-red-400 shrink-0 mt-0.5" />
             <div>
-              <p className="font-semibold text-[#B91C1C] text-sm">CONFLICT DETECTED</p>
+              <p className="font-semibold text-[#B91C1C] dark:text-red-400 text-sm">CONFLICT DETECTED</p>
               <p className="text-[13px] text-[#64748B] mt-0.5">The retrieved SOP content contains potentially conflicting guidance.</p>
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <button onClick={() => setShowConflictDetails(!showConflictDetails)}
-              className="px-3 py-1.5 rounded-lg text-sm border border-[#FECACA] text-[#B91C1C] hover:bg-[#FEE2E2] transition-colors">
+              className="px-3 py-1.5 rounded-lg text-sm border border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400 hover:bg-[#FEE2E2] dark:bg-red-500/10 transition-colors">
               {showConflictDetails ? "Hide Details" : "View Details"}
             </button>
             <button onClick={() => router.push("/proposals?from_conflict=true")}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA] hover:bg-[#FEE2E2] transition-colors">
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30 hover:bg-[#FEE2E2] dark:bg-red-500/10 transition-colors">
               <PlusCircle className="w-4 h-4" />
               Create Update Proposal
             </button>
@@ -514,16 +514,16 @@ function AssistantAnswer({
         {showConflictDetails && hasConflict && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden">
-            <div className="p-4 rounded-2xl bg-white border border-[#FECACA] space-y-2">
+            <div className="p-4 rounded-2xl bg-card border border-[#FECACA] dark:border-red-500/30 space-y-2">
               {data.sopConflicts.map((c, i) => (
-                <div key={i} className="p-3 rounded-lg bg-[#FEE2E2] border border-[#FECACA] text-sm">
-                  <p className="font-semibold text-[#B91C1C]">{c.message}</p>
+                <div key={i} className="p-3 rounded-lg bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 text-sm">
+                  <p className="font-semibold text-[#B91C1C] dark:text-red-400">{c.message}</p>
                   <p className="text-[#64748B] text-xs mt-1">Values in {c.sop_a}: {c.values_a?.join(", ")} vs {c.sop_b}: {c.values_b?.join(", ")}</p>
                 </div>
               ))}
               {evidenceConflicts.map((e) => (
-                <div key={e.id} className="p-3 rounded-lg bg-[#FEE2E2] border border-[#FECACA] text-sm">
-                  <p className="font-semibold text-[#B91C1C]">Evidence conflict: {e.source_name}</p>
+                <div key={e.id} className="p-3 rounded-lg bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 text-sm">
+                  <p className="font-semibold text-[#B91C1C] dark:text-red-400">Evidence conflict: {e.source_name}</p>
                   <p className="text-[#64748B] text-xs mt-1">{e.summary.substring(0, 120)}…</p>
                 </div>
               ))}
@@ -545,9 +545,9 @@ function AssistantAnswer({
             <ReadingLevelToggle value={readingLevel} onChange={onReadingLevelChange} />
           </div>
           {isAbstained ? (
-            <div className="p-6 sm:p-8 rounded-2xl bg-white border border-[#0B6BCB]/30">
+            <div className="p-6 sm:p-8 rounded-2xl bg-card border border-[#0B6BCB]/30">
               <div className="flex items-start gap-4">
-                <div className="w-11 h-11 rounded-xl bg-[#F1F5F9] flex items-center justify-center shrink-0">
+                <div className="w-11 h-11 rounded-xl bg-muted flex items-center justify-center shrink-0">
                   <SearchX className="w-5 h-5 text-[#64748B]" />
                 </div>
                 <div className="min-w-0">
@@ -576,7 +576,7 @@ function AssistantAnswer({
             <>
               {/* Grounding bar */}
               {distinctSopTitles.length > 0 && (
-                <div className="p-3.5 rounded-2xl bg-white border border-[#E2E8F0]">
+                <div className="p-3.5 rounded-2xl bg-card border border-[#E2E8F0]">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="inline-flex items-center gap-1.5 text-sm font-medium text-[#1A2332]">
                       <Layers className="w-4 h-4 text-[#0B6BCB]" />
@@ -589,7 +589,7 @@ function AssistantAnswer({
                     ))}
                     {data.generationMode && (
                       <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase border",
-                        data.generationMode === "llm" ? "bg-[#DCFCE7] text-[#15803D] border-[#BBF7D0]" : "bg-white text-[#475569] border-[#CBD5E1]")}>
+                        data.generationMode === "llm" ? "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30" : "bg-card text-[#475569] border-[#CBD5E1]")}>
                         {data.generationMode}
                       </span>
                     )}
@@ -601,7 +601,7 @@ function AssistantAnswer({
                     )}
                   </div>
                   {distinctSopTitles.length === 1 && (
-                    <p className="mt-2 text-[12px] text-[#B45309] flex items-center gap-1.5">
+                    <p className="mt-2 text-[12px] text-[#B45309] dark:text-amber-400 flex items-center gap-1.5">
                       <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
                       Single-source answer - verify against the full SOP
                     </p>
@@ -609,7 +609,7 @@ function AssistantAnswer({
                 </div>
               )}
 
-              <div className="p-6 sm:p-8 rounded-2xl bg-white border border-[#E2E8F0] shadow-sm relative">
+              <div className="p-6 sm:p-8 rounded-2xl bg-card border border-[#E2E8F0] shadow-sm relative">
                 <div className="flex justify-end mb-4 sm:mb-0 sm:absolute sm:top-6 sm:right-6">
                   <VerificationBadge status={data.verification.status} />
                 </div>
@@ -640,7 +640,7 @@ function AssistantAnswer({
 
           {/* Faithfulness badge */}
           {data.faithfulness && (
-            <div className="p-4 rounded-2xl bg-white border border-[#E2E8F0] space-y-3">
+            <div className="p-4 rounded-2xl bg-card border border-[#E2E8F0] space-y-3">
               <div className="flex items-center justify-between">
                 <FaithfulnessBadge score={data.faithfulness.overall_faithfulness} />
                 <button onClick={() => setShowSentenceCheck(!showSentenceCheck)}
@@ -655,10 +655,10 @@ function AssistantAnswer({
                     className="overflow-hidden">
                     <div className="space-y-2 pt-1">
                       {data.faithfulness.sentences.map((s: any, i: number) => (
-                        <div key={i} className={cn("p-2.5 rounded-lg text-[13px] leading-relaxed", s.grounded ? "bg-[#F1F5F9]" : "bg-[#FEF3C7] border border-[#FDE68A]")}>
+                        <div key={i} className={cn("p-2.5 rounded-lg text-[13px] leading-relaxed", s.grounded ? "bg-muted" : "bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30")}>
                           <span className="text-[#1A2332]">{s.text}</span>
                           {!s.grounded && (
-                            <span className="ml-2 text-[#B45309] text-xs font-semibold">Not found in SOP</span>
+                            <span className="ml-2 text-[#B45309] dark:text-amber-400 text-xs font-semibold">Not found in SOP</span>
                           )}
                           {s.source_chunk && s.source_chunk !== "Unknown" && s.source_chunk !== "General context" && (
                             <span className="ml-2 text-[11px] text-[#64748B]">- {s.source_chunk}</span>
@@ -714,7 +714,7 @@ function AssistantAnswer({
                   <SourcePanel citations={data.inlineCitations} highlightedNumber={highlightedSource} />
                 )}
                 {activePanel === "sources" && data.inlineCitations.length === 0 && (
-                  <div className="p-5 rounded-2xl bg-white border border-[#E2E8F0]">
+                  <div className="p-5 rounded-2xl bg-card border border-[#E2E8F0]">
                     <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
                       <FileText className="w-4 h-4 text-[#0B6BCB]" />
                       Source Evidence
@@ -722,7 +722,7 @@ function AssistantAnswer({
                     <div className="space-y-3">
                       {data.sources.map((s) => (
                         <button key={s.id} onClick={() => setSelectedSource(s)}
-                          className="w-full text-left p-4 rounded-xl bg-white border border-[#E2E8F0] hover:border-[#0B6BCB]/30 transition-all group">
+                          className="w-full text-left p-4 rounded-xl bg-card border border-[#E2E8F0] hover:border-[#0B6BCB]/30 transition-all group">
                           <div className="flex items-center justify-between mb-1">
                             <span className="text-sm font-semibold group-hover:text-[#0B6BCB] transition-colors">{s.sop_title}</span>
                             <span className="text-xs font-mono text-[#0B6BCB]">{Math.round(s.score * 100)}% match</span>
@@ -737,7 +737,7 @@ function AssistantAnswer({
 
                 {/* Safety Check Panel */}
                 {activePanel === "safety" && (
-                  <div className="p-5 rounded-2xl bg-white border border-[#E2E8F0]">
+                  <div className="p-5 rounded-2xl bg-card border border-[#E2E8F0]">
                     <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
                       <Shield className="w-4 h-4 text-[#0B6BCB]" />
                       Safety Verification Results
@@ -758,10 +758,10 @@ function AssistantAnswer({
                         <p className="text-xs font-semibold uppercase text-[#64748B] mb-2">Threshold Checks</p>
                         <div className="space-y-2">
                           {data.verification.thresholdChecks.map((c, i) => (
-                            <div key={i} className="flex items-center gap-2 p-3 rounded-lg bg-white">
-                              {c.status === "pass" ? <CheckCircle2 className="w-4 h-4 text-[#15803D] shrink-0" /> : <XCircle className="w-4 h-4 text-[#B91C1C] shrink-0" />}
+                            <div key={i} className="flex items-center gap-2 p-3 rounded-lg bg-card">
+                              {c.status === "pass" ? <CheckCircle2 className="w-4 h-4 text-[#15803D] dark:text-green-400 shrink-0" /> : <XCircle className="w-4 h-4 text-[#B91C1C] dark:text-red-400 shrink-0" />}
                               <span className="flex-1 text-[15px] leading-relaxed text-[#1A2332]">{c.parameter}: <span className="font-mono text-[#0B6BCB]">{c.value}</span></span>
-                              <span className={cn("text-xs font-semibold", c.status === "pass" ? "text-[#15803D]" : "text-[#B91C1C]")}>{c.status.toUpperCase()}</span>
+                              <span className={cn("text-xs font-semibold", c.status === "pass" ? "text-[#15803D] dark:text-green-400" : "text-[#B91C1C] dark:text-red-400")}>{c.status.toUpperCase()}</span>
                             </div>
                           ))}
                         </div>
@@ -772,8 +772,8 @@ function AssistantAnswer({
                         <p className="text-xs font-semibold uppercase text-[#64748B] mb-2">Sequence Checks</p>
                         <div className="space-y-2">
                           {data.verification.sequenceChecks.map((c, i) => (
-                            <div key={i} className="flex items-center gap-2 p-3 rounded-lg bg-white">
-                              {c.correct ? <CheckCircle2 className="w-4 h-4 text-[#15803D]" /> : <XCircle className="w-4 h-4 text-[#B91C1C]" />}
+                            <div key={i} className="flex items-center gap-2 p-3 rounded-lg bg-card">
+                              {c.correct ? <CheckCircle2 className="w-4 h-4 text-[#15803D] dark:text-green-400" /> : <XCircle className="w-4 h-4 text-[#B91C1C] dark:text-red-400" />}
                               <span className="text-[15px] leading-relaxed text-[#1A2332]">{c.procedure}</span>
                               <span className="text-[#64748B] text-xs ml-auto">{c.correct ? "Correct order" : "Order issue"}</span>
                             </div>
@@ -786,8 +786,8 @@ function AssistantAnswer({
                         <p className="text-xs font-semibold uppercase text-[#64748B] mb-2">Contraindication Checks</p>
                         <div className="space-y-2">
                           {data.verification.contraindicationChecks.map((c, i) => (
-                            <div key={i} className="flex items-center gap-2 p-3 rounded-lg bg-white">
-                              {c.safe ? <CheckCircle2 className="w-4 h-4 text-[#15803D]" /> : <AlertTriangle className="w-4 h-4 text-[#B45309]" />}
+                            <div key={i} className="flex items-center gap-2 p-3 rounded-lg bg-card">
+                              {c.safe ? <CheckCircle2 className="w-4 h-4 text-[#15803D] dark:text-green-400" /> : <AlertTriangle className="w-4 h-4 text-[#B45309] dark:text-amber-400" />}
                               <span className="flex-1 text-[15px] leading-relaxed text-[#1A2332]">{c.item}</span>
                               <span className="text-xs text-[#64748B]">{c.note}</span>
                             </div>
@@ -800,7 +800,7 @@ function AssistantAnswer({
 
                 {/* Pipeline Trace Panel */}
                 {activePanel === "trace" && (
-                  <div className="p-5 rounded-2xl bg-white border border-[#E2E8F0]">
+                  <div className="p-5 rounded-2xl bg-card border border-[#E2E8F0]">
                     <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
                       <Brain className="w-4 h-4 text-[#0B6BCB]" />
                       How This Answer Was Built
@@ -837,7 +837,7 @@ function AssistantAnswer({
 
                 {/* Feedback Panel */}
                 {activePanel === "feedback" && (
-                  <div className="p-5 rounded-2xl bg-white border border-[#E2E8F0]">
+                  <div className="p-5 rounded-2xl bg-card border border-[#E2E8F0]">
                     <h3 className="text-sm font-semibold mb-4">Was this answer helpful?</h3>
                     <div className="flex flex-wrap gap-2 mb-4">
                       {[
@@ -855,7 +855,7 @@ function AssistantAnswer({
                       ))}
                     </div>
                     {feedbackGiven && (
-                      <p className="text-xs text-[#15803D] flex items-center gap-1.5">
+                      <p className="text-xs text-[#15803D] dark:text-green-400 flex items-center gap-1.5">
                         <CheckCircle2 className="w-3.5 h-3.5" />
                         Feedback submitted. Thank you!
                       </p>
@@ -865,7 +865,7 @@ function AssistantAnswer({
 
                 {/* Export Panel */}
                 {activePanel === "export" && (
-                  <div className="p-5 rounded-2xl bg-white border border-[#E2E8F0]">
+                  <div className="p-5 rounded-2xl bg-card border border-[#E2E8F0]">
                     <h3 className="text-sm font-semibold mb-4">Export This Result</h3>
                     <div className="flex flex-wrap gap-3">
                       <button onClick={async () => {
@@ -908,11 +908,11 @@ function AssistantAnswer({
           {/* Model Comparison pane */}
           {compareModels && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-              className="p-5 rounded-2xl bg-white border border-[#E2E8F0]">
+              className="p-5 rounded-2xl bg-card border border-[#E2E8F0]">
               <div className="flex items-center gap-2 mb-4">
                 <BeakerIcon className="w-4 h-4 text-[#0B6BCB]" />
                 <h3 className="text-sm font-semibold">Model B - Llama 3.1 8B (Simulated)</h3>
-                <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]">MOCK</span>
+                <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30">MOCK</span>
               </div>
               <p className="text-[15px] leading-relaxed text-[#1A2332] mb-4">{mockComparisonAnswer.answer}</p>
               <div className="border-t border-[#E2E8F0] pt-4 mt-4">
@@ -929,13 +929,13 @@ function AssistantAnswer({
                     <tbody className="divide-y divide-[#EDF1F5]">
                       <tr>
                         <td className="py-2 pr-4 text-[#64748B]">Faithfulness</td>
-                        <td className="py-2 pr-4 text-[#15803D] font-mono">{data.faithfulness ? `${Math.round(data.faithfulness.overall_faithfulness * 100)}%` : "n/a"}</td>
-                        <td className="py-2 text-[#B45309] font-mono">{Math.round(mockComparisonAnswer.faithfulness.overall_faithfulness * 100)}%</td>
+                        <td className="py-2 pr-4 text-[#15803D] dark:text-green-400 font-mono">{data.faithfulness ? `${Math.round(data.faithfulness.overall_faithfulness * 100)}%` : "n/a"}</td>
+                        <td className="py-2 text-[#B45309] dark:text-amber-400 font-mono">{Math.round(mockComparisonAnswer.faithfulness.overall_faithfulness * 100)}%</td>
                       </tr>
                       <tr>
                         <td className="py-2 pr-4 text-[#64748B]">Confidence</td>
-                        <td className="py-2 pr-4 text-[#15803D] font-mono">{Math.round(data.verification.confidence * 100)}%</td>
-                        <td className="py-2 text-[#B45309] font-mono">{Math.round(mockComparisonAnswer.confidence * 100)}%</td>
+                        <td className="py-2 pr-4 text-[#15803D] dark:text-green-400 font-mono">{Math.round(data.verification.confidence * 100)}%</td>
+                        <td className="py-2 text-[#B45309] dark:text-amber-400 font-mono">{Math.round(mockComparisonAnswer.confidence * 100)}%</td>
                       </tr>
                       <tr>
                         <td className="py-2 pr-4 text-[#64748B]">Response Length</td>
@@ -961,18 +961,18 @@ function AssistantAnswer({
             <BookOpen className="w-4 h-4 text-[#0B6BCB]" />
             <h2 className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">External Evidence</h2>
           </div>
-          <div className="p-5 rounded-2xl bg-white border border-[#E2E8F0] shadow-sm h-fit">
+          <div className="p-5 rounded-2xl bg-card border border-[#E2E8F0] shadow-sm h-fit">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-semibold flex items-center gap-2">
                 <BookOpen className="w-4 h-4 text-[#0B6BCB]" />
                 External Evidence
               </h3>
-              <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]">MOCK</span>
+              <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30">MOCK</span>
             </div>
             <EvidenceMeter items={MOCK_EVIDENCE} />
             <div className="space-y-3">
               {MOCK_EVIDENCE.map((ev) => (
-                <div key={ev.id} className="p-3 rounded-xl bg-[#F1F5F9] border border-[#E2E8F0] space-y-2">
+                <div key={ev.id} className="p-3 rounded-xl bg-muted border border-[#E2E8F0] space-y-2">
                   <div className="flex items-start justify-between gap-2">
                     <span className="text-[11px] font-semibold text-[#64748B] uppercase tracking-wide">{ev.source_name}</span>
                     <EvidenceStrengthBadge strength={ev.evidence_strength} />
@@ -1007,12 +1007,12 @@ function AssistantAnswer({
             className="fixed inset-0 z-50 flex justify-end bg-black/50 backdrop-blur-sm"
             onClick={() => setSelectedSource(null)}>
             <motion.div initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="w-full max-w-lg h-full bg-white border-l border-[#E2E8F0] shadow-2xl overflow-y-auto"
+              className="w-full max-w-lg h-full bg-card border-l border-[#E2E8F0] shadow-2xl overflow-y-auto"
               onClick={(e) => e.stopPropagation()}>
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-semibold">Source Detail</h3>
-                  <button onClick={() => setSelectedSource(null)} className="p-2 rounded-lg hover:bg-[#F1F5F9] text-[#64748B] transition-colors">
+                  <button onClick={() => setSelectedSource(null)} className="p-2 rounded-lg hover:bg-muted text-[#64748B] transition-colors">
                     <X className="w-5 h-5" />
                   </button>
                 </div>
@@ -1028,7 +1028,7 @@ function AssistantAnswer({
                   <div>
                     <label className="text-xs font-medium text-[#64748B] uppercase tracking-wider">Relevance Score</label>
                     <div className="flex items-center gap-2 mt-1">
-                      <div className="w-24 h-2 rounded-full bg-[#F1F5F9] overflow-hidden">
+                      <div className="w-24 h-2 rounded-full bg-muted overflow-hidden">
                         <div className="h-full rounded-full bg-[#0B6BCB]" style={{ width: `${selectedSource.score * 100}%` }} />
                       </div>
                       <span className="text-sm font-mono text-[#0B6BCB]">{(selectedSource.score * 100).toFixed(0)}%</span>
@@ -1036,7 +1036,7 @@ function AssistantAnswer({
                   </div>
                   <div>
                     <label className="text-xs font-medium text-[#64748B] uppercase tracking-wider">Content</label>
-                    <p className="text-sm text-[#64748B] mt-2 leading-relaxed p-3 rounded-xl bg-[#F1F5F9] border border-[#E2E8F0]">
+                    <p className="text-sm text-[#64748B] mt-2 leading-relaxed p-3 rounded-xl bg-muted border border-[#E2E8F0]">
                       {selectedSource.content}
                     </p>
                   </div>
@@ -1300,8 +1300,8 @@ export default function QueryPage() {
             <div className="flex items-center gap-2 text-xs text-[#64748B]">
               <User className="w-3.5 h-3.5" />
               <span className="capitalize">{userRole}</span>
-              {userRole === "admin" && <span className="px-1.5 py-0.5 rounded bg-[#FEE2E2] text-[#B91C1C] text-[10px] font-semibold">ADMIN</span>}
-              {userRole === "editor" && <span className="px-1.5 py-0.5 rounded bg-[#FEF3C7] text-[#B45309] text-[10px] font-semibold">EDITOR</span>}
+              {userRole === "admin" && <span className="px-1.5 py-0.5 rounded bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 text-[10px] font-semibold">ADMIN</span>}
+              {userRole === "editor" && <span className="px-1.5 py-0.5 rounded bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 text-[10px] font-semibold">EDITOR</span>}
             </div>
           </div>
 
@@ -1317,7 +1317,7 @@ export default function QueryPage() {
               {showPatientContext && (
                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
                   className="overflow-hidden mt-2">
-                  <div className="p-4 rounded-xl bg-white border border-[#E2E8F0] space-y-3">
+                  <div className="p-4 rounded-xl bg-card border border-[#E2E8F0] space-y-3">
                     <div className="flex items-center gap-4">
                       <label className="text-sm font-medium shrink-0">NEWS2 Score</label>
                       <input
@@ -1327,7 +1327,7 @@ export default function QueryPage() {
                         value={news2Score ?? ""}
                         onChange={e => setNews2Score(e.target.value === "" ? null : Number(e.target.value))}
                         placeholder="0-20"
-                        className="w-24 px-3 py-1.5 rounded-lg bg-[#F1F5F9] border border-[#E2E8F0] text-sm text-[#1A2332] focus:outline-none focus:ring-2 focus:ring-[#0B6BCB]/40"
+                        className="w-24 px-3 py-1.5 rounded-lg bg-muted border border-[#E2E8F0] text-sm text-[#1A2332] focus:outline-none focus:ring-2 focus:ring-[#0B6BCB]/40"
                       />
                       {news2Score !== null && (
                         <span className={cn("inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border", news2RiskConfig(news2Score).className)}>
@@ -1351,7 +1351,7 @@ export default function QueryPage() {
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSubmit() } }}
               placeholder={submitted ? "Ask a follow-up..." : "Ask a clinical SOP question..."}
               rows={3}
-              className="w-full p-4 sm:pr-28 rounded-2xl bg-[#F1F5F9] border border-[#E2E8F0] text-[#1A2332] placeholder:text-[#94A3B8] caret-[#0B6BCB] resize-none focus:outline-none focus:ring-2 focus:ring-[#0B6BCB]/40 text-base"
+              className="w-full p-4 sm:pr-28 rounded-2xl bg-muted border border-[#E2E8F0] text-[#1A2332] placeholder:text-[#94A3B8] caret-[#0B6BCB] resize-none focus:outline-none focus:ring-2 focus:ring-[#0B6BCB]/40 text-base"
             />
             <div className="max-sm:relative max-sm:mt-2 max-sm:justify-end absolute bottom-3 right-3 flex items-center gap-2">
               <VoiceRecorder onTranscript={(t) => { setQuery(t) }} />
@@ -1368,7 +1368,7 @@ export default function QueryPage() {
               className="mt-4 flex gap-2 overflow-x-auto pb-2 scrollbar-thin sm:flex-wrap">
               {suggestedQueries.map((q) => (
                 <button key={q} onClick={() => setQuery(q)}
-                  className="px-3 py-1.5 rounded-lg bg-[#F1F5F9] text-sm text-[#64748B] hover:text-[#1A2332] border border-[#E2E8F0] transition-colors whitespace-nowrap shrink-0 sm:whitespace-normal sm:shrink">
+                  className="px-3 py-1.5 rounded-lg bg-muted text-sm text-[#64748B] hover:text-[#1A2332] border border-[#E2E8F0] transition-colors whitespace-nowrap shrink-0 sm:whitespace-normal sm:shrink">
                   {q}
                 </button>
               ))}
@@ -1380,7 +1380,7 @@ export default function QueryPage() {
         <AnimatePresence>
           {showHistory && allHistory.length > 0 && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-              className="mb-4 p-4 rounded-2xl bg-white border border-[#E2E8F0]">
+              className="mb-4 p-4 rounded-2xl bg-card border border-[#E2E8F0]">
               <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
                 <History className="w-4 h-4 text-[#0B6BCB]" />
                 Recent Queries
@@ -1388,10 +1388,10 @@ export default function QueryPage() {
               <div className="space-y-2">
                 {allHistory.map((h) => (
                   <button key={h.timestamp} onClick={() => { setQuery(h.query); setShowHistory(false) }}
-                    className="w-full text-left p-2.5 rounded-xl hover:bg-[#F1F5F9] border border-transparent hover:border-[#E2E8F0] transition-all group">
+                    className="w-full text-left p-2.5 rounded-xl hover:bg-muted border border-transparent hover:border-[#E2E8F0] transition-all group">
                     <div className="flex items-center justify-between">
                       <span className="text-sm truncate flex-1 mr-3">{h.query}</span>
-                      <span className={cn("text-xs font-mono shrink-0", h.confidence >= 0.7 ? "text-[#15803D]" : h.confidence >= 0.5 ? "text-[#B45309]" : "text-[#B91C1C]")}>
+                      <span className={cn("text-xs font-mono shrink-0", h.confidence >= 0.7 ? "text-[#15803D] dark:text-green-400" : h.confidence >= 0.5 ? "text-[#B45309] dark:text-amber-400" : "text-[#B91C1C] dark:text-red-400")}>
                         {Math.round(h.confidence * 100)}%
                       </span>
                     </div>

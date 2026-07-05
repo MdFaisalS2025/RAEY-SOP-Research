@@ -37,30 +37,30 @@ function statusToStep(conflict: SOPConflict): number {
 const riskConfig: Record<string, { label: string; className: string; dot: string }> = {
   critical: {
     label: "Critical",
-    className: "bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA]",
+    className: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30",
     dot: "bg-[#DC2626]",
   },
   high: {
     label: "High",
-    className: "bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]",
+    className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30",
     dot: "bg-[#F59E0B]",
   },
   medium: {
     label: "Medium",
-    className: "bg-white text-[#475569] border border-[#CBD5E1]",
+    className: "bg-card text-[#475569] border border-[#CBD5E1]",
     dot: "bg-[#94A3B8]",
   },
   low: {
     label: "Low",
-    className: "bg-[#F1F5F9] text-[#94A3B8] border border-[#E2E8F0]",
+    className: "bg-muted text-[#94A3B8] border border-[#E2E8F0]",
     dot: "bg-[#94A3B8]",
   },
 }
 
 const statusConfig: Record<string, { label: string; className: string }> = {
-  open: { label: "Open", className: "bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA]" },
-  under_review: { label: "Under Review", className: "bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]" },
-  resolved: { label: "Resolved", className: "bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]" },
+  open: { label: "Open", className: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30" },
+  under_review: { label: "Under Review", className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30" },
+  resolved: { label: "Resolved", className: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30" },
   accepted_variance: { label: "Accepted Variance", className: "bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/25" },
 }
 
@@ -133,8 +133,8 @@ function ConflictCard({ conflict, role }: { conflict: SOPConflict; role: string 
       className={cn(
         "rounded-2xl border p-5 space-y-4 transition-colors",
         isResolved
-          ? "bg-[#F0FDF4] border-[#BBF7D0]"
-          : "bg-white border-[#E2E8F0]"
+          ? "bg-[#F0FDF4] border-[#BBF7D0] dark:border-green-500/30"
+          : "bg-card border-[#E2E8F0]"
       )}
     >
       {/* Top row: risk badge, conflict type, status */}
@@ -144,7 +144,7 @@ function ConflictCard({ conflict, role }: { conflict: SOPConflict; role: string 
             <span className={cn("w-1.5 h-1.5 rounded-full", risk.dot)} />
             {risk.label} Risk
           </span>
-          <span className="px-2 py-0.5 rounded-full text-xs border border-[#E2E8F0] text-[#64748B] bg-[#F1F5F9]">
+          <span className="px-2 py-0.5 rounded-full text-xs border border-[#E2E8F0] text-[#64748B] bg-muted">
             {conflictTypeLabel[conflict.conflict_type] ?? conflict.conflict_type}
           </span>
           <MiniStepper currentStep={step} />
@@ -164,7 +164,7 @@ function ConflictCard({ conflict, role }: { conflict: SOPConflict; role: string 
 
       {/* SOP A vs SOP B */}
       <div className="flex items-center gap-2 flex-wrap">
-        <div className="flex-1 min-w-[140px] rounded-xl bg-[#F1F5F9] border border-[#E2E8F0] px-3 py-2">
+        <div className="flex-1 min-w-[140px] rounded-xl bg-muted border border-[#E2E8F0] px-3 py-2">
           <p className="text-[10px] text-[#94A3B8] uppercase tracking-widest mb-0.5">SOP A</p>
           <p className="text-xs font-medium text-[#1A2332] leading-snug">{conflict.sop_a_title}</p>
           <p className="text-[10px] text-[#0B6BCB] font-mono mt-0.5">{conflict.sop_a_id}</p>
@@ -173,7 +173,7 @@ function ConflictCard({ conflict, role }: { conflict: SOPConflict; role: string 
           <span className="text-xs font-bold text-[#0B6BCB]">vs</span>
           <ArrowRight className="w-3 h-3 text-[#0B6BCB]/50 rotate-0" />
         </div>
-        <div className="flex-1 min-w-[140px] rounded-xl bg-[#F1F5F9] border border-[#E2E8F0] px-3 py-2">
+        <div className="flex-1 min-w-[140px] rounded-xl bg-muted border border-[#E2E8F0] px-3 py-2">
           <p className="text-[10px] text-[#94A3B8] uppercase tracking-widest mb-0.5">SOP B</p>
           <p className="text-xs font-medium text-[#1A2332] leading-snug">{conflict.sop_b_title}</p>
           <p className="text-[10px] text-[#0B6BCB] font-mono mt-0.5">{conflict.sop_b_id}</p>
@@ -201,7 +201,7 @@ function ConflictCard({ conflict, role }: { conflict: SOPConflict; role: string 
       <div className="flex items-center gap-1.5 flex-wrap">
         <Users className="w-3.5 h-3.5 text-[#94A3B8] shrink-0" />
         {conflict.affected_departments.map((d) => (
-          <span key={d} className="px-2 py-0.5 rounded-full text-[10px] bg-[#F1F5F9] text-[#64748B] border border-[#E2E8F0]">
+          <span key={d} className="px-2 py-0.5 rounded-full text-[10px] bg-muted text-[#64748B] border border-[#E2E8F0]">
             {d}
           </span>
         ))}
@@ -229,15 +229,15 @@ function ConflictCard({ conflict, role }: { conflict: SOPConflict; role: string 
 
       {/* Resolution info if resolved */}
       {isResolved && conflict.resolution_notes && (
-        <div className="rounded-xl bg-[#DCFCE7] border border-[#BBF7D0] p-3 space-y-1.5">
+        <div className="rounded-xl bg-[#DCFCE7] dark:bg-green-500/10 border border-[#BBF7D0] dark:border-green-500/30 p-3 space-y-1.5">
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-1.5">
-              <CheckCircle className="w-3.5 h-3.5 text-[#15803D]" />
-              <span className="text-xs font-semibold text-[#15803D]">Resolved</span>
+              <CheckCircle className="w-3.5 h-3.5 text-[#15803D] dark:text-green-400" />
+              <span className="text-xs font-semibold text-[#15803D] dark:text-green-400">Resolved</span>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               {conflict.resolution_type && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0] font-medium">
+                <span className="px-2 py-0.5 rounded-full text-[10px] bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30 font-medium">
                   {resolutionTypeLabel[conflict.resolution_type] ?? conflict.resolution_type}
                 </span>
               )}
@@ -259,21 +259,21 @@ function ConflictCard({ conflict, role }: { conflict: SOPConflict; role: string 
             <button className="text-xs px-3 py-1.5 rounded-lg bg-[#0B6BCB]/10 text-[#0B6BCB] hover:bg-[#0B6BCB]/20 transition-colors border border-[#0B6BCB]/30 font-medium">
               Begin Review
             </button>
-            <button className="text-xs px-3 py-1.5 rounded-lg bg-[#F1F5F9] text-[#334155] hover:bg-[#E2E8F0] transition-colors border border-[#E2E8F0]">
+            <button className="text-xs px-3 py-1.5 rounded-lg bg-muted text-[#334155] hover:bg-[#E2E8F0] transition-colors border border-[#E2E8F0]">
               Assign to Team
             </button>
-            <button className="text-xs px-3 py-1.5 rounded-lg bg-[#F1F5F9] text-[#334155] hover:bg-[#E2E8F0] transition-colors border border-[#E2E8F0]">
+            <button className="text-xs px-3 py-1.5 rounded-lg bg-muted text-[#334155] hover:bg-[#E2E8F0] transition-colors border border-[#E2E8F0]">
               Create Proposal
             </button>
           </>
         )}
         {isAdmin(role) && !isResolved && (
-          <button className="text-xs px-3 py-1.5 rounded-lg bg-[#FEE2E2] text-[#B91C1C] hover:bg-[#FECACA] transition-colors border border-[#FECACA]">
+          <button className="text-xs px-3 py-1.5 rounded-lg bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 hover:bg-[#FECACA] transition-colors border border-[#FECACA] dark:border-red-500/30">
             Close Conflict
           </button>
         )}
         {!canAct(role) && (
-          <button className="text-xs px-3 py-1.5 rounded-lg bg-[#F1F5F9] text-[#64748B] hover:bg-[#E2E8F0] transition-colors border border-[#E2E8F0]">
+          <button className="text-xs px-3 py-1.5 rounded-lg bg-muted text-[#64748B] hover:bg-[#E2E8F0] transition-colors border border-[#E2E8F0]">
             View
           </button>
         )}
@@ -337,12 +337,12 @@ function ReportConflictModal({
         initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.96 }}
-        className="relative w-full max-w-lg rounded-2xl bg-[#F1F5F9] border border-[#E2E8F0] shadow-md overflow-hidden max-h-[90vh] flex flex-col"
+        className="relative w-full max-w-lg rounded-2xl bg-muted border border-[#E2E8F0] shadow-md overflow-hidden max-h-[90vh] flex flex-col"
       >
         {/* Header */}
-        <div className="bg-white border-b border-[#E2E8F0] px-6 py-4 flex items-center justify-between shrink-0">
+        <div className="bg-card border-b border-[#E2E8F0] px-6 py-4 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-[#B45309]" />
+            <AlertCircle className="w-4 h-4 text-[#B45309] dark:text-amber-400" />
             <span className="font-semibold text-sm">Report New Conflict</span>
           </div>
           <button onClick={onClose} className="text-[#64748B] hover:text-[#0B6BCB] transition-colors">
@@ -371,23 +371,23 @@ function ReportConflictModal({
         ) : (
           <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
             <div>
-              <label className="block text-xs text-[#64748B] mb-1.5 font-medium">Conflict Title <span className="text-[#B91C1C]">*</span></label>
+              <label className="block text-xs text-[#64748B] mb-1.5 font-medium">Conflict Title <span className="text-[#B91C1C] dark:text-red-400">*</span></label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Brief description of the conflict..."
-                className="w-full px-3 py-2 rounded-xl bg-white border border-[#E2E8F0] text-sm text-[#1A2332] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#0B6BCB]/30 transition-colors"
+                className="w-full px-3 py-2 rounded-xl bg-card border border-[#E2E8F0] text-sm text-[#1A2332] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#0B6BCB]/30 transition-colors"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs text-[#64748B] mb-1.5 font-medium">SOP A <span className="text-[#B91C1C]">*</span></label>
+                <label className="block text-xs text-[#64748B] mb-1.5 font-medium">SOP A <span className="text-[#B91C1C] dark:text-red-400">*</span></label>
                 <select
                   value={sopAId}
                   onChange={(e) => setSopAId(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-white border border-[#E2E8F0] text-sm text-[#1A2332] focus:outline-none focus:border-[#0B6BCB]/30 transition-colors"
+                  className="w-full px-3 py-2 rounded-xl bg-card border border-[#E2E8F0] text-sm text-[#1A2332] focus:outline-none focus:border-[#0B6BCB]/30 transition-colors"
                 >
                   <option value="">Select SOP A...</option>
                   {MOCK_SOPS.map((s) => (
@@ -396,11 +396,11 @@ function ReportConflictModal({
                 </select>
               </div>
               <div>
-                <label className="block text-xs text-[#64748B] mb-1.5 font-medium">SOP B <span className="text-[#B91C1C]">*</span></label>
+                <label className="block text-xs text-[#64748B] mb-1.5 font-medium">SOP B <span className="text-[#B91C1C] dark:text-red-400">*</span></label>
                 <select
                   value={sopBId}
                   onChange={(e) => setSopBId(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-white border border-[#E2E8F0] text-sm text-[#1A2332] focus:outline-none focus:border-[#0B6BCB]/30 transition-colors"
+                  className="w-full px-3 py-2 rounded-xl bg-card border border-[#E2E8F0] text-sm text-[#1A2332] focus:outline-none focus:border-[#0B6BCB]/30 transition-colors"
                 >
                   <option value="">Select SOP B...</option>
                   {MOCK_SOPS.map((s) => (
@@ -416,7 +416,7 @@ function ReportConflictModal({
                 <select
                   value={conflictType}
                   onChange={(e) => setConflictType(e.target.value as SOPConflict["conflict_type"])}
-                  className="w-full px-3 py-2 rounded-xl bg-white border border-[#E2E8F0] text-sm text-[#1A2332] focus:outline-none focus:border-[#0B6BCB]/30 transition-colors"
+                  className="w-full px-3 py-2 rounded-xl bg-card border border-[#E2E8F0] text-sm text-[#1A2332] focus:outline-none focus:border-[#0B6BCB]/30 transition-colors"
                 >
                   {Object.entries(conflictTypeLabel).map(([val, lbl]) => (
                     <option key={val} value={val}>{lbl}</option>
@@ -428,7 +428,7 @@ function ReportConflictModal({
                 <select
                   value={clinicalRisk}
                   onChange={(e) => setClinicalRisk(e.target.value as SOPConflict["clinical_risk"])}
-                  className="w-full px-3 py-2 rounded-xl bg-white border border-[#E2E8F0] text-sm text-[#1A2332] focus:outline-none focus:border-[#0B6BCB]/30 transition-colors"
+                  className="w-full px-3 py-2 rounded-xl bg-card border border-[#E2E8F0] text-sm text-[#1A2332] focus:outline-none focus:border-[#0B6BCB]/30 transition-colors"
                 >
                   <option value="critical">Critical</option>
                   <option value="high">High</option>
@@ -439,13 +439,13 @@ function ReportConflictModal({
             </div>
 
             <div>
-              <label className="block text-xs text-[#64748B] mb-1.5 font-medium">Description <span className="text-[#B91C1C]">*</span></label>
+              <label className="block text-xs text-[#64748B] mb-1.5 font-medium">Description <span className="text-[#B91C1C] dark:text-red-400">*</span></label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={4}
                 placeholder="Describe the specific conflict and its clinical impact..."
-                className="w-full px-3 py-2 rounded-xl bg-white border border-[#E2E8F0] text-sm text-[#1A2332] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#0B6BCB]/30 transition-colors resize-none"
+                className="w-full px-3 py-2 rounded-xl bg-card border border-[#E2E8F0] text-sm text-[#1A2332] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#0B6BCB]/30 transition-colors resize-none"
               />
             </div>
 
@@ -459,7 +459,7 @@ function ReportConflictModal({
               </button>
               <button
                 onClick={onClose}
-                className="flex-1 py-2.5 rounded-xl bg-[#F1F5F9] text-[#334155] hover:bg-[#E2E8F0] text-sm font-medium transition-colors border border-[#E2E8F0]"
+                className="flex-1 py-2.5 rounded-xl bg-muted text-[#334155] hover:bg-[#E2E8F0] text-sm font-medium transition-colors border border-[#E2E8F0]"
               >
                 Cancel
               </button>
@@ -493,10 +493,10 @@ export default function ConflictResolutionPage() {
   }
 
   const overallStats = [
-    { label: "Open Conflicts", value: openConflicts.length, color: "text-[#B91C1C]", bg: "bg-[#FEE2E2]" },
-    { label: "Under Review", value: reviewConflicts.length, color: "text-[#B45309]", bg: "bg-[#FEF3C7]" },
-    { label: "Resolved", value: resolvedConflicts.length, color: "text-[#15803D]", bg: "bg-[#DCFCE7]" },
-    { label: "Clinical Risk: Critical", value: criticalCount, color: "text-[#B91C1C]", bg: "bg-[#FEE2E2]" },
+    { label: "Open Conflicts", value: openConflicts.length, color: "text-[#B91C1C] dark:text-red-400", bg: "bg-[#FEE2E2] dark:bg-red-500/10" },
+    { label: "Under Review", value: reviewConflicts.length, color: "text-[#B45309] dark:text-amber-400", bg: "bg-[#FEF3C7] dark:bg-amber-500/10" },
+    { label: "Resolved", value: resolvedConflicts.length, color: "text-[#15803D] dark:text-green-400", bg: "bg-[#DCFCE7] dark:bg-green-500/10" },
+    { label: "Clinical Risk: Critical", value: criticalCount, color: "text-[#B91C1C] dark:text-red-400", bg: "bg-[#FEE2E2] dark:bg-red-500/10" },
   ]
 
   return (
@@ -518,8 +518,8 @@ export default function ConflictResolutionPage() {
         {/* Header */}
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-[#FEF3C7] flex items-center justify-center">
-              <AlertTriangle className="w-6 h-6 text-[#B45309]" />
+            <div className="w-12 h-12 rounded-2xl bg-[#FEF3C7] dark:bg-amber-500/10 flex items-center justify-center">
+              <AlertTriangle className="w-6 h-6 text-[#B45309] dark:text-amber-400" />
             </div>
             <div>
               <h1 className="text-2xl font-bold font-display">SOP Conflict Resolution</h1>
@@ -537,8 +537,8 @@ export default function ConflictResolutionPage() {
         </div>
 
         {/* Alert banner */}
-        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-[#FEF3C7] border border-[#FDE68A] text-[#B45309] text-sm">
-          <AlertTriangle className="w-4 h-4 shrink-0 text-[#B45309]" />
+        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 text-sm">
+          <AlertTriangle className="w-4 h-4 shrink-0 text-[#B45309] dark:text-amber-400" />
           <span>
             Unresolved conflicts create patient safety risk. Each must be resolved by committee before the next accreditation survey.
           </span>
@@ -562,7 +562,7 @@ export default function ConflictResolutionPage() {
           <h2 className="text-sm font-semibold text-[#64748B] uppercase tracking-wider mb-3">
             Resolution Workflow
           </h2>
-          <div className="rounded-2xl bg-white border border-[#E2E8F0] p-5">
+          <div className="rounded-2xl bg-card border border-[#E2E8F0] p-5">
             <div className="flex items-center justify-between gap-1 overflow-x-auto pb-1">
               {WORKFLOW_STEPS.map((step, i) => (
                 <div key={step.id} className="flex items-center gap-1 min-w-max">
@@ -623,7 +623,7 @@ export default function ConflictResolutionPage() {
         {/* Resolution Guide */}
         <section>
           <h2 className="text-base font-semibold font-display mb-3">Resolution Guide</h2>
-          <div className="rounded-2xl bg-white border border-[#E2E8F0] divide-y divide-[#EDF1F5] overflow-hidden">
+          <div className="rounded-2xl bg-card border border-[#E2E8F0] divide-y divide-[#EDF1F5] overflow-hidden">
             {[
               {
                 approach: "Update SOP A to align with SOP B",
@@ -643,12 +643,12 @@ export default function ConflictResolutionPage() {
               {
                 approach: "Accept as legitimate clinical variance",
                 desc: "Use when guidance applies to different patient populations. Document the variance and scope boundaries in both SOPs.",
-                color: "text-[#B45309]",
+                color: "text-[#B45309] dark:text-amber-400",
               },
               {
                 approach: "Escalate to CMO / Chief Medical Officer",
                 desc: "Use for significant clinical risk, legal implications, or committee deadlock.",
-                color: "text-[#B91C1C]",
+                color: "text-[#B91C1C] dark:text-red-400",
               },
             ].map((item) => (
               <div key={item.approach} className="px-5 py-4 flex gap-3">

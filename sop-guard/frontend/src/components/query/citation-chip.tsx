@@ -44,11 +44,11 @@ export function CitationChip({
         {number}
       </button>
       {hovered && (
-        <span className="absolute z-40 left-1/2 -translate-x-1/2 bottom-full mb-1.5 w-72 p-3 rounded-xl bg-white border border-[#E2E8F0] shadow-md text-left block">
+        <span className="absolute z-40 left-1/2 -translate-x-1/2 bottom-full mb-1.5 w-72 p-3 rounded-xl bg-card border border-[#E2E8F0] shadow-md text-left block">
           <span className="block text-[12px] font-semibold text-[#1A2332] leading-snug">{citation.sop_title}</span>
           <span className="block text-[11px] text-[#0B6BCB] mt-0.5">{citation.section_title}</span>
           {citation.chunk_type && (
-            <span className="inline-block mt-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-white text-[#475569] border border-[#CBD5E1] capitalize">
+            <span className="inline-block mt-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-card text-[#475569] border border-[#CBD5E1] capitalize">
               {citation.chunk_type.replace(/_/g, " ")}
             </span>
           )}

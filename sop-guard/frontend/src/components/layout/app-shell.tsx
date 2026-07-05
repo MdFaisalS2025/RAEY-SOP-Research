@@ -60,7 +60,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   // Show loading spinner while auth is being resolved
   if (auth.loading) {
     return (
-      <div className="min-h-screen bg-[#F7F9FB] flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="w-8 h-8 rounded-full border-2 border-[#0B6BCB]/20 border-t-[#0B6BCB] animate-spin" />
       </div>
     )
@@ -69,7 +69,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   // Show spinner while redirecting unauthenticated users
   if (!auth.isAuthenticated && pathname !== "/login") {
     return (
-      <div className="min-h-screen bg-[#F7F9FB] flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="w-8 h-8 rounded-full border-2 border-[#0B6BCB]/20 border-t-[#0B6BCB] animate-spin" />
       </div>
     )
@@ -90,12 +90,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Demo mode banner */}
       {!bannerDismissed && (
-        <div className="relative flex items-center justify-between gap-3 px-4 py-2.5 bg-[#FEF3C7] border-b border-[#FDE68A]">
+        <div className="relative flex items-center justify-between gap-3 px-4 py-2.5 bg-[#FEF3C7] dark:bg-amber-500/10 border-b border-[#FDE68A] dark:border-amber-500/30">
           <div className="flex items-start gap-2 min-w-0">
-            <Info className="w-4 h-4 text-[#B45309] shrink-0 mt-0.5" />
-            <p className="text-[12px] text-[#B45309] leading-relaxed">
+            <Info className="w-4 h-4 text-[#B45309] dark:text-amber-400 shrink-0 mt-0.5" />
+            <p className="text-[12px] text-[#B45309] dark:text-amber-400 leading-relaxed">
               <span className="font-semibold">Demo mode active</span> - Switch roles in the top navigation.{" "}
-              <span className="text-[#B45309]/80">
+              <span className="text-[#B45309] dark:text-amber-400/80">
                 Demo scenario: query PPE, discover outdated SOP, create proposal, committee review, compliance tracking.
               </span>
             </p>
@@ -103,7 +103,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <button
             onClick={dismissBanner}
             aria-label="Dismiss demo banner"
-            className="shrink-0 p-1 rounded-md text-[#B45309]/70 hover:text-[#B45309] hover:bg-[#FDE68A]/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B45309]/40"
+            className="shrink-0 p-1 rounded-md text-[#B45309] dark:text-amber-400/70 hover:text-[#B45309] dark:text-amber-400 hover:bg-[#FDE68A]/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B45309]/40"
           >
             <X className="w-4 h-4" />
           </button>

@@ -21,7 +21,7 @@ function SourceRow({
         "p-4 rounded-xl border transition-colors duration-200",
         highlighted
           ? "bg-[#0B6BCB]/[0.06] border-[#0B6BCB]/40"
-          : "bg-white border-[#E2E8F0]",
+          : "bg-card border-[#E2E8F0]",
         dimmed && "opacity-70"
       )}
     >
@@ -33,7 +33,7 @@ function SourceRow({
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <span className="text-sm font-semibold text-[#1A2332]">{citation.sop_title}</span>
             {citation.chunk_type && (
-              <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-white text-[#475569] border border-[#CBD5E1] capitalize">
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-card text-[#475569] border border-[#CBD5E1] capitalize">
                 {citation.chunk_type.replace(/_/g, " ")}
               </span>
             )}
@@ -79,7 +79,7 @@ export function SourcePanel({
   const uncited = citations.filter((c) => !c.cited_in_answer)
 
   return (
-    <div className="p-5 rounded-2xl bg-white border border-[#E2E8F0] shadow-sm">
+    <div className="p-5 rounded-2xl bg-card border border-[#E2E8F0] shadow-sm">
       <h3 className="text-sm font-semibold mb-4 flex items-center gap-2 text-[#1A2332]">
         <FileText className="w-4 h-4 text-[#0B6BCB]" />
         Sources

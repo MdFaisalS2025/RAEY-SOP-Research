@@ -86,15 +86,15 @@ export function OverrideModal({ open, onClose, contextType, contextId, contextLa
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 12 }}
             transition={{ duration: 0.15 }}
-            className="w-full max-w-md rounded-2xl bg-white border border-[#E2E8F0] shadow-md overflow-hidden"
+            className="w-full max-w-md rounded-2xl bg-card border border-[#E2E8F0] shadow-md overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {status !== "idle" ? (
               <div className="flex flex-col items-center justify-center gap-3 px-6 py-10">
-                <div className="w-12 h-12 rounded-full bg-[#DCFCE7] flex items-center justify-center">
-                  <CheckCircle2 className="w-6 h-6 text-[#15803D]" />
+                <div className="w-12 h-12 rounded-full bg-[#DCFCE7] dark:bg-green-500/10 flex items-center justify-center">
+                  <CheckCircle2 className="w-6 h-6 text-[#15803D] dark:text-green-400" />
                 </div>
-                <p className="text-sm font-semibold text-[#15803D]">
+                <p className="text-sm font-semibold text-[#15803D] dark:text-green-400">
                   {status === "success" ? "Override recorded" : "Recorded locally"}
                 </p>
               </div>
@@ -119,7 +119,7 @@ export function OverrideModal({ open, onClose, contextType, contextId, contextLa
                         "w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-left text-sm font-medium transition-colors",
                         reason === r.key
                           ? "bg-[#0B6BCB]/10 border-[#0B6BCB]/40 text-[#0B6BCB]"
-                          : "border-[#E2E8F0] text-[#334155] hover:bg-[#F1F5F9]"
+                          : "border-[#E2E8F0] text-[#334155] hover:bg-muted"
                       )}
                     >
                       <span
@@ -141,7 +141,7 @@ export function OverrideModal({ open, onClose, contextType, contextId, contextLa
                       onChange={(e) => setNote(e.target.value)}
                       placeholder="Briefly describe your reason..."
                       rows={3}
-                      className="w-full px-3 py-2 rounded-xl bg-[#F1F5F9] border border-[#E2E8F0] text-sm text-[#1A2332] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#0B6BCB]/30 resize-none"
+                      className="w-full px-3 py-2 rounded-xl bg-muted border border-[#E2E8F0] text-sm text-[#1A2332] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#0B6BCB]/30 resize-none"
                     />
                   )}
                 </div>

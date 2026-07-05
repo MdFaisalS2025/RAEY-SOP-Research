@@ -18,41 +18,41 @@ type ReviewFilter = "all" | "new" | "reviewing" | "actioned" | "dismissed" | "pr
 // ── Helpers ────────────────────────────────────────────────────────────────
 function sourceTypeBadge(type: EvidenceWatchItem["source_type"]) {
   const map: Record<string, string> = {
-    cdc: "bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA]",
-    fda: "bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]",
-    who: "bg-white text-[#475569] border border-[#CBD5E1]",
-    nejm: "bg-white text-[#475569] border border-[#CBD5E1]",
-    jama: "bg-white text-[#475569] border border-[#CBD5E1]",
-    cochrane: "bg-white text-[#475569] border border-[#CBD5E1]",
-    professional_society: "bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]",
+    cdc: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30",
+    fda: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30",
+    who: "bg-card text-[#475569] border border-[#CBD5E1]",
+    nejm: "bg-card text-[#475569] border border-[#CBD5E1]",
+    jama: "bg-card text-[#475569] border border-[#CBD5E1]",
+    cochrane: "bg-card text-[#475569] border border-[#CBD5E1]",
+    professional_society: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30",
     pubmed: "bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30",
     pmc: "bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30",
-    nccn: "bg-white text-[#475569] border border-[#CBD5E1]",
+    nccn: "bg-card text-[#475569] border border-[#CBD5E1]",
     guideline: "bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30",
-    internal_memo: "bg-white text-[#475569] border border-[#CBD5E1]",
+    internal_memo: "bg-card text-[#475569] border border-[#CBD5E1]",
   }
-  return map[type] ?? "bg-white text-[#475569] border border-[#CBD5E1]"
+  return map[type] ?? "bg-card text-[#475569] border border-[#CBD5E1]"
 }
 
 function impactBadge(level: EvidenceWatchItem["impact_level"]) {
   const map = {
-    critical: "bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA]",
-    high: "bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]",
-    medium: "bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]",
-    low: "bg-white text-[#475569] border border-[#CBD5E1]",
+    critical: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30",
+    high: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30",
+    medium: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30",
+    low: "bg-card text-[#475569] border border-[#CBD5E1]",
   }
   return map[level]
 }
 
 function reviewStatusBadge(status: EvidenceWatchItem["review_status"]) {
   const map: Record<string, { cls: string; label: string }> = {
-    new: { cls: "bg-white text-[#475569] border border-[#CBD5E1]", label: "New" },
-    reviewing: { cls: "bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]", label: "Reviewing" },
-    actioned: { cls: "bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]", label: "Actioned" },
-    dismissed: { cls: "bg-white text-[#475569] border border-[#CBD5E1]", label: "Dismissed" },
+    new: { cls: "bg-card text-[#475569] border border-[#CBD5E1]", label: "New" },
+    reviewing: { cls: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30", label: "Reviewing" },
+    actioned: { cls: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30", label: "Actioned" },
+    dismissed: { cls: "bg-card text-[#475569] border border-[#CBD5E1]", label: "Dismissed" },
     proposal_created: { cls: "bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30", label: "Proposal Created" },
   }
-  return map[status] ?? { cls: "bg-[#F1F5F9] text-[#64748B]", label: status }
+  return map[status] ?? { cls: "bg-muted text-[#64748B]", label: status }
 }
 
 const TRUSTED_SOURCES = [
@@ -84,12 +84,12 @@ function EvidenceCard({ item, index }: { item: EvidenceWatchItem; index: number 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.06 }}
-      className="rounded-2xl bg-white border border-[#E2E8F0] overflow-hidden"
+      className="rounded-2xl bg-card border border-[#E2E8F0] overflow-hidden"
     >
       {item.action_required && (
-        <div className="flex items-center gap-2 px-4 py-2 bg-[#FEF3C7] border-b border-[#FDE68A]">
-          <AlertTriangle className="w-3.5 h-3.5 text-[#B45309] shrink-0" />
-          <span className="text-xs font-semibold text-[#B45309] uppercase tracking-wide">Action Required</span>
+        <div className="flex items-center gap-2 px-4 py-2 bg-[#FEF3C7] dark:bg-amber-500/10 border-b border-[#FDE68A] dark:border-amber-500/30">
+          <AlertTriangle className="w-3.5 h-3.5 text-[#B45309] dark:text-amber-400 shrink-0" />
+          <span className="text-xs font-semibold text-[#B45309] dark:text-amber-400 uppercase tracking-wide">Action Required</span>
         </div>
       )}
 
@@ -133,7 +133,7 @@ function EvidenceCard({ item, index }: { item: EvidenceWatchItem; index: number 
           <div className="flex flex-wrap items-center gap-2">
             <Building2 className="w-3.5 h-3.5 text-[#64748B] shrink-0" />
             {item.departments_affected.map(d => (
-              <span key={d} className="px-2 py-0.5 rounded-full bg-[#F1F5F9] border border-[#E2E8F0] text-xs text-[#64748B]">
+              <span key={d} className="px-2 py-0.5 rounded-full bg-muted border border-[#E2E8F0] text-xs text-[#64748B]">
                 {d}
               </span>
             ))}
@@ -165,7 +165,7 @@ function EvidenceCard({ item, index }: { item: EvidenceWatchItem; index: number 
           <div className="flex flex-wrap items-center gap-1.5">
             <Tag className="w-3 h-3 text-[#64748B]/60" />
             {item.categories.map(c => (
-              <span key={c} className="px-1.5 py-0.5 rounded bg-[#F1F5F9] text-[10px] text-[#64748B]">
+              <span key={c} className="px-1.5 py-0.5 rounded bg-muted text-[10px] text-[#64748B]">
                 {c}
               </span>
             ))}
@@ -174,13 +174,13 @@ function EvidenceCard({ item, index }: { item: EvidenceWatchItem; index: number 
 
         {/* Action buttons */}
         <div className="flex flex-wrap items-center gap-2 pt-1">
-          <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#E2E8F0] text-xs text-[#64748B] hover:bg-[#F1F5F9] transition-colors">
+          <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#E2E8F0] text-xs text-[#64748B] hover:bg-muted transition-colors">
             <ExternalLink className="w-3 h-3" /> View Evidence
           </button>
           <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 text-xs text-[#0B6BCB] hover:bg-[#0B6BCB]/20 transition-colors">
             <Plus className="w-3 h-3" /> Create Proposal
           </button>
-          <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-[#64748B] hover:bg-[#F1F5F9] transition-colors">
+          <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-[#64748B] hover:bg-muted transition-colors">
             <X className="w-3 h-3" /> Dismiss
           </button>
         </div>
@@ -192,7 +192,7 @@ function EvidenceCard({ item, index }: { item: EvidenceWatchItem; index: number 
 
 function TrustedSourcesPanel() {
   return (
-    <div className="rounded-2xl bg-white border border-[#E2E8F0] p-5 space-y-4">
+    <div className="rounded-2xl bg-card border border-[#E2E8F0] p-5 space-y-4">
       <div className="flex items-center gap-2">
         <Shield className="w-4 h-4 text-[#0B6BCB]" />
         <h3 className="font-display text-sm font-bold text-[#1A2332]">Trusted Sources</h3>
@@ -204,7 +204,7 @@ function TrustedSourcesPanel() {
               <span className="font-medium text-[#334155]">{name}</span>
               <div className="flex items-center gap-2">
                 <span className="text-[#0B6BCB] font-semibold">{score}%</span>
-                <span className="px-1.5 py-0.5 rounded-full bg-[#DCFCE7] text-[#15803D] text-[10px] font-medium border border-[#BBF7D0]">Active</span>
+                <span className="px-1.5 py-0.5 rounded-full bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 text-[10px] font-medium border border-[#BBF7D0] dark:border-green-500/30">Active</span>
               </div>
             </div>
             <div className="w-full h-1.5 rounded-full bg-[#E2E8F0] overflow-hidden">
@@ -239,8 +239,8 @@ export default function EvidenceWatchPage() {
   const stats = [
     { label: "Sources Monitored", value: 8, icon: Shield, color: "text-[#0B6BCB]" },
     { label: "New This Month", value: 2, icon: Clock, color: "text-[#64748B]" },
-    { label: "Requires Action", value: actionRequiredCount, icon: AlertTriangle, color: "text-[#B45309]" },
-    { label: "Proposals Created", value: 3, icon: CheckCircle2, color: "text-[#15803D]" },
+    { label: "Requires Action", value: actionRequiredCount, icon: AlertTriangle, color: "text-[#B45309] dark:text-amber-400" },
+    { label: "Proposals Created", value: 3, icon: CheckCircle2, color: "text-[#15803D] dark:text-green-400" },
   ]
 
   return (
@@ -270,10 +270,10 @@ export default function EvidenceWatchPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05 }}
-          className="flex items-start gap-3 px-4 py-3 rounded-xl bg-[#FEF3C7] border border-[#FDE68A]"
+          className="flex items-start gap-3 px-4 py-3 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30"
         >
-          <AlertTriangle className="w-4 h-4 text-[#B45309] shrink-0 mt-0.5" />
-          <div className="text-sm text-[#B45309]">
+          <AlertTriangle className="w-4 h-4 text-[#B45309] dark:text-amber-400 shrink-0 mt-0.5" />
+          <div className="text-sm text-[#B45309] dark:text-amber-400">
             <span className="font-semibold">Responsible AI: </span>
             Committee review is required before any SOP update. This dashboard is for monitoring only.
           </div>
@@ -287,7 +287,7 @@ export default function EvidenceWatchPage() {
           className="grid grid-cols-2 lg:grid-cols-4 gap-4"
         >
           {stats.map(({ label, value, icon: Icon, color }) => (
-            <div key={label} className="rounded-2xl bg-white border border-[#E2E8F0] p-4 space-y-2">
+            <div key={label} className="rounded-2xl bg-card border border-[#E2E8F0] p-4 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs text-[#64748B] font-medium">{label}</span>
                 <Icon className={cn("w-4 h-4", color)} />
@@ -307,7 +307,7 @@ export default function EvidenceWatchPage() {
                 "px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors",
                 activeFilter === tab.value
                   ? "bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30"
-                  : "text-[#64748B] hover:bg-[#F1F5F9]"
+                  : "text-[#64748B] hover:bg-muted"
               )}
             >
               {tab.label}
@@ -320,7 +320,7 @@ export default function EvidenceWatchPage() {
           {/* Evidence cards */}
           <div className="space-y-4">
             {filtered.length === 0 ? (
-              <div className="rounded-2xl bg-white border border-[#E2E8F0] p-12 text-center">
+              <div className="rounded-2xl bg-card border border-[#E2E8F0] p-12 text-center">
                 <Eye className="w-8 h-8 text-[#64748B] mx-auto mb-3 opacity-40" />
                 <p className="text-[#64748B] text-sm">No items match this filter.</p>
               </div>
@@ -336,7 +336,7 @@ export default function EvidenceWatchPage() {
             <TrustedSourcesPanel />
 
             {/* Disclaimer */}
-            <div className="rounded-xl bg-white border border-[#E2E8F0] px-4 py-3">
+            <div className="rounded-xl bg-card border border-[#E2E8F0] px-4 py-3">
               <p className="text-[10px] text-[#64748B]/50 uppercase tracking-widest text-center">
                 Research Prototype - Not for Clinical Use
               </p>

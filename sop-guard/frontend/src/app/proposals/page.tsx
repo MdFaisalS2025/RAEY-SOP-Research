@@ -20,29 +20,29 @@ type ProposalFilter = "all" | "in_review" | "awaiting_vote" | "legal_review" | "
 // ── Helpers ────────────────────────────────────────────────────────────────
 function priorityBadge(priority: UpdateProposal["priority"]) {
   const map = {
-    critical: "bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA]",
-    high: "bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA]",
-    medium: "bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]",
-    low: "bg-white text-[#475569] border border-[#CBD5E1]",
+    critical: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30",
+    high: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30",
+    medium: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30",
+    low: "bg-card text-[#475569] border border-[#CBD5E1]",
   }
   return map[priority]
 }
 
 function statusBadgeInfo(status: UpdateProposal["status"]) {
   const map: Record<string, { cls: string; label: string }> = {
-    committee_review: { cls: "bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]", label: "Committee Review" },
-    legal_review: { cls: "bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]", label: "Legal Review" },
-    approved: { cls: "bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]", label: "Approved" },
-    training_review: { cls: "bg-white text-[#475569] border border-[#CBD5E1]", label: "Training Review" },
-    draft: { cls: "bg-white text-[#475569] border border-[#CBD5E1]", label: "Draft" },
-    submitted: { cls: "bg-white text-[#475569] border border-[#CBD5E1]", label: "Submitted" },
+    committee_review: { cls: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30", label: "Committee Review" },
+    legal_review: { cls: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30", label: "Legal Review" },
+    approved: { cls: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30", label: "Approved" },
+    training_review: { cls: "bg-card text-[#475569] border border-[#CBD5E1]", label: "Training Review" },
+    draft: { cls: "bg-card text-[#475569] border border-[#CBD5E1]", label: "Draft" },
+    submitted: { cls: "bg-card text-[#475569] border border-[#CBD5E1]", label: "Submitted" },
     evidence_review: { cls: "bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30", label: "Evidence Review" },
-    department_review: { cls: "bg-white text-[#475569] border border-[#CBD5E1]", label: "Dept Review" },
-    rejected: { cls: "bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA]", label: "Rejected" },
-    published: { cls: "bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]", label: "Published" },
-    archived: { cls: "bg-white text-[#475569] border border-[#CBD5E1]", label: "Archived" },
+    department_review: { cls: "bg-card text-[#475569] border border-[#CBD5E1]", label: "Dept Review" },
+    rejected: { cls: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30", label: "Rejected" },
+    published: { cls: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30", label: "Published" },
+    archived: { cls: "bg-card text-[#475569] border border-[#CBD5E1]", label: "Archived" },
   }
-  return map[status] ?? { cls: "bg-[#F1F5F9] text-[#64748B]", label: status }
+  return map[status] ?? { cls: "bg-muted text-[#64748B]", label: status }
 }
 
 const FILTER_TABS: { value: ProposalFilter; label: string }[] = [
@@ -67,12 +67,12 @@ function ProposalCard({ proposal, index }: { proposal: UpdateProposal; index: nu
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.06 }}
-      className="rounded-2xl bg-white border border-[#E2E8F0] overflow-hidden"
+      className="rounded-2xl bg-card border border-[#E2E8F0] overflow-hidden"
     >
       {proposal.legal_review_required && (
-        <div className="flex items-center gap-2 px-4 py-2 bg-[#FEE2E2] border-b border-[#FECACA]">
-          <Scale className="w-3.5 h-3.5 text-[#B91C1C] shrink-0" />
-          <span className="text-xs font-semibold text-[#B91C1C] uppercase tracking-wide">Legal Review Required</span>
+        <div className="flex items-center gap-2 px-4 py-2 bg-[#FEE2E2] dark:bg-red-500/10 border-b border-[#FECACA] dark:border-red-500/30">
+          <Scale className="w-3.5 h-3.5 text-[#B91C1C] dark:text-red-400 shrink-0" />
+          <span className="text-xs font-semibold text-[#B91C1C] dark:text-red-400 uppercase tracking-wide">Legal Review Required</span>
         </div>
       )}
 
@@ -115,11 +115,11 @@ function ProposalCard({ proposal, index }: { proposal: UpdateProposal; index: nu
 
         {/* Evidence chip + approvers */}
         <div className="flex flex-wrap items-center gap-3">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#F1F5F9] border border-[#E2E8F0] text-xs text-[#64748B]">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted border border-[#E2E8F0] text-xs text-[#64748B]">
             <FileText className="w-3 h-3" />
             {proposal.evidence_source_ids.length} evidence source{proposal.evidence_source_ids.length !== 1 ? "s" : ""}
           </span>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#F1F5F9] border border-[#E2E8F0] text-xs text-[#64748B]">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted border border-[#E2E8F0] text-xs text-[#64748B]">
             <Users className="w-3 h-3" />
             {approvedCount} / {totalApprovers} approvers
           </span>
@@ -137,18 +137,18 @@ function ProposalCard({ proposal, index }: { proposal: UpdateProposal; index: nu
 
         {/* Impact flags */}
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[#F1F5F9] border border-[#E2E8F0] text-xs text-[#334155]">
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-muted border border-[#E2E8F0] text-xs text-[#334155]">
             <Stethoscope className="w-3 h-3" />
             Clinical Impact
           </div>
           {proposal.legal_review_required && (
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[#FEE2E2] border border-[#FECACA] text-xs text-[#B91C1C]">
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 text-xs text-[#B91C1C] dark:text-red-400">
               <Scale className="w-3 h-3" />
               Legal Review
             </div>
           )}
           {proposal.training_triggered && (
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[#F1F5F9] border border-[#E2E8F0] text-xs text-[#334155]">
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-muted border border-[#E2E8F0] text-xs text-[#334155]">
               <GraduationCap className="w-3 h-3" />
               Training Required
             </div>
@@ -161,7 +161,7 @@ function ProposalCard({ proposal, index }: { proposal: UpdateProposal; index: nu
         </p>
 
         {/* Due date */}
-        <div className={cn("flex items-center gap-1.5 text-xs", isPastDue ? "text-[#B91C1C]" : "text-[#64748B]")}>
+        <div className={cn("flex items-center gap-1.5 text-xs", isPastDue ? "text-[#B91C1C] dark:text-red-400" : "text-[#64748B]")}>
           <Calendar className="w-3 h-3" />
           Due {proposal.due_date}
           {isPastDue && <span className="font-semibold ml-1">(Overdue)</span>}
@@ -177,13 +177,13 @@ function ProposalCard({ proposal, index }: { proposal: UpdateProposal; index: nu
           </Link>
 
           {role === "committee_member" && proposal.status === "committee_review" && (
-            <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#DCFCE7] border border-[#BBF7D0] text-xs text-[#15803D] hover:bg-[#BBF7D0] transition-colors">
+            <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#DCFCE7] dark:bg-green-500/10 border border-[#BBF7D0] dark:border-green-500/30 text-xs text-[#15803D] dark:text-green-400 hover:bg-[#BBF7D0] transition-colors">
               Vote
             </button>
           )}
 
           {role === "legal_risk" && proposal.legal_review_required && (
-            <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#F1F5F9] border border-[#E2E8F0] text-xs text-[#334155] hover:bg-[#E2E8F0] transition-colors">
+            <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted border border-[#E2E8F0] text-xs text-[#334155] hover:bg-[#E2E8F0] transition-colors">
               Legal Review
             </button>
           )}
@@ -215,8 +215,8 @@ export default function ProposalsPage() {
   const stats = [
     { label: "Total", value: MOCK_PROPOSALS.length, color: "text-[#0B6BCB]" },
     { label: "Committee Review", value: committeeReviewCount, color: "text-[#64748B]" },
-    { label: "Legal Review", value: legalReviewCount, color: "text-[#B45309]" },
-    { label: "Approved", value: approvedCount, color: "text-[#15803D]" },
+    { label: "Legal Review", value: legalReviewCount, color: "text-[#B45309] dark:text-amber-400" },
+    { label: "Approved", value: approvedCount, color: "text-[#15803D] dark:text-green-400" },
   ]
 
   return (
@@ -250,10 +250,10 @@ export default function ProposalsPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.04 }}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEF3C7] border border-[#FDE68A]"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30"
         >
-          <AlertTriangle className="w-4 h-4 text-[#B45309] shrink-0" />
-          <span className="text-xs text-[#B45309]">Research Prototype - Not for Clinical Use. Proposals require committee review before implementation.</span>
+          <AlertTriangle className="w-4 h-4 text-[#B45309] dark:text-amber-400 shrink-0" />
+          <span className="text-xs text-[#B45309] dark:text-amber-400">Research Prototype - Not for Clinical Use. Proposals require committee review before implementation.</span>
         </motion.div>
 
         {/* Stats */}
@@ -264,7 +264,7 @@ export default function ProposalsPage() {
           className="grid grid-cols-2 sm:grid-cols-4 gap-3"
         >
           {stats.map(({ label, value, color }) => (
-            <div key={label} className="rounded-xl bg-white border border-[#E2E8F0] p-4">
+            <div key={label} className="rounded-xl bg-card border border-[#E2E8F0] p-4">
               <p className="text-xs text-[#64748B] mb-1">{label}</p>
               <p className={cn("text-3xl font-bold font-display", color)}>{value}</p>
             </div>
@@ -281,7 +281,7 @@ export default function ProposalsPage() {
                 "px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors",
                 activeFilter === tab.value
                   ? "bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30"
-                  : "text-[#64748B] hover:bg-[#F1F5F9]"
+                  : "text-[#64748B] hover:bg-muted"
               )}
             >
               {tab.label}
@@ -292,7 +292,7 @@ export default function ProposalsPage() {
         {/* Proposal cards */}
         <div className="space-y-4">
           {filtered.length === 0 ? (
-            <div className="rounded-2xl bg-white border border-[#E2E8F0] p-12 text-center">
+            <div className="rounded-2xl bg-card border border-[#E2E8F0] p-12 text-center">
               <ClipboardList className="w-8 h-8 text-[#64748B] mx-auto mb-3 opacity-40" />
               <p className="text-[#64748B] text-sm">No proposals match this filter.</p>
             </div>

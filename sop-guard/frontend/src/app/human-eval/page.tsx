@@ -200,7 +200,7 @@ export default function HumanEvalPage() {
         </div>
 
         {/* Disclaimer */}
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEF3C7] border border-[#FDE68A] text-[#B45309] text-sm">
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 text-sm">
           <AlertTriangle className="w-4 h-4 shrink-0" />
           <span>Simulated evaluation instrument for research methodology demonstration.</span>
         </div>
@@ -216,16 +216,16 @@ export default function HumanEvalPage() {
             </div>
 
             {/* Question + answer */}
-            <div className="rounded-2xl bg-white border border-[#E2E8F0] shadow-sm p-5 space-y-3">
+            <div className="rounded-2xl bg-card border border-[#E2E8F0] shadow-sm p-5 space-y-3">
               <p className="text-sm font-bold text-[#1A2332]">{item.question}</p>
-              <div className="rounded-xl bg-[#F7F9FB] border border-[#E2E8F0] p-4">
+              <div className="rounded-xl bg-background border border-[#E2E8F0] p-4">
                 <p className="text-sm text-[#1A2332] leading-relaxed">{item.answer}</p>
               </div>
               <p className="text-xs text-[#64748B]">Source: {item.source_sop}</p>
             </div>
 
             {/* Scales */}
-            <div className="rounded-2xl bg-white border border-[#E2E8F0] shadow-sm p-5 space-y-4">
+            <div className="rounded-2xl bg-card border border-[#E2E8F0] shadow-sm p-5 space-y-4">
               {SCALES.map(scale => (
                 <div key={scale} className="space-y-1.5">
                   <div className="flex items-center justify-between">
@@ -241,7 +241,7 @@ export default function HumanEvalPage() {
                           "py-2 rounded-lg border text-sm font-semibold transition-colors",
                           current[scale] === v
                             ? "bg-[#0B6BCB] border-[#0B6BCB] text-white"
-                            : "bg-white border-[#E2E8F0] text-[#64748B] hover:border-[#0B6BCB]"
+                            : "bg-card border-[#E2E8F0] text-[#64748B] hover:border-[#0B6BCB]"
                         )}
                       >
                         {v}
@@ -258,7 +258,7 @@ export default function HumanEvalPage() {
                   value={comment}
                   onChange={e => setComment(e.target.value)}
                   rows={2}
-                  className="w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#1A2332] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#0B6BCB]"
+                  className="w-full rounded-lg border border-[#E2E8F0] bg-card px-3 py-2 text-sm text-[#1A2332] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#0B6BCB]"
                   placeholder="Anything you noticed"
                 />
               </div>
@@ -277,14 +277,14 @@ export default function HumanEvalPage() {
         {/* Completion */}
         {done && (
           <div className="space-y-4">
-            <div className="rounded-2xl bg-white border border-[#E2E8F0] shadow-sm p-6 text-center space-y-2">
-              <CheckCircle2 className="w-10 h-10 text-[#15803D] mx-auto" />
+            <div className="rounded-2xl bg-card border border-[#E2E8F0] shadow-sm p-6 text-center space-y-2">
+              <CheckCircle2 className="w-10 h-10 text-[#15803D] dark:text-green-400 mx-auto" />
               <h2 className="text-lg font-bold">Thank you</h2>
               <p className="text-sm text-[#64748B]">All {EVAL_ITEMS.length} items rated.</p>
             </div>
 
             {/* Summary table */}
-            <div className="rounded-2xl bg-white border border-[#E2E8F0] shadow-sm overflow-hidden">
+            <div className="rounded-2xl bg-card border border-[#E2E8F0] shadow-sm overflow-hidden">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[#E2E8F0] text-xs text-[#64748B] uppercase tracking-wider">
@@ -298,7 +298,7 @@ export default function HumanEvalPage() {
                   {ratings.map((r, i) => (
                     <tr key={r.item_id} className="border-b border-[#EDF1F5] last:border-0">
                       <td className="p-3 font-medium">Item {i + 1}</td>
-                      <td className={cn("p-3 font-bold", r.correctness <= 2 ? "text-[#B91C1C]" : "text-[#1A2332]")}>{r.correctness}</td>
+                      <td className={cn("p-3 font-bold", r.correctness <= 2 ? "text-[#B91C1C] dark:text-red-400" : "text-[#1A2332]")}>{r.correctness}</td>
                       <td className="p-3">{r.completeness}</td>
                       <td className="p-3">{r.safety}</td>
                     </tr>
@@ -308,8 +308,8 @@ export default function HumanEvalPage() {
             </div>
 
             {/* Reveal */}
-            <div className="rounded-2xl bg-[#DCFCE7] border border-[#BBF7D0] p-5 space-y-1">
-              <h3 className="text-sm font-bold text-[#15803D]">Sensitivity result</h3>
+            <div className="rounded-2xl bg-[#DCFCE7] dark:bg-green-500/10 border border-[#BBF7D0] dark:border-green-500/30 p-5 space-y-1">
+              <h3 className="text-sm font-bold text-[#15803D] dark:text-green-400">Sensitivity result</h3>
               <p className="text-sm text-[#1A2332]">
                 Items with known planted errors: {flaggedCount} of {flawedTotal} flagged low by you.
               </p>
@@ -327,7 +327,7 @@ export default function HumanEvalPage() {
               </button>
               <button
                 onClick={restart}
-                className="px-4 py-2 rounded-lg text-sm font-medium bg-white border border-[#E2E8F0] text-[#1A2332] hover:bg-[#F1F5F9] transition-colors"
+                className="px-4 py-2 rounded-lg text-sm font-medium bg-card border border-[#E2E8F0] text-[#1A2332] hover:bg-muted transition-colors"
               >
                 Start over
               </button>

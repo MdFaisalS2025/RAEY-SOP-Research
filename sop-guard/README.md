@@ -154,7 +154,8 @@ sop-guard/
 | POST | /api/upload-sop | Upload and parse SOP document |
 | POST | /api/evaluate/rag | Run RAG evaluation |
 | POST | /api/evaluate/adversarial | Run adversarial verifier tests |
-| GET | /api/evaluate/summary | Get complete metrics summary |
+| GET | /api/project/summary | Get static project/dataset metadata |
+| GET | /api/evaluation/summary | Get cached/computed RAGAS-lite evaluation results |
 | GET | /api/llm/status | Check LLM provider status |
 | GET | /api/activity | Get activity log |
 | POST | /api/voice/transcribe | Transcribe audio |

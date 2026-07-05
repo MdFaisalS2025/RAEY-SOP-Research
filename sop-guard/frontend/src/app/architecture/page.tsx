@@ -143,7 +143,7 @@ export default function ArchitecturePage() {
 
   // Fetch system metrics
   useEffect(() => {
-    fetch("/api/evaluate/summary")
+    fetch("/api/project/summary")
       .then(r => r.json())
       .then(setMetrics)
       .catch(() => {})

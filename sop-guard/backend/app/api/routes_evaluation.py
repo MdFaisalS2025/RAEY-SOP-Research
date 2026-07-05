@@ -320,9 +320,17 @@ async def run_adversarial_evaluation(include_generated: bool = False, db: AsyncS
     }
 
 
-@router.get("/api/evaluate/summary")
-async def evaluation_summary():
-    """Return a complete metrics summary for thesis documentation."""
+@router.get("/api/project/summary")
+async def project_summary():
+    """
+    Return static project/dataset metadata (SOP counts, pipeline
+    components, capabilities) for thesis documentation.
+
+    Not to be confused with GET /api/evaluation/summary, which returns
+    the dynamic, computed RAGAS-lite evaluation results - this endpoint
+    was previously at the near-identical /api/evaluate/summary
+    ("evaluate" vs "evaluation"), which made the two easy to mix up.
+    """
     from app.demo_data.demo_sops import DEMO_SOPS
     from app.demo_data.adversarial_tests import ADVERSARIAL_TESTS
 

@@ -27,6 +27,7 @@ import {
   FileCheck,
 } from "lucide-react"
 import { useRole } from "@/lib/role-context"
+import AppShell from "@/components/layout/app-shell"
 import { FirstRunDemo } from "@/components/layout/first-run-demo"
 import {
   MOCK_SOPS,
@@ -1050,7 +1051,7 @@ function SystemAdminDashboard() {
                       <span className="text-[10px] text-[#94A3B8]">{entry.user}</span>
                       <span className="text-[10px] text-[#CBD5E1]">·</span>
                       <span className="text-[10px] text-[#94A3B8]">
-                        {new Date(entry.timestamp).toLocaleDateString()}
+                        {new Date(entry.timestamp).toLocaleDateString("en-US")}
                       </span>
                     </div>
                   </div>
@@ -1088,7 +1089,8 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F9FB] px-4 md:px-6 lg:px-8 py-6">
+    <AppShell>
+    <div className="bg-[#F7F9FB] px-4 md:px-6 lg:px-8 py-6">
       <FirstRunDemo />
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
@@ -1168,5 +1170,6 @@ export default function DashboardPage() {
         {role === "system_admin" && <SystemAdminDashboard />}
       </div>
     </div>
+    </AppShell>
   )
 }

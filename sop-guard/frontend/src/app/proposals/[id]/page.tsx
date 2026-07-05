@@ -500,7 +500,7 @@ function TimelineTab({ proposal }: { proposal: UpdateProposal }) {
                     <span className="text-xs font-semibold text-[#1A2332]">{entry.user}</span>
                     <span className="text-[10px] text-[#64748B] uppercase tracking-wide">{entry.user_role}</span>
                     <span className="text-xs text-[#64748B] ml-auto">
-                      {new Date(entry.timestamp).toLocaleString()}
+                      {new Date(entry.timestamp).toLocaleString("en-US")}
                     </span>
                   </div>
                   <p className="text-xs text-[#64748B] leading-relaxed">{entry.action_summary}</p>

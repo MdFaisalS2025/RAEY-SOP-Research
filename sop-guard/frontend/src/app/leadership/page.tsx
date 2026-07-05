@@ -18,6 +18,7 @@ import {
   Loader2,
 } from "lucide-react"
 import { useRole } from "@/lib/role-context"
+import AppShell from "@/components/layout/app-shell"
 import { cn } from "@/lib/utils"
 
 const LEADERSHIP_ROLES = [
@@ -141,7 +142,8 @@ export default function LeadershipPage() {
 
   if (!LEADERSHIP_ROLES.includes(role)) {
     return (
-      <div className="min-h-screen bg-[#F7F9FB] px-4 md:px-6 lg:px-8 py-6">
+      <AppShell>
+      <div className="px-4 md:px-6 lg:px-8 py-6">
         <div className="max-w-2xl mx-auto mt-16">
           <div className="bg-white border border-[#E2E8F0] shadow-sm rounded-xl p-8 text-center space-y-3">
             <div className="w-12 h-12 rounded-xl bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 flex items-center justify-center mx-auto">
@@ -158,10 +160,11 @@ export default function LeadershipPage() {
           </div>
         </div>
       </div>
+      </AppShell>
     )
   }
 
-  const today = new Date().toLocaleDateString(undefined, {
+  const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
     year: "numeric",
     month: "long",
@@ -169,7 +172,8 @@ export default function LeadershipPage() {
   })
 
   return (
-    <div className="min-h-screen bg-[#F7F9FB] px-4 md:px-6 lg:px-8 py-6">
+    <AppShell>
+    <div className="bg-[#F7F9FB] px-4 md:px-6 lg:px-8 py-6">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
         <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -430,5 +434,6 @@ export default function LeadershipPage() {
         </div>
       </div>
     </div>
+    </AppShell>
   )
 }

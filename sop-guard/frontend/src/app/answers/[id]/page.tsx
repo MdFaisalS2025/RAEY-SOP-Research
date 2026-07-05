@@ -138,7 +138,7 @@ export default function AnswerPermalinkPage() {
 
             <h1 className="text-2xl font-semibold text-[#1A2332] mb-1 font-display">{record.query}</h1>
             <p className="text-xs text-[#94A3B8] mb-5">
-              {record.created_at ? new Date(record.created_at).toLocaleString() : ""}
+              {record.created_at ? new Date(record.created_at).toLocaleString("en-US") : ""}
             </p>
 
             <div className="bg-white border border-[#E2E8F0] rounded-xl shadow-sm p-6 mb-4">

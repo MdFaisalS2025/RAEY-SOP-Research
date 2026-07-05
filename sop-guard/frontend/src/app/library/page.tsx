@@ -810,7 +810,7 @@ function LibraryPageInner() {
                         <CheckCircle2 className="w-5 h-5 text-[#15803D] shrink-0" />
                         <div>
                           <p className="text-sm font-semibold text-[#15803D]">Acknowledged</p>
-                          <p className="text-xs text-[#15803D]/70">Acknowledged on {new Date().toLocaleDateString()}</p>
+                          <p className="text-xs text-[#15803D]/70">Acknowledged on {new Date().toLocaleDateString("en-US")}</p>
                         </div>
                       </div>
                     ) : (

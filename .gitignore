@@ -12,6 +12,11 @@ node_modules/
 *.tsbuildinfo
 npm-debug.log*
 
+# Playwright
+/sop-guard/frontend/test-results/
+/sop-guard/frontend/playwright-report/
+/sop-guard/frontend/blob-report/
+
 # Env
 .env
 .env.local

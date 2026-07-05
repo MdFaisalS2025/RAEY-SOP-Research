@@ -1,0 +1,179 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { useParams, useRouter } from "next/navigation"
+import { motion } from "framer-motion"
+import { ArrowLeft, ShieldCheck, ShieldAlert, ShieldX, MessageCircle, FileQuestion } from "lucide-react"
+import AppShell from "@/components/layout/app-shell"
+import { Breadcrumb } from "@/components/ui/breadcrumb"
+import { cn } from "@/lib/utils"
+
+interface AnswerRecord {
+  query: string
+  answer: string
+  citations: string[]
+  faithfulness: { overall_faithfulness?: number } | null
+  created_at: string
+}
+
+function FaithfulnessBadge({ score }: { score: number | undefined }) {
+  if (score === undefined) return null
+  const pct = Math.round(score * 100)
+  if (score >= 0.85) {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#15803D] bg-[#DCFCE7] border border-[#BBF7D0] rounded-full px-2.5 py-1">
+        <ShieldCheck className="w-3.5 h-3.5" /> High faithfulness ({pct}%)
+      </span>
+    )
+  }
+  if (score >= 0.65) {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#B45309] bg-[#FEF3C7] border border-[#FDE68A] rounded-full px-2.5 py-1">
+        <ShieldAlert className="w-3.5 h-3.5" /> Moderate faithfulness ({pct}%)
+      </span>
+    )
+  }
+  return (
+    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#B91C1C] bg-[#FEE2E2] border border-[#FECACA] rounded-full px-2.5 py-1">
+      <ShieldX className="w-3.5 h-3.5" /> Low faithfulness ({pct}%)
+    </span>
+  )
+}
+
+function renderAnswerText(text: string) {
+  const lines = text.split("\n").filter(Boolean)
+  return lines.map((line, i) => {
+    const headingMatch = line.match(/^(#{1,3})\s+(.+)$/)
+    if (headingMatch) {
+      const level = headingMatch[1].length
+      return (
+        <p key={i} className={cn("font-semibold text-[#1A2332] mt-4 mb-1", level === 1 ? "text-lg" : "text-base")}>
+          {headingMatch[2]}
+        </p>
+      )
+    }
+    if (/^>\s+/.test(line)) {
+      return (
+        <div key={i} className="my-2 px-4 py-2 bg-[#FEF3C7] border border-[#FDE68A] rounded-lg text-[#B45309] text-sm">
+          {line.replace(/^>\s+/, "")}
+        </div>
+      )
+    }
+    return (
+      <p key={i} className="text-[15px] leading-relaxed text-[#1A2332] mb-2">
+        {line.replace(/\*\*(.+?)\*\*/g, "$1")}
+      </p>
+    )
+  })
+}
+
+export default function AnswerPermalinkPage() {
+  const params = useParams()
+  const router = useRouter()
+  const id = params?.id as string
+
+  const [record, setRecord] = useState<AnswerRecord | null>(null)
+  const [status, setStatus] = useState<"loading" | "ok" | "notfound" | "error">("loading")
+
+  useEffect(() => {
+    if (!id) return
+    fetch(`/api/answers/${id}`)
+      .then(r => {
+        if (r.status === 404) { setStatus("notfound"); return null }
+        if (!r.ok) { setStatus("error"); return null }
+        return r.json()
+      })
+      .then(data => {
+        if (data) {
+          setRecord({
+            query: data.query_text ?? data.query ?? "",
+            answer: data.answer_text ?? data.answer ?? "",
+            citations: data.citations ?? [],
+            faithfulness: data.faithfulness_score != null ? { overall_faithfulness: data.faithfulness_score } : null,
+            created_at: data.created_at ?? "",
+          })
+          setStatus("ok")
+        }
+      })
+      .catch(() => setStatus("error"))
+  }, [id])
+
+  return (
+    <AppShell>
+      <div className="max-w-3xl mx-auto px-4 py-8">
+        <Breadcrumb items={[{ label: "Shared answer" }]} />
+
+        {status === "loading" && (
+          <div className="mt-8 text-sm text-[#64748B]">Loading answer...</div>
+        )}
+
+        {status === "notfound" && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-8 bg-white border border-[#0B6BCB]/20 rounded-xl p-8 text-center shadow-sm">
+            <FileQuestion className="w-10 h-10 text-[#94A3B8] mx-auto mb-3" />
+            <p className="text-[#1A2332] font-medium mb-1">This answer link is not available</p>
+            <p className="text-sm text-[#64748B] mb-5">It may have expired or the link is incorrect.</p>
+            <button
+              onClick={() => router.push("/query")}
+              className="inline-flex items-center gap-2 text-sm font-medium text-white bg-[#0B6BCB] hover:bg-[#0959AC] rounded-lg px-4 py-2 transition-colors"
+            >
+              Ask a new question
+            </button>
+          </motion.div>
+        )}
+
+        {status === "error" && (
+          <div className="mt-8 bg-white border border-[#FECACA] rounded-xl p-6 text-sm text-[#B91C1C]">
+            Could not load this answer. Try again shortly.
+          </div>
+        )}
+
+        {status === "ok" && record && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+            <button
+              onClick={() => router.push("/query")}
+              className="inline-flex items-center gap-1.5 text-sm text-[#64748B] hover:text-[#0B6BCB] mb-4 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" /> Back to query
+            </button>
+
+            <h1 className="text-2xl font-semibold text-[#1A2332] mb-1 font-display">{record.query}</h1>
+            <p className="text-xs text-[#94A3B8] mb-5">
+              {record.created_at ? new Date(record.created_at).toLocaleString() : ""}
+            </p>
+
+            <div className="bg-white border border-[#E2E8F0] rounded-xl shadow-sm p-6 mb-4">
+              {renderAnswerText(record.answer)}
+
+              {record.citations.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-[#EDF1F5] flex flex-wrap gap-2">
+                  {record.citations.map((c, i) => (
+                    <span key={i} className="text-xs text-[#475569] border border-[#CBD5E1] bg-white rounded px-2 py-0.5">
+                      {c}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {record.faithfulness && (
+                <div className="mt-4">
+                  <FaithfulnessBadge score={record.faithfulness.overall_faithfulness} />
+                </div>
+              )}
+            </div>
+
+            <div className="bg-[#FEF3C7] border border-[#FDE68A] rounded-xl px-4 py-3 text-sm text-[#B45309] mb-6">
+              Shared answer snapshot. Verify against the current SOP before clinical use.
+            </div>
+
+            <button
+              onClick={() => router.push("/query")}
+              className="inline-flex items-center gap-2 text-sm font-medium text-white bg-[#0B6BCB] hover:bg-[#0959AC] rounded-lg px-4 py-2.5 transition-colors"
+            >
+              <MessageCircle className="w-4 h-4" /> Ask a follow-up
+            </button>
+          </motion.div>
+        )}
+      </div>
+    </AppShell>
+  )
+}

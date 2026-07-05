@@ -1,0 +1,39 @@
+# Render deployment blueprint for the SOP-Guard backend.
+# Research prototype  - NOT for clinical use.
+#
+# Deploy: push this repo to GitHub, then in Render choose
+# "New +" -> "Blueprint" and point it at this file.
+
+services:
+  - type: web
+    name: sop-guard-backend
+    runtime: python
+    plan: free
+    rootDir: sop-guard/backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "false"
+      # SQLite lives on the container's ephemeral disk. For durable storage,
+      # attach a Render disk mounted at /app/data and point DATABASE_URL at it,
+      # or use a managed Postgres URL (postgresql+asyncpg://...).
+      - key: DATABASE_URL
+        value: sqlite+aiosqlite:///./sop_guard.db
+      - key: LLM_PROVIDER
+        value: openai
+      - key: LLM_MODEL
+        value: gpt-4o-mini
+      # Set the secret value in the Render dashboard, not in this file.
+      - key: LLM_API_KEY
+        sync: false
+      - key: LLM_BASE_URL
+        sync: false
+      # Comma-separated origins are also accepted by pydantic-settings.
+      - key: CORS_ORIGINS
+        value: '["https://your-frontend.example.com"]'

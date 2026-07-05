@@ -1,0 +1,282 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --sop-blue: 213 60% 23%;
+    --sop-teal: 175 84% 32%;
+    --sop-light: 166 76% 97%;
+
+    --background: 210 40% 98%;    /* #F7F9FB */
+    --foreground: 217 33% 15%;    /* #1A2332 */
+    --card: 0 0% 100%;            /* white */
+    --card-foreground: 217 33% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 217 33% 15%;
+    --primary: 210 87% 42%;       /* #0B6BCB clinical blue */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 40% 96%;     /* #F1F5F9 */
+    --secondary-foreground: 217 33% 15%;
+    --muted: 210 40% 96%;         /* #F1F5F9 */
+    --muted-foreground: 215 16% 47%;  /* #64748B */
+    --accent: 210 40% 96%;        /* #F1F5F9 */
+    --accent-foreground: 217 33% 15%;
+    --destructive: 0 72% 42%;     /* #B91C1C */
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 32% 91%;        /* #E2E8F0 */
+    --input: 213 27% 84%;         /* #CBD5E1 */
+    --ring: 210 87% 42%;          /* #0B6BCB */
+    --radius: 0.5rem;
+    --success: 142 72% 29%;       /* #15803D */
+    --success-foreground: 0 0% 100%;
+    --warning: 32 81% 36%;        /* #B45309 */
+    --warning-foreground: 0 0% 100%;
+  }
+
+  .dark {
+    --background: 220 20% 4%;    /* #0A0C10 */
+    --foreground: 190 12% 90%;   /* #dce4e5 */
+    --card: 180 14% 8%;          /* #0d1516 */
+    --card-foreground: 190 12% 90%;
+    --popover: 180 14% 8%;
+    --popover-foreground: 190 12% 90%;
+    --primary: 187 100% 50%;     /* #00E5FF clinical cyan */
+    --primary-foreground: 220 20% 4%;
+    --secondary: 180 10% 13%;    /* #192122 surface container */
+    --secondary-foreground: 190 12% 90%;
+    --muted: 180 10% 13%;
+    --muted-foreground: 190 10% 65%;  /* #bac9cc subdued */
+    --accent: 180 10% 13%;
+    --accent-foreground: 190 12% 90%;
+    --destructive: 0 100% 66%;   /* #FF5252 critical red */
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 100% / 0.08;
+    --input: 180 10% 10%;
+    --ring: 187 100% 50%;        /* clinical cyan */
+    --success: 145 100% 39%;     /* #00C853 clinical emerald */
+    --success-foreground: 0 0% 100%;
+    --warning: 54 100% 50%;      /* #FFD600 alert amber */
+    --warning-foreground: 220 20% 4%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background-color: rgba(11, 107, 203, 0.18);
+    color: #1A2332;
+  }
+
+  h1, h2, h3 {
+    @apply font-display;
+  }
+
+  /* Global input readability fix: ensures text is ALWAYS visible */
+  input,
+  textarea,
+  select {
+    color: inherit;
+    caret-color: #0B6BCB;
+  }
+  .dark input,
+  .dark textarea,
+  .dark select {
+    color: #dce4e5;
+    caret-color: #00E5FF;
+  }
+  .dark input::placeholder,
+  .dark textarea::placeholder {
+    color: #7f8f92;
+  }
+  .dark select option {
+    background: #11191b;
+    color: #dce4e5;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/20 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/40;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-lg;
+  }
+
+  .dark .glass {
+    @apply bg-gray-900/70 border-gray-700/30;
+  }
+
+  .glass-strong {
+    @apply bg-white/90 backdrop-blur-xl border border-white/30 shadow-xl;
+  }
+
+  .dark .glass-strong {
+    @apply bg-gray-900/90 border-gray-700/40;
+  }
+
+  .gradient-primary {
+    @apply bg-gradient-to-r from-sop-blue to-sop-teal;
+  }
+
+  .gradient-subtle {
+    @apply bg-gradient-to-br from-sop-light via-white to-teal-50;
+  }
+
+  .dark .gradient-subtle {
+    @apply bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900;
+  }
+
+  .gradient-radial {
+    background: radial-gradient(ellipse at top, hsl(var(--sop-teal) / 0.15), transparent 70%);
+  }
+
+  .glass-clinical {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+  }
+
+  .dark .glass-clinical {
+    background: rgba(13, 21, 22, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .glow-cyan {
+    box-shadow: 0 0 20px rgba(0, 229, 255, 0.1), 0 0 40px rgba(0, 229, 255, 0.05);
+  }
+
+  .glow-cyan-strong {
+    box-shadow: 0 0 20px rgba(0, 229, 255, 0.2), 0 0 60px rgba(0, 229, 255, 0.08);
+  }
+
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .clinical-input {
+    @apply bg-white dark:bg-[#11191b] text-foreground dark:text-[#dce4e5] placeholder-muted-foreground dark:placeholder-[#7f8f92] caret-[#0B6BCB] dark:caret-[#00E5FF] border border-[#CBD5E1] dark:border-white/10 rounded-lg focus:border-[#0B6BCB] dark:focus:border-[#00E5FF]/50 focus:ring-1 focus:ring-[#0B6BCB]/30 dark:focus:ring-[#00E5FF]/30 focus:outline-none transition-colors;
+  }
+
+  /* Micro-interactions: consistent tactile feedback across the app */
+  .press {
+    @apply transition-transform duration-150 active:scale-[0.97];
+  }
+
+  .lift {
+    @apply transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/5 dark:hover:shadow-[#00E5FF]/5;
+  }
+
+  .interactive-card {
+    @apply transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:shadow-black/5 dark:hover:shadow-[#00E5FF]/5 hover:border-[#0B6BCB]/30 active:scale-[0.99] active:translate-y-0;
+  }
+}
+
+@layer base {
+  .dark input:-webkit-autofill,
+  .dark input:-webkit-autofill:hover,
+  .dark input:-webkit-autofill:focus,
+  .dark textarea:-webkit-autofill {
+    -webkit-text-fill-color: #dce4e5;
+    -webkit-box-shadow: 0 0 0 1000px #11191b inset;
+    transition: background-color 5000s ease-in-out 0s;
+  }
+
+  .border-border {
+    border-color: hsl(var(--border));
+  }
+  .bg-background {
+    background-color: hsl(var(--background));
+  }
+  .text-foreground {
+    color: hsl(var(--foreground));
+  }
+  .bg-muted-foreground\/20 {
+    background-color: hsl(var(--muted-foreground) / 0.2);
+  }
+  .bg-muted-foreground\/40 {
+    background-color: hsl(var(--muted-foreground) / 0.4);
+  }
+
+  :focus-visible {
+    outline: 2px solid #0B6BCB;
+    outline-offset: 2px;
+  }
+}
+
+/* ── Compact density ─────────────────────────────────────────── */
+body.compact table td,
+body.compact table th {
+  padding-top: 6px !important;
+  padding-bottom: 6px !important;
+}
+body.compact table {
+  font-size: 13px;
+}
+body.compact .p-5 {
+  padding: 0.75rem !important;
+}
+body.compact .p-4 {
+  padding: 0.625rem !important;
+}
+body.compact .p-6 {
+  padding: 1rem !important;
+}
+body.compact .gap-4 {
+  gap: 0.625rem !important;
+}
+body.compact .space-y-4 > * + * {
+  margin-top: 0.625rem !important;
+}
+
+/* ── Print ────────────────────────────────────────────────────── */
+@media print {
+  nav,
+  header,
+  .no-print,
+  button {
+    display: none !important;
+  }
+  body,
+  #main-content {
+    background: white !important;
+    color: black !important;
+  }
+  a[href]:after {
+    content: none !important;
+  }
+}

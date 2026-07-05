@@ -197,7 +197,8 @@ export default function EffectivenessPage() {
         <section>
           <h2 className="text-lg font-medium text-[#1A2332] mb-3">SOP Outcome Tracking</h2>
           <div className="bg-card border border-[#E2E8F0] shadow-sm rounded-xl overflow-hidden">
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto">
+<table className="w-full text-sm">
               <thead>
                 <tr className="bg-muted border-b border-[#E2E8F0] text-xs text-[#64748B] uppercase tracking-wider">
                   <th className="p-4 text-left">SOP</th>
@@ -269,6 +270,7 @@ export default function EffectivenessPage() {
                 })}
               </tbody>
             </table>
+</div>
           </div>
         </section>
 

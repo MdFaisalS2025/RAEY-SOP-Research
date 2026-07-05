@@ -285,7 +285,8 @@ export default function HumanEvalPage() {
 
             {/* Summary table */}
             <div className="rounded-2xl bg-card border border-[#E2E8F0] shadow-sm overflow-hidden">
-              <table className="w-full text-sm">
+              <div className="overflow-x-auto">
+<table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[#E2E8F0] text-xs text-[#64748B] uppercase tracking-wider">
                     <th className="p-3 text-left">Item</th>
@@ -305,6 +306,7 @@ export default function HumanEvalPage() {
                   ))}
                 </tbody>
               </table>
+</div>
             </div>
 
             {/* Reveal */}

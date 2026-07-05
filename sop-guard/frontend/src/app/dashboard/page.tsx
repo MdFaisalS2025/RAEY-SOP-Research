@@ -532,7 +532,8 @@ function DeptAdminDashboard() {
             Department Compliance
           </h3>
           <div className="bg-card border border-[#E2E8F0] shadow-sm rounded-xl overflow-hidden">
-            <table className="w-full text-[12px]">
+            <div className="overflow-x-auto">
+<table className="w-full text-[12px]">
               <thead>
                 <tr className="border-b border-[#EDF1F5]">
                   <th className="text-left px-3 py-2 text-[#64748B] font-semibold">Department</th>
@@ -565,6 +566,7 @@ function DeptAdminDashboard() {
                 ))}
               </tbody>
             </table>
+</div>
           </div>
         </div>
 
@@ -917,7 +919,8 @@ function NurseEducatorDashboard() {
             Department Summary
           </h3>
           <div className="bg-card border border-[#E2E8F0] shadow-sm rounded-xl overflow-hidden">
-            <table className="w-full text-[12px]">
+            <div className="overflow-x-auto">
+<table className="w-full text-[12px]">
               <thead>
                 <tr className="border-b border-[#EDF1F5]">
                   <th className="text-left px-3 py-2 text-[#64748B] font-semibold">Dept</th>
@@ -946,6 +949,7 @@ function NurseEducatorDashboard() {
                 ))}
               </tbody>
             </table>
+</div>
           </div>
         </div>
       </div>

@@ -416,7 +416,8 @@ export default function TrainingPage() {
         <section>
           <h2 className="text-lg font-semibold font-display mb-3">Department Completion Summary</h2>
           <div className="rounded-2xl bg-card border border-[#E2E8F0] overflow-hidden">
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto">
+<table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[#E2E8F0] text-xs text-[#64748B] uppercase tracking-wider">
                   <th className="p-4 text-left">Department</th>
@@ -453,6 +454,7 @@ export default function TrainingPage() {
                 })}
               </tbody>
             </table>
+</div>
           </div>
         </section>
 
@@ -479,7 +481,8 @@ export default function TrainingPage() {
           </div>
 
           <div className="rounded-xl border border-[#E2E8F0] overflow-hidden">
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto">
+<table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[#E2E8F0] text-xs text-[#64748B] uppercase tracking-wider">
                   <th className="p-3 text-left">SOP Department</th>
@@ -517,6 +520,7 @@ export default function TrainingPage() {
                 ))}
               </tbody>
             </table>
+</div>
           </div>
 
           <p className="text-xs text-[#64748B]/70 italic">

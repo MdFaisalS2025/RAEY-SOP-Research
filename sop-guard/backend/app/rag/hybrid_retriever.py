@@ -11,7 +11,7 @@ from collections import Counter
 from typing import Any, Optional
 
 from app.rag.clinical_terms import expand_query as clinical_expand_query, SYNONYM_GROUPS
-from app.rag.reranker import get_reranker, HeuristicReranker
+from app.rag.reranker import NoOpReranker
 from app.rag.embedding_cache import is_dense_backend_active, dense_similarity, get_shared_embedding_provider
 
 # Weight given to dense (semantic) similarity vs sparse (TF-IDF) score when
@@ -44,7 +44,17 @@ class HybridRetriever:
         self.chunks = chunks
         self._idf: dict[str, float] = {}
         self._build_idf()
-        self._reranker = reranker or HeuristicReranker()
+        # Defaults to no-op: the ablation endpoint (GET /api/evaluation/ablation)
+        # measured HeuristicReranker actively making retrieval worse - average
+        # top-1 relevance 0.305 with it enabled vs 0.334 disabled, reordering
+        # the top-3 in 70% of the eval queries. It double-counts signals the
+        # base TF-IDF + chunk-type-boost score already accounts for (raw,
+        # non-IDF-weighted term overlap and numeric-match bonuses), so a
+        # chunk that repeats common query words can outrank one the base
+        # score correctly preferred. Pass reranker=HeuristicReranker()
+        # explicitly to re-enable it once that scoring is fixed and
+        # re-validated against the ablation.
+        self._reranker = reranker or NoOpReranker()
 
     def _tokenize(self, text: str) -> list[str]:
         tokens = re.findall(r"[a-z0-9]+", text.lower())

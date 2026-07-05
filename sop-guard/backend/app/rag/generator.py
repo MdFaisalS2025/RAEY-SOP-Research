@@ -8,14 +8,20 @@ Research prototype  - NOT for clinical use.
 import re
 from typing import Any
 
-# Minimum relevance score to consider a chunk useful. Calibrated against the
-# corpus's own score distribution: verified out-of-scope queries (e.g. an
-# oncology question against a hospital SOP library with no oncology
-# content) score ~0.04-0.05 top-chunk relevance, while genuinely in-scope
-# queries typically score noticeably higher. This threshold intentionally
-# sits just above that out-of-scope band - a clinical safety tool should
-# err toward abstaining when uncertain rather than confidently answering
-# from the wrong SOP.
+# Minimum relevance score to consider a chunk useful. This only catches
+# queries with essentially no lexical overlap with the corpus at all - it
+# does NOT reliably separate "wrong domain" from "right domain, weak
+# match". Verified directly: with a plain TF-IDF retriever (no reranker;
+# see hybrid_retriever.py for why the reranker is disabled), an
+# out-of-scope oncology query scored 0.165 top-chunk relevance - *higher*
+# than several genuinely in-scope queries in the same eval set (0.088,
+# 0.153, 0.160). A single relevance-score threshold cannot separate those
+# without also rejecting the legitimate ones. Domain-mismatch detection at
+# moderate relevance levels is an open problem here; a corpus-entity/
+# vocabulary check (e.g. does the query mention any known drug/condition
+# from entity_graph.py's lexicon) would be a stronger signal than raw
+# top-K score, but isn't implemented. This floor is kept because it still
+# does useful, narrow work: catching near-zero-relevance queries.
 _MIN_RELEVANCE = 0.05
 
 _DISCLAIMER = (

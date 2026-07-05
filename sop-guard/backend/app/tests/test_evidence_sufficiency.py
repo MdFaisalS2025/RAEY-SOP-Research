@@ -4,20 +4,22 @@ generator's own relevance floor).
 
 Calibration note (read before changing thresholds): this corpus does not
 have a single relevance-score cutoff that cleanly separates "genuinely
-out of scope" from "genuinely in scope but weakly retrieved" queries -
-verified directly against the live query pipeline, an off-topic oncology
-query scored 0.045 top-chunk relevance, while a legitimate in-scope
-cross-SOP query scored 0.031 and a legitimate NEWS2 threshold query
-scored 0.025 (both *lower* than the out-of-scope query). A harder
-out-of-scope case (an MRI calibration query) scored 0.11 - *higher* than
-those two legitimate queries. No threshold between 0.025 and 0.11 avoids
-misclassifying something.
+out of scope" from "genuinely in scope but weakly retrieved" queries.
+Verified directly against the live query pipeline (plain TF-IDF, no
+reranker - see hybrid_retriever.py for why): an off-topic oncology query
+scored 0.165 top-chunk relevance, which is *higher* than several
+genuinely in-scope queries in the same eval set (0.088, 0.153, 0.160).
+There is no threshold that catches that oncology query without also
+rejecting those legitimate ones.
 
-The 0.05 floor here accepts that some weak-but-legitimate queries will be
-told to rephrase, in exchange for catching the clearer out-of-scope case.
-For a clinical safety tool that's the right side to err on: an
-unnecessary "please rephrase" is annoying, a confident wrong-domain
-answer citing the wrong drug's dosing is dangerous.
+The 0.05 floor here is deliberately modest: it only catches near-zero
+relevance (queries with essentially no lexical overlap with the corpus
+at all), which is real but narrow protection. It will NOT catch a
+moderate-relevance wrong-domain query - that needs a different signal
+(e.g. checking the query against a known corpus vocabulary/entity list)
+that isn't implemented yet. Don't raise this threshold to try to close
+that gap; the score distributions above show it will just break
+legitimate weak queries without reliably catching the harder OOS cases.
 """
 
 import pytest

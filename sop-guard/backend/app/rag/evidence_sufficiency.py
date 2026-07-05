@@ -20,12 +20,12 @@ class EvidenceSufficiencyChecker:
     def __init__(
         self,
         min_chunks: int = 1,
-        # Verified against the corpus's own score distribution: an
-        # out-of-scope query (e.g. oncology dosing against a hospital SOP
-        # library with no oncology content) scores ~0.04-0.05 top-chunk
-        # relevance. 0.005 let essentially anything through - matches the
-        # _MIN_RELEVANCE floor in rag/generator.py so both gates agree on
-        # what counts as "not actually relevant".
+        # Matches the _MIN_RELEVANCE floor in rag/generator.py so both gates
+        # agree on what counts as "not actually relevant". Only catches
+        # near-zero relevance (0.005 let essentially anything through) - see
+        # the long comment on _MIN_RELEVANCE for why a single score
+        # threshold can't reliably separate wrong-domain queries from
+        # weakly-matched legitimate ones in this corpus.
         min_top_score: float = 0.05,
         min_keyword_overlap: float = 0.15,
     ):

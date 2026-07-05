@@ -4,6 +4,8 @@ SOP-Guard Evaluation Routes
 Research prototype  - NOT for clinical use.
 """
 
+from typing import Any
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -188,8 +190,16 @@ async def evaluation_ablation(db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/api/evaluate/adversarial")
-async def run_adversarial_evaluation(db: AsyncSession = Depends(get_db)):
-    """Run the verifier against adversarial test cases."""
+async def run_adversarial_evaluation(include_generated: bool = False, db: AsyncSession = Depends(get_db)):
+    """
+    Run the verifier against adversarial test cases.
+
+    include_generated=true additionally runs the programmatically-generated
+    perturbation benchmark (app/evaluation/perturbation.py), which scales
+    with the corpus's own structured data instead of staying fixed at the
+    17 hand-written cases - useful when the hand-written set is too small
+    to support a percentage claim on its own.
+    """
     from app.demo_data.adversarial_tests import ADVERSARIAL_TESTS
     from app.verifier.verifier import ProceduralFaithfulnessVerifier
     from app.services.sop_structurer import structure_sop
@@ -206,13 +216,18 @@ async def run_adversarial_evaluation(db: AsyncSession = Depends(get_db)):
             sop["raw_text"], sop["title"]
         )
 
+    test_cases = list(ADVERSARIAL_TESTS)
+    if include_generated:
+        from app.evaluation.perturbation import generate_perturbed_benchmark
+        test_cases.extend(generate_perturbed_benchmark(DEMO_SOPS, structured_lookup))
+
     correct_detections = 0
     correct_passes = 0
-    total = len(ADVERSARIAL_TESTS)
+    total = len(test_cases)
     adv_scores: list[float] = []
     correct_scores: list[float] = []
 
-    for test in ADVERSARIAL_TESTS:
+    for test in test_cases:
         sop_id = test.get("sop_id", "")
         structured = structured_lookup.get(
             sop_id, {"steps": [], "thresholds": [], "contraindications": []}
@@ -259,21 +274,47 @@ async def run_adversarial_evaluation(db: AsyncSession = Depends(get_db)):
     pairwise_ties = sum(1 for c, a in zip(correct_scores, adv_scores) if c == a)
     separation = round((pairwise_wins + 0.5 * pairwise_ties) / total, 3) if total else 0.0
 
+    # Stratify by violation type - an aggregate number hides whether the
+    # verifier is actually strong across the board or just doing well on
+    # one easy category (contraindications, in practice) while being much
+    # weaker on another (sequence, in practice).
+    by_type: dict[str, dict[str, Any]] = {}
+    for r in results:
+        vt = r["violation_type"]
+        bucket = by_type.setdefault(vt, {"n": 0, "caught": 0, "correct_passed": 0})
+        bucket["n"] += 1
+        bucket["caught"] += int(r["caught"])
+        bucket["correct_passed"] += int(r["correct_answer_passed"])
+    breakdown = {
+        vt: {
+            "n": b["n"],
+            "sensitivity": round(b["caught"] / b["n"], 3) if b["n"] else 0,
+            "specificity": round(b["correct_passed"] / b["n"], 3) if b["n"] else 0,
+        }
+        for vt, b in by_type.items()
+    }
+
     return {
         "total_tests": total,
+        "generated_cases_included": include_generated,
         "detections": correct_detections,
         "sensitivity": round(correct_detections / total, 3) if total else 0,
         "specificity": round(correct_passes / total, 3) if total else 0,
         "pairwise_separation": separation,
         "mean_adversarial_score": round(sum(adv_scores) / total, 3) if total else 0,
         "mean_correct_score": round(sum(correct_scores) / total, 3) if total else 0,
+        "by_violation_type": breakdown,
         "disclaimer": (
             "Sensitivity alone is a misleading headline metric: a verifier "
             "that flags every answer as suspicious trivially scores 100% "
             "sensitivity while providing no useful signal. Specificity "
             "(correct answers that pass cleanly) and pairwise_separation "
             "(does the verifier actually score correct answers higher than "
-            "wrong ones) show whether it can tell them apart."
+            "wrong ones) show whether it can tell them apart. "
+            + ("Includes the programmatically-generated perturbation benchmark."
+               if include_generated else
+               "17 hand-written cases only - pass include_generated=true for "
+               "the larger perturbation-based benchmark.")
         ),
         "results": results,
     }

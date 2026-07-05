@@ -78,3 +78,30 @@ async def test_adversarial_eval_per_result_shape(client):
         assert "caught" in r
         assert r["adversarial_status"] in ("passed", "warning", "failed")
         assert r["correct_status"] in ("passed", "warning", "failed")
+
+
+async def test_adversarial_eval_with_generated_cases_scales_the_benchmark(client):
+    """
+    The 17 hand-written cases alone can't support a percentage claim - one
+    flipped case moves the rate by ~6 points. include_generated=true should
+    pull in the programmatic perturbation benchmark and report per-type
+    breakdown so the numbers are backed by something more substantial.
+    """
+    resp = await client.post("/api/evaluate/adversarial?include_generated=true")
+    assert resp.status_code == 200
+    data = resp.json()
+
+    assert data["generated_cases_included"] is True
+    assert data["total_tests"] >= 80, "expected the generated perturbation cases to be included"
+
+    assert "by_violation_type" in data
+    for vt in ("threshold", "sequence", "contraindication"):
+        assert vt in data["by_violation_type"]
+        bucket = data["by_violation_type"][vt]
+        assert bucket["n"] > 0
+        assert 0.0 <= bucket["sensitivity"] <= 1.0
+        assert 0.0 <= bucket["specificity"] <= 1.0
+
+    # Sanity: the larger benchmark shouldn't collapse the verifier's overall
+    # discriminative power relative to the smaller hand-written-only set.
+    assert data["pairwise_separation"] >= 0.7

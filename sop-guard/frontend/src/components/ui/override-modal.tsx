@@ -53,6 +53,7 @@ export function OverrideModal({ open, onClose, contextType, contextId, contextLa
         body: JSON.stringify({
           context_type: contextType,
           context_id: contextId,
+          context_label: contextLabel,
           user_id: currentUser.id,
           user_name: currentUser.name,
           reason,

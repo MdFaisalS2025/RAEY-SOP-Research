@@ -262,6 +262,7 @@ class AcknowledgmentResponse(BaseModel):
 class OverrideCreate(BaseModel):
     context_type: str  # conflict | answer | cds_card
     context_id: str = ""
+    context_label: str = ""
     user_id: str = ""
     user_name: str = ""
     reason: str = "other"  # will_monitor | not_applicable | disagree_with_sop | other
@@ -272,6 +273,7 @@ class OverrideResponse(BaseModel):
     id: int
     context_type: str
     context_id: str = ""
+    context_label: str = ""
     user_id: str = ""
     user_name: str = ""
     reason: str = "other"

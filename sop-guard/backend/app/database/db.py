@@ -95,3 +95,12 @@ async def init_db() -> None:
             ))
     except Exception:
         pass  # Column already exists (or backend handles it via create_all)
+
+    try:
+        from sqlalchemy import text
+        async with engine.begin() as conn:
+            await conn.execute(text(
+                "ALTER TABLE override_records ADD COLUMN context_label VARCHAR(512) DEFAULT ''"
+            ))
+    except Exception:
+        pass  # Column already exists (or backend handles it via create_all)

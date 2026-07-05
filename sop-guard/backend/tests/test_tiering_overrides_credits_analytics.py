@@ -125,6 +125,57 @@ async def test_override_create_list_summary(client):
     assert summary_data["by_context_type"]["answer"] == 1
 
 
+async def test_overrides_stewardship_ranks_repeated_alerts(client):
+    """
+    A stewardship view should surface alerts overridden more than once as
+    candidates for review, and leave one-off overrides out by default.
+    """
+    # "conflict-1" overridden 3 times (by different users) -> a repeat offender.
+    for i in range(3):
+        resp = await client.post("/api/overrides", json={
+            "context_type": "conflict",
+            "context_id": "conflict-1",
+            "context_label": "Sepsis vs. Cardiac Arrest MAP threshold conflict",
+            "user_id": f"u{i}",
+            "user_name": f"User {i}",
+            "reason": "will_monitor",
+            "note": "",
+        })
+        assert resp.status_code == 200
+
+    # "answer-1" overridden only once -> should not appear with the default min_overrides=2.
+    resp = await client.post("/api/overrides", json={
+        "context_type": "answer",
+        "context_id": "answer-1",
+        "context_label": "What is the sepsis lactate threshold?",
+        "user_id": "u9",
+        "user_name": "User 9",
+        "reason": "disagree_with_sop",
+        "note": "",
+    })
+    assert resp.status_code == 200
+
+    stewardship = await client.get("/api/overrides/stewardship")
+    assert stewardship.status_code == 200
+    data = stewardship.json()
+    assert data["total_distinct_contexts"] == 2
+
+    ids = [c["context_id"] for c in data["candidates"]]
+    assert "conflict-1" in ids
+    assert "answer-1" not in ids
+
+    top = data["candidates"][0]
+    assert top["context_id"] == "conflict-1"
+    assert top["count"] == 3
+    assert top["context_label"] == "Sepsis vs. Cardiac Arrest MAP threshold conflict"
+    assert top["reasons"]["will_monitor"] == 3
+
+    # min_overrides=1 should include the one-off answer override too.
+    all_contexts = await client.get("/api/overrides/stewardship?min_overrides=1")
+    all_ids = [c["context_id"] for c in all_contexts.json()["candidates"]]
+    assert "answer-1" in all_ids
+
+
 # ── Credits ──────────────────────────────────────────────────────
 
 

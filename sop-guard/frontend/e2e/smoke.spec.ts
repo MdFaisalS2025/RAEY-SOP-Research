@@ -63,7 +63,7 @@ test.describe("learning / credits", () => {
 })
 
 const STATIC_ROUTES = [
-  "/dashboard", "/admin", "/adversarial", "/architecture", "/audit", "/bedside",
+  "/dashboard", "/admin", "/adversarial", "/alert-stewardship", "/architecture", "/audit", "/bedside",
   "/cds-demo", "/committee", "/compliance", "/conflict-resolution", "/effectiveness",
   "/evaluation", "/evidence-watch", "/exceptions", "/expiry", "/feedback",
   "/human-eval", "/impact-map", "/incidents", "/leadership", "/legal", "/library",

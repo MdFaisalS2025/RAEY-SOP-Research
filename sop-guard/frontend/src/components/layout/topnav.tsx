@@ -42,6 +42,7 @@ import {
   Bug,
   Wrench,
   Info,
+  ShieldOff,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { RoleSwitcher } from "@/components/layout/role-switcher"
@@ -114,6 +115,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: "/evaluation", label: "Evaluation", icon: Gauge },
       { href: "/adversarial", label: "Adversarial", icon: Bug },
+      { href: "/alert-stewardship", label: "Alert Stewardship", icon: ShieldOff },
       { href: "/settings", label: "Settings", icon: Settings },
       { href: "/admin", label: "Admin", icon: Wrench },
     ],

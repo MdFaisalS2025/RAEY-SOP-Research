@@ -257,6 +257,7 @@ class OverrideRecord(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     context_type = Column(String(32), default="conflict")  # conflict | answer | cds_card
     context_id = Column(String(128), default="")
+    context_label = Column(String(512), default="")  # human-readable text (e.g. the query), for stewardship review
     user_id = Column(String(128), default="")
     user_name = Column(String(256), default="")
     reason = Column(String(32), default="other")  # will_monitor | not_applicable | disagree_with_sop | other

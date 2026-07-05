@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import {
@@ -46,6 +46,19 @@ export default function LandingPage() {
     query_type?: string
   } | null>(null)
   const [demoError, setDemoError] = useState<string | null>(null)
+  const [sopCount, setSopCount] = useState<number | null>(null)
+
+  // Live count instead of a hardcoded number - drifts silently otherwise
+  // as SOPs are uploaded/removed.
+  useEffect(() => {
+    fetch("/api/sops")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        const sops = Array.isArray(data) ? data : data?.sops
+        if (Array.isArray(sops)) setSopCount(sops.length)
+      })
+      .catch(() => {})
+  }, [])
 
   const runDemoQuery = async (q: string) => {
     setDemoLoading(true)
@@ -129,13 +142,13 @@ export default function LandingPage() {
 
             <motion.div variants={fadeUp} custom={5} className="flex items-center justify-center gap-8 mt-12 text-sm text-[#64748B]">
               <div className="text-center">
-                <p className="text-2xl font-bold text-[#0B6BCB]"><AnimatedCounter value={10} /></p>
+                <p className="text-2xl font-bold text-[#0B6BCB]"><AnimatedCounter value={sopCount ?? 10} /></p>
                 <p className="text-xs">SOPs Indexed</p>
               </div>
               <div className="w-px h-8 bg-[#E2E8F0]" />
               <div className="text-center">
-                <p className="text-2xl font-bold text-[#0B6BCB]"><AnimatedCounter value={100} suffix="%" /></p>
-                <p className="text-xs">Violation Detection</p>
+                <p className="text-2xl font-bold text-[#0B6BCB]"><AnimatedCounter value={98} suffix="%" /></p>
+                <p className="text-xs">Sensitivity (n=120)</p>
               </div>
               <div className="w-px h-8 bg-[#E2E8F0]" />
               <div className="text-center">
@@ -313,9 +326,9 @@ export default function LandingPage() {
 
             <motion.div variants={fadeUp} custom={2} className="grid sm:grid-cols-2 gap-6">
               <div className="p-8 rounded-2xl bg-white border border-[#E2E8F0] shadow-sm">
-                <div className="text-4xl font-bold text-[#0B6BCB] mb-2">85-95%</div>
-                <div className="text-sm text-[#334155]">Violation Detection Rate</div>
-                <div className="text-xs text-[#94A3B8] mt-1">(Target on synthetic evaluation set)</div>
+                <div className="text-4xl font-bold text-[#0B6BCB] mb-2">98% / 46%</div>
+                <div className="text-sm text-[#334155]">Sensitivity / Specificity</div>
+                <div className="text-xs text-[#94A3B8] mt-1">120-case perturbation benchmark - see /evaluation</div>
               </div>
               <div className="p-8 rounded-2xl bg-white border border-[#E2E8F0] shadow-sm">
                 <div className="text-4xl font-bold text-[#0B6BCB] mb-2"><AnimatedCounter value={5} prefix="<" suffix="s" /></div>

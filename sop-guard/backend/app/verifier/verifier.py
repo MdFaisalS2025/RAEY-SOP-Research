@@ -16,6 +16,78 @@ from typing import Any
 
 from app.schemas.schemas import VerificationResult, VerificationStatus, CheckResult
 
+# Generic words that appear in almost every threshold/contraindication's
+# surrounding text but carry no topical signal on their own (e.g. "dose",
+# "level", "patient"). Used to keep relevance-matching scoped to the actual
+# clinical concept rather than incidental vocabulary overlap.
+_GENERIC_CLINICAL_WORDS = {
+    "target", "count", "level", "range", "value", "action", "maintain",
+    "dose", "administer", "patient", "patients", "therapy", "therapeutic",
+    "management", "protocol", "consider", "initiate", "hold", "give",
+    "adjust", "monitor", "assess", "check", "within", "before", "after",
+}
+
+# Negation / prohibition cues that indicate a contraindication or warning is
+# actually being stated in the answer (as opposed to the topic merely being
+# mentioned). Uses word-stems (contraindicat*, prohibit*) so both the noun
+# ("contraindication") and adjective ("contraindicated") forms match, and
+# covers standalone negation ("is not", "was not") in addition to modal
+# phrases ("must not", "should not").
+_NEGATION_RE = re.compile(
+    r"\b(do\s*n[o']t|does\s*n[o']t|is\s+not|are\s+not|was\s+not|were\s+not|"
+    r"must\s+not|should\s+not|shall\s+not|cannot|can't|"
+    r"never|avoid|contraindicat\w*|prohibit\w*|warning|caution)\b"
+    r"|^\s*no[.,;:]",
+    re.IGNORECASE,
+)
+
+
+def _has_negation_cue(text: str) -> bool:
+    return bool(_NEGATION_RE.search(text))
+
+
+def _numbers_equal(a: str, b: str) -> bool:
+    """Numeric-value comparison that tolerates formatting differences (e.g. '65' vs '65.0')."""
+    try:
+        return float(a) == float(b)
+    except ValueError:
+        return a == b
+
+
+# Unit token immediately following a number, e.g. "2 mmol/L" -> "mmol/l",
+# "30 mL/kg" -> "ml/kg", "5 minutes" -> "minutes". Matched right after the
+# number (allowing one space) so two different numbers in the same short
+# sentence - e.g. a threshold value and an unrelated time window - can be
+# told apart even when a generic word-overlap context check would consider
+# the whole sentence "the same context".
+_UNIT_AFTER_RE = re.compile(
+    r"^\s*"
+    r"(mcg/kg/min|mcg/kg/hr|mg/kg/min|mg/kg/hr|ml/kg/hr|ml/kg|mcg/min|mg/hr|"
+    r"units?/min|units?/hr|mmol/l|mg/dl|meq/l|mmhg|bpm|mcg|mg|ml|"
+    r"hours?|hrs?|h(?=\b)|minutes?|mins?|seconds?|secs?|%)\b",
+    re.IGNORECASE,
+)
+
+
+_UNIT_ALIASES = {
+    "hr": "hours", "hrs": "hours", "h": "hours", "hour": "hours",
+    "min": "minutes", "mins": "minutes", "minute": "minutes",
+    "sec": "seconds", "secs": "seconds", "second": "seconds",
+    "u": "units", "unit": "units",
+}
+
+
+def _normalize_unit(unit: str) -> str:
+    return _UNIT_ALIASES.get(unit, unit)
+
+
+def _unit_after(text: str, pos: int) -> str:
+    """Best-effort unit token starting at `pos` in `text` (e.g. right after a matched number)."""
+    m = _UNIT_AFTER_RE.match(text[pos:pos + 20])
+    if not m:
+        return ""
+    return _normalize_unit(m.group(1).lower().replace(" ", ""))
+
 
 class ThresholdVerifier:
     """Verify that numeric thresholds in the answer match the source SOP."""
@@ -52,13 +124,25 @@ class ThresholdVerifier:
             thresh_action = thresh.get("action", "")
             thresh_parameter = thresh.get("parameter", "")
             thresh_context = thresh.get("context", "") or f"{thresh_parameter} {thresh_action}"
+            # Scoped to parameter+value only (not the action field) for
+            # single-number matching below: the action text often contains
+            # unrelated numbers (e.g. a time window like "within 2-4 hours")
+            # that can coincidentally equal the threshold's own value and
+            # falsely inherit its context via the shared action wording.
+            value_context = f"{thresh_parameter} {thresh_value}"
 
-            # Extract numbers from both value AND action fields
-            nums_in_value = re.findall(r"\d+\.?\d*", thresh_value)
+            if not self._is_relevant_threshold(thresh_parameter, answer):
+                continue
+
+            # Extract numbers (with their immediately-following unit, if any)
+            # from the value field, and plain numbers from the action field.
+            nums_in_value = [
+                (m.group(), _unit_after(thresh_value, m.end()))
+                for m in re.finditer(r"\d+\.?\d*", thresh_value)
+            ]
             nums_in_action = re.findall(r"\d+\.?\d*", thresh_action)
-            all_sop_nums = nums_in_value + nums_in_action
 
-            if not all_sop_nums:
+            if not nums_in_value and not nums_in_action:
                 continue
 
             # Extract ranges from value and action
@@ -68,12 +152,12 @@ class ThresholdVerifier:
 
             # Check range mismatches first (more precise than individual numbers)
             range_mismatch = False
-            if sop_ranges and self._is_relevant_threshold(thresh_context, thresh_parameter, answer):
+            if sop_ranges:
                 for sop_lo, sop_hi, sop_range_ctx in sop_ranges:
                     for ans_lo, ans_hi, ans_range_ctx in answer_ranges:
                         # Check if ranges are about the same thing (context overlap)
                         if self._context_matches(ans_range_ctx, thresh_context):
-                            if sop_lo != ans_lo or sop_hi != ans_hi:
+                            if not _numbers_equal(sop_lo, ans_lo) or not _numbers_equal(sop_hi, ans_hi):
                                 range_mismatch = True
                                 results.append(CheckResult(
                                     check_type="threshold",
@@ -89,64 +173,68 @@ class ThresholdVerifier:
             if range_mismatch:
                 continue
 
-            # Check individual number matching for value field
-            matched = False
-            for num in nums_in_value:
-                for ans_num, ans_ctx in answer_numbers:
-                    if num == ans_num:
-                        matched = True
-                        if self._context_matches(ans_ctx, thresh_context):
-                            results.append(CheckResult(
-                                check_type="threshold",
-                                status="pass",
-                                detail=f"Threshold '{thresh_value}' correctly cited in answer.",
-                                source_reference=thresh_context[:120],
-                            ))
-                        else:
-                            results.append(CheckResult(
-                                check_type="threshold",
-                                status="warning",
-                                detail=f"Value '{num}' appears in answer but context may differ from SOP.",
-                                source_reference=thresh_context[:120],
-                            ))
+            # Check individual number matching for value field. Each number
+            # in the SOP value is checked independently and must be found in
+            # the answer - a value like "50 mg PO at 13h, 7h, 1h before"
+            # specifies three required administration times, and an answer
+            # that only states one of them is missing two doses, not "close
+            # enough" because at least one number happened to match.
+            #
+            # When the SOP value has a recognizable unit attached (e.g.
+            # "2 mmol/L"), the answer's matching number must carry the SAME
+            # unit - this is what actually disambiguates two different
+            # numbers that happen to coincide in a short sentence (a
+            # threshold value and an unrelated time window both containing
+            # the digit "2"), which a generic word-overlap context check
+            # cannot reliably do.
+            for num, sop_unit in nums_in_value:
+                num_matched = False
+                for ans_num, ans_ctx, ans_unit in answer_numbers:
+                    if not _numbers_equal(num, ans_num):
+                        continue
+                    # If the SOP value has a defined unit, the answer's
+                    # occurrence of this number must carry that same unit -
+                    # an occurrence with no unit at all (e.g. one side of an
+                    # unrelated "2-4 hours" range) is not good enough
+                    # evidence, since it's exactly the ambiguous case a
+                    # coincidental digit match needs to be screened out for.
+                    if sop_unit and ans_unit != sop_unit:
+                        continue
+                    num_matched = True
+                    if self._context_matches(ans_ctx, value_context):
+                        results.append(CheckResult(
+                            check_type="threshold",
+                            status="pass",
+                            detail=f"Threshold '{thresh_value}' correctly cited in answer.",
+                            source_reference=thresh_context[:120],
+                        ))
+                    else:
+                        results.append(CheckResult(
+                            check_type="threshold",
+                            status="warning",
+                            detail=f"Value '{num}' appears in answer but context may differ from SOP.",
+                            source_reference=thresh_context[:120],
+                        ))
+                    break
 
-            # Also check action field numbers if relevant
-            if nums_in_action and self._is_relevant_threshold(thresh_context, thresh_parameter, answer):
-                for num in nums_in_action:
-                    action_num_found = False
-                    for ans_num, ans_ctx in answer_numbers:
-                        if num == ans_num:
-                            action_num_found = True
-                            break
-                    if not action_num_found and not range_mismatch:
-                        # Check if this is part of a range that was already handled
-                        in_sop_range = any(
-                            num == lo or num == hi for lo, hi, _ in sop_ranges_act
-                        )
-                        in_ans_range = any(
-                            num == lo or num == hi for lo, hi, _ in answer_ranges
-                        )
-                        if in_sop_range and not in_ans_range:
-                            # The range exists in SOP action but answer has a different range
-                            pass  # Handled by range check above
-
-            if not matched and self._is_relevant_threshold(thresh_context, thresh_parameter, answer):
-                results.append(CheckResult(
-                    check_type="threshold",
-                    status="fail",
-                    detail=f"SOP threshold '{thresh_value}' is relevant but missing from answer.",
-                    source_reference=thresh_context[:120],
-                ))
+                if not num_matched:
+                    results.append(CheckResult(
+                        check_type="threshold",
+                        status="fail",
+                        detail=f"SOP threshold '{thresh_value}' is relevant but missing from answer.",
+                        source_reference=thresh_context[:120],
+                    ))
 
         return results
 
-    def _extract_numbers_with_context(self, text: str) -> list[tuple[str, str]]:
-        """Extract numbers and their surrounding context from text."""
+    def _extract_numbers_with_context(self, text: str) -> list[tuple[str, str, str]]:
+        """Extract numbers, their surrounding context, and their immediately-following unit (if any)."""
         results = []
         for match in re.finditer(r"\d+\.?\d*", text):
             start = max(0, match.start() - 50)
             end = min(len(text), match.end() + 50)
-            results.append((match.group(), text[start:end]))
+            unit = _unit_after(text, match.end())
+            results.append((match.group(), text[start:end], unit))
         return results
 
     def _extract_ranges(self, text: str) -> list[tuple[str, str, str]]:
@@ -170,27 +258,32 @@ class ThresholdVerifier:
         overlap = len(a_words & s_words) / max(len(s_words), 1)
         return overlap > 0.15
 
-    def _is_relevant_threshold(self, thresh_context: str, thresh_parameter: str, answer: str) -> bool:
-        """Check if a threshold's topic appears in the answer."""
+    def _is_relevant_threshold(self, thresh_parameter: str, answer: str) -> bool:
+        """
+        Check if a threshold's specific measured parameter (e.g. "Platelet
+        count", "MAP") appears in the answer - not just any word from its
+        surrounding action/context text, which is full of generic clinical
+        vocabulary ("maintain", "administer", "anticoagulation") that would
+        make almost any answer look "relevant" to almost any threshold.
+        """
         answer_lower = answer.lower()
-        context_lower = thresh_context.lower()
         param_lower = thresh_parameter.lower()
 
-        # Check for abbreviation matches
+        # Abbreviation matches (MAP, INR, etc.) are a strong, precise signal.
         for abbrev, expansions in self._ABBREVIATION_MAP.items():
-            if abbrev in context_lower or abbrev in param_lower:
+            if abbrev in param_lower:
                 if abbrev in answer_lower or any(exp in answer_lower for exp in expansions):
                     return True
 
-        # Extract key medical terms from threshold context
-        keywords = set(re.findall(r"[a-z]{3,}", context_lower))
-        answer_words = set(re.findall(r"[a-z]{3,}", answer_lower))
-        overlap = keywords & answer_words
-        # Use lower threshold: 1 match of length >= 4 or 2 matches of length >= 3
-        long_overlap = {w for w in overlap if len(w) >= 4}
-        if len(long_overlap) >= 1:
-            return True
-        return len(overlap) >= 2
+        # Otherwise require a distinctive (non-generic) word from the
+        # parameter name itself to appear in the answer.
+        param_words = set(re.findall(r"[a-z]{4,}", param_lower)) - _GENERIC_CLINICAL_WORDS
+        if not param_words:
+            # Parameter name is too generic to extract a distinctive word from -
+            # fall back to requiring the full parameter phrase (short ones only).
+            return param_lower in answer_lower if len(param_lower) <= 20 else False
+
+        return any(w in answer_lower for w in param_words)
 
 
 class SequenceVerifier:
@@ -234,12 +327,20 @@ class SequenceVerifier:
 
                 mentioned_steps.append((step_num, pos))
 
-        # Check for missing critical steps
+        # Check for missing critical steps. Only applies when the answer is
+        # clearly attempting a multi-step procedure walkthrough (it mentions
+        # a meaningful fraction of all the SOP's steps) - an answer that
+        # narrowly compares two specific steps of a ten-or-more-step SOP
+        # (e.g. "which of these two things happens first") is a targeted
+        # Q&A response, not an incomplete procedure summary, and flagging
+        # the other eight steps as "omitted" would fail almost every
+        # well-scoped answer that happens to touch exactly two steps.
         mentioned_nums = {s[0] for s in mentioned_steps}
         all_nums = {s.get("step_number", 0) or s.get("step", 0) for s in sop_steps}
         missing = all_nums - mentioned_nums
+        coverage = len(mentioned_nums) / len(all_nums) if all_nums else 0
 
-        if missing and len(mentioned_nums) > 0:
+        if missing and len(mentioned_nums) >= 2 and coverage >= 0.3:
             results.append(CheckResult(
                 check_type="sequence",
                 status="warning" if len(missing) <= 1 else "fail",
@@ -279,6 +380,14 @@ class SequenceVerifier:
 class ContraindicationVerifier:
     """Verify that relevant contraindications are not omitted."""
 
+    # Minimum fraction of a contraindication's distinctive keywords that must
+    # appear in the answer before we treat the topic as being discussed at
+    # all. Used both to decide relevance (is this contraindication even about
+    # what the answer is about?) and completeness (was it adequately covered?)
+    # so a contraindication sharing one or two generic words with the answer
+    # isn't wrongly treated as an on-topic omission.
+    _TOPIC_OVERLAP_RATIO = 0.3
+
     def check(
         self, answer: str, structured_sop: dict[str, Any]
     ) -> list[CheckResult]:
@@ -288,6 +397,7 @@ class ContraindicationVerifier:
             return results
 
         answer_lower = answer.lower()
+        answer_keywords = set(re.findall(r"[a-z]{4,}", answer_lower)) - _GENERIC_CLINICAL_WORDS
 
         for contra in contras:
             # Support both dict format and plain string format
@@ -298,24 +408,23 @@ class ContraindicationVerifier:
                 contra_text = (contra.get("text", "") or str(contra)).lower()
                 contra_detail = (contra.get("detail", "") or contra.get("text", "") or str(contra)).lower()
 
-            # Check if the contraindication topic is relevant to the answer
-            contra_keywords = set(re.findall(r"[a-z]{4,}", contra_detail))
-            answer_keywords = set(re.findall(r"[a-z]{4,}", answer_lower))
+            contra_keywords = set(re.findall(r"[a-z]{4,}", contra_detail)) - _GENERIC_CLINICAL_WORDS
+            if not contra_keywords:
+                continue
             overlap = contra_keywords & answer_keywords
+            overlap_ratio = len(overlap) / len(contra_keywords)
 
-            if len(overlap) < 2:
-                # Contraindication topic not relevant to this answer
+            # Relevance gate: the SAME bar used below to judge whether the
+            # contraindication was adequately addressed. A contraindication
+            # that only shares one or two incidental words with the answer
+            # (e.g. both mention "anticoagulation" in a 6-contraindication
+            # SOP) is not "on topic" just because of that coincidence.
+            if len(overlap) < 2 or overlap_ratio < self._TOPIC_OVERLAP_RATIO:
                 continue
 
-            # Check if the prohibition/warning is actually mentioned
-            prohibition_terms = ["do not", "don't", "avoid", "never", "must not",
-                                 "should not", "contraindicated", "prohibited",
-                                 "warning", "caution"]
+            warning_present = _has_negation_cue(answer_lower)
 
-            warning_present = any(term in answer_lower for term in prohibition_terms)
-            detail_words_present = len(overlap) / max(len(contra_keywords), 1) > 0.3
-
-            if warning_present and detail_words_present:
+            if warning_present:
                 results.append(CheckResult(
                     check_type="contraindication",
                     status="pass",

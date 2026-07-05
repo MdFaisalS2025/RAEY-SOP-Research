@@ -207,7 +207,10 @@ async def run_adversarial_evaluation(db: AsyncSession = Depends(get_db)):
         )
 
     correct_detections = 0
+    correct_passes = 0
     total = len(ADVERSARIAL_TESTS)
+    adv_scores: list[float] = []
+    correct_scores: list[float] = []
 
     for test in ADVERSARIAL_TESTS:
         sop_id = test.get("sop_id", "")
@@ -221,10 +224,18 @@ async def run_adversarial_evaluation(db: AsyncSession = Depends(get_db)):
         # Verify the CORRECT answer
         correct_result = verifier.verify(test["correct_answer"], [], structured)
 
-        # Did verifier catch the adversarial answer? (it should fail or warn)
+        # Sensitivity: did the verifier catch the adversarial (wrong) answer?
         caught = adv_result.status.value in ("failed", "warning")
         if caught:
             correct_detections += 1
+
+        # Specificity: did the verifier NOT flag the correct answer?
+        passed_correct = correct_result.status.value == "passed"
+        if passed_correct:
+            correct_passes += 1
+
+        adv_scores.append(adv_result.overall_score)
+        correct_scores.append(correct_result.overall_score)
 
         results.append({
             "test_id": test.get("test_id", ""),
@@ -236,12 +247,34 @@ async def run_adversarial_evaluation(db: AsyncSession = Depends(get_db)):
             "correct_status": correct_result.status.value,
             "correct_score": correct_result.overall_score,
             "caught": caught,
+            "correct_answer_passed": passed_correct,
         })
+
+    # Pairwise separation: fraction of test pairs where the correct answer's
+    # score is strictly higher than its paired adversarial answer's score.
+    # A verifier with no discriminative power at all would score ~0.5 here
+    # even while "catching" 100% of violations (see specificity above for
+    # why detection rate alone is a misleading headline number).
+    pairwise_wins = sum(1 for c, a in zip(correct_scores, adv_scores) if c > a)
+    pairwise_ties = sum(1 for c, a in zip(correct_scores, adv_scores) if c == a)
+    separation = round((pairwise_wins + 0.5 * pairwise_ties) / total, 3) if total else 0.0
 
     return {
         "total_tests": total,
         "detections": correct_detections,
-        "detection_rate": round(correct_detections / total, 3) if total else 0,
+        "sensitivity": round(correct_detections / total, 3) if total else 0,
+        "specificity": round(correct_passes / total, 3) if total else 0,
+        "pairwise_separation": separation,
+        "mean_adversarial_score": round(sum(adv_scores) / total, 3) if total else 0,
+        "mean_correct_score": round(sum(correct_scores) / total, 3) if total else 0,
+        "disclaimer": (
+            "Sensitivity alone is a misleading headline metric: a verifier "
+            "that flags every answer as suspicious trivially scores 100% "
+            "sensitivity while providing no useful signal. Specificity "
+            "(correct answers that pass cleanly) and pairwise_separation "
+            "(does the verifier actually score correct answers higher than "
+            "wrong ones) show whether it can tell them apart."
+        ),
         "results": results,
     }
 

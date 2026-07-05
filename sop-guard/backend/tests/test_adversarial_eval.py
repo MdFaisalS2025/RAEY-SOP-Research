@@ -105,3 +105,28 @@ async def test_adversarial_eval_with_generated_cases_scales_the_benchmark(client
     # Sanity: the larger benchmark shouldn't collapse the verifier's overall
     # discriminative power relative to the smaller hand-written-only set.
     assert data["pairwise_separation"] >= 0.7
+
+
+async def test_adversarial_eval_compare_nli(client):
+    """
+    compare_nli=true should run the second, independently-implemented
+    NLIVerifier over the same cases and report both sets of metrics side
+    by side, without changing the primary rule-based numbers.
+    """
+    resp = await client.post("/api/evaluate/adversarial?include_generated=true&compare_nli=true")
+    assert resp.status_code == 200
+    data = resp.json()
+
+    assert "verifier_comparison" in data
+    comparison = data["verifier_comparison"]
+    for key in ("rule_based", "nli_lite", "note"):
+        assert key in comparison
+
+    for metrics in (comparison["rule_based"], comparison["nli_lite"]):
+        for key in ("sensitivity", "specificity", "pairwise_separation"):
+            assert 0.0 <= metrics[key] <= 1.0
+
+    # rule_based in the comparison block must match the primary top-level
+    # numbers - compare_nli should be additive, not change the main result.
+    assert comparison["rule_based"]["sensitivity"] == data["sensitivity"]
+    assert comparison["rule_based"]["specificity"] == data["specificity"]

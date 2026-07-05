@@ -189,8 +189,41 @@ async def evaluation_ablation(db: AsyncSession = Depends(get_db)):
         return {"eval": "ablation_reranker", "error": str(e), "reranker_on": {}, "reranker_off": {}}
 
 
+def _run_verifier_over_cases(verifier, test_cases: list[dict], structured_lookup: dict) -> dict[str, Any]:
+    """Run one verifier over all test cases and return sensitivity/specificity/separation."""
+    caught = 0
+    passed_correct = 0
+    adv_scores: list[float] = []
+    correct_scores: list[float] = []
+    for test in test_cases:
+        structured = structured_lookup.get(
+            test.get("sop_id", ""), {"steps": [], "thresholds": [], "contraindications": []}
+        )
+        adv_result = verifier.verify(test["adversarial_answer"], [], structured)
+        correct_result = verifier.verify(test["correct_answer"], [], structured)
+        if adv_result.status.value in ("failed", "warning"):
+            caught += 1
+        if correct_result.status.value == "passed":
+            passed_correct += 1
+        adv_scores.append(adv_result.overall_score)
+        correct_scores.append(correct_result.overall_score)
+
+    total = len(test_cases)
+    pairwise_wins = sum(1 for c, a in zip(correct_scores, adv_scores) if c > a)
+    pairwise_ties = sum(1 for c, a in zip(correct_scores, adv_scores) if c == a)
+    return {
+        "sensitivity": round(caught / total, 3) if total else 0,
+        "specificity": round(passed_correct / total, 3) if total else 0,
+        "pairwise_separation": round((pairwise_wins + 0.5 * pairwise_ties) / total, 3) if total else 0,
+        "mean_adversarial_score": round(sum(adv_scores) / total, 3) if total else 0,
+        "mean_correct_score": round(sum(correct_scores) / total, 3) if total else 0,
+    }
+
+
 @router.post("/api/evaluate/adversarial")
-async def run_adversarial_evaluation(include_generated: bool = False, db: AsyncSession = Depends(get_db)):
+async def run_adversarial_evaluation(
+    include_generated: bool = False, compare_nli: bool = False, db: AsyncSession = Depends(get_db)
+):
     """
     Run the verifier against adversarial test cases.
 
@@ -199,6 +232,16 @@ async def run_adversarial_evaluation(include_generated: bool = False, db: AsyncS
     with the corpus's own structured data instead of staying fixed at the
     17 hand-written cases - useful when the hand-written set is too small
     to support a percentage claim on its own.
+
+    compare_nli=true additionally runs the same test cases through
+    NLIVerifier (app/verifier/nli_verifier.py), a second, independently
+    implemented generic-entailment checker, and reports its metrics
+    alongside the primary rule-based verifier for comparison. On the full
+    120-case perturbation benchmark the two disagree in an informative way:
+    the rule-based verifier has much higher sensitivity but lower
+    specificity (it over-flags correct answers), while the NLI-lite
+    verifier is the opposite (conservative: it misses more violations but
+    rarely false-alarms). Neither dominates the other.
     """
     from app.demo_data.adversarial_tests import ADVERSARIAL_TESTS
     from app.verifier.verifier import ProceduralFaithfulnessVerifier
@@ -294,7 +337,7 @@ async def run_adversarial_evaluation(include_generated: bool = False, db: AsyncS
         for vt, b in by_type.items()
     }
 
-    return {
+    response: dict[str, Any] = {
         "total_tests": total,
         "generated_cases_included": include_generated,
         "detections": correct_detections,
@@ -318,6 +361,33 @@ async def run_adversarial_evaluation(include_generated: bool = False, db: AsyncS
         ),
         "results": results,
     }
+
+    if compare_nli:
+        from app.verifier.nli_verifier import NLIVerifier
+
+        rule_based_metrics = {
+            "sensitivity": response["sensitivity"],
+            "specificity": response["specificity"],
+            "pairwise_separation": response["pairwise_separation"],
+            "mean_adversarial_score": response["mean_adversarial_score"],
+            "mean_correct_score": response["mean_correct_score"],
+        }
+        nli_metrics = _run_verifier_over_cases(NLIVerifier(), test_cases, structured_lookup)
+        response["verifier_comparison"] = {
+            "rule_based": rule_based_metrics,
+            "nli_lite": nli_metrics,
+            "note": (
+                "Two independently-implemented verifiers over the same test cases. "
+                "rule_based (ProceduralFaithfulnessVerifier) uses type-specific "
+                "regex extraction per violation class; nli_lite (NLIVerifier) "
+                "treats every answer generically as an entailment problem against "
+                "a combined premise built from the SOP's structured facts. They "
+                "trade off differently: rule_based tends toward higher sensitivity "
+                "and lower specificity, nli_lite the reverse - neither dominates."
+            ),
+        }
+
+    return response
 
 
 @router.get("/api/project/summary")

@@ -8,7 +8,20 @@ import re
 from typing import Any
 import logging
 
+from app.rag.entity_graph import DRUG_LEXICON, CONDITION_LEXICON
+
 logger = logging.getLogger(__name__)
+
+# Sorted longest-first so multi-word entries (e.g. "septic shock") match
+# before their single-word substrings (e.g. "shock").
+_LEXICON_ENTITIES = sorted(set(DRUG_LEXICON) | set(CONDITION_LEXICON), key=len, reverse=True)
+_LEXICON_PATTERNS = [(name, re.compile(r"\b" + re.escape(name) + r"\b")) for name in _LEXICON_ENTITIES]
+
+
+def _extract_lexicon_entities(query: str) -> list[str]:
+    """Find known drug/condition names mentioned in the query text."""
+    low = query.lower()
+    return [name for name, pattern in _LEXICON_PATTERNS if pattern.search(low)]
 
 
 class EvidenceSufficiencyChecker:
@@ -101,7 +114,26 @@ class EvidenceSufficiencyChecker:
             missing.append("procedure step content")
         checks.append(("chunk_type_match", type_match, str(chunk_types)))
 
-        # 5. SOP status check
+        # 5. Entity-lexicon grounding (CRAG-style additional signal). If the
+        # query names a specific drug or condition from the known clinical
+        # lexicon, that entity should actually show up in the retrieved
+        # evidence text. This catches queries that name something no
+        # indexed SOP covers (e.g. a chemotherapy question against this
+        # sepsis/cardiac-arrest corpus) even when they still clear the
+        # generic keyword-overlap bar on shared common words like "dose"
+        # or "management". Queries that don't name any lexicon entity at
+        # all (most free-text questions) skip this check rather than being
+        # penalized for using vocabulary outside our ~70-term lexicon.
+        query_entities = _extract_lexicon_entities(query)
+        entity_grounded = True
+        if query_entities:
+            ungrounded = [e for e in query_entities if e not in combined_text]
+            entity_grounded = len(ungrounded) == 0
+            checks.append(("entity_grounding", entity_grounded, query_entities))
+            if not entity_grounded:
+                missing.append(f"evidence for named entities ({', '.join(ungrounded)})")
+
+        # 6. SOP status check
         sop_statuses = {c.get("status", "active") for c in retrieved_chunks[:5]}
         status_warning = "archived" in sop_statuses
         if status_warning:
@@ -112,7 +144,12 @@ class EvidenceSufficiencyChecker:
         total = len(checks)
         score = passed / total if total > 0 else 0
 
-        sufficient = score >= 0.6 and score_ok  # Must have decent relevance score
+        # Must have decent relevance score and, if the query names a
+        # specific lexicon entity, that entity must actually be grounded in
+        # the retrieved evidence - otherwise the named-entity check would
+        # never be more than one vote among several and could be outvoted
+        # by generic keyword overlap on shared common words.
+        sufficient = score >= 0.6 and score_ok and entity_grounded
 
         reason = f"Evidence check: {passed}/{total} criteria met."
         if not sufficient:

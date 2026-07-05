@@ -14,12 +14,20 @@ rejecting those legitimate ones.
 
 The 0.05 floor here is deliberately modest: it only catches near-zero
 relevance (queries with essentially no lexical overlap with the corpus
-at all), which is real but narrow protection. It will NOT catch a
-moderate-relevance wrong-domain query - that needs a different signal
-(e.g. checking the query against a known corpus vocabulary/entity list)
-that isn't implemented yet. Don't raise this threshold to try to close
-that gap; the score distributions above show it will just break
-legitimate weak queries without reliably catching the harder OOS cases.
+at all), which is real but narrow protection. Don't raise this threshold
+to try to close the moderate-relevance gap; the score distributions
+above show it will just break legitimate weak queries without reliably
+catching the harder OOS cases.
+
+The entity_grounding check (see TestEvidenceSufficiencyChecker's
+test_named_entity_* tests) is the "different signal" this note used to
+say wasn't implemented: it flags queries that name a specific lexicon
+drug/condition absent from the retrieved text, independent of the
+generic keyword-overlap score. It's narrow by design - it only fires
+when the query names something from entity_graph's ~70-term lexicon, so
+it doesn't cover every wrong-domain query, but it catches cases the
+keyword-overlap check misses (shared generic words masking a missing
+named entity).
 """
 
 import pytest
@@ -55,6 +63,31 @@ class TestEvidenceSufficiencyChecker:
         result = checker.check("anything", [], "general")
         assert result["sufficient"] is False
         assert result["score"] == 0.0
+
+    def test_named_entity_absent_from_evidence_is_flagged(self, checker):
+        """
+        CRAG-style signal: the query names a specific lexicon drug
+        (vancomycin) that never appears in the retrieved text, even though
+        the chunks share enough generic words to pass keyword overlap.
+        """
+        chunks = [_chunk(0.3, "dose threshold monitoring management protocol")]
+        result = checker.check("What is the vancomycin dose threshold?", chunks, "threshold")
+        names = [c["name"] for c in result["checks"]]
+        assert "entity_grounding" in names
+        entity_check = next(c for c in result["checks"] if c["name"] == "entity_grounding")
+        assert entity_check["passed"] is False
+
+    def test_named_entity_present_in_evidence_passes(self, checker):
+        chunks = [_chunk(0.3, "vancomycin dose threshold monitoring")]
+        result = checker.check("What is the vancomycin dose threshold?", chunks, "threshold")
+        entity_check = next(c for c in result["checks"] if c["name"] == "entity_grounding")
+        assert entity_check["passed"] is True
+
+    def test_query_with_no_lexicon_entity_skips_check(self, checker):
+        chunks = [_chunk(0.3, "documentation timing requirements signature checklist")]
+        result = checker.check("When must the checklist be signed?", chunks, "general")
+        names = [c["name"] for c in result["checks"]]
+        assert "entity_grounding" not in names
 
 
 class TestMockGeneratorAbstention:

@@ -13,11 +13,34 @@ import {
   ShieldAlert,
   Play,
   Info,
+  Loader2,
 } from "lucide-react"
 import AppShell from "@/components/layout/app-shell"
 import { cn } from "@/lib/utils"
 import { useRole } from "@/lib/role-context"
 import { useToast } from "@/components/ui/use-toast"
+
+interface VerifierMetrics {
+  sensitivity: number
+  specificity: number
+  pairwise_separation: number
+  mean_adversarial_score: number
+  mean_correct_score: number
+}
+
+interface BenchmarkResult {
+  total_tests: number
+  generated_cases_included: boolean
+  sensitivity: number
+  specificity: number
+  pairwise_separation: number
+  disclaimer: string
+  verifier_comparison?: {
+    rule_based: VerifierMetrics
+    nli_lite: VerifierMetrics
+    note: string
+  }
+}
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -312,6 +335,9 @@ export default function AdversarialPage() {
   useRole()
   const { toast } = useToast()
   const [activeCategory, setActiveCategory] = useState("all")
+  const [benchmark, setBenchmark] = useState<BenchmarkResult | null>(null)
+  const [loadingBenchmark, setLoadingBenchmark] = useState(false)
+  const [benchmarkError, setBenchmarkError] = useState(false)
 
   const passCount = ADVERSARIAL_TESTS.filter((t) => t.status === "pass").length
   const partialCount = ADVERSARIAL_TESTS.filter((t) => t.status === "partial").length
@@ -323,11 +349,24 @@ export default function AdversarialPage() {
   const filtered =
     activeCategory === "all" ? ADVERSARIAL_TESTS : ADVERSARIAL_TESTS.filter((t) => t.category === activeCategory)
 
-  function handleRunTestSuite() {
-    toast({
-      title: "Coming in v2",
-      description: "Run Test Suite requires backend integration. Not yet available.",
-    })
+  async function handleRunTestSuite() {
+    setLoadingBenchmark(true)
+    setBenchmarkError(false)
+    try {
+      const res = await fetch("/api/evaluate/adversarial?include_generated=true&compare_nli=true", { method: "POST" })
+      if (!res.ok) throw new Error(`status ${res.status}`)
+      const data: BenchmarkResult = await res.json()
+      setBenchmark(data)
+      toast({
+        title: "Live verifier benchmark complete",
+        description: `${data.total_tests} test cases - sensitivity ${Math.round(data.sensitivity * 100)}%, specificity ${Math.round(data.specificity * 100)}%.`,
+      })
+    } catch {
+      setBenchmarkError(true)
+      toast({ title: "Benchmark failed", description: "Could not reach the backend. Is it running?" })
+    } finally {
+      setLoadingBenchmark(false)
+    }
   }
 
   return (
@@ -348,10 +387,11 @@ export default function AdversarialPage() {
             </div>
             <button
               onClick={handleRunTestSuite}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 text-[#0B6BCB] hover:bg-[#0B6BCB]/20 transition-colors text-sm font-medium"
+              disabled={loadingBenchmark}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 text-[#0B6BCB] hover:bg-[#0B6BCB]/20 transition-colors text-sm font-medium disabled:opacity-60"
             >
-              <Play className="w-4 h-4" />
-              Run Test Suite
+              {loadingBenchmark ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+              {loadingBenchmark ? "Running..." : "Run Live Verifier Benchmark"}
             </button>
           </div>
 
@@ -431,17 +471,121 @@ export default function AdversarialPage() {
           ))}
         </div>
 
-        {/* ── Summary analysis ── */}
+        {/* ── Live Verifier Benchmark ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="rounded-2xl bg-card border border-[#0B6BCB]/10 p-6 space-y-4"
+        >
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <h2 className="text-base font-semibold font-display text-[#1A2332] flex items-center gap-2">
+              <FlaskConical className="w-4 h-4 text-[#0B6BCB]" />
+              Live Verifier Benchmark
+            </h2>
+            <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30">
+              REAL BACKEND DATA
+            </span>
+          </div>
+
+          {!benchmark && !loadingBenchmark && !benchmarkError && (
+            <p className="text-sm text-[#64748B]">
+              Click &quot;Run Live Verifier Benchmark&quot; above to run the procedural faithfulness verifier
+              against the real 120-case perturbation benchmark (17 hand-written + 103 programmatically-generated
+              threshold/sequence/contraindication violations), including a second-opinion comparison against the
+              NLI-lite verifier.
+            </p>
+          )}
+
+          {loadingBenchmark && (
+            <div className="flex items-center gap-2 text-sm text-[#64748B] py-4">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Running verifier against {"{"}17 hand-written + programmatically-generated{"}"} test cases...
+            </div>
+          )}
+
+          {benchmarkError && (
+            <p className="text-sm text-[#B91C1C] dark:text-red-400">
+              Could not reach the backend. Make sure the Python server is running on port 8000.
+            </p>
+          )}
+
+          {benchmark && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="p-3 rounded-xl bg-muted border border-[#E2E8F0] text-center">
+                  <p className="text-2xl font-bold text-[#1A2332]">{benchmark.total_tests}</p>
+                  <p className="text-xs text-[#94A3B8] mt-0.5">Test Cases</p>
+                </div>
+                <div className="p-3 rounded-xl bg-muted border border-[#E2E8F0] text-center">
+                  <p className="text-2xl font-bold text-[#0B6BCB]">{Math.round(benchmark.sensitivity * 100)}%</p>
+                  <p className="text-xs text-[#94A3B8] mt-0.5">Sensitivity</p>
+                </div>
+                <div className="p-3 rounded-xl bg-muted border border-[#E2E8F0] text-center">
+                  <p className="text-2xl font-bold text-[#0B6BCB]">{Math.round(benchmark.specificity * 100)}%</p>
+                  <p className="text-xs text-[#94A3B8] mt-0.5">Specificity</p>
+                </div>
+                <div className="p-3 rounded-xl bg-muted border border-[#E2E8F0] text-center">
+                  <p className="text-2xl font-bold text-[#0B6BCB]">{Math.round(benchmark.pairwise_separation * 100)}%</p>
+                  <p className="text-xs text-[#94A3B8] mt-0.5">Pairwise Separation</p>
+                </div>
+              </div>
+
+              {benchmark.verifier_comparison && (
+                <div className="overflow-x-auto rounded-xl border border-[#E2E8F0]">
+                  <table className="w-full min-w-[420px] text-sm border-collapse">
+                    <thead>
+                      <tr className="bg-muted text-xs text-[#64748B] uppercase tracking-wide">
+                        <th className="text-left py-2 px-3">Verifier</th>
+                        <th className="text-right py-2 px-3">Sensitivity</th>
+                        <th className="text-right py-2 px-3">Specificity</th>
+                        <th className="text-right py-2 px-3">Separation</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="border-t border-[#EDF1F5]">
+                        <td className="py-2 px-3 font-medium text-[#1A2332]">Rule-based</td>
+                        <td className="py-2 px-3 text-right font-mono">{Math.round(benchmark.verifier_comparison.rule_based.sensitivity * 100)}%</td>
+                        <td className="py-2 px-3 text-right font-mono">{Math.round(benchmark.verifier_comparison.rule_based.specificity * 100)}%</td>
+                        <td className="py-2 px-3 text-right font-mono">{Math.round(benchmark.verifier_comparison.rule_based.pairwise_separation * 100)}%</td>
+                      </tr>
+                      <tr className="border-t border-[#EDF1F5]">
+                        <td className="py-2 px-3 font-medium text-[#1A2332]">NLI-lite</td>
+                        <td className="py-2 px-3 text-right font-mono">{Math.round(benchmark.verifier_comparison.nli_lite.sensitivity * 100)}%</td>
+                        <td className="py-2 px-3 text-right font-mono">{Math.round(benchmark.verifier_comparison.nli_lite.specificity * 100)}%</td>
+                        <td className="py-2 px-3 text-right font-mono">{Math.round(benchmark.verifier_comparison.nli_lite.pairwise_separation * 100)}%</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {benchmark.verifier_comparison && (
+                <p className="text-xs text-[#64748B] italic">{benchmark.verifier_comparison.note}</p>
+              )}
+              <p className="text-xs text-[#94A3B8]">{benchmark.disclaimer}</p>
+            </div>
+          )}
+        </motion.div>
+
+        {/* ── Illustrative failure-mode categories ── */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
           className="rounded-2xl bg-card border border-[#0B6BCB]/10 p-6 space-y-5"
         >
-          <h2 className="text-base font-semibold font-display text-[#1A2332] flex items-center gap-2">
-            <FlaskConical className="w-4 h-4 text-[#0B6BCB]" />
-            Summary Analysis
-          </h2>
+          <div>
+            <h2 className="text-base font-semibold font-display text-[#1A2332] flex items-center gap-2">
+              <FlaskConical className="w-4 h-4 text-[#0B6BCB]" />
+              Illustrative Failure-Mode Categories
+            </h2>
+            <p className="text-xs text-[#94A3B8] mt-1">
+              The pass/partial/fail rates below describe the 10 hand-authored example scenarios above, written to
+              illustrate categories of failure mode - they are static and not live-tested. See Live Verifier
+              Benchmark above for real, backend-computed results.
+            </p>
+          </div>
 
           {/* Pass/Partial/Fail bar */}
           <div>
@@ -492,16 +636,17 @@ export default function AdversarialPage() {
             </div>
           </div>
 
-          {/* Run test suite CTA */}
+          {/* Run live benchmark CTA */}
           <div className="flex items-center gap-3 pt-2 border-t border-[#EDF1F5]">
             <button
               onClick={handleRunTestSuite}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0B6BCB] hover:bg-[#0959AC] text-white text-sm font-medium transition-colors"
+              disabled={loadingBenchmark}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0B6BCB] hover:bg-[#0959AC] text-white text-sm font-medium transition-colors disabled:opacity-60"
             >
-              <Play className="w-4 h-4" />
-              Run Test Suite
+              {loadingBenchmark ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+              {loadingBenchmark ? "Running..." : "Run Live Verifier Benchmark"}
             </button>
-            <span className="text-xs text-[#94A3B8] italic">Coming in v2 - requires backend integration</span>
+            <span className="text-xs text-[#94A3B8] italic">Runs the real procedural faithfulness verifier - see the section above</span>
           </div>
         </motion.div>
 

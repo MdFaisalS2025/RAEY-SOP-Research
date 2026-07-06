@@ -35,7 +35,6 @@ import {
   Printer,
   User,
   PlusCircle,
-  BeakerIcon,
   Activity,
   SearchX,
   Layers,
@@ -76,13 +75,6 @@ const pipelineStages = [
 ]
 
 const CHAT_SESSION_KEY = "sop-guard-chat-session"
-
-const mockComparisonAnswer = {
-  answer: "Model B Answer (simulated, smaller context window): Sepsis management involves blood cultures, antibiotics within 1 hour, and IV fluids. Vasopressors may be needed if MAP is low.",
-  confidence: 0.6,
-  faithfulness: { overall_faithfulness: 0.7 },
-  citations: ["ICU Sepsis Management Protocol"],
-}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -394,13 +386,11 @@ function CollapsedAssistant({ data }: { data: AssistantData }) {
 
 function AssistantAnswer({
   data,
-  compareModels,
   onFollowup,
   readingLevel,
   onReadingLevelChange,
 }: {
   data: AssistantData
-  compareModels: boolean
   onFollowup: (q: string) => void
   readingLevel: ReadingLevel
   onReadingLevelChange: (v: ReadingLevel) => void
@@ -918,54 +908,6 @@ function AssistantAnswer({
             )}
           </AnimatePresence>
 
-          {/* Model Comparison pane */}
-          {compareModels && (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-              className="p-5 rounded-2xl bg-card border border-[#E2E8F0]">
-              <div className="flex items-center gap-2 mb-4">
-                <BeakerIcon className="w-4 h-4 text-[#0B6BCB]" />
-                <h3 className="text-sm font-semibold">Model B - Llama 3.1 8B (Simulated)</h3>
-                <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30">MOCK</span>
-              </div>
-              <p className="text-[15px] leading-relaxed text-[#1A2332] mb-4">{mockComparisonAnswer.answer}</p>
-              <div className="border-t border-[#E2E8F0] pt-4 mt-4">
-                <p className="text-xs font-semibold uppercase text-[#64748B] mb-3">Model Comparison</p>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="text-left text-xs text-[#64748B]">
-                        <th className="pb-2 pr-4 font-semibold">Metric</th>
-                        <th className="pb-2 pr-4 font-semibold">Model A (Llama 3.3 70B)</th>
-                        <th className="pb-2 font-semibold">Model B (Llama 3.1 8B)</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#EDF1F5]">
-                      <tr>
-                        <td className="py-2 pr-4 text-[#64748B]">Faithfulness</td>
-                        <td className="py-2 pr-4 text-[#15803D] dark:text-green-400 font-mono">{data.faithfulness ? `${Math.round(data.faithfulness.overall_faithfulness * 100)}%` : "n/a"}</td>
-                        <td className="py-2 text-[#B45309] dark:text-amber-400 font-mono">{Math.round(mockComparisonAnswer.faithfulness.overall_faithfulness * 100)}%</td>
-                      </tr>
-                      <tr>
-                        <td className="py-2 pr-4 text-[#64748B]">Confidence</td>
-                        <td className="py-2 pr-4 text-[#15803D] dark:text-green-400 font-mono">{Math.round(data.verification.confidence * 100)}%</td>
-                        <td className="py-2 text-[#B45309] dark:text-amber-400 font-mono">{Math.round(mockComparisonAnswer.confidence * 100)}%</td>
-                      </tr>
-                      <tr>
-                        <td className="py-2 pr-4 text-[#64748B]">Response Length</td>
-                        <td className="py-2 pr-4 font-mono">{wordCount(data.answer)} words</td>
-                        <td className="py-2 font-mono">{wordCount(mockComparisonAnswer.answer)} words</td>
-                      </tr>
-                      <tr>
-                        <td className="py-2 pr-4 text-[#64748B]">Citations</td>
-                        <td className="py-2 pr-4 font-mono">{data.sources.length}</td>
-                        <td className="py-2 font-mono">{mockComparisonAnswer.citations.length}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </motion.div>
-          )}
         </div>
 
         {/* Right column - External Evidence */}
@@ -1052,7 +994,6 @@ export default function QueryPage() {
   const [serverHistory, setServerHistory] = useState<Array<{ id: number; query: string; confidence: number; query_type: string; timestamp: string }>>([])
   const [news2Score, setNews2Score] = useState<number | null>(null)
   const [showPatientContext, setShowPatientContext] = useState(false)
-  const [compareModels, setCompareModels] = useState(false)
   const [readingLevel, setReadingLevel] = useState<ReadingLevel>("clinical")
 
   const chatDisabledRef = useRef(false)
@@ -1261,13 +1202,6 @@ export default function QueryPage() {
                 title="Query history">
                 <History className="w-5 h-5" />
               </button>
-              <button onClick={() => setCompareModels(!compareModels)}
-                className={cn("inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border transition-all",
-                  compareModels ? "bg-[#0B6BCB]/10 border-[#0B6BCB]/30 text-[#0B6BCB]" : "border-[#E2E8F0] text-[#64748B] hover:text-[#1A2332] hover:border-[#CBD5E1]")}
-                title="Compare models">
-                <BeakerIcon className="w-4 h-4" />
-                Compare Models
-              </button>
               {submitted && (
                 <button onClick={resetConversation}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border border-[#E2E8F0] text-[#64748B] hover:text-[#1A2332] hover:border-[#CBD5E1] transition-all"
@@ -1413,7 +1347,6 @@ export default function QueryPage() {
               <AssistantAnswer
                 key={m.id}
                 data={m.data}
-                compareModels={compareModels}
                 onFollowup={(q) => handleSubmit(q)}
                 readingLevel={readingLevel}
                 onReadingLevelChange={changeReadingLevel}

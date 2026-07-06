@@ -242,7 +242,10 @@ export interface AuditEntry {
   id: string
   event_type: AuditEventType
   user: string
-  user_role: UserRole
+  // Broadened from UserRole: real activity-log entries carry backend demo
+  // roles (e.g. "admin", "pharmacist") that don't all appear in the
+  // UserRole permission-role enum. Only used here for display/filtering.
+  user_role: UserRole | string
   timestamp: string
   affected_resource: string
   affected_resource_id: string
@@ -259,6 +262,8 @@ export type AuditEventType =
   | "sop_updated"
   | "sop_published"
   | "sop_archived"
+  | "sop_deleted"
+  | "sop_viewed"
   | "evidence_linked"
   | "proposal_created"
   | "proposal_submitted"
@@ -275,6 +280,8 @@ export type AuditEventType =
   | "user_login"
   | "export_generated"
   | "cross_reference_run"
+  | "query_submitted"
+  | "source_clicked"
 
 export interface ComplianceStat {
   department: string

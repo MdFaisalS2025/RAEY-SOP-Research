@@ -47,6 +47,16 @@ def log_activity(
 def get_activity_log(limit: int = 50) -> list[dict]:
     return list(reversed(_activity_log[-limit:]))
 
+def has_any_activity() -> bool:
+    """Whether anything has been logged yet in this process's lifetime.
+
+    The log is in-memory (resets on every process restart) - this must
+    not be confused with whether the SQLite SOP data already exists,
+    which persists across restarts. Demo activity seeding should be
+    gated on this, not on SOP count.
+    """
+    return len(_activity_log) > 0
+
 def get_sop_usage() -> list[dict]:
     usage: dict[str, dict] = {}
     for entry in _activity_log:

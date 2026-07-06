@@ -1,6 +1,6 @@
 "use client"
 
-import { Fragment, useState, useMemo } from "react"
+import { Fragment, useState, useMemo, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   Shield, AlertTriangle, ChevronDown, ChevronRight,
@@ -9,9 +9,56 @@ import {
 import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { cn } from "@/lib/utils"
-import { MOCK_AUDIT } from "@/lib/mock-data"
-import type { AuditEventType } from "@/lib/governance-types"
+import type { AuditEntry, AuditEventType } from "@/lib/governance-types"
 import { useRole } from "@/lib/role-context"
+
+interface RawActivityEntry {
+  id: number
+  timestamp: string
+  action: string
+  sop_id: string
+  sop_title: string
+  user_name: string
+  user_role: string
+  department: string
+  details: string
+  query: string
+  confidence: number
+}
+
+function summarizeActivity(entry: RawActivityEntry): string {
+  switch (entry.action) {
+    case "sop_created":
+      return `Created SOP: ${entry.sop_title || entry.sop_id}`
+    case "sop_updated":
+      return `Updated SOP: ${entry.sop_title || entry.sop_id}`
+    case "sop_archived":
+      return `Archived SOP: ${entry.sop_title || entry.sop_id}`
+    case "sop_deleted":
+      return `Deleted SOP: ${entry.sop_title || entry.sop_id}${entry.details ? ` (${entry.details})` : ""}`
+    case "sop_viewed":
+      return `Viewed SOP: ${entry.sop_title || entry.sop_id}`
+    case "query_submitted":
+      return `Query: "${entry.query}"${entry.confidence ? ` (confidence ${Math.round(entry.confidence * 100)}%)` : ""}`
+    case "source_clicked":
+      return `Clicked source in ${entry.sop_title || entry.sop_id}`
+    default:
+      return entry.details || entry.action.replace(/_/g, " ")
+  }
+}
+
+function mapActivityToAuditEntry(entry: RawActivityEntry): AuditEntry {
+  return {
+    id: String(entry.id),
+    event_type: entry.action as AuditEventType,
+    user: entry.user_name || "Unknown",
+    user_role: entry.user_role || "viewer",
+    timestamp: entry.timestamp,
+    affected_resource: entry.sop_title || entry.query || entry.department || "",
+    affected_resource_id: entry.sop_id || "",
+    action_summary: summarizeActivity(entry),
+  }
+}
 
 function formatTimestamp(ts: string) {
   const d = new Date(ts)
@@ -54,19 +101,32 @@ export default function AuditPage() {
   const [exportState, setExportState] = useState<"idle" | "loading" | "success">("idle")
   const [exportFormat, setExportFormat] = useState<"csv" | "pdf" | "json">("csv")
   const [showExportMenu, setShowExportMenu] = useState(false)
+  const [auditEntries, setAuditEntries] = useState<AuditEntry[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch("/api/activity?limit=200")
+      .then((r) => r.json())
+      .then((data) => {
+        const raw: RawActivityEntry[] = Array.isArray(data?.entries) ? data.entries : []
+        setAuditEntries(raw.map(mapActivityToAuditEntry))
+      })
+      .catch(() => setAuditEntries([]))
+      .finally(() => setLoading(false))
+  }, [])
 
   const uniqueEventTypes = useMemo(() => {
-    const types = Array.from(new Set(MOCK_AUDIT.map((e) => e.event_type)))
+    const types = Array.from(new Set(auditEntries.map((e) => e.event_type)))
     return types.sort()
-  }, [])
+  }, [auditEntries])
 
   const uniqueRoles = useMemo(() => {
-    const roles = Array.from(new Set(MOCK_AUDIT.map((e) => e.user_role)))
+    const roles = Array.from(new Set(auditEntries.map((e) => e.user_role)))
     return roles.sort()
-  }, [])
+  }, [auditEntries])
 
   const filteredAudit = useMemo(() => {
-    return MOCK_AUDIT
+    return auditEntries
       .filter((e) => {
         const searchLower = search.toLowerCase()
         const matchesSearch = !search ||
@@ -78,7 +138,7 @@ export default function AuditPage() {
         return matchesSearch && matchesType && matchesRole
       })
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-  }, [search, eventTypeFilter, roleFilter])
+  }, [auditEntries, search, eventTypeFilter, roleFilter])
 
   const handleExport = (format: "csv" | "pdf" | "json") => {
     setExportFormat(format)
@@ -88,11 +148,16 @@ export default function AuditPage() {
     setTimeout(() => setExportState("idle"), 3500)
   }
 
+  const eventsToday = useMemo(() => {
+    const today = new Date().toDateString()
+    return auditEntries.filter((e) => new Date(e.timestamp).toDateString() === today).length
+  }, [auditEntries])
+
   const stats = [
-    { label: "Events Today", value: "12", color: "text-[#0B6BCB]" },
-    { label: "Total Events", value: String(MOCK_AUDIT.length), color: "text-[#1A2332]" },
+    { label: "Events Today", value: String(eventsToday), color: "text-[#0B6BCB]" },
+    { label: "Total Events", value: String(auditEntries.length), color: "text-[#1A2332]" },
     { label: "Event Types", value: String(uniqueEventTypes.length), color: "text-[#64748B]" },
-    { label: "Last Export", value: "Jun 28", color: "text-[#15803D] dark:text-green-400" },
+    { label: "Last Export", value: exportState === "success" ? "Just now" : "Not yet exported", color: "text-[#15803D] dark:text-green-400" },
   ]
 
   return (
@@ -291,10 +356,19 @@ export default function AuditPage() {
                   </AnimatePresence>
                 </Fragment>
               ))}
-              {filteredAudit.length === 0 && (
+              {!loading && filteredAudit.length === 0 && (
                 <tr>
                   <td colSpan={7} className="p-8 text-center text-[#64748B] text-sm">
-                    No audit events match your filters.
+                    {auditEntries.length === 0
+                      ? "No activity has been logged yet - query or edit an SOP to generate audit events."
+                      : "No audit events match your filters."}
+                  </td>
+                </tr>
+              )}
+              {loading && (
+                <tr>
+                  <td colSpan={7} className="p-8 text-center text-[#64748B] text-sm">
+                    Loading audit trail...
                   </td>
                 </tr>
               )}

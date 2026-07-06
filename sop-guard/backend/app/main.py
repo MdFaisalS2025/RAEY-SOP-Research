@@ -29,6 +29,7 @@ async def _load_demo_data() -> None:
     async with async_session() as session:
         count = (await session.execute(select(func.count(SOP.id)))).scalar() or 0
         if count > 0:
+            await _seed_demo_activity_if_empty()
             return
 
         for data in DEMO_SOPS:
@@ -69,8 +70,27 @@ async def _load_demo_data() -> None:
         await session.commit()
         print(f"[SOP-Guard] Loaded {len(DEMO_SOPS)} demo SOPs.")
 
-    # Seed demo activity data
-    from app.services.activity import log_activity
+    await _seed_demo_activity_if_empty()
+
+
+async def _seed_demo_activity_if_empty() -> None:
+    """
+    Seed demo activity log entries once per process.
+
+    This used to live inside the SOP-count early-return above, which
+    meant it only ever ran the very first time the SQLite DB was
+    populated - on every later restart, count > 0 short-circuited before
+    this code ran, so the audit trail was silently empty (except for
+    activity generated during that session) despite looking like seeded
+    demo data was intended. The activity log is in-memory and resets on
+    every restart independent of the persisted SOP data, so it needs its
+    own gate.
+    """
+    from app.services.activity import log_activity, has_any_activity
+
+    if has_any_activity():
+        return
+
     demo_activities = [
         ("sop_viewed", "SOP-ICU-001", "Sepsis Management Protocol"),
         ("query_submitted", "SOP-ICU-001", "Sepsis Management Protocol"),

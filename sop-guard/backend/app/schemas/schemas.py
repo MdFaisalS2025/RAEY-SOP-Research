@@ -88,6 +88,7 @@ class SOPResponse(BaseModel):
     department: str = ""
     version: str = "1.0"
     effective_date: str = ""
+    review_date: str = ""
     status: str = "active"
     structured_json: dict = {}
     chunk_count: int = 0

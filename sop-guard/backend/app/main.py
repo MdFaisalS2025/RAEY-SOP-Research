@@ -30,6 +30,7 @@ async def _load_demo_data() -> None:
         count = (await session.execute(select(func.count(SOP.id)))).scalar() or 0
         if count > 0:
             await _seed_demo_activity_if_empty()
+            await _backfill_review_dates(session)
             return
 
         for data in DEMO_SOPS:
@@ -40,6 +41,7 @@ async def _load_demo_data() -> None:
                 department=data.get("department", "General"),
                 version=data.get("version", "1.0"),
                 effective_date=data.get("effective_date", ""),
+                review_date=data.get("review_date", ""),
                 raw_text=data["raw_text"],
                 structured_json=structured,
             )
@@ -103,6 +105,40 @@ async def _seed_demo_activity_if_empty() -> None:
     ]
     for action, sid, title in demo_activities:
         log_activity(action, sop_id=sid, sop_title=title)
+
+
+async def _backfill_review_dates(session) -> None:
+    """
+    Set review_date on existing demo SOP rows that predate this column.
+
+    review_date was added after this project's dev database already had
+    SOPs loaded (a persisted SQLite file, unlike the in-memory activity
+    log) - the ALTER TABLE migration in db.py adds the column with an
+    empty default, but only the SOP-count-based seed path above sets its
+    value, and that path is skipped whenever SOPs already exist. Without
+    this, every already-populated dev/demo database would show no
+    review dates at all on the expiry page.
+    """
+    from sqlalchemy import select
+    from app.models.models import SOP
+    from app.demo_data.demo_sops import DEMO_SOPS
+
+    review_dates_by_sop_id = {d["sop_id"]: d.get("review_date", "") for d in DEMO_SOPS if d.get("review_date")}
+    if not review_dates_by_sop_id:
+        return
+
+    rows = (await session.execute(
+        select(SOP).where(SOP.sop_id.in_(review_dates_by_sop_id.keys()))
+    )).scalars().all()
+
+    changed = False
+    for sop in rows:
+        if not sop.review_date and sop.sop_id in review_dates_by_sop_id:
+            sop.review_date = review_dates_by_sop_id[sop.sop_id]
+            changed = True
+
+    if changed:
+        await session.commit()
 
 
 @asynccontextmanager

@@ -46,6 +46,7 @@ async def list_sops(db: AsyncSession = Depends(get_db)):
             department=sop.department,
             version=sop.version,
             effective_date=sop.effective_date or "",
+            review_date=sop.review_date or "",
             status=sop.status,
             structured_json=sop.structured_json or {},
             chunk_count=count,
@@ -88,6 +89,7 @@ async def get_sop(sop_id: str, db: AsyncSession = Depends(get_db)):
         department=sop.department,
         version=sop.version,
         effective_date=sop.effective_date or "",
+        review_date=sop.review_date or "",
         status=sop.status,
         structured_json=sop.structured_json or {},
         chunk_count=len(chunks),
@@ -277,6 +279,7 @@ async def create_sop(
     department = body.get("department", "General")
     version = body.get("version", "1.0")
     effective_date = body.get("effective_date", "")
+    review_date = body.get("review_date", "")
     raw_text = body.get("raw_text", "")
     status = body.get("status", "active")
 
@@ -297,6 +300,7 @@ async def create_sop(
         department=department,
         version=version,
         effective_date=effective_date,
+        review_date=review_date,
         status=status,
         raw_text=raw_text,
         structured_json=structured,
@@ -354,7 +358,7 @@ async def update_sop(
         raise HTTPException(status_code=404, detail=f"SOP '{sop_id}' not found.")
 
     # Update allowed fields
-    updatable_fields = ["title", "department", "version", "effective_date", "status", "raw_text"]
+    updatable_fields = ["title", "department", "version", "effective_date", "review_date", "status", "raw_text"]
     for field in updatable_fields:
         if field in body:
             setattr(sop, field, body[field])

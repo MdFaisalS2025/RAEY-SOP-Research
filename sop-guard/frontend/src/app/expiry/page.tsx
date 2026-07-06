@@ -1,16 +1,26 @@
 "use client"
 
-import { useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { motion } from "framer-motion"
 import {
   AlertTriangle, Clock, CheckCircle, CalendarClock,
-  ArrowRight, FileText, User, Calendar, Bell
+  ArrowRight, FileText, Calendar, Bell, Loader2
 } from "lucide-react"
 import Link from "next/link"
 import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { cn } from "@/lib/utils"
-import { MOCK_SOPS } from "@/lib/mock-data"
+
+interface RealSOP {
+  id: number
+  sop_id: string
+  title: string
+  department: string
+  version: string
+  effective_date: string
+  review_date: string
+  status: string
+}
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -135,16 +145,32 @@ const ESCALATION_STEPS = [
 // ─── page ─────────────────────────────────────────────────────────────────────
 
 export default function ExpiryPage() {
+  const [sops, setSops] = useState<RealSOP[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch("/api/sops")
+      .then((r) => r.json())
+      .then((data) => setSops(Array.isArray(data?.sops) ? data.sops : []))
+      .catch(() => setSops([]))
+      .finally(() => setLoading(false))
+  }, [])
+
+  // SOPs without a scheduled review_date can't be placed on a timeline -
+  // rather than fabricate a date, they're excluded and called out below.
+  const unscheduledCount = useMemo(() => sops.filter((s) => !s.review_date).length, [sops])
+
   const items = useMemo(() => {
-    return MOCK_SOPS
+    return sops
+      .filter((sop) => !!sop.review_date)
       .map((sop) => ({
         sop,
-        days: daysUntil(sop.review_due_date),
-        status: expiryStatus(daysUntil(sop.review_due_date)),
-        alertTier: getAlertTier(daysUntil(sop.review_due_date)),
+        days: daysUntil(sop.review_date),
+        status: expiryStatus(daysUntil(sop.review_date)),
+        alertTier: getAlertTier(daysUntil(sop.review_date)),
       }))
       .sort((a, b) => a.days - b.days)
-  }, [])
+  }, [sops])
 
   const counts = useMemo(() => ({
     expired: items.filter((i) => i.status === "expired").length,
@@ -276,6 +302,26 @@ export default function ExpiryPage() {
         {/* Timeline */}
         <section>
           <h2 className="text-lg font-medium mb-3">Review Timeline - sorted by urgency</h2>
+
+          {loading && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground py-8 justify-center">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Loading SOPs...
+            </div>
+          )}
+
+          {!loading && items.length === 0 && (
+            <div className="p-8 rounded-2xl bg-card border border-[#E2E8F0] text-center text-sm text-muted-foreground">
+              No SOPs with a scheduled review date yet.
+            </div>
+          )}
+
+          {!loading && unscheduledCount > 0 && (
+            <div className="mb-3 px-3 py-2 rounded-lg bg-[#F8FAFC] border border-[#EDF1F5] text-xs text-muted-foreground">
+              {unscheduledCount} SOP{unscheduledCount === 1 ? "" : "s"} without a scheduled review date {unscheduledCount === 1 ? "is" : "are"} not shown below.
+            </div>
+          )}
+
           <div className="space-y-3">
             {items.map(({ sop, days, status, alertTier }, i) => {
               const meta = STATUS_META[status]
@@ -310,20 +356,16 @@ export default function ExpiryPage() {
                           {sop.sop_id} - v{sop.version}
                         </span>
                         <span className="flex items-center gap-1">
-                          <User className="w-3 h-3" />
-                          {sop.owner}
-                        </span>
-                        <span className="flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
                           {sop.department}
                         </span>
                       </div>
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs mt-2">
                         <span className="text-muted-foreground">
-                          Last reviewed: <span className="text-foreground">{sop.effective_date}</span>
+                          Effective since: <span className="text-foreground">{sop.effective_date || "—"}</span>
                         </span>
                         <span className="text-muted-foreground">
-                          Review due: <span className="text-foreground">{sop.review_due_date}</span>
+                          Review due: <span className="text-foreground">{sop.review_date}</span>
                         </span>
                       </div>
                     </div>

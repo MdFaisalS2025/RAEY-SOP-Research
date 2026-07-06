@@ -38,6 +38,7 @@ class SOP(Base):
     department = Column(String(128), default="General")
     version = Column(String(32), default="1.0")
     effective_date = Column(String(32), default="")
+    review_date = Column(String(32), default="")  # ISO date (YYYY-MM-DD); next scheduled review/expiry
     status = Column(String(16), default=SOPStatus.active.value)
     raw_text = Column(Text, default="")
     structured_json = Column(JSON, default=dict)

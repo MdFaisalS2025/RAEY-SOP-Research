@@ -17,6 +17,7 @@ DEMO_SOPS = [
         "department": "ICU",
         "version": "3.1",
         "effective_date": "2025-01-15",
+        "review_date": "2026-06-01",
         "raw_text": (
             "SEPSIS MANAGEMENT PROTOCOL - ICU\n"
             "Version 3.1 | Effective 2025-01-15\n"
@@ -109,6 +110,7 @@ DEMO_SOPS = [
         "department": "General",
         "version": "2.4",
         "effective_date": "2025-02-01",
+        "review_date": "2026-07-20",
         "raw_text": (
             "BLOOD TRANSFUSION PROTOCOL - GENERAL\n"
             "Version 2.4 | Effective 2025-02-01\n"
@@ -200,6 +202,7 @@ DEMO_SOPS = [
         "department": "ICU",
         "version": "4.0",
         "effective_date": "2025-03-01",
+        "review_date": "2026-08-01",
         "raw_text": (
             "CENTRAL LINE INSERTION PROTOCOL - ICU\n"
             "Version 4.0 | Effective 2025-03-01\n"
@@ -299,6 +302,7 @@ DEMO_SOPS = [
         "department": "Endocrine",
         "version": "2.2",
         "effective_date": "2025-01-20",
+        "review_date": "2026-05-01",
         "raw_text": (
             "INSULIN AND HYPOGLYCEMIA MANAGEMENT PROTOCOL  - ENDOCRINE\n"
             "Version 2.2 | Effective 2025-01-20\n"
@@ -390,6 +394,7 @@ DEMO_SOPS = [
         "department": "Pharmacy",
         "version": "3.0",
         "effective_date": "2025-02-15",
+        "review_date": "2026-09-15",
         "raw_text": (
             "ANTICOAGULATION SAFETY PROTOCOL  - PHARMACY\n"
             "Version 3.0 | Effective 2025-02-15\n"
@@ -486,6 +491,7 @@ DEMO_SOPS = [
         "department": "Pharmacy",
         "version": "2.1",
         "effective_date": "2025-03-10",
+        "review_date": "2027-01-15",
         "raw_text": (
             "MEDICATION RECONCILIATION PROTOCOL  - PHARMACY\n"
             "Version 2.1 | Effective 2025-03-10\n"
@@ -578,6 +584,7 @@ DEMO_SOPS = [
         "department": "Nursing",
         "version": "2.5",
         "effective_date": "2025-04-01",
+        "review_date": "2027-03-01",
         "raw_text": (
             "FALL PREVENTION PROTOCOL  - NURSING\n"
             "Version 2.5 | Effective 2025-04-01\n"
@@ -676,6 +683,7 @@ DEMO_SOPS = [
         "department": "Infection Control",
         "version": "3.2",
         "effective_date": "2025-01-30",
+        "review_date": "2026-10-01",
         "raw_text": (
             "INFECTION CONTROL ISOLATION PROTOCOL  - INFECTION CONTROL\n"
             "Version 3.2 | Effective 2025-01-30\n"
@@ -773,6 +781,7 @@ DEMO_SOPS = [
         "department": "Emergency",
         "version": "5.0",
         "effective_date": "2025-02-20",
+        "review_date": "2026-12-01",
         "raw_text": (
             "CODE BLUE RESPONSE PROTOCOL  - EMERGENCY\n"
             "Version 5.0 | Effective 2025-02-20\n"
@@ -888,6 +897,7 @@ DEMO_SOPS = [
         "department": "Radiology",
         "version": "2.8",
         "effective_date": "2025-03-15",
+        "review_date": "2027-06-01",
         "raw_text": (
             "CONTRAST ALLERGY AND REACTION PROTOCOL  - RADIOLOGY\n"
             "Version 2.8 | Effective 2025-03-15\n"

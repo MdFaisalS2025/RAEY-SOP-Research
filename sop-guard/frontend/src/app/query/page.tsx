@@ -42,6 +42,7 @@ import {
   RotateCcw,
   Link2,
   Check,
+  Cpu,
 } from "lucide-react"
 import { type InlineCitation } from "@/components/query/citation-chip"
 import { SourcePanel } from "@/components/query/source-panel"
@@ -110,7 +111,14 @@ export type AssistantData = {
   responseTimeMs: number | null
   answerId: string | null
   entities: { drugs?: string[]; conditions?: string[] }
+  answeredAt: number
   error?: boolean
+}
+
+/** Pulls "Evidence: sufficient (score: 0.83)" out of the joined reasoning trace. */
+function extractEvidenceScore(reasoning: string): number | null {
+  const m = reasoning.match(/Evidence:\s*\w+\s*\(score:\s*([\d.]+)\)/)
+  return m ? parseFloat(m[1]) : null
 }
 
 type ChatMessage =
@@ -188,6 +196,7 @@ function mapResponse(query: string, response: any, startedAt: number): Assistant
     responseTimeMs: typeof ext.response_time_ms === "number" ? ext.response_time_ms : Date.now() - startedAt,
     answerId: ext.answer_id != null ? String(ext.answer_id) : null,
     entities: (ext.entities && typeof ext.entities === "object") ? ext.entities as { drugs?: string[]; conditions?: string[] } : {},
+    answeredAt: Date.now(),
   }
 }
 
@@ -644,6 +653,37 @@ function AssistantAnswer({
               </AnimatePresence>
             </div>
           )}
+
+          {/* Answer provenance footer */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 px-1 text-[11px] text-[#94A3B8]">
+            <span className="inline-flex items-center gap-1">
+              <Cpu className="w-3 h-3" />
+              {data.generationMode === "llm" ? "LLM-generated" : data.generationMode === "mock_fallback" ? "Extractive (LLM fallback)" : "Extractive (no LLM configured)"}
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <ShieldCheck className="w-3 h-3" />
+              Verifier: {data.verification.status}
+            </span>
+            {(() => {
+              const evScore = extractEvidenceScore(data.reasoning)
+              return evScore !== null ? (
+                <span className="inline-flex items-center gap-1">
+                  <Database className="w-3 h-3" />
+                  Evidence score: {evScore.toFixed(2)}
+                </span>
+              ) : null
+            })()}
+            {distinctSopTitles.length > 0 && (
+              <span className="inline-flex items-center gap-1">
+                <FileText className="w-3 h-3" />
+                {distinctSopTitles.length} SOP{distinctSopTitles.length === 1 ? "" : "s"} consulted
+              </span>
+            )}
+            <span className="inline-flex items-center gap-1">
+              <Clock className="w-3 h-3" />
+              {new Date(data.answeredAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+            </span>
+          </div>
 
           {/* Create Update Proposal button */}
           {hasPermission("create_proposal") && (
@@ -1190,6 +1230,7 @@ export default function QueryPage() {
         responseTimeMs: null,
         answerId: null,
         entities: {},
+        answeredAt: Date.now(),
         error: true,
       }
       setQueryHistory(prev => [{ query: q, confidence: 0, type: "error", timestamp: Date.now() }, ...prev].slice(0, 10))

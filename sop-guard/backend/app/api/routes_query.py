@@ -385,8 +385,11 @@ async def llm_status():
     gen = LLMGenerator()
     available = await gen._check_available()
     return {
+        # gen.model defaults to settings.LLM_MODEL ("gpt-4o-mini") even when
+        # provider="mock" and no model is ever actually invoked - reporting
+        # that name here would falsely imply a real model is backing answers.
         "provider": gen.provider,
-        "model": gen.model,
+        "model": gen.model if gen.provider != "mock" else None,
         "available": available,
         "mode": "llm" if available else "mock",
     }

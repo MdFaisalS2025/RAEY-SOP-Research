@@ -46,7 +46,6 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { RoleSwitcher } from "@/components/layout/role-switcher"
-import { MOCK_NOTIFICATIONS } from "@/lib/mock-data"
 import { useAuth } from "@/lib/auth-context"
 import { useRole, ROLE_HIERARCHY } from "@/lib/role-context"
 import { useRouter } from "next/navigation"
@@ -200,7 +199,7 @@ export function TopNav() {
   const [notifOpen, setNotifOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const [openGroup, setOpenGroup] = useState<string | null>(null)
-  const [notifications, setNotifications] = useState<LiveNotificationItem[]>(MOCK_NOTIFICATIONS)
+  const [notifications, setNotifications] = useState<LiveNotificationItem[]>([])
   const [notifLive, setNotifLive] = useState(false)
   const [interruptiveCountToday, setInterruptiveCountToday] = useState<number | null>(null)
   const [sessionInterruptiveCount, setSessionInterruptiveCount] = useState(0)
@@ -279,7 +278,7 @@ export function TopNav() {
           setSessionInterruptiveCount(newCount)
         }
       } catch {
-        // keep mock notifications
+        // keep whatever notifications are already loaded (real data only - no mock fallback)
       }
     }
     load()
@@ -630,6 +629,9 @@ export function TopNav() {
                     </div>
                   </div>
                   <div className="max-h-[320px] overflow-y-auto">
+                    {tieredNotifications.length === 0 && (
+                      <p className="px-3 py-6 text-center text-xs text-[#64748B]">No notifications yet.</p>
+                    )}
                     {tieredNotifications.map((n) => (
                       <Link
                         key={n.id}

@@ -1,18 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import {
   AlertTriangle,
-  TrendingUp,
-  TrendingDown,
-  Minus,
+  Loader2,
+  RefreshCw,
   CheckCircle2,
-  XCircle,
   FlaskConical,
   BarChart3,
   Brain,
-  Clock,
   ShieldAlert,
   Target,
   Activity,
@@ -22,142 +19,79 @@ import AppShell from "@/components/layout/app-shell"
 import { cn } from "@/lib/utils"
 import { useRole } from "@/lib/role-context"
 
-// ── Stat tiles data ──────────────────────────────────────────────────────────
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 
-interface StatTile {
-  label: string
-  value: string
-  trend: "up" | "down" | "neutral"
-  trendGood: boolean // if trend=up is good (for display color)
-  icon: React.ElementType
-  description: string
+// ── Response shapes (subset of fields actually rendered) ──────────────────────
+
+interface RagEvalResult {
+  total_cases: number
+  retrieval_precision: number
+  keyword_coverage: number
+  refusal_accuracy: number
 }
 
-const STAT_TILES: StatTile[] = [
-  {
-    label: "Retrieval Precision@5",
-    value: "0.87",
-    trend: "up",
-    trendGood: true,
-    icon: Target,
-    description: "Top-5 chunk precision across 120 synthetic queries",
-  },
-  {
-    label: "Answer Faithfulness",
-    value: "0.84",
-    trend: "up",
-    trendGood: true,
-    icon: Brain,
-    description: "Sentence-level grounding score vs retrieved chunks",
-  },
-  {
-    label: "Query Type Accuracy",
-    value: "0.91",
-    trend: "up",
-    trendGood: true,
-    icon: BarChart3,
-    description: "Rule-based router classification accuracy",
-  },
-  {
-    label: "Avg Response Time",
-    value: "2.3s",
-    trend: "neutral",
-    trendGood: true,
-    icon: Clock,
-    description: "End-to-end latency including retrieval + generation",
-  },
-  {
-    label: "Conflicting SOP Detection",
-    value: "76%",
-    trend: "up",
-    trendGood: true,
-    icon: ShieldAlert,
-    description: "Recall on cross-SOP conflict test set",
-  },
-  {
-    label: "Hallucination Rate",
-    value: "12%",
-    trend: "down",
-    trendGood: false, // down = bad here since it means the metric went down (but lower hallucination is good)
-    // We'll special-case: lower is better, so "down" trend = green
-    icon: AlertTriangle,
-    description: "Queries with ungrounded content (lower is better)",
-  },
-]
-
-// ── Comparison table ─────────────────────────────────────────────────────────
-
-interface ComparisonRow {
-  metric: string
-  sopGuard: string
-  baseline: string
-  naiveRag: string
-  higherIsBetter: boolean
-  isCheckmark?: boolean
-}
-
-const COMPARISON_ROWS: ComparisonRow[] = [
-  { metric: "Faithfulness", sopGuard: "0.84", baseline: "0.71", naiveRag: "0.62", higherIsBetter: true },
-  { metric: "Precision@5", sopGuard: "0.87", baseline: "0.79", naiveRag: "0.68", higherIsBetter: true },
-  { metric: "Medication Accuracy", sopGuard: "0.92", baseline: "0.81", naiveRag: "0.70", higherIsBetter: true },
-  { metric: "Procedure Accuracy", sopGuard: "0.89", baseline: "0.76", naiveRag: "0.65", higherIsBetter: true },
-  { metric: "Threshold Accuracy", sopGuard: "0.91", baseline: "0.82", naiveRag: "0.71", higherIsBetter: true },
-  { metric: "Contraindication Acc.", sopGuard: "0.88", baseline: "0.74", naiveRag: "0.63", higherIsBetter: true },
-  { metric: "Conflict Detection", sopGuard: "0.76", baseline: "0.41", naiveRag: "0.12", higherIsBetter: true },
-  { metric: "Avg Latency (s)", sopGuard: "2.3", baseline: "1.8", naiveRag: "0.9", higherIsBetter: false },
-  { metric: "NEWS2 Context Use", sopGuard: "✓ Yes", baseline: "✗ No", naiveRag: "✗ No", higherIsBetter: true, isCheckmark: true },
-]
-
-// ── Query type breakdown ──────────────────────────────────────────────────────
-
-interface QueryTypeRow {
-  type: string
+interface RagasPerQuery {
+  query: string
+  category: string
   faithfulness: number
-  precision: number
+  citation_coverage: number
+  top_chunk_relevance_score: number
+  abstained: boolean
 }
 
-const QUERY_TYPE_DATA: QueryTypeRow[] = [
-  { type: "medication", faithfulness: 0.92, precision: 0.89 },
-  { type: "threshold", faithfulness: 0.91, precision: 0.88 },
-  { type: "procedure_steps", faithfulness: 0.89, precision: 0.85 },
-  { type: "contraindication", faithfulness: 0.88, precision: 0.84 },
-  { type: "monitoring", faithfulness: 0.86, precision: 0.82 },
-  { type: "general", faithfulness: 0.79, precision: 0.81 },
-]
-
-// ── NEWS2 comparison ──────────────────────────────────────────────────────────
-
-interface News2Row {
-  metric: string
-  withNews2: number
-  withoutNews2: number
-  lowerIsBetter?: boolean
+interface RagasSummary {
+  aggregate: {
+    total_queries: number
+    avg_faithfulness: number
+    avg_citation_coverage: number
+    avg_top_chunk_relevance_score: number
+    abstention_accuracy: number
+    out_of_scope_cases: number
+    generation_mode: string
+    faithfulness_note?: string
+  }
+  per_query: RagasPerQuery[]
+  generated_at: string
+  error?: string
 }
 
-const NEWS2_ROWS: News2Row[] = [
-  { metric: "Escalation Recommendation Accuracy", withNews2: 0.89, withoutNews2: 0.74 },
-  { metric: "Protocol Match Rate", withNews2: 0.91, withoutNews2: 0.79 },
-  { metric: "False Alarm Rate", withNews2: 0.08, withoutNews2: 0.19, lowerIsBetter: true },
-]
-
-// ── Chunk type distribution ───────────────────────────────────────────────────
-
-interface ChunkType {
-  type: string
-  pct: number
-  color: string
+interface AblationResult {
+  queries: number
+  reranker_on: { avg_top1_relevance: number }
+  reranker_off: { avg_top1_relevance: number }
+  order_change_rate: number
+  top3_order_changed: number
+  error?: string
 }
 
-const CHUNK_TYPES: ChunkType[] = [
-  { type: "step_sequence", pct: 31, color: "bg-[#0B6BCB]" },
-  { type: "threshold", pct: 24, color: "bg-[#0B6BCB]" },
-  { type: "medication", pct: 19, color: "bg-[#0D9488]" },
-  { type: "contraindication", pct: 13, color: "bg-[#B45309]" },
-  { type: "section", pct: 8, color: "bg-[#B91C1C]" },
-  { type: "full_text", pct: 5, color: "bg-[#94A3B8]" },
-]
+interface ChunkDistribution {
+  total_chunks: number
+  distribution: { type: string; count: number; pct: number }[]
+}
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+interface AdversarialResult {
+  total_tests: number
+  sensitivity: number
+  specificity: number
+  pairwise_separation: number
+}
+
+interface LlmStatus {
+  provider: string
+  model: string
+  available: boolean
+  mode: string
+}
+
+const CHUNK_COLORS: Record<string, string> = {
+  step: "bg-[#0B6BCB]",
+  section: "bg-[#94A3B8]",
+  step_sequence: "bg-[#0D9488]",
+  threshold: "bg-[#B45309]",
+  contraindication: "bg-[#B91C1C]",
+  summary: "bg-[#7C3AED]",
+  full_text: "bg-[#334155]",
+}
 
 function fade(delay = 0) {
   return { initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.4, delay } }
@@ -177,11 +111,92 @@ function SectionTitle({ icon: Icon, title, subtitle }: { icon: React.ElementType
   )
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
+function StatTile({
+  icon: Icon, value, label, description, i,
+}: { icon: React.ElementType; value: string; label: string; description: string; i: number }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.08 + i * 0.04 }}
+      className="p-5 rounded-2xl bg-card border border-[#0B6BCB]/10 hover:border-[#0B6BCB]/30 transition-colors"
+    >
+      <div className="w-8 h-8 rounded-lg bg-[#0B6BCB]/10 flex items-center justify-center mb-3">
+        <Icon className="w-4 h-4 text-[#0B6BCB]" />
+      </div>
+      <p className="text-3xl font-bold mb-1 text-[#0B6BCB]">{value}</p>
+      <p className="text-sm font-medium text-[#1A2332] mb-1">{label}</p>
+      <p className="text-xs text-[#94A3B8]">{description}</p>
+    </motion.div>
+  )
+}
 
 export default function EvaluationPage() {
   useRole()
   const [showMethodology, setShowMethodology] = useState(false)
+
+  const [ragResult, setRagResult] = useState<RagEvalResult | null>(null)
+  const [ragasSummary, setRagasSummary] = useState<RagasSummary | null>(null)
+  const [ablation, setAblation] = useState<AblationResult | null>(null)
+  const [chunkDist, setChunkDist] = useState<ChunkDistribution | null>(null)
+  const [adversarial, setAdversarial] = useState<AdversarialResult | null>(null)
+  const [llmStatus, setLlmStatus] = useState<LlmStatus | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [error, setError] = useState("")
+
+  async function loadAll(force: boolean) {
+    setError("")
+    try {
+      const [ragRes, summaryRes, ablationRes, chunkRes, advRes, llmRes] = await Promise.all([
+        fetch(`${API_BASE}/api/evaluate/rag`, { method: "POST" }),
+        fetch(`${API_BASE}/api/evaluation/summary?force=${force}`),
+        fetch(`${API_BASE}/api/evaluation/ablation`),
+        fetch(`${API_BASE}/api/evaluation/chunk-distribution`),
+        fetch(`${API_BASE}/api/evaluate/adversarial`, { method: "POST" }),
+        fetch(`${API_BASE}/api/llm/status`),
+      ])
+      const [rag, summary, ablationData, chunk, adv, llm] = await Promise.all([
+        ragRes.json(), summaryRes.json(), ablationRes.json(), chunkRes.json(), advRes.json(), llmRes.json(),
+      ])
+      setRagResult(rag)
+      setRagasSummary(summary)
+      setAblation(ablationData)
+      setChunkDist(chunk)
+      setAdversarial(adv)
+      setLlmStatus(llm)
+    } catch {
+      setError("Could not reach the evaluation backend. Is it running?")
+    }
+  }
+
+  useEffect(() => {
+    loadAll(false).finally(() => setLoading(false))
+  }, [])
+
+  async function handleRunFresh() {
+    setRefreshing(true)
+    await loadAll(true)
+    setRefreshing(false)
+  }
+
+  // Aggregate per-query faithfulness/citation coverage by category - real
+  // numbers computed from the actual last eval run, not invented per-type
+  // constants.
+  const byCategory = (() => {
+    if (!ragasSummary?.per_query) return []
+    const buckets: Record<string, { faithfulness: number[]; coverage: number[] }> = {}
+    for (const q of ragasSummary.per_query) {
+      if (!q.category) continue
+      buckets[q.category] ??= { faithfulness: [], coverage: [] }
+      buckets[q.category].faithfulness.push(q.faithfulness ?? 0)
+      buckets[q.category].coverage.push(q.citation_coverage ?? 0)
+    }
+    const avg = (arr: number[]) => (arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0)
+    return Object.entries(buckets)
+      .map(([type, v]) => ({ type, faithfulness: avg(v.faithfulness), coverage: avg(v.coverage), n: v.faithfulness.length }))
+      .sort((a, b) => b.faithfulness - a.faithfulness)
+  })()
 
   return (
     <AppShell>
@@ -195,8 +210,16 @@ export default function EvaluationPage() {
             </div>
             <div className="flex-1 min-w-0">
               <h1 className="text-2xl font-bold font-display text-[#1A2332]">Research Evaluation Dashboard</h1>
-              <p className="text-sm text-[#64748B] mt-0.5">RAG System Performance Metrics: SOP-Guard v2.0</p>
+              <p className="text-sm text-[#64748B] mt-0.5">Live metrics from the running RAG pipeline and current SOP corpus</p>
             </div>
+            <button
+              onClick={handleRunFresh}
+              disabled={refreshing || loading}
+              className="press flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#0B6BCB] hover:bg-[#0959AC] disabled:opacity-50 text-white text-xs font-medium transition-colors"
+            >
+              {refreshing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+              Run Fresh Evaluation
+            </button>
           </div>
 
           {/* Badges */}
@@ -205,303 +228,251 @@ export default function EvaluationPage() {
               <span className="w-1.5 h-1.5 rounded-full bg-[#B45309]" />
               Research Prototype
             </span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 text-[#0B6BCB] text-xs font-medium">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#0B6BCB]" />
-              Llama 3.3 70B via Groq
-            </span>
+            {llmStatus && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 text-[#0B6BCB] text-xs font-medium">
+                <span className={cn("w-1.5 h-1.5 rounded-full", llmStatus.available ? "bg-green-500" : "bg-[#0B6BCB]")} />
+                {llmStatus.mode === "mock" ? "Mock generation (no live LLM configured)" : `${llmStatus.provider} / ${llmStatus.model}`}
+              </span>
+            )}
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400 text-xs font-medium">
               <AlertTriangle className="w-3 h-3" />
               Research Prototype - Not for Clinical Use
             </span>
           </div>
 
-          {/* Disclaimer */}
           <div className="mt-4 flex items-start gap-2 px-4 py-3 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 text-xs">
             <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-[#B45309] dark:text-amber-400" />
-            <span>Metrics shown are from controlled evaluation runs on synthetic SOP queries. Not from real clinical queries.</span>
-          </div>
-        </motion.div>
-
-        {/* ── Section 1: Overall Performance ── */}
-        <motion.div {...fade(0.05)}>
-          <SectionTitle icon={Activity} title="Overall System Performance" subtitle="120 synthetic queries · 8 clinical SOP categories" />
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {STAT_TILES.map((tile, i) => {
-              const Icon = tile.icon
-              // For hallucination rate: down trend = good (lower is better)
-              const isHallucination = tile.label === "Hallucination Rate"
-              const trendIsGood = isHallucination
-                ? tile.trend === "down"
-                : tile.trend === "up" ? tile.trendGood : tile.trend === "down" ? !tile.trendGood : true
-
-              return (
-                <motion.div
-                  key={tile.label}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.08 + i * 0.04 }}
-                  className="p-5 rounded-2xl bg-card border border-[#0B6BCB]/10 hover:border-[#0B6BCB]/30 transition-colors"
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-8 h-8 rounded-lg bg-[#0B6BCB]/10 flex items-center justify-center">
-                      <Icon className="w-4 h-4 text-[#0B6BCB]" />
-                    </div>
-                    {tile.trend !== "neutral" && (
-                      <span className={cn(
-                        "flex items-center gap-0.5 text-xs font-medium",
-                        trendIsGood ? "text-[#15803D] dark:text-green-400" : "text-[#B91C1C] dark:text-red-400"
-                      )}>
-                        {tile.trend === "up"
-                          ? <TrendingUp className="w-3.5 h-3.5" />
-                          : <TrendingDown className="w-3.5 h-3.5" />}
-                      </span>
-                    )}
-                    {tile.trend === "neutral" && <Minus className="w-3.5 h-3.5 text-[#94A3B8]" />}
-                  </div>
-                  <p className={cn(
-                    "text-3xl font-bold mb-1",
-                    isHallucination ? "text-[#B91C1C] dark:text-red-400" : "text-[#0B6BCB]"
-                  )}>{tile.value}</p>
-                  <p className="text-sm font-medium text-[#1A2332] mb-1">{tile.label}</p>
-                  <p className="text-xs text-[#94A3B8]">{tile.description}</p>
-                </motion.div>
-              )
-            })}
-          </div>
-        </motion.div>
-
-        {/* ── Section 2: Model Comparison Table ── */}
-        <motion.div {...fade(0.1)}>
-          <SectionTitle icon={BarChart3} title="Model Comparison Table" subtitle="Identical retrieval pipeline, generation model varies" />
-          <div className="rounded-2xl bg-card border border-[#0B6BCB]/10 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-[#E2E8F0]">
-                    <th className="text-left py-3.5 px-5 text-[#64748B] font-medium text-xs uppercase tracking-wide">Metric</th>
-                    <th className="py-3.5 px-4 text-center text-[#0B6BCB] font-semibold text-xs uppercase tracking-wide border-l-2 border-[#0B6BCB]/30 bg-[#0B6BCB]/5">
-                      SOP-Guard<br />
-                      <span className="font-normal text-[#64748B] normal-case tracking-normal">Llama 3.3 70B</span>
-                    </th>
-                    <th className="py-3.5 px-4 text-center text-[#64748B] font-medium text-xs uppercase tracking-wide">
-                      Baseline<br />
-                      <span className="font-normal normal-case tracking-normal">Llama 3.1 8B</span>
-                    </th>
-                    <th className="py-3.5 px-4 text-center text-[#64748B] font-medium text-xs uppercase tracking-wide">
-                      Naive RAG<br />
-                      <span className="font-normal normal-case tracking-normal">No type routing</span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {COMPARISON_ROWS.map((row, i) => {
-                    // Determine which column has best value
-                    const isBest = (val: string) => {
-                      if (row.isCheckmark) return val === "✓ Yes"
-                      const n = parseFloat(val)
-                      const vals = [parseFloat(row.sopGuard), parseFloat(row.baseline), parseFloat(row.naiveRag)]
-                      return row.higherIsBetter ? n === Math.max(...vals) : n === Math.min(...vals)
-                    }
-
-                    return (
-                      <tr
-                        key={row.metric}
-                        className={cn(
-                          "border-b border-[#EDF1F5] last:border-0",
-                          i % 2 === 0 ? "bg-transparent" : "bg-[#F8FAFC]"
-                        )}
-                      >
-                        <td className="py-3 px-5 text-[#334155] font-medium">{row.metric}</td>
-                        <td className={cn(
-                          "py-3 px-4 text-center font-bold border-l-2 border-[#0B6BCB]/30 bg-[#0B6BCB]/5",
-                          isBest(row.sopGuard) ? "text-[#0B6BCB]" : "text-[#334155]"
-                        )}>
-                          {row.sopGuard}
-                        </td>
-                        <td className={cn(
-                          "py-3 px-4 text-center",
-                          isBest(row.baseline) ? "text-[#15803D] dark:text-green-400 font-bold" : "text-[#64748B]"
-                        )}>
-                          {row.baseline}
-                        </td>
-                        <td className={cn(
-                          "py-3 px-4 text-center",
-                          isBest(row.naiveRag) ? "text-[#15803D] dark:text-green-400 font-bold" : "text-[#94A3B8]"
-                        )}>
-                          {row.naiveRag}
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* ── Section 3: Query Type Breakdown ── */}
-        <motion.div {...fade(0.12)}>
-          <SectionTitle icon={BarChart3} title="Query Type Breakdown" subtitle="Faithfulness and Retrieval Precision by query category" />
-          <div className="rounded-2xl bg-card border border-[#0B6BCB]/10 p-5 space-y-4">
-            {/* Legend */}
-            <div className="flex gap-5 text-xs text-[#64748B] mb-2">
-              <span className="flex items-center gap-1.5"><span className="w-3 h-2 rounded-sm bg-[#0B6BCB] inline-block" /> Faithfulness</span>
-              <span className="flex items-center gap-1.5"><span className="w-3 h-2 rounded-sm bg-[#0D9488] inline-block" /> Retrieval Precision</span>
-            </div>
-            {QUERY_TYPE_DATA.map((row, i) => (
-              <motion.div
-                key={row.type}
-                initial={{ opacity: 0, x: -12 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.15 + i * 0.05 }}
-                className="space-y-1.5"
-              >
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-mono text-[#334155] w-40 shrink-0">{row.type}</span>
-                  <div className="flex gap-4 text-[#64748B]">
-                    <span className="text-[#0B6BCB] font-medium">{row.faithfulness.toFixed(2)}</span>
-                    <span className="text-[#64748B] font-medium">{row.precision.toFixed(2)}</span>
-                  </div>
-                </div>
-                {/* Faithfulness bar */}
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 h-2 rounded-full bg-muted">
-                    <div
-                      className="h-full rounded-full bg-[#0B6BCB] transition-all duration-700"
-                      style={{ width: `${row.faithfulness * 100}%` }}
-                    />
-                  </div>
-                </div>
-                {/* Precision bar */}
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 h-2 rounded-full bg-muted">
-                    <div
-                      className="h-full rounded-full bg-[#0D9488] transition-all duration-700"
-                      style={{ width: `${row.precision * 100}%` }}
-                    />
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* ── Section 4: NEWS2 Integration Results ── */}
-        <motion.div {...fade(0.14)}>
-          <SectionTitle icon={Activity} title="NEWS2 Integration Results" subtitle="Escalation recommendation accuracy with vs without patient acuity context" />
-          <div className="rounded-2xl bg-card border border-[#0B6BCB]/10 overflow-hidden mb-4">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-[#E2E8F0]">
-                    <th className="text-left py-3.5 px-5 text-[#64748B] font-medium text-xs uppercase tracking-wide">Metric</th>
-                    <th className="py-3.5 px-4 text-center text-[#0B6BCB] font-semibold text-xs uppercase tracking-wide">With NEWS2 Context</th>
-                    <th className="py-3.5 px-4 text-center text-[#64748B] font-medium text-xs uppercase tracking-wide">Without NEWS2 Context</th>
-                    <th className="py-3.5 px-4 text-center text-[#64748B] font-medium text-xs uppercase tracking-wide">Delta</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {NEWS2_ROWS.map((row, i) => {
-                    const delta = row.lowerIsBetter
-                      ? row.withoutNews2 - row.withNews2
-                      : row.withNews2 - row.withoutNews2
-                    const deltaStr = delta > 0 ? `+${(delta * 100).toFixed(0)}pp` : `${(delta * 100).toFixed(0)}pp`
-                    const isGood = delta > 0
-
-                    return (
-                      <tr key={row.metric} className={cn("border-b border-[#EDF1F5] last:border-0", i % 2 === 0 ? "" : "bg-[#F8FAFC]")}>
-                        <td className="py-3 px-5 text-[#334155] font-medium text-xs">{row.metric}</td>
-                        <td className="py-3 px-4 text-center font-bold text-[#0B6BCB]">{row.withNews2}</td>
-                        <td className="py-3 px-4 text-center text-[#64748B]">{row.withoutNews2}</td>
-                        <td className={cn("py-3 px-4 text-center font-semibold text-xs", isGood ? "text-[#15803D] dark:text-green-400" : "text-[#B91C1C] dark:text-red-400")}>
-                          {deltaStr}
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-[#0B6BCB]/5 border border-[#0B6BCB]/15 text-[#334155] text-xs">
-            <Info className="w-4 h-4 shrink-0 text-[#0B6BCB] mt-0.5" />
             <span>
-              NEWS2 score context allows SOP-Guard to prioritize protocol recommendations appropriate for patient acuity, improving escalation accuracy by 15 percentage points.
+              Every number on this page is computed live against the current SOP corpus and pipeline - there is no
+              synthetic/fixed dataset behind it, so results will shift as SOPs are added, edited, or removed.
             </span>
           </div>
         </motion.div>
 
-        {/* ── Section 5: Retrieval Architecture Analysis ── */}
-        <motion.div {...fade(0.16)}>
-          <SectionTitle icon={Target} title="Retrieval Architecture Analysis" subtitle="Chunk type distribution across the 120-query test set" />
-          <div className="rounded-2xl bg-card border border-[#0B6BCB]/10 p-5">
-            <div className="space-y-3">
-              {CHUNK_TYPES.map((chunk, i) => (
-                <motion.div
-                  key={chunk.type}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.18 + i * 0.04 }}
-                  className="flex items-center gap-3"
-                >
-                  <span className="font-mono text-xs text-[#64748B] w-36 shrink-0">{chunk.type}</span>
-                  <div className="flex-1 h-3 rounded-full bg-muted">
-                    <div
-                      className={cn("h-full rounded-full transition-all duration-700", chunk.color)}
-                      style={{ width: `${chunk.pct}%` }}
-                    />
-                  </div>
-                  <span className="text-xs font-semibold text-[#334155] w-8 text-right">{chunk.pct}%</span>
-                </motion.div>
-              ))}
-            </div>
+        {loading && (
+          <div className="flex items-center justify-center py-24 text-[#64748B] gap-2">
+            <Loader2 className="w-5 h-5 animate-spin" /> Running live evaluation...
+          </div>
+        )}
 
-            {/* Donut-style visual summary */}
-            <div className="mt-5 pt-4 border-t border-[#EDF1F5] flex flex-wrap gap-2">
-              {CHUNK_TYPES.map((chunk) => (
-                <span key={chunk.type} className="flex items-center gap-1.5 text-xs text-[#64748B]">
-                  <span className={cn("w-2.5 h-2.5 rounded-sm", chunk.color)} />
-                  {chunk.type} ({chunk.pct}%)
+        {error && !loading && (
+          <div className="p-4 rounded-xl bg-red-500/5 border border-red-500/20 text-sm text-red-400 flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4" /> {error}
+          </div>
+        )}
+
+        {!loading && !error && (
+          <>
+            {/* ── Section 1: Overall Performance ── */}
+            <motion.div {...fade(0.05)}>
+              <SectionTitle
+                icon={Activity}
+                title="Overall System Performance"
+                subtitle={`${ragasSummary?.aggregate.total_queries ?? 0}-query live RAGAS-lite run · ${ragResult?.total_cases ?? 0} retrieval test cases · generation mode: ${ragasSummary?.aggregate.generation_mode ?? "unknown"}`}
+              />
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <StatTile
+                  i={0} icon={Target}
+                  value={ragResult ? ragResult.retrieval_precision.toFixed(2) : "-"}
+                  label="Retrieval Precision"
+                  description="Fraction of retrieval test cases whose top result matched the expected SOP"
+                />
+                <StatTile
+                  i={1} icon={Brain}
+                  value={ragasSummary ? ragasSummary.aggregate.avg_faithfulness.toFixed(2) : "-"}
+                  label="Answer Faithfulness"
+                  description="Sentence-level grounding score vs retrieved chunks, last live run"
+                />
+                <StatTile
+                  i={2} icon={BarChart3}
+                  value={ragasSummary ? ragasSummary.aggregate.avg_citation_coverage.toFixed(2) : "-"}
+                  label="Citation Coverage"
+                  description="Share of answer claims backed by an inline [N] citation"
+                />
+                <StatTile
+                  i={3} icon={CheckCircle2}
+                  value={ragasSummary ? ragasSummary.aggregate.abstention_accuracy.toFixed(2) : "-"}
+                  label="Abstention Accuracy"
+                  description={`Correct refusal rate on ${ragasSummary?.aggregate.out_of_scope_cases ?? 0} out-of-scope queries`}
+                />
+                <StatTile
+                  i={4} icon={Target}
+                  value={ablation ? `${(ablation.order_change_rate * 100).toFixed(0)}%` : "-"}
+                  label="Reranker Impact"
+                  description={`Top-3 order changed on ${ablation?.top3_order_changed ?? 0}/${ablation?.queries_compared ?? ablation?.queries ?? 0} queries with reranking on vs off`}
+                />
+                <StatTile
+                  i={5} icon={ShieldAlert}
+                  value={adversarial ? adversarial.sensitivity.toFixed(2) : "-"}
+                  label="Adversarial Sensitivity"
+                  description={`Verifier catch rate across ${adversarial?.total_tests ?? 0} adversarial test cases`}
+                />
+              </div>
+            </motion.div>
+
+            {/* ── Section 2: Retrieval Ablation ── */}
+            <motion.div {...fade(0.1)}>
+              <SectionTitle icon={BarChart3} title="Retrieval Ablation: Reranker On vs Off" subtitle="Same retriever, same query set - only the heuristic reranker toggles" />
+              <div className="rounded-2xl bg-card border border-[#0B6BCB]/10 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-[#E2E8F0]">
+                        <th className="text-left py-3.5 px-5 text-[#64748B] font-medium text-xs uppercase tracking-wide">Metric</th>
+                        <th className="py-3.5 px-4 text-center text-[#0B6BCB] font-semibold text-xs uppercase tracking-wide border-l-2 border-[#0B6BCB]/30 bg-[#0B6BCB]/5">Reranker On</th>
+                        <th className="py-3.5 px-4 text-center text-[#64748B] font-medium text-xs uppercase tracking-wide">Reranker Off</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="border-b border-[#EDF1F5] last:border-0">
+                        <td className="py-3 px-5 text-[#334155] font-medium">Avg Top-1 Relevance</td>
+                        <td className="py-3 px-4 text-center font-bold border-l-2 border-[#0B6BCB]/30 bg-[#0B6BCB]/5 text-[#0B6BCB]">
+                          {ablation?.reranker_on.avg_top1_relevance.toFixed(3) ?? "-"}
+                        </td>
+                        <td className="py-3 px-4 text-center text-[#64748B]">{ablation?.reranker_off.avg_top1_relevance.toFixed(3) ?? "-"}</td>
+                      </tr>
+                      <tr>
+                        <td className="py-3 px-5 text-[#334155] font-medium">Top-3 Order Change Rate</td>
+                        <td className="py-3 px-4 text-center font-bold border-l-2 border-[#0B6BCB]/30 bg-[#0B6BCB]/5 text-[#0B6BCB]" colSpan={2}>
+                          {ablation ? `${(ablation.order_change_rate * 100).toFixed(0)}% of queries (${ablation.top3_order_changed}/${ablation.queries_compared})` : "-"}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* ── Section 3: Query Type Breakdown ── */}
+            <motion.div {...fade(0.12)}>
+              <SectionTitle icon={BarChart3} title="Query Category Breakdown" subtitle="Faithfulness and citation coverage averaged per category, from the last live eval run" />
+              <div className="rounded-2xl bg-card border border-[#0B6BCB]/10 p-5 space-y-4">
+                <div className="flex gap-5 text-xs text-[#64748B] mb-2">
+                  <span className="flex items-center gap-1.5"><span className="w-3 h-2 rounded-sm bg-[#0B6BCB] inline-block" /> Faithfulness</span>
+                  <span className="flex items-center gap-1.5"><span className="w-3 h-2 rounded-sm bg-[#0D9488] inline-block" /> Citation Coverage</span>
+                </div>
+                {byCategory.length === 0 && <p className="text-xs text-[#94A3B8]">No per-query data available yet.</p>}
+                {byCategory.map((row, i) => (
+                  <motion.div key={row.type} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 + i * 0.05 }} className="space-y-1.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-mono text-[#334155] w-40 shrink-0">{row.type} <span className="text-[#94A3B8]">(n={row.n})</span></span>
+                      <div className="flex gap-4 text-[#64748B]">
+                        <span className="text-[#0B6BCB] font-medium">{row.faithfulness.toFixed(2)}</span>
+                        <span className="text-[#64748B] font-medium">{row.coverage.toFixed(2)}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-2 rounded-full bg-muted">
+                        <div className="h-full rounded-full bg-[#0B6BCB] transition-all duration-700" style={{ width: `${row.faithfulness * 100}%` }} />
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-2 rounded-full bg-muted">
+                        <div className="h-full rounded-full bg-[#0D9488] transition-all duration-700" style={{ width: `${row.coverage * 100}%` }} />
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* ── Section 4: Adversarial Verifier Benchmark ── */}
+            <motion.div {...fade(0.14)}>
+              <SectionTitle icon={ShieldAlert} title="Adversarial Verifier Benchmark" subtitle="Can the verifier tell a correct answer from a deliberately wrong one, on the same question?" />
+              <div className="grid grid-cols-3 gap-4">
+                <div className="p-4 rounded-xl bg-card border border-[#0B6BCB]/10 text-center">
+                  <p className="text-2xl font-bold text-[#0B6BCB]">{adversarial ? adversarial.sensitivity.toFixed(2) : "-"}</p>
+                  <p className="text-xs text-[#64748B] mt-1">Sensitivity</p>
+                </div>
+                <div className="p-4 rounded-xl bg-card border border-[#0B6BCB]/10 text-center">
+                  <p className="text-2xl font-bold text-[#0B6BCB]">{adversarial ? adversarial.specificity.toFixed(2) : "-"}</p>
+                  <p className="text-xs text-[#64748B] mt-1">Specificity</p>
+                </div>
+                <div className="p-4 rounded-xl bg-card border border-[#0B6BCB]/10 text-center">
+                  <p className="text-2xl font-bold text-[#0B6BCB]">{adversarial ? adversarial.pairwise_separation.toFixed(2) : "-"}</p>
+                  <p className="text-xs text-[#64748B] mt-1">Pairwise Separation</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 px-4 py-3 mt-4 rounded-xl bg-[#0B6BCB]/5 border border-[#0B6BCB]/15 text-[#334155] text-xs">
+                <Info className="w-4 h-4 shrink-0 text-[#0B6BCB] mt-0.5" />
+                <span>
+                  Sensitivity alone is a misleading headline metric - a verifier that flags every answer scores 100%
+                  sensitivity while providing no signal. Specificity and pairwise separation show whether it can
+                  actually tell correct and wrong answers apart. See <code>/adversarial</code> for the full per-case
+                  benchmark, including the generated perturbation set and rule-based vs NLI-lite vs ensemble comparison.
                 </span>
-              ))}
-            </div>
-          </div>
-        </motion.div>
+              </div>
+            </motion.div>
 
-        {/* ── Section 6: Evaluation Methodology ── */}
-        <motion.div {...fade(0.18)}>
-          <div className="rounded-2xl bg-card border border-[#0B6BCB]/10 p-5">
-            <button
-              onClick={() => setShowMethodology((v) => !v)}
-              className="flex items-center gap-2 text-sm font-semibold text-[#1A2332] mb-1 hover:text-[#0B6BCB] transition-colors w-full text-left"
-            >
-              <Info className="w-4 h-4 text-[#0B6BCB]" />
-              Evaluation Methodology Note
-              <span className="ml-auto text-xs text-[#94A3B8]">{showMethodology ? "hide" : "show"}</span>
-            </button>
-            {showMethodology && (
-              <motion.p
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                className="mt-3 text-xs text-[#64748B] leading-relaxed"
-              >
-                Evaluation conducted on 120 synthetic queries across 8 clinical SOP categories. Ground truth annotations by clinical informatics team.
-                Query types classified by rule-based router with 91% accuracy. Faithfulness scoring via sentence-level keyword grounding against retrieved chunks.
-                Model comparison uses identical retrieval pipeline; only generation model varies.
-              </motion.p>
-            )}
-            {!showMethodology && (
-              <p className="text-xs text-[#94A3B8] mt-1">
-                120 synthetic queries · 8 SOP categories · sentence-level faithfulness grounding · identical retrieval pipeline across models
-              </p>
-            )}
-          </div>
-        </motion.div>
+            {/* ── Section 5: Chunk Type Distribution ── */}
+            <motion.div {...fade(0.16)}>
+              <SectionTitle icon={Target} title="Retrieval Architecture: Chunk Type Distribution" subtitle={`${chunkDist?.total_chunks ?? 0} chunks across the current live SOP corpus`} />
+              <div className="rounded-2xl bg-card border border-[#0B6BCB]/10 p-5">
+                <div className="space-y-3">
+                  {(chunkDist?.distribution ?? []).map((chunk, i) => (
+                    <motion.div key={chunk.type} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.18 + i * 0.04 }} className="flex items-center gap-3">
+                      <span className="font-mono text-xs text-[#64748B] w-36 shrink-0">{chunk.type}</span>
+                      <div className="flex-1 h-3 rounded-full bg-muted">
+                        <div className={cn("h-full rounded-full transition-all duration-700", CHUNK_COLORS[chunk.type] ?? "bg-[#94A3B8]")} style={{ width: `${chunk.pct}%` }} />
+                      </div>
+                      <span className="text-xs font-semibold text-[#334155] w-14 text-right">{chunk.pct}% ({chunk.count})</span>
+                    </motion.div>
+                  ))}
+                  {(!chunkDist || chunkDist.distribution.length === 0) && (
+                    <p className="text-xs text-[#94A3B8]">No chunks in the corpus yet - upload an SOP to populate this.</p>
+                  )}
+                </div>
+              </div>
+            </motion.div>
 
-        {/* Footer */}
-        <motion.div {...fade(0.2)} className="text-center text-xs text-[#94A3B8] pb-4">
-          SOP-Guard v2.0 · Research Prototype · All metrics from synthetic evaluation runs · Not from real clinical queries
-        </motion.div>
+            {/* ── Section 6: Evaluation Methodology ── */}
+            <motion.div {...fade(0.18)}>
+              <div className="rounded-2xl bg-card border border-[#0B6BCB]/10 p-5">
+                <button
+                  onClick={() => setShowMethodology((v) => !v)}
+                  className="flex items-center gap-2 text-sm font-semibold text-[#1A2332] mb-1 hover:text-[#0B6BCB] transition-colors w-full text-left"
+                >
+                  <Info className="w-4 h-4 text-[#0B6BCB]" />
+                  Evaluation Methodology Note
+                  <span className="ml-auto text-xs text-[#94A3B8]">{showMethodology ? "hide" : "show"}</span>
+                </button>
+                {showMethodology && (
+                  <motion.p initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="mt-3 text-xs text-[#64748B] leading-relaxed">
+                    Retrieval precision comes from POST /api/evaluate/rag (8 hand-written retrieval test cases run
+                    against the live retriever). Faithfulness, citation coverage, and abstention accuracy come from
+                    the RAGAS-lite reference-free suite (GET /api/evaluation/summary, 20 queries spanning medication,
+                    threshold, sequence, contraindication, monitoring, cross-SOP, and out-of-scope categories),
+                    cached after the first run and refreshed on demand via &quot;Run Fresh Evaluation&quot;. The
+                    reranker ablation (GET /api/evaluation/ablation) re-runs the same 20 queries with the heuristic
+                    reranker forced on and off and compares top-1/top-3 relevance - retrieval only, no generation
+                    step involved. The adversarial benchmark (POST /api/evaluate/adversarial) pairs each correct
+                    answer with a deliberately wrong one on the same question and checks whether the procedural
+                    verifier scores the correct one higher. Chunk type distribution is a live count over
+                    SOPChunk.chunk_type for every chunk currently indexed. None of these numbers are pre-computed
+                    constants - every reload re-derives them from whatever SOPs and chunks currently exist in the
+                    database.
+                  </motion.p>
+                )}
+                {!showMethodology && (
+                  <p className="text-xs text-[#94A3B8] mt-1">
+                    8 retrieval test cases · 20-query RAGAS-lite suite · reranker ablation · adversarial verifier benchmark · live corpus chunk counts
+                  </p>
+                )}
+              </div>
+            </motion.div>
+
+            {ragasSummary?.aggregate.faithfulness_note && (
+              <motion.div {...fade(0.19)} className="flex items-start gap-2 px-4 py-3 rounded-xl bg-muted/30 border border-border text-xs text-[#64748B]">
+                <Info className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>{ragasSummary.aggregate.faithfulness_note}</span>
+              </motion.div>
+            )}
+
+            <motion.div {...fade(0.2)} className="text-center text-xs text-[#94A3B8] pb-4">
+              SOP-Guard · Research Prototype · All metrics computed live from the current pipeline and SOP corpus · Not from real clinical queries
+            </motion.div>
+          </>
+        )}
       </div>
     </AppShell>
   )

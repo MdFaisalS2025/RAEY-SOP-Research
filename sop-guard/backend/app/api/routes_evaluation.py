@@ -173,6 +173,22 @@ async def evaluation_summary_eval(force: bool = False, db: AsyncSession = Depend
     return await get_eval_summary(pipeline, force=force)
 
 
+@router.get("/api/evaluation/chunk-distribution")
+async def chunk_type_distribution(db: AsyncSession = Depends(get_db)):
+    """Real chunk_type counts across the current live corpus (not a fixed test set)."""
+    rows = (await db.execute(select(SOPChunk.chunk_type))).all()
+    total = len(rows)
+    counts: dict[str, int] = {}
+    for (chunk_type,) in rows:
+        key = chunk_type or "section"
+        counts[key] = counts.get(key, 0) + 1
+    distribution = [
+        {"type": t, "count": c, "pct": round(c / total * 100, 1) if total else 0}
+        for t, c in sorted(counts.items(), key=lambda kv: kv[1], reverse=True)
+    ]
+    return {"total_chunks": total, "distribution": distribution}
+
+
 @router.get("/api/evaluation/ablation")
 async def evaluation_ablation(db: AsyncSession = Depends(get_db)):
     """Reranker on-vs-off ablation over the eval set (retrieval-only, never 500s)."""

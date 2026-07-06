@@ -172,13 +172,14 @@ class LLMGenerator:
             result["sop_conflicts"] = _merge_graph_conflicts(
                 detect_sop_conflicts(retrieved_chunks), retrieved_chunks
             )
-            result["inline_citations"] = []
-            result["followup_questions"] = []
-            # Respect the mock generator's own abstention decision (set when
-            # no chunk cleared its relevance floor) instead of hardcoding
-            # False here - overwriting it unconditionally meant a query that
-            # the mock generator correctly refused to answer would still be
-            # reported as a confident, non-abstained response.
+            # Respect the mock generator's own inline_citations/
+            # followup_questions/abstained values instead of hardcoding
+            # them here - the mock generator now builds real [N] markers
+            # and template follow-ups, so overwriting them unconditionally
+            # would silently discard that data on every mock-mode query
+            # (the default install, with no LLM configured).
+            result.setdefault("inline_citations", [])
+            result.setdefault("followup_questions", [])
             result["abstained"] = result.get("abstained", False)
             return result
 
@@ -292,13 +293,8 @@ Answer:"""
             result = self._mock.generate_answer(query, retrieved_chunks, query_type)
             result["generation_mode"] = "mock_fallback"
             result["reasoning_trace"].append(f"LLM failed ({e}), used mock fallback")
-            result["inline_citations"] = []
-            result["followup_questions"] = []
-            # Respect the mock generator's own abstention decision (set when
-            # no chunk cleared its relevance floor) instead of hardcoding
-            # False here - overwriting it unconditionally meant a query that
-            # the mock generator correctly refused to answer would still be
-            # reported as a confident, non-abstained response.
+            result.setdefault("inline_citations", [])
+            result.setdefault("followup_questions", [])
             result["abstained"] = result.get("abstained", False)
             return result
 

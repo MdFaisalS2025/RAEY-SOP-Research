@@ -8,6 +8,8 @@ Research prototype  - NOT for clinical use.
 import re
 from typing import Any
 
+from app.rag.citation_tracker import build_numbered_context, extract_citations, _chunk_id
+
 # Minimum relevance score to consider a chunk useful. This only catches
 # queries with essentially no lexical overlap with the corpus at all - it
 # does NOT reliably separate "wrong domain" from "right domain, weak
@@ -72,6 +74,8 @@ class MockGenerator:
                     "Please consult the relevant department or clinical supervisor."
                 ),
                 "citations": [],
+                "inline_citations": [],
+                "followup_questions": [],
                 "reasoning_trace": reasoning_trace,
                 "confidence": 0.1,
                 "abstained": True,
@@ -101,18 +105,35 @@ class MockGenerator:
                 f"Used chunk from '{ct}' (score: {chunk.get('relevance_score', 0):.3f})"
             )
 
+        # Number every good chunk (not just the top 3 used for the plain
+        # `citations` strings above) using the same identity/ordering the
+        # LLM path uses, so mock-mode answers get real [N] markers and the
+        # frontend Sources panel - previously empty in mock mode, the
+        # default install - has something to render.
+        citation_map: dict[str, int] = {}
+        for c in good_chunks:
+            key = _chunk_id(c)
+            if key not in citation_map:
+                citation_map[key] = len(citation_map) + 1
+        _, citation_records = build_numbered_context(good_chunks)
+
         # Build answer based on query type
         if query_type in ("sequence", "procedure_steps", "monitoring"):
-            answer = self._build_sequence_answer(sop_title, top_text, good_chunks)
+            answer = self._build_sequence_answer(sop_title, top_text, good_chunks, citation_map)
         elif query_type in ("threshold", "medication"):
-            answer = self._build_threshold_answer(sop_title, top_text, good_chunks)
+            answer = self._build_threshold_answer(sop_title, top_text, good_chunks, citation_map)
         elif query_type == "contraindication":
-            answer = self._build_contraindication_answer(sop_title, top_text, good_chunks)
+            answer = self._build_contraindication_answer(sop_title, top_text, good_chunks, citation_map)
         else:
-            answer = self._build_general_answer(sop_title, top_text, good_chunks)
+            answer = self._build_general_answer(sop_title, top_text, good_chunks, citation_map)
 
         answer += f"\n\n{source_label}"
         answer += _DISCLAIMER
+
+        # Validate/strip [N] markers and mark which citation records were
+        # actually used - same post-processing the LLM path does, so both
+        # generation modes produce consistent inline_citations shapes.
+        answer, citation_records = extract_citations(answer, citation_records)
 
         # Confidence based on top chunk relevance
         top_score = good_chunks[0].get("relevance_score", 0)
@@ -132,10 +153,58 @@ class MockGenerator:
         return {
             "answer": answer,
             "citations": citations,
+            "inline_citations": citation_records,
+            "followup_questions": self._template_followups(query_type),
             "reasoning_trace": reasoning_trace,
             "confidence": round(confidence, 2),
             "abstained": False,
         }
+
+    @staticmethod
+    def _template_followups(query_type: str) -> list[str]:
+        """
+        Fixed per-query-type follow-up suggestions. These are template-based,
+        not personalized to the specific SOP or answer content (the mock
+        generator has no LLM to draft bespoke ones) - deliberately generic
+        rather than fabricated specifics.
+        """
+        templates: dict[str, list[str]] = {
+            "threshold": [
+                "What should be done if this threshold is exceeded?",
+                "Are there contraindications to consider first?",
+                "Who should be notified if this value is abnormal?",
+            ],
+            "medication": [
+                "What should be done if this threshold is exceeded?",
+                "Are there contraindications to consider first?",
+                "Who should be notified if this value is abnormal?",
+            ],
+            "sequence": [
+                "What equipment is needed for this procedure?",
+                "What are the contraindications for this procedure?",
+                "How is this procedure documented?",
+            ],
+            "procedure_steps": [
+                "What equipment is needed for this procedure?",
+                "What are the contraindications for this procedure?",
+                "How is this procedure documented?",
+            ],
+            "contraindication": [
+                "What should be used instead?",
+                "What should be monitored if this situation arises?",
+                "Who should be notified?",
+            ],
+            "monitoring": [
+                "What is the escalation threshold for these values?",
+                "How should abnormal findings be documented?",
+                "Who should be notified of abnormal values?",
+            ],
+        }
+        return templates.get(query_type, [
+            "What are the key thresholds in this protocol?",
+            "What are the contraindications?",
+            "What are the procedural steps?",
+        ])
 
     # ------------------------------------------------------------------
     # Helper: extract key sentences
@@ -177,8 +246,14 @@ class MockGenerator:
         return False
 
     @staticmethod
-    def _extract_key_sentences(text: str, max_sentences: int = 4) -> list[str]:
-        """Extract the most informative sentences, filtering all noise."""
+    def _extract_key_sentences(text: str, max_sentences: int = 4, citation_number: "int | None" = None) -> list[str]:
+        """Extract the most informative sentences, filtering all noise.
+
+        citation_number is appended as [N] to every returned line when
+        provided - only pass it when `text` is known to come from a single
+        chunk (e.g. the top chunk), since a citation on aggregated
+        multi-chunk text would misattribute the source.
+        """
         lines = text.split("\n")
         good = []
         for line in lines:
@@ -208,84 +283,104 @@ class MockGenerator:
             scored.append((action_score + (1 if has_number else 0), line))
 
         scored.sort(key=lambda x: x[0], reverse=True)
-        return [s[1] for s in scored[:max_sentences]]
+        top = [s[1] for s in scored[:max_sentences]]
+        if citation_number is not None:
+            top = [MockGenerator._mark(s, citation_number) for s in top]
+        return top
+
+    @staticmethod
+    def _mark(line: str, citation_number: "int | None") -> str:
+        """Append a [N] citation marker to a line when a number is known."""
+        return f"{line} [{citation_number}]" if citation_number is not None else line
 
     # ------------------------------------------------------------------
     # Scanning helpers for cross-cutting concerns
     # ------------------------------------------------------------------
 
     @staticmethod
-    def _scan_thresholds(chunks_or_text) -> list[str]:
+    def _scan_thresholds(chunks_or_text, citation_map: dict[str, int] | None = None) -> list[tuple[str, "int | None"]]:
         """Extract lines containing threshold-like clinical values.
 
         Accepts either a string (combined text) or a list of chunk dicts.
-        When given chunks, prioritizes threshold-typed chunks.
+        When given chunks, prioritizes threshold-typed chunks and pairs each
+        line with its originating chunk's citation number (via
+        citation_map), so callers can attach a real [N] marker instead of
+        guessing. Returns (line, citation_number_or_None) tuples; the
+        string-input path (ambiguous origin) always returns None numbers.
         """
-        found: list[str] = []
+        found: list[tuple[str, int | None]] = []
+        seen: set[str] = set()
 
-        if isinstance(chunks_or_text, list):
-            # Prioritize threshold chunks first
-            priority_texts = []
-            other_texts = []
-            for c in chunks_or_text:
-                text = c.get("text", c.get("chunk_text", ""))
-                if c.get("chunk_type") == "threshold":
-                    priority_texts.append(text)
-                else:
-                    other_texts.append(text)
-            combined = "\n".join(priority_texts + other_texts)
-        else:
-            combined = chunks_or_text
-
-        for line in combined.split("\n"):
-            stripped = line.strip().lstrip("- ")
-            if not stripped or len(stripped) < 10:
-                continue
-            if re.search(
+        def _matches(stripped: str) -> bool:
+            return bool(re.search(
                 r"[><≥≤]=?\s*\d"
                 r"|(?:target|threshold|maximum|minimum|dose|rate|limit)\b.*\d",
                 stripped, re.IGNORECASE,
-            ):
-                if stripped not in found:
-                    found.append(stripped)
+            ))
+
+        if isinstance(chunks_or_text, list):
+            priority = [c for c in chunks_or_text if c.get("chunk_type") == "threshold"]
+            other = [c for c in chunks_or_text if c.get("chunk_type") != "threshold"]
+            for c in priority + other:
+                text = c.get("text", c.get("chunk_text", ""))
+                num = (citation_map or {}).get(_chunk_id(c))
+                for line in text.split("\n"):
+                    stripped = line.strip().lstrip("- ")
+                    if not stripped or len(stripped) < 10 or stripped in seen:
+                        continue
+                    if _matches(stripped):
+                        seen.add(stripped)
+                        found.append((stripped, num))
+        else:
+            for line in chunks_or_text.split("\n"):
+                stripped = line.strip().lstrip("- ")
+                if not stripped or len(stripped) < 10 or stripped in seen:
+                    continue
+                if _matches(stripped):
+                    seen.add(stripped)
+                    found.append((stripped, None))
         return found
 
     @staticmethod
-    def _scan_contraindications(chunks_or_text) -> list[str]:
+    def _scan_contraindications(chunks_or_text, citation_map: dict[str, int] | None = None) -> list[tuple[str, "int | None"]]:
         """Extract lines with contraindication/warning language.
 
         Accepts either a string (combined text) or a list of chunk dicts.
-        When given chunks, prioritizes contraindication-typed chunks.
+        When given chunks, prioritizes contraindication-typed chunks and
+        pairs each line with its originating chunk's citation number (see
+        _scan_thresholds for why). Returns (line, citation_number_or_None).
         """
         keywords = [
             "do not", "don't", "contraindicated", "avoid", "must not",
             "should not", "never", "caution", "prohibited", "warning",
         ]
-        found: list[str] = []
+        found: list[tuple[str, int | None]] = []
+        seen: set[str] = set()
+
+        def _matches(stripped: str) -> bool:
+            return not MockGenerator._is_noise_line(stripped) and any(k in stripped.lower() for k in keywords)
 
         if isinstance(chunks_or_text, list):
-            priority_texts = []
-            other_texts = []
-            for c in chunks_or_text:
+            priority = [c for c in chunks_or_text if c.get("chunk_type") == "contraindication"]
+            other = [c for c in chunks_or_text if c.get("chunk_type") != "contraindication"]
+            for c in priority + other:
                 text = c.get("text", c.get("chunk_text", ""))
-                if c.get("chunk_type") == "contraindication":
-                    priority_texts.append(text)
-                else:
-                    other_texts.append(text)
-            combined = "\n".join(priority_texts + other_texts)
+                num = (citation_map or {}).get(_chunk_id(c))
+                for line in text.split("\n"):
+                    stripped = line.strip().lstrip("- ")
+                    if not stripped or len(stripped) < 10 or stripped in seen:
+                        continue
+                    if _matches(stripped):
+                        seen.add(stripped)
+                        found.append((stripped, num))
         else:
-            combined = chunks_or_text
-
-        for line in combined.split("\n"):
-            stripped = line.strip().lstrip("- ")
-            if not stripped or len(stripped) < 10:
-                continue
-            # Skip chunk headers and boilerplate
-            if MockGenerator._is_noise_line(stripped):
-                continue
-            if any(k in stripped.lower() for k in keywords):
-                if stripped not in found:
-                    found.append(stripped)
+            for line in chunks_or_text.split("\n"):
+                stripped = line.strip().lstrip("- ")
+                if not stripped or len(stripped) < 10 or stripped in seen:
+                    continue
+                if _matches(stripped):
+                    seen.add(stripped)
+                    found.append((stripped, None))
         return found
 
     # ------------------------------------------------------------------
@@ -293,7 +388,7 @@ class MockGenerator:
     # ------------------------------------------------------------------
 
     def _build_sequence_answer(
-        self, sop_title: str, top_text: str, chunks: list[dict]
+        self, sop_title: str, top_text: str, chunks: list[dict], citation_map: "dict[str, int] | None" = None
     ) -> str:
         """Extract and present numbered steps cleanly."""
         primary_sop = chunks[0].get("sop_id", "") if chunks else ""
@@ -303,6 +398,7 @@ class MockGenerator:
         for chunk in same_sop:
             if chunk.get("chunk_type") == "step_sequence":
                 text = chunk.get("text", chunk.get("chunk_text", ""))
+                num_cite = (citation_map or {}).get(_chunk_id(chunk))
                 steps = re.findall(
                     r"Step\s+(\d+)\s*:\s*(.+?)(?=Step\s+\d+\s*:|$)",
                     text, re.DOTALL | re.IGNORECASE
@@ -312,12 +408,12 @@ class MockGenerator:
                     for num, content in sorted(steps, key=lambda x: int(x[0])):
                         first_line = content.strip().split("\n")[0].strip()
                         if first_line and len(first_line) > 5:
-                            lines.append(f"{num}. {first_line}")
+                            lines.append(self._mark(f"{num}. {first_line}", num_cite))
                     if lines:
                         return (
                             f"Based on the {sop_title}, follow these steps:\n\n"
                             + "\n".join(lines)
-                            + self._append_extras(same_sop)
+                            + self._append_extras(same_sop, citation_map)
                         )
 
         # Strategy 2: Collect individual step chunks
@@ -326,18 +422,19 @@ class MockGenerator:
             lines = []
             for chunk in step_chunks:
                 text = chunk.get("text", chunk.get("chunk_text", ""))
+                num_cite = (citation_map or {}).get(_chunk_id(chunk))
                 match = re.match(r"Step\s+(\d+)\s*:\s*(.+)", text, re.DOTALL | re.IGNORECASE)
                 if match:
                     num = match.group(1)
                     content = match.group(2).strip().split("\n")[0].strip()
                     if content and len(content) > 5:
-                        lines.append((int(num), f"{num}. {content}"))
+                        lines.append((int(num), self._mark(f"{num}. {content}", num_cite)))
             if lines:
                 lines.sort(key=lambda x: x[0])
                 return (
                     f"Based on the {sop_title}, follow these steps:\n\n"
                     + "\n".join(l[1] for l in lines)
-                    + self._append_extras(same_sop)
+                    + self._append_extras(same_sop, citation_map)
                 )
 
         # Strategy 3: Parse steps from combined text of all chunks
@@ -376,7 +473,7 @@ class MockGenerator:
             return (
                 f"Based on the {sop_title}, follow these steps:\n\n"
                 + "\n".join(unique)
-                + self._append_extras(same_sop)
+                + self._append_extras(same_sop, citation_map)
             )
 
         return (
@@ -384,19 +481,19 @@ class MockGenerator:
             + self._clean_text(top_text)
         )
 
-    def _append_extras(self, chunks: list[dict]) -> str:
+    def _append_extras(self, chunks: list[dict], citation_map: "dict[str, int] | None" = None) -> str:
         """Append thresholds and warnings from non-step chunks."""
         extras = ""
 
         # Scan for thresholds
-        thresholds = self._scan_thresholds(chunks)
+        thresholds = self._scan_thresholds(chunks, citation_map)
         if thresholds:
-            extras += "\n\nKey thresholds:\n" + "\n".join(f"- {t}" for t in thresholds[:5])
+            extras += "\n\nKey thresholds:\n" + "\n".join(f"- {self._mark(t, n)}" for t, n in thresholds[:5])
 
         # Scan for contraindications
-        contras = self._scan_contraindications(chunks)
+        contras = self._scan_contraindications(chunks, citation_map)
         if contras:
-            extras += "\n\nImportant:\n" + "\n".join(f"- {c}" for c in contras[:3])
+            extras += "\n\nImportant:\n" + "\n".join(f"- {self._mark(c, n)}" for c, n in contras[:3])
 
         return extras
 
@@ -435,7 +532,7 @@ class MockGenerator:
         return raw
 
     def _build_threshold_answer(
-        self, sop_title: str, top_text: str, chunks: list[dict]
+        self, sop_title: str, top_text: str, chunks: list[dict], citation_map: "dict[str, int] | None" = None
     ) -> str:
         """Extract and present threshold values with clinical context."""
         primary_sop = chunks[0].get("sop_id", "") if chunks else ""
@@ -455,7 +552,8 @@ class MockGenerator:
         )
         combined = self._clean_text(combined)
 
-        threshold_lines = self._scan_thresholds(ordered_chunks)
+        threshold_lines = self._scan_thresholds(ordered_chunks, citation_map)
+        threshold_line_set = {t for t, _ in threshold_lines}
 
         # Also extract action triggers (lines with "if", "when", "escalate",
         # "notify", "alert" near a number or threshold)
@@ -470,11 +568,11 @@ class MockGenerator:
                 r"(?:if|when|escalate|notify|alert|contact|call)\b",
                 stripped, re.IGNORECASE,
             ) and re.search(r"\d", stripped):
-                if stripped not in threshold_lines and stripped not in action_triggers:
+                if stripped not in threshold_line_set and stripped not in action_triggers:
                     action_triggers.append(stripped)
 
         if threshold_lines:
-            formatted = [self._format_threshold_line(t) for t in threshold_lines[:10]]
+            formatted = [self._mark(self._format_threshold_line(t), n) for t, n in threshold_lines[:10]]
             items = "\n".join(f"- {t}" for t in formatted)
             answer = (
                 f"Based on the {sop_title}, the relevant clinical values are:\n\n"
@@ -485,8 +583,10 @@ class MockGenerator:
                 answer += "\n".join(f"- {a}" for a in action_triggers[:5])
             return answer
 
-        # Fallback: use key sentences
-        key = self._extract_key_sentences(top_text, 3)
+        # Fallback: use key sentences (top_text is definitively from the
+        # single top chunk, so it's safe to attribute)
+        top_cite = (citation_map or {}).get(_chunk_id(chunks[0])) if chunks else None
+        key = self._extract_key_sentences(top_text, 3, citation_number=top_cite)
         if key:
             return (
                 f"Based on the {sop_title}:\n\n"
@@ -498,7 +598,7 @@ class MockGenerator:
         )
 
     def _build_contraindication_answer(
-        self, sop_title: str, top_text: str, chunks: list[dict]
+        self, sop_title: str, top_text: str, chunks: list[dict], citation_map: "dict[str, int] | None" = None
     ) -> str:
         """Extract and present contraindications in grouped format."""
         primary_sop = chunks[0].get("sop_id", "") if chunks else ""
@@ -513,24 +613,25 @@ class MockGenerator:
         ]
         ordered_chunks = contra_chunks + other_chunks
 
-        contras = self._scan_contraindications(ordered_chunks)
+        contras = self._scan_contraindications(ordered_chunks, citation_map)
 
         # Group into "Do NOT" items, "Use instead" alternatives, and
         # monitoring requirements
         do_not: list[str] = []
         use_instead: list[str] = []
         monitor: list[str] = []
-        for c in contras:
+        for c, n in contras:
             # Skip any remaining noise that slipped through
             if self._is_noise_line(c):
                 continue
+            marked = self._mark(c, n)
             low = c.lower()
             if any(k in low for k in ["instead", "alternative", "substitute", "use "]):
-                use_instead.append(c)
+                use_instead.append(marked)
             elif any(k in low for k in ["monitor", "observe", "watch for", "check"]):
-                monitor.append(c)
+                monitor.append(marked)
             else:
-                do_not.append(c)
+                do_not.append(marked)
 
         if do_not or use_instead or monitor:
             answer = f"Based on the {sop_title}, the following restrictions apply:"
@@ -549,8 +650,9 @@ class MockGenerator:
 
             return answer
 
-        # Fallback
-        key = self._extract_key_sentences(top_text, 3)
+        # Fallback (top_text is definitively from the single top chunk)
+        top_cite = (citation_map or {}).get(_chunk_id(chunks[0])) if chunks else None
+        key = self._extract_key_sentences(top_text, 3, citation_number=top_cite)
         if key:
             return (
                 f"Based on the {sop_title}, the relevant cautions are:\n\n"
@@ -562,7 +664,7 @@ class MockGenerator:
         )
 
     def _build_general_answer(
-        self, sop_title: str, top_text: str, chunks: list[dict]
+        self, sop_title: str, top_text: str, chunks: list[dict], citation_map: "dict[str, int] | None" = None
     ) -> str:
         """Provide a clean summary from top chunks."""
         primary_sop = chunks[0].get("sop_id", "") if chunks else ""
@@ -571,19 +673,20 @@ class MockGenerator:
         # Try to find step-type chunks first
         step_chunks = [c for c in same_sop if c.get("chunk_type") in ("step", "step_sequence")]
         if step_chunks:
-            return self._build_sequence_answer(sop_title, top_text, chunks)
+            return self._build_sequence_answer(sop_title, top_text, chunks, citation_map)
 
         # Try to find threshold chunks
         threshold_chunks = [c for c in same_sop if c.get("chunk_type") == "threshold"]
         if threshold_chunks:
-            return self._build_threshold_answer(sop_title, top_text, chunks)
+            return self._build_threshold_answer(sop_title, top_text, chunks, citation_map)
 
         # Try to find contraindication chunks
         contra_chunks = [c for c in same_sop if c.get("chunk_type") == "contraindication"]
         if contra_chunks:
-            return self._build_contraindication_answer(sop_title, top_text, chunks)
+            return self._build_contraindication_answer(sop_title, top_text, chunks, citation_map)
 
-        # General: extract key sentences from all same-SOP chunks
+        # General: extract key sentences from all same-SOP chunks (multiple
+        # chunks combined - ambiguous origin, so no citation marker here)
         all_text = "\n".join(c.get("text", c.get("chunk_text", "")) for c in same_sop[:4])
         sentences = self._extract_key_sentences(all_text, max_sentences=6)
 

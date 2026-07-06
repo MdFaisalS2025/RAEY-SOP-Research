@@ -2,10 +2,24 @@
 SOP-Guard RAGAS-Lite Evaluation
 Lightweight reference-free evaluation inspired by RAGAS. No external deps.
 Metrics per query:
-  - faithfulness: overall_faithfulness from the pipeline's hallucination checker
-  - citation_coverage: fraction of answer sentences carrying a [N] marker
+  - faithfulness: overall_faithfulness from the pipeline's hallucination
+    checker. Calibration note: in mock mode this sits at a near-1.0
+    ceiling for almost every query, not because faithfulness is perfect
+    but because the mock generator is purely extractive (it copies phrases
+    directly from retrieved chunks), so keyword-grounding checks trivially
+    pass. This metric is only discriminating for LLM-generated answers,
+    which can genuinely paraphrase or hallucinate - see faithfulness_note
+    in the aggregate output.
+  - citation_coverage: fraction of answer sentences carrying a [N] marker.
+    Requires the generator to emit real markers - both MockGenerator and
+    LLMGenerator do this now (see generator.py / llm_generator.py).
   - abstention_correct: out-of-scope queries should abstain (or refuse)
-  - retrieval_precision_proxy: relevance score of the top retrieved chunk
+  - top_chunk_relevance_score: raw TF-IDF relevance score of the top
+    retrieved chunk (renamed from the old "retrieval_precision_proxy" -
+    it is NOT a precision metric: it is unbounded (can exceed 1.0) and
+    not comparable across queries with different vocabulary overlap. See
+    /api/evaluate/rag for an actual precision metric, which measures
+    whether the top-retrieved SOP matches the expected SOP for the query).
 Research prototype. Not for clinical use.
 """
 
@@ -111,7 +125,7 @@ async def run_eval(pipeline: Optional[SOPGuardPipeline] = None) -> dict:
 
         faith = (result.faithfulness or {}).get("overall_faithfulness", 0.0) if result.faithfulness else 0.0
         coverage = _citation_coverage(result.answer)
-        top_relevance = result.retrieved_chunks[0].relevance_score if result.retrieved_chunks else 0.0
+        top_chunk_score = result.retrieved_chunks[0].relevance_score if result.retrieved_chunks else 0.0
 
         # Abstention: explicit flag from the generator, or a low-confidence refusal
         did_abstain = result.abstained or (
@@ -126,14 +140,14 @@ async def run_eval(pipeline: Optional[SOPGuardPipeline] = None) -> dict:
 
         faith_scores.append(faith)
         coverage_scores.append(coverage)
-        precision_scores.append(top_relevance)
+        precision_scores.append(top_chunk_score)
 
         per_query.append({
             "query": query,
             "category": case["category"],
             "faithfulness": faith,
             "citation_coverage": coverage,
-            "retrieval_precision_proxy": round(top_relevance, 4),
+            "top_chunk_relevance_score": round(top_chunk_score, 4),
             "abstained": did_abstain,
             "abstention_correct": abstention_correct,
             "confidence": result.confidence,
@@ -154,11 +168,22 @@ async def run_eval(pipeline: Optional[SOPGuardPipeline] = None) -> dict:
         "completed": n,
         "avg_faithfulness": round(sum(faith_scores) / n, 3) if n else 0.0,
         "avg_citation_coverage": round(sum(coverage_scores) / n, 3) if n else 0.0,
-        "avg_retrieval_precision_proxy": round(sum(precision_scores) / n, 4) if n else 0.0,
+        "avg_top_chunk_relevance_score": round(sum(precision_scores) / n, 4) if n else 0.0,
         "abstention_accuracy": round(abstention_hits / abstention_total, 3) if abstention_total else None,
         "out_of_scope_cases": abstention_total,
         "generation_mode": dominant_mode,
         "generation_mode_breakdown": dict(mode_counts),
+        "faithfulness_note": (
+            "avg_faithfulness sits near its 1.0 ceiling in mock mode because "
+            "the mock generator is purely extractive (answers are built from "
+            "verbatim chunk phrases), so keyword-grounding checks trivially "
+            "pass. It only becomes a meaningful discriminator for LLM-"
+            "generated answers, which can paraphrase or add unsupported "
+            "content."
+            if dominant_mode in ("mock", "mock_fallback")
+            else "LLM-generated answers: faithfulness reflects real "
+                 "grounding checks, not an extractive-generation ceiling."
+        ),
     }
 
     return {

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   AlertTriangle, CheckCircle, Clock, Flag, FileText,
@@ -10,9 +10,24 @@ import {
 import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { cn } from "@/lib/utils"
-import { MOCK_COMPLIANCE, MOCK_SOPS, MOCK_DASHBOARD_STATS, MOCK_ATTESTATIONS } from "@/lib/mock-data"
+import { MOCK_COMPLIANCE, MOCK_SOPS, MOCK_DASHBOARD_STATS } from "@/lib/mock-data"
 import { useRole } from "@/lib/role-context"
-import type { AttestationRecord } from "@/lib/governance-types"
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
+const LEGAL_TEXT = "By clicking Attest, I confirm I have read, understood, and will comply with this policy in my clinical practice. This attestation is timestamped and may be used as evidence in regulatory audits or litigation."
+
+interface RealAttestation {
+  id: number
+  sop_id: string
+  sop_version: string
+  user_id: string
+  user_name: string
+  user_role: string
+  department: string
+  ip_address: string
+  legal_text: string
+  attested_at: string | null
+}
 
 function scoreColor(score: number) {
   if (score >= 90) return "text-[#15803D] dark:text-green-400"
@@ -71,22 +86,17 @@ function formatAttestedAtLong(iso: string): string {
   }) + " UTC"
 }
 
-function parseDevice(ua: string): string {
-  if (ua.includes("iPhone")) return "Mobile (iOS 17)"
-  if (ua.includes("Macintosh")) return "Desktop (macOS)"
-  if (ua.includes("Windows NT")) return "Desktop (Windows)"
-  return "Unknown device"
-}
-
 // ─────────────────────────────────────────────
 // Sub-components
 // ─────────────────────────────────────────────
 
 function CertificateModal({
   record,
+  sopTitle,
   onClose,
 }: {
-  record: AttestationRecord
+  record: RealAttestation
+  sopTitle: string
   onClose: () => void
 }) {
   return (
@@ -118,14 +128,14 @@ function CertificateModal({
           <div className="border-t border-[#E2E8F0] pt-4">
             <p className="text-xs text-[#94A3B8] uppercase tracking-widest mb-1">This certifies that:</p>
             <p className="text-[#1A2332] font-semibold text-base">{record.user_name}</p>
-            <p className="text-[#64748B] text-xs">{record.user_department} - {roleLabel[record.user_role] ?? record.user_role}</p>
+            <p className="text-[#64748B] text-xs">{record.department} - {roleLabel[record.user_role] ?? record.user_role}</p>
           </div>
 
           <div className="border-t border-[#E2E8F0] pt-4">
             <p className="text-xs text-[#94A3B8] uppercase tracking-widest mb-1">Has read, acknowledged, and agreed to comply with:</p>
-            <p className="text-[#1A2332] font-medium">{record.sop_title}</p>
+            <p className="text-[#1A2332] font-medium">{sopTitle}</p>
             <span className="inline-block mt-1 px-2 py-0.5 rounded bg-[#0B6BCB]/10 text-[#0B6BCB] text-xs border border-[#0B6BCB]/30">
-              Version {record.sop_version}
+              Version {record.sop_version || "?"}
             </span>
           </div>
 
@@ -137,15 +147,11 @@ function CertificateModal({
           <div className="border-t border-[#E2E8F0] pt-4 space-y-1.5">
             <div className="flex justify-between text-xs">
               <span className="text-[#94A3B8]">Timestamp</span>
-              <span className="text-[#334155]">{formatAttestedAtLong(record.attested_at)}</span>
+              <span className="text-[#334155]">{record.attested_at ? formatAttestedAtLong(record.attested_at) : "unknown"}</span>
             </div>
             <div className="flex justify-between text-xs">
               <span className="text-[#94A3B8]">IP Address</span>
-              <span className="text-[#334155] font-mono">{record.ip_address}</span>
-            </div>
-            <div className="flex justify-between text-xs">
-              <span className="text-[#94A3B8]">Device</span>
-              <span className="text-[#334155]">{parseDevice(record.user_agent)}</span>
+              <span className="text-[#334155] font-mono">{record.ip_address || "unknown"}</span>
             </div>
             <div className="flex justify-between text-xs">
               <span className="text-[#94A3B8]">Status</span>
@@ -177,38 +183,48 @@ function CertificateModal({
 }
 
 function TestAttestationModal({
+  sop,
   onClose,
   onAttest,
 }: {
+  sop: { sop_id: string; title: string; version: string } | null
   onClose: () => void
-  onAttest: (record: AttestationRecord) => void
+  onAttest: (record: RealAttestation) => void
 }) {
+  const { currentUser, role } = useRole()
   const [attested, setAttested] = useState(false)
-  const [timestamp, setTimestamp] = useState("")
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState("")
+  const [result, setResult] = useState<RealAttestation | null>(null)
 
-  const sopName = "High-Risk Respiratory Isolation + PPE Protocol"
-  const sopVersion = "3.1"
-
-  const handleAttest = () => {
-    const now = new Date().toISOString()
-    setTimestamp(now)
-    setAttested(true)
-    const newRecord: AttestationRecord = {
-      id: `att-demo-${Date.now()}`,
-      sop_id: "IC-PPE-001",
-      sop_title: sopName,
-      sop_version: sopVersion,
-      user_id: "user-demo",
-      user_name: "Demo User",
-      user_role: "nurse",
-      user_department: "General",
-      attested_at: now,
-      ip_address: "192.168.0.1",
-      user_agent: navigator.userAgent,
-      legal_text: "By clicking Attest, I confirm I have read, understood, and will comply with this policy in my clinical practice. This attestation is timestamped and may be used as evidence in regulatory audits or litigation.",
-      is_valid: true,
+  const handleAttest = async () => {
+    if (!sop) return
+    setSubmitting(true)
+    setError("")
+    try {
+      const res = await fetch(`${API_BASE}/api/governance/attestations`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sop_id: sop.sop_id,
+          sop_version: sop.version,
+          user_id: currentUser.name,
+          user_name: currentUser.name,
+          user_role: role,
+          department: currentUser.department,
+          legal_text: LEGAL_TEXT,
+        }),
+      })
+      if (!res.ok) throw new Error("Failed to record attestation")
+      const record: RealAttestation = await res.json()
+      setResult(record)
+      setAttested(true)
+      onAttest(record)
+    } catch {
+      setError("Could not record the attestation. Is the backend running?")
+    } finally {
+      setSubmitting(false)
     }
-    onAttest(newRecord)
   }
 
   return (
@@ -222,21 +238,25 @@ function TestAttestationModal({
         <div className="bg-card border-b border-[#E2E8F0] px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Shield className="w-5 h-5 text-[#0B6BCB]" />
-            <span className="font-semibold text-sm">Test Attestation Flow</span>
+            <span className="font-semibold text-sm">Attest to a SOP</span>
           </div>
-          <button onClick={onClose} aria-label="Close test attestation flow" className="text-[#64748B] hover:text-[#0B6BCB] transition-colors">
+          <button onClick={onClose} aria-label="Close attestation flow" className="text-[#64748B] hover:text-[#0B6BCB] transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
 
         <div className="px-6 py-5 space-y-4">
-          {!attested ? (
+          {!sop ? (
+            <p className="text-sm text-[#64748B]">No SOPs available to attest to yet - upload one first.</p>
+          ) : !attested ? (
             <>
               <p className="text-sm text-[#334155]">
                 You are about to attest to{" "}
-                <span className="font-semibold text-[#1A2332]">{sopName}</span>{" "}
-                version <span className="text-[#0B6BCB] font-mono">{sopVersion}</span>.
+                <span className="font-semibold text-[#1A2332]">{sop.title}</span>{" "}
+                version <span className="text-[#0B6BCB] font-mono">{sop.version || "1"}</span>.
               </p>
+
+              {error && <p className="text-xs text-red-400">{error}</p>}
 
               <div className="rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 p-4 text-xs text-[#B45309] dark:text-amber-400 leading-relaxed">
                 <p className="font-semibold mb-1">Legal Statement</p>
@@ -250,8 +270,10 @@ function TestAttestationModal({
               <div className="flex items-center gap-3 pt-1">
                 <button
                   onClick={handleAttest}
-                  className="flex-1 py-2.5 rounded-xl bg-[#0B6BCB] hover:bg-[#0959AC] text-white font-semibold text-sm transition-colors"
+                  disabled={submitting}
+                  className="flex-1 py-2.5 rounded-xl bg-[#0B6BCB] hover:bg-[#0959AC] disabled:opacity-50 text-white font-semibold text-sm transition-colors flex items-center justify-center gap-2"
                 >
+                  {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
                   I Attest
                 </button>
                 <button
@@ -274,15 +296,15 @@ function TestAttestationModal({
               <div className="rounded-xl bg-card border border-[#E2E8F0] p-3 text-xs text-left space-y-1.5">
                 <div className="flex justify-between">
                   <span className="text-[#94A3B8]">Timestamp</span>
-                  <span className="text-[#334155] font-mono">{formatAttestedAtLong(timestamp)}</span>
+                  <span className="text-[#334155] font-mono">{result?.attested_at ? formatAttestedAtLong(result.attested_at) : "unknown"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-[#94A3B8]">SOP</span>
-                  <span className="text-[#334155]">{sopName}</span>
+                  <span className="text-[#334155]">{sop.title}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-[#94A3B8]">Version</span>
-                  <span className="text-[#0B6BCB] font-mono">{sopVersion}</span>
+                  <span className="text-[#0B6BCB] font-mono">{sop.version || "1"}</span>
                 </div>
               </div>
               <button
@@ -307,9 +329,31 @@ export default function CompliancePage() {
   const { role } = useRole()
   const [exportState, setExportState] = useState<"idle" | "loading" | "success">("idle")
   const [infoExpanded, setInfoExpanded] = useState(false)
-  const [certRecord, setCertRecord] = useState<AttestationRecord | null>(null)
+  const [certRecord, setCertRecord] = useState<RealAttestation | null>(null)
   const [showTestModal, setShowTestModal] = useState(false)
-  const [attestations, setAttestations] = useState<AttestationRecord[]>(MOCK_ATTESTATIONS)
+  const [attestations, setAttestations] = useState<RealAttestation[]>([])
+  const [sopTitleById, setSopTitleById] = useState<Record<string, string>>({})
+  const [firstRealSop, setFirstRealSop] = useState<{ sop_id: string; title: string; version: string } | null>(null)
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/governance/attestations?limit=200`)
+      .then((r) => r.json())
+      .then((data) => setAttestations(Array.isArray(data?.attestations) ? data.attestations : []))
+      .catch(() => setAttestations([]))
+
+    fetch(`${API_BASE}/api/sops`)
+      .then((r) => r.json())
+      .then((data) => {
+        const list = Array.isArray(data) ? data : (data.sops ?? data.items ?? [])
+        const titles: Record<string, string> = {}
+        for (const s of list) titles[s.sop_id] = s.title
+        setSopTitleById(titles)
+        if (list.length > 0) {
+          setFirstRealSop({ sop_id: list[0].sop_id, title: list[0].title, version: list[0].version ?? "1" })
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   const sopsNeedingReview = MOCK_SOPS.filter(
     (s) => s.status === "needs_update" || s.status === "under_review"
@@ -321,7 +365,7 @@ export default function CompliancePage() {
     setTimeout(() => setExportState("idle"), 3500)
   }
 
-  const handleNewAttestation = (record: AttestationRecord) => {
+  const handleNewAttestation = (record: RealAttestation) => {
     setAttestations((prev) => [record, ...prev])
   }
 
@@ -333,9 +377,9 @@ export default function CompliancePage() {
   ]
 
   const attestationStats = [
-    { label: "Total Attestations This Month", value: attestations.length, color: "text-[#0B6BCB]" },
-    { label: "Legally Valid", value: attestations.filter((a) => a.is_valid).length, color: "text-[#15803D] dark:text-green-400" },
+    { label: "Total Attestations", value: attestations.length, color: "text-[#0B6BCB]" },
     { label: "With Timestamp + IP", value: attestations.filter((a) => a.ip_address && a.attested_at).length, color: "text-[#15803D] dark:text-green-400" },
+    { label: "Distinct SOPs Attested", value: new Set(attestations.map((a) => a.sop_id)).size, color: "text-[#15803D] dark:text-green-400" },
     { label: "Exportable for Litigation", value: "Yes", color: "text-[#15803D] dark:text-green-400" },
   ]
 
@@ -345,10 +389,15 @@ export default function CompliancePage() {
         {/* Modals */}
         <AnimatePresence>
           {certRecord && (
-            <CertificateModal record={certRecord} onClose={() => setCertRecord(null)} />
+            <CertificateModal
+              record={certRecord}
+              sopTitle={sopTitleById[certRecord.sop_id] ?? certRecord.sop_id}
+              onClose={() => setCertRecord(null)}
+            />
           )}
           {showTestModal && (
             <TestAttestationModal
+              sop={firstRealSop}
               onClose={() => setShowTestModal(false)}
               onAttest={(r) => {
                 handleNewAttestation(r)
@@ -530,7 +579,7 @@ export default function CompliancePage() {
               onClick={() => setShowTestModal(true)}
               className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-[#0B6BCB]/10 text-[#0B6BCB] hover:bg-[#0B6BCB]/20 transition-colors border border-[#0B6BCB]/30 font-medium"
             >
-              <Plus className="w-3.5 h-3.5" /> Test Attestation Flow
+              <Plus className="w-3.5 h-3.5" /> Attest to a SOP
             </button>
           </div>
 
@@ -595,7 +644,14 @@ export default function CompliancePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {attestations.map((rec) => (
+                  {attestations.length === 0 && (
+                    <tr>
+                      <td colSpan={8} className="p-6 text-center text-xs text-[#64748B]">No attestations recorded yet.</td>
+                    </tr>
+                  )}
+                  {attestations.map((rec) => {
+                    const title = sopTitleById[rec.sop_id] ?? rec.sop_id
+                    return (
                     <tr key={rec.id} className="border-b border-[#EDF1F5] hover:bg-[#F8FAFC] transition-colors">
                       <td className="p-4">
                         <p className="font-medium text-[#1A2332]">{rec.user_name}</p>
@@ -603,31 +659,27 @@ export default function CompliancePage() {
                           {roleLabel[rec.user_role] ?? rec.user_role}
                         </span>
                       </td>
-                      <td className="p-4 text-[#64748B] text-xs">{rec.user_department}</td>
+                      <td className="p-4 text-[#64748B] text-xs">{rec.department}</td>
                       <td className="p-4">
-                        <p className="text-[#1A2332] text-xs truncate max-w-[200px]" title={rec.sop_title}>
-                          {rec.sop_title.length > 30 ? rec.sop_title.slice(0, 30) + "..." : rec.sop_title}
+                        <p className="text-[#1A2332] text-xs truncate max-w-[200px]" title={title}>
+                          {title.length > 30 ? title.slice(0, 30) + "..." : title}
                         </p>
                       </td>
                       <td className="p-4">
                         <span className="px-2 py-0.5 rounded bg-[#0B6BCB]/10 text-[#0B6BCB] text-xs border border-[#0B6BCB]/30 font-mono">
-                          v{rec.sop_version}
+                          v{rec.sop_version || "?"}
                         </span>
                       </td>
                       <td className="p-4 text-xs text-[#64748B] whitespace-nowrap">
-                        {formatAttestedAt(rec.attested_at)}
+                        {rec.attested_at ? formatAttestedAt(rec.attested_at) : "unknown"}
                       </td>
                       <td className="p-4">
-                        <span className="font-mono text-xs text-[#64748B]">{rec.ip_address}</span>
+                        <span className="font-mono text-xs text-[#64748B]">{rec.ip_address || "unknown"}</span>
                       </td>
                       <td className="p-4">
-                        {rec.is_valid ? (
-                          <span className="flex items-center gap-1 text-[#15803D] dark:text-green-400 text-xs">
-                            <Check className="w-3.5 h-3.5" /> Valid
-                          </span>
-                        ) : (
-                          <span className="text-[#B91C1C] dark:text-red-400 text-xs">Invalid</span>
-                        )}
+                        <span className="flex items-center gap-1 text-[#15803D] dark:text-green-400 text-xs">
+                          <Check className="w-3.5 h-3.5" /> Valid
+                        </span>
                       </td>
                       <td className="p-4">
                         <button
@@ -638,7 +690,8 @@ export default function CompliancePage() {
                         </button>
                       </td>
                     </tr>
-                  ))}
+                    )
+                  })}
                 </tbody>
               </table>
             </div>

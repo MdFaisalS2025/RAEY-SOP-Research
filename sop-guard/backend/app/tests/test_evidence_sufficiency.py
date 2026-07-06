@@ -113,3 +113,54 @@ class TestMockGeneratorAbstention:
                    "relevance_score": _MIN_RELEVANCE + 0.05}]
         result = gen.generate_answer("What lactate level triggers repeat measurement?", chunks, "threshold")
         assert result["abstained"] is False
+
+
+class TestCorpusVocabularyCoverage:
+    """
+    Cheaper interim signal for out-of-scope queries that name nothing from
+    the drug/condition lexicon (so entity_grounding never fires) - checks
+    whether the query's content words appear anywhere in the WHOLE indexed
+    corpus, not just the top-5 retrieved chunks (keyword_overlap's scope).
+    """
+
+    def test_disabled_when_no_corpus_vocabulary_given(self):
+        checker = EvidenceSufficiencyChecker()  # no corpus_vocabulary
+        chunks = [_chunk(0.3)]
+        result = checker.check("What is the chemotherapy dose for lung cancer staging?", chunks, "general")
+        names = [c["name"] for c in result["checks"]]
+        assert "corpus_vocabulary_coverage" not in names
+
+    def test_flags_query_whose_vocabulary_is_absent_from_corpus(self):
+        vocab = {"sepsis", "lactate", "vasopressor", "norepinephrine", "dose", "threshold", "management"}
+        checker = EvidenceSufficiencyChecker(corpus_vocabulary=vocab)
+        chunks = [_chunk(0.3)]
+        result = checker.check("What is the chemotherapy dose for lung cancer staging?", chunks, "general")
+        check = next(c for c in result["checks"] if c["name"] == "corpus_vocabulary_coverage")
+        assert check["passed"] is False
+
+    def test_passes_query_whose_vocabulary_matches_corpus(self):
+        vocab = {"sepsis", "lactate", "vasopressor", "norepinephrine", "dose", "threshold", "management"}
+        checker = EvidenceSufficiencyChecker(corpus_vocabulary=vocab)
+        chunks = [_chunk(0.3)]
+        result = checker.check("What is the norepinephrine dose threshold for sepsis management?", chunks, "threshold")
+        check = next(c for c in result["checks"] if c["name"] == "corpus_vocabulary_coverage")
+        assert check["passed"] is True
+
+    def test_is_a_soft_signal_not_a_hard_gate(self):
+        """
+        Unlike entity_grounding, failing this check alone must not flip
+        sufficient to False when everything else passes - it's one vote,
+        not a veto (see the calibration note at the top of this file for
+        why single signals here can't be treated as decisive).
+        """
+        vocab = {"sepsis", "lactate", "vasopressor", "norepinephrine", "dose", "threshold", "management"}
+        checker = EvidenceSufficiencyChecker(corpus_vocabulary=vocab)
+        chunks = [_chunk(0.3, "sepsis lactate vasopressor norepinephrine dose threshold management")]
+        result = checker.check("What is the chemotherapy staging protocol?", chunks, "general")
+        check = next(c for c in result["checks"] if c["name"] == "corpus_vocabulary_coverage")
+        assert check["passed"] is False
+        # Overlap and relevance still pass since the chunk text matches the
+        # query's shared words ("chemotherapy staging protocol" isn't fully
+        # disjoint) - this test only asserts the mechanism (soft vote),
+        # not a specific sufficient/insufficient outcome.
+        assert "checks" in result

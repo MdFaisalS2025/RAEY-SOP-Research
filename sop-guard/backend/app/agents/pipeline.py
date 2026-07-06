@@ -13,7 +13,7 @@ from app.schemas.schemas import QueryResponse, RetrievedChunk, VerificationResul
 from app.rag.hybrid_retriever import HybridRetriever
 from app.rag.llm_generator import LLMGenerator
 from app.rag.multihop import MultiHopRetriever
-from app.rag.evidence_sufficiency import EvidenceSufficiencyChecker
+from app.rag.evidence_sufficiency import EvidenceSufficiencyChecker, build_corpus_vocabulary
 from app.rag.hyde import generate_hypothetical_doc
 from app.verifier.verifier import ProceduralFaithfulnessVerifier
 from app.agents.query_agent import QueryUnderstandingAgent
@@ -34,7 +34,9 @@ class SOPGuardPipeline:
         """
         self.retriever = HybridRetriever(chunks)
         self.multihop = MultiHopRetriever(self.retriever)
-        self.evidence_checker = EvidenceSufficiencyChecker()
+        self.evidence_checker = EvidenceSufficiencyChecker(
+            corpus_vocabulary=build_corpus_vocabulary(chunks)
+        )
         self.generator = LLMGenerator()
         self.verifier = ProceduralFaithfulnessVerifier()
         self.query_agent = QueryUnderstandingAgent()

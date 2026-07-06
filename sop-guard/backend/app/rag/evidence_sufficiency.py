@@ -24,6 +24,30 @@ def _extract_lexicon_entities(query: str) -> list[str]:
     return [name for name, pattern in _LEXICON_PATTERNS if pattern.search(low)]
 
 
+_STOPWORDS = {
+    "the", "a", "an", "is", "are", "was", "were", "be", "been", "to", "of",
+    "in", "on", "for", "and", "or", "this", "that", "it", "with", "as", "at",
+    "by", "from", "should", "must", "will", "what", "when", "how", "does",
+    "can", "could", "would", "you", "your", "which", "who", "why", "there",
+}
+
+
+def build_corpus_vocabulary(chunks: list[dict[str, Any]]) -> set[str]:
+    """
+    Content-word vocabulary across the entire indexed corpus (not just the
+    top-K retrieved chunks). Used for a cheap, corpus-wide "does this query
+    use vocabulary that appears ANYWHERE in what we've indexed" signal -
+    complementary to keyword_overlap, which only compares against the top
+    5 retrieved chunks and can't tell "weakly related to the top match"
+    apart from "unrelated to the entire corpus".
+    """
+    vocab: set[str] = set()
+    for c in chunks:
+        text = c.get("text") or c.get("chunk_text") or ""
+        vocab.update(w for w in re.findall(r"[a-z]{3,}", text.lower()) if w not in _STOPWORDS)
+    return vocab
+
+
 class EvidenceSufficiencyChecker:
     """
     Checks whether retrieved chunks provide enough evidence to answer a query.
@@ -41,10 +65,17 @@ class EvidenceSufficiencyChecker:
         # weakly-matched legitimate ones in this corpus.
         min_top_score: float = 0.05,
         min_keyword_overlap: float = 0.15,
+        corpus_vocabulary: set[str] | None = None,
+        min_corpus_vocabulary_coverage: float = 0.34,
     ):
         self.min_chunks = min_chunks
         self.min_top_score = min_top_score
         self.min_keyword_overlap = min_keyword_overlap
+        # Whole-corpus vocabulary (see build_corpus_vocabulary) - optional
+        # so existing call sites/tests that construct this checker directly
+        # without a corpus don't need to change. None disables check 6.
+        self.corpus_vocabulary = corpus_vocabulary
+        self.min_corpus_vocabulary_coverage = min_corpus_vocabulary_coverage
 
     def check(
         self,
@@ -133,7 +164,32 @@ class EvidenceSufficiencyChecker:
             if not entity_grounded:
                 missing.append(f"evidence for named entities ({', '.join(ungrounded)})")
 
-        # 6. SOP status check
+        # 6. Corpus-vocabulary coverage: a cheap, corpus-wide complement to
+        # the entity_grounding gate above. entity_grounding only fires when
+        # the query names something from the ~70-term drug/condition
+        # lexicon; a query that uses no lexicon term at all (e.g. "What is
+        # the recommended dose of chemotherapy for stage 3 lung cancer?" -
+        # "chemotherapy" isn't in the lexicon) sails through untouched.
+        # This checks what fraction of the query's content words appear
+        # ANYWHERE in the indexed corpus, not just the top-5 retrieved
+        # chunks (keyword_overlap's scope) - a query mostly built from
+        # words absent from the whole corpus is a real out-of-scope signal.
+        # Soft vote only (unlike entity_grounding): unlike a named entity
+        # that's either grounded or not, "uses some unfamiliar vocabulary"
+        # is common in legitimate weak queries too, so this must not be a
+        # hard gate - see the calibration note in
+        # test_evidence_sufficiency.py for why single signals here can't
+        # be treated as decisive on their own.
+        if self.corpus_vocabulary is not None:
+            content_words = {w for w in q_tokens if w not in _STOPWORDS}
+            if content_words:
+                vocab_coverage = len(content_words & self.corpus_vocabulary) / len(content_words)
+                vocab_ok = vocab_coverage >= self.min_corpus_vocabulary_coverage
+                checks.append(("corpus_vocabulary_coverage", vocab_ok, round(vocab_coverage, 3)))
+                if not vocab_ok:
+                    missing.append("corpus vocabulary overlap")
+
+        # 7. SOP status check
         sop_statuses = {c.get("status", "active") for c in retrieved_chunks[:5]}
         status_warning = "archived" in sop_statuses
         if status_warning:

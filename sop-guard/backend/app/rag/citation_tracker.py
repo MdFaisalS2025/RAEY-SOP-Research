@@ -111,3 +111,27 @@ def extract_citations(answer: str, citation_records: list[dict]) -> tuple[str, l
         updated.append(rec)
 
     return cleaned, updated
+
+
+def citation_coverage(answer: str) -> float:
+    """
+    Fraction of substantive answer sentences that carry a [N] marker.
+
+    Shared by the RAGAS-lite eval (app/evaluation/ragas_lite.py) and the
+    live pipeline's confidence gate (app/agents/pipeline.py) - moved here
+    so both read the same definition of "substantive sentence" instead of
+    two regexes silently drifting apart.
+    """
+    raw = re.split(r"(?<=[.!?])\s+|\n+", answer.strip())
+    sentences = [
+        s.strip() for s in raw
+        if len(s.strip()) > 20
+        and not s.strip().startswith("#")
+        and not s.strip().startswith("Source:")
+        and "research prototype" not in s.lower()
+        and not s.strip().startswith("---")
+    ]
+    if not sentences:
+        return 0.0
+    cited = sum(1 for s in sentences if _MARKER_RE.search(s))
+    return round(cited / len(sentences), 3)

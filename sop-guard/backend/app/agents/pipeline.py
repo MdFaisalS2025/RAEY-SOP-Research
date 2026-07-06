@@ -17,6 +17,7 @@ from app.rag.evidence_sufficiency import EvidenceSufficiencyChecker
 from app.rag.hyde import generate_hypothetical_doc
 from app.verifier.verifier import ProceduralFaithfulnessVerifier
 from app.agents.query_agent import QueryUnderstandingAgent
+from app.rag.citation_tracker import citation_coverage
 
 
 class SOPGuardPipeline:
@@ -151,11 +152,14 @@ class SOPGuardPipeline:
         reasoning.append(f"Timing - Verification: {t_verify}ms")
 
         # 5. Confidence Gate
+        coverage = citation_coverage(answer)
+        reasoning.append(f"Citation coverage: {coverage}")
         final_confidence = self._confidence_gate(
             confidence, verification,
             num_chunks=len(retrieved),
             evidence_score=evidence.get("score", 0.0) if isinstance(evidence, dict) else 0.0,
             query_type=query_type,
+            citation_coverage_score=coverage,
         )
         t_total = round((time.perf_counter() - t_start) * 1000)
         reasoning.append(f"Final confidence after gating: {final_confidence}")
@@ -240,6 +244,7 @@ class SOPGuardPipeline:
         num_chunks: int = 0,
         evidence_score: float = 0.0,
         query_type: str = "general",
+        citation_coverage_score: float | None = None,
     ) -> float:
         """Compute final confidence from retrieval, generation, and verification signals."""
         score = raw_confidence
@@ -269,5 +274,16 @@ class SOPGuardPipeline:
                 score = min(score, 0.55)
             else:
                 score = min(score * 0.5, 0.35)
+
+        # Citation-coverage cap: the checks above can boost confidence to
+        # 0.8+ purely from verification/evidence signals, even if most of
+        # the answer's sentences aren't attributed to any specific source
+        # chunk (both generators now emit real [N] markers - see
+        # generator.py/llm_generator.py - so low coverage is a genuine
+        # grounding-quality signal, not a generator limitation). A
+        # confidently-worded but poorly-cited answer shouldn't outrank one
+        # that's actually traceable to its sources.
+        if citation_coverage_score is not None and citation_coverage_score < 0.3:
+            score = min(score, 0.65)
 
         return round(score, 2)

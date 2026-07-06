@@ -23,7 +23,6 @@ Metrics per query:
 Research prototype. Not for clinical use.
 """
 
-import re
 import json
 import os
 from collections import Counter
@@ -31,6 +30,7 @@ from datetime import datetime, timezone
 from typing import Any, Optional
 
 from app.agents.pipeline import SOPGuardPipeline
+from app.rag.citation_tracker import citation_coverage as _citation_coverage
 
 _CACHE_PATH = os.path.join(os.path.dirname(__file__), "last_eval.json")
 
@@ -58,26 +58,6 @@ EVAL_QUERIES: list[dict[str, Any]] = [
     {"query": "How do I calibrate the hospital MRI scanner magnets?", "category": "out_of_scope", "out_of_scope": True},
     {"query": "If a septic patient also needs a transfusion, which monitoring rules from both protocols apply?", "category": "cross_sop", "out_of_scope": False},
 ]
-
-_MARKER_RE = re.compile(r"\[\d+\]")
-
-
-def _citation_coverage(answer: str) -> float:
-    """Fraction of substantive answer sentences that carry a [N] marker."""
-    raw = re.split(r"(?<=[.!?])\s+|\n+", answer.strip())
-    sentences = [
-        s.strip() for s in raw
-        if len(s.strip()) > 20
-        and not s.strip().startswith("#")
-        and not s.strip().startswith("Source:")
-        and "research prototype" not in s.lower()
-        and not s.strip().startswith("---")
-    ]
-    if not sentences:
-        return 0.0
-    cited = sum(1 for s in sentences if _MARKER_RE.search(s))
-    return round(cited / len(sentences), 3)
-
 
 def _build_demo_pipeline() -> SOPGuardPipeline:
     """Build a pipeline from bundled demo SOPs (used when no pipeline is given)."""

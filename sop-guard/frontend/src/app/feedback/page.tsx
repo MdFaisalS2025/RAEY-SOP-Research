@@ -137,6 +137,7 @@ export default function FeedbackPage() {
         const data = await res.json()
         if (data.usage && data.usage.length > 0) {
           setSopUsage(data.usage.map((s: any) => ({
+            sop_id: s.sop_id,
             title: s.sop_title || s.title,
             views: s.views,
             queries: s.queries,
@@ -368,7 +369,7 @@ export default function FeedbackPage() {
           <div className="space-y-2">
             {sopUsage.map((sop: any, idx: number) => (
               <div
-                key={sop.title || idx}
+                key={sop.sop_id || sop.title || idx}
                 className="interactive-card flex items-center gap-4 p-3 rounded-xl bg-muted/30 dark:bg-white/[0.02] border border-border dark:border-white/[0.04] hover:bg-muted/50 dark:hover:bg-white/[0.04] transition-colors"
               >
                 <div className="w-7 h-7 rounded-full bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 flex items-center justify-center text-xs font-bold text-[#0B6BCB] shrink-0">

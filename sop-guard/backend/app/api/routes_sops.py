@@ -14,7 +14,7 @@ from sqlalchemy import select, func, delete
 from app.database.db import get_db
 from app.models.models import SOP, SOPChunk, SOPUpdate
 from app.services.permissions import get_user_role, require_permission
-from app.services.activity import log_activity
+from app.services.activity import log_activity, purge_activity_for_sop
 from app.schemas.schemas import (
     SOPResponse, SOPDetailResponse, SOPListResponse,
     SOPUploadResponse, SOPUpdateRequest, SOPUpdateResponse,
@@ -403,6 +403,7 @@ async def delete_sop(
         await db.execute(delete(SOPChunk).where(SOPChunk.sop_id == sop.id))
         await db.execute(delete(SOPUpdate).where(SOPUpdate.sop_id == sop.id))
         await db.delete(sop)
+        purge_activity_for_sop(sop_id)
         log_activity("sop_deleted", sop_id=sop_id, sop_title=sop.title, user_role=role,
                       details="Permanently deleted")
         return {"message": f"SOP '{sop_id}' permanently deleted.", "sop_id": sop_id}

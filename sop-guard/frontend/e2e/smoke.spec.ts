@@ -27,20 +27,42 @@ test.describe("core query flow", () => {
 })
 
 test.describe("upload flow", () => {
-  test("uploading a file completes and links to the library", async ({ page }) => {
+  test("uploading a file completes and links to the library", async ({ page, request }) => {
+    // Give this run's junk SOP a unique, greppable title so cleanup can
+    // never accidentally delete a real SOP even if this test crashes
+    // mid-run and leaves a stray row behind.
+    const uniqueTitle = `smoke-test-sop-${Date.now()}`
+
     await loginAsDemoUser(page, "Tariq Farooq")
     await page.goto("/upload")
     await page.setInputFiles('input[type="file"]', {
-      name: "smoke-test-sop.txt",
+      name: `${uniqueTitle}.txt`,
       mimeType: "text/plain",
       buffer: Buffer.from("Sample SOP content for smoke testing."),
     })
     await page.getByRole("button", { name: /upload & process/i }).click()
     await expect(page.getByText("Processing Complete")).toBeVisible({ timeout: 15_000 })
+
+    // Capture the sop_id the backend assigned so it can be deleted after
+    // the assertions below - without this, every CI/local run leaves a
+    // permanent junk row in the shared dev database, polluting retrieval,
+    // the corpus vocabulary abstention signal, and every SOP-count display
+    // in the app. Read it from the result card's data-sop-id attribute
+    // (not page text) since the site header also contains text starting
+    // with "SOP-" ("SOP-Guard").
+    const sopId = await page.locator("[data-sop-id]").getAttribute("data-sop-id")
+
     const libraryLink = page.getByRole("link", { name: /view in library/i })
     await expect(libraryLink).toBeVisible()
     await libraryLink.click()
     await page.waitForURL("**/library")
+
+    if (sopId) {
+      const cleanup = await request.delete(`http://localhost:8000/api/sops/${sopId.trim()}?permanent=true`, {
+        headers: { "X-User-Role": "admin" },
+      })
+      expect(cleanup.ok()).toBeTruthy()
+    }
   })
 })
 

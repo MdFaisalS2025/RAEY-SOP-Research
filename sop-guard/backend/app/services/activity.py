@@ -47,6 +47,17 @@ def log_activity(
 def get_activity_log(limit: int = 50) -> list[dict]:
     return list(reversed(_activity_log[-limit:]))
 
+def purge_activity_for_sop(sop_id: str) -> None:
+    """Remove all logged activity for a permanently-deleted SOP.
+
+    The activity log is the source of truth for get_sop_usage() - without
+    this, a hard-deleted SOP's views/queries/source_clicks keep showing up
+    in sop-usage forever (until process restart), which is exactly the kind
+    of stale ghost data a permanent delete is supposed to eliminate.
+    """
+    global _activity_log
+    _activity_log = [e for e in _activity_log if e.get("sop_id") != sop_id]
+
 def has_any_activity() -> bool:
     """Whether anything has been logged yet in this process's lifetime.
 
@@ -61,7 +72,11 @@ def get_sop_usage() -> list[dict]:
     usage: dict[str, dict] = {}
     for entry in _activity_log:
         sid = entry.get("sop_id", "")
-        if not sid:
+        # A deletion record must stay in the audit trail (get_activity_log)
+        # but a permanently-deleted SOP has no "usage" to report - without
+        # this it re-appears as a 0-views ghost row in the usage list right
+        # after purge_activity_for_sop() clears its real history.
+        if not sid or entry.get("action") == "sop_deleted":
             continue
         if sid not in usage:
             usage[sid] = {

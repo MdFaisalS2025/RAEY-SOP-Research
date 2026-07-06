@@ -56,6 +56,7 @@ export default function UploadPage() {
       setState("processing")
       setTimeout(() => {
         setResult({
+          sop_id: response.sop_id || "",
           title: response.title || selectedFile.name,
           department: response.department || "Unspecified",
           version: response.version || "1.0",
@@ -185,7 +186,7 @@ export default function UploadPage() {
 
           {state === "done" && result && (
             <motion.div key="done" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-              <div className="p-6 rounded-2xl bg-card border border-green-500/20">
+              <div className="p-6 rounded-2xl bg-card border border-green-500/20" data-sop-id={(result as { sop_id?: string }).sop_id ?? ""}>
                 <div className="flex items-center gap-3 mb-4">
                   <CheckCircle2 className="w-6 h-6 text-green-400" />
                   <h3 className="text-lg font-semibold">Processing Complete</h3>

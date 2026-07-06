@@ -36,8 +36,6 @@ import {
   MOCK_LEGAL,
   MOCK_PROPOSALS,
   MOCK_EVIDENCE_WATCH,
-  MOCK_AUDIT,
-  MOCK_DASHBOARD_STATS,
   DEMO_USERS,
 } from "@/lib/mock-data"
 import { cn } from "@/lib/utils"
@@ -957,31 +955,117 @@ function NurseEducatorDashboard() {
   )
 }
 
-function SystemAdminDashboard() {
-  const recentAudit = MOCK_AUDIT.slice(0, 5)
+interface RawActivityEntry {
+  id: number
+  timestamp: string
+  action: string
+  sop_id: string
+  sop_title: string
+  user_name: string
+  user_role: string
+  department: string
+  details: string
+  query: string
+  confidence: number
+}
 
-  const EVENT_ICON: Partial<Record<string, React.ComponentType<{ className?: string }>>> = {
-    proposal_created: FileText,
-    proposal_approved: CheckCircle2,
-    committee_vote: Vote,
-    training_assigned: GraduationCap,
-    sop_updated: BookOpen,
-    sop_published: BookOpen,
-    sop_archived: ClipboardList,
-    legal_review_completed: Scale,
-    acknowledgment_completed: CheckCheck,
-    ai_recommendation_generated: Zap,
-    export_generated: Download,
-    cross_reference_run: Activity,
+function summarizeActivity(entry: RawActivityEntry): string {
+  switch (entry.action) {
+    case "sop_created":
+      return `Created SOP: ${entry.sop_title || entry.sop_id}`
+    case "sop_updated":
+      return `Updated SOP: ${entry.sop_title || entry.sop_id}`
+    case "sop_archived":
+      return `Archived SOP: ${entry.sop_title || entry.sop_id}`
+    case "sop_deleted":
+      return `Deleted SOP: ${entry.sop_title || entry.sop_id}${entry.details ? ` (${entry.details})` : ""}`
+    case "sop_viewed":
+      return `Viewed SOP: ${entry.sop_title || entry.sop_id}`
+    case "query_submitted":
+      return `Query: "${entry.query}"${entry.confidence ? ` (confidence ${Math.round(entry.confidence * 100)}%)` : ""}`
+    case "source_clicked":
+      return `Clicked source in ${entry.sop_title || entry.sop_id}`
+    default:
+      return entry.details || entry.action.replace(/_/g, " ")
   }
+}
+
+const ACTIVITY_ICON: Partial<Record<string, React.ComponentType<{ className?: string }>>> = {
+  sop_created: FileText,
+  sop_updated: BookOpen,
+  sop_archived: ClipboardList,
+  sop_deleted: ClipboardList,
+  sop_viewed: BookOpen,
+  query_submitted: Zap,
+  source_clicked: ExternalLink,
+  feedback_submitted: CheckCheck,
+}
+
+interface LlmStatus {
+  provider: string
+  model: string
+  available: boolean
+  mode: string
+}
+
+function SystemAdminDashboard() {
+  const [sopCount, setSopCount] = useState<number | null>(null)
+  const [chunkCount, setChunkCount] = useState<number | null>(null)
+  const [activity, setActivity] = useState<RawActivityEntry[]>([])
+  const [llmStatus, setLlmStatus] = useState<LlmStatus | null>(null)
+  const [backendOnline, setBackendOnline] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    const base = process.env.NEXT_PUBLIC_API_URL || ""
+    let cancelled = false
+
+    fetch(`${base}/api/sops`)
+      .then((r) => {
+        if (cancelled) return
+        setBackendOnline(r.ok)
+        return r.ok ? r.json() : null
+      })
+      .then((data) => {
+        if (cancelled || !data) return
+        const list = Array.isArray(data) ? data : (data.sops ?? data.items ?? [])
+        setSopCount(list.length)
+      })
+      .catch(() => { if (!cancelled) setBackendOnline(false) })
+
+    fetch(`${base}/api/evaluation/chunk-distribution`)
+      .then((r) => r.json())
+      .then((data) => { if (!cancelled) setChunkCount(data?.total_chunks ?? null) })
+      .catch(() => { if (!cancelled) setChunkCount(null) })
+
+    fetch(`${base}/api/activity?limit=200`)
+      .then((r) => r.json())
+      .then((data) => { if (!cancelled) setActivity(Array.isArray(data?.entries) ? data.entries : []) })
+      .catch(() => { if (!cancelled) setActivity([]) })
+
+    fetch(`${base}/api/llm/status`)
+      .then((r) => r.json())
+      .then((data) => { if (!cancelled) setLlmStatus(data) })
+      .catch(() => { if (!cancelled) setLlmStatus(null) })
+
+    return () => { cancelled = true }
+  }, [])
+
+  const recentActivity = activity.slice(0, 5)
+
+  const llmLabel = llmStatus
+    ? llmStatus.mode === "mock"
+      ? "Mock (no live LLM configured)"
+      : `${llmStatus.provider} / ${llmStatus.model}`
+    : "Checking..."
+  const llmColor = llmStatus?.available ? "green" : "amber"
 
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatTile label="Total SOPs" value={MOCK_DASHBOARD_STATS.total_sops} color="teal" icon={BookOpen} />
+        <StatTile label="Total SOPs" value={sopCount ?? "-"} color="teal" icon={BookOpen} />
         <StatTile label="Total Users" value={DEMO_USERS.length} color="teal" icon={Users} />
-        <StatTile label="Evidence Sources" value={8} color="gray" icon={Activity} />
-        <StatTile label="Audit Events" value={MOCK_AUDIT.length} color="gray" icon={ClipboardList} trend="up" />
+        <StatTile label="Corpus Chunks Indexed" value={chunkCount ?? "-"} color="gray" icon={Activity} />
+        <StatTile label="Audit Events" value={activity.length} color="gray" icon={ClipboardList} trend="up" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -992,10 +1076,10 @@ function SystemAdminDashboard() {
           </h3>
           <div className="space-y-2">
             {[
-              { label: "Backend API", status: "Online", color: "green" as const },
-              { label: "LLM Engine", status: "Groq / Llama3", color: "teal" as const },
+              { label: "Backend API", status: backendOnline === null ? "Checking..." : backendOnline ? "Online" : "Offline", color: backendOnline ? "green" as const : backendOnline === false ? "red" as const : "amber" as const },
+              { label: "LLM Engine", status: llmLabel, color: llmColor as "green" | "amber" },
               { label: "Database", status: "SQLite (dev)", color: "teal" as const },
-              { label: "Evidence Pipeline", status: "Active", color: "green" as const },
+              { label: "Activity Logging", status: activity.length > 0 ? "Active" : "No events yet", color: activity.length > 0 ? "green" as const : "amber" as const },
             ].map(({ label, status, color }) => (
               <div
                 key={label}
@@ -1039,8 +1123,11 @@ function SystemAdminDashboard() {
             Recent Activity
           </h3>
           <div className="space-y-2">
-            {recentAudit.map((entry) => {
-              const Icon = EVENT_ICON[entry.event_type] ?? Activity
+            {recentActivity.length === 0 && (
+              <p className="text-[12px] text-[#94A3B8] px-1">No activity logged yet this session.</p>
+            )}
+            {recentActivity.map((entry) => {
+              const Icon = ACTIVITY_ICON[entry.action] ?? Activity
               return (
                 <div
                   key={entry.id}
@@ -1050,9 +1137,9 @@ function SystemAdminDashboard() {
                     <Icon className="w-3.5 h-3.5 text-[#0B6BCB]" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[12px] text-[#334155] line-clamp-2">{entry.action_summary}</p>
+                    <p className="text-[12px] text-[#334155] line-clamp-2">{summarizeActivity(entry)}</p>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-[10px] text-[#94A3B8]">{entry.user}</span>
+                      <span className="text-[10px] text-[#94A3B8]">{entry.user_name}</span>
                       <span className="text-[10px] text-[#CBD5E1]">·</span>
                       <span className="text-[10px] text-[#94A3B8]">
                         {new Date(entry.timestamp).toLocaleDateString("en-US")}

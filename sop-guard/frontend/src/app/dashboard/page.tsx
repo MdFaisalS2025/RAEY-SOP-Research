@@ -367,21 +367,44 @@ function PhysicianDashboard() {
 }
 
 function NurseDashboard() {
-  // ── Acknowledgment state (shared with library via localStorage) ──────────
-  const [acknowledged, setAcknowledged] = useState<Set<string>>(() => {
-    if (typeof window === "undefined") return new Set()
-    const saved = localStorage.getItem("sop-guard-acknowledged")
-    return saved ? new Set(JSON.parse(saved)) : new Set()
-  })
+  const { currentUser } = useRole()
+  // ── Acknowledgment state - persisted via /api/governance/acknowledgments,
+  // shared with the library page since both read the same backend records ──
+  const [acknowledged, setAcknowledged] = useState<Set<string>>(new Set())
   const [toastMessage, setToastMessage] = useState<string | null>(null)
 
-  const acknowledgeFromDashboard = (sopId: string, sopTitle: string) => {
-    const newSet = new Set(acknowledged)
-    newSet.add(sopId)
-    setAcknowledged(newSet)
-    localStorage.setItem("sop-guard-acknowledged", JSON.stringify(Array.from(newSet)))
-    setToastMessage(`Acknowledged: ${sopTitle}`)
-    setTimeout(() => setToastMessage(null), 3000)
+  useEffect(() => {
+    const base = process.env.NEXT_PUBLIC_API_URL || ""
+    fetch(`${base}/api/governance/acknowledgments?user_id=${encodeURIComponent(currentUser.name)}&limit=500`)
+      .then((r) => r.json())
+      .then((data) => {
+        const rows: { sop_id: string }[] = Array.isArray(data?.acknowledgments) ? data.acknowledgments : []
+        setAcknowledged(new Set(rows.map((r) => r.sop_id)))
+      })
+      .catch(() => setAcknowledged(new Set()))
+  }, [currentUser.name])
+
+  const acknowledgeFromDashboard = async (sopId: string, sopTitle: string) => {
+    const base = process.env.NEXT_PUBLIC_API_URL || ""
+    setAcknowledged((prev) => new Set(prev).add(sopId))
+    try {
+      const res = await fetch(`${base}/api/governance/acknowledgments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sop_id: sopId, user_id: currentUser.name, user_name: currentUser.name }),
+      })
+      if (!res.ok) throw new Error("Failed to record acknowledgment")
+      setToastMessage(`Acknowledged: ${sopTitle}`)
+      setTimeout(() => setToastMessage(null), 3000)
+    } catch {
+      setAcknowledged((prev) => {
+        const next = new Set(prev)
+        next.delete(sopId)
+        return next
+      })
+      setToastMessage("Could not record acknowledgment - backend unreachable")
+      setTimeout(() => setToastMessage(null), 3000)
+    }
   }
 
   const requiresAckSOPs = MOCK_SOPS.filter((s) => s.compliance_acknowledgment_required)

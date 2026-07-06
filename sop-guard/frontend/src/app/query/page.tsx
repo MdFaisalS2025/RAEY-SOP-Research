@@ -584,7 +584,14 @@ function AssistantAnswer({
                       </p>
                     </div>
                   )}
-                  <AnswerRenderer text={displayAnswer} citations={data.inlineCitations} onCitationClick={handleCitationClick} />
+                  {data.faithfulness?.sentences && data.faithfulness.sentences.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-3 mb-3 text-[11px] text-[#64748B]">
+                      <span className="inline-flex items-center gap-1"><span className="w-2.5 h-0.5 rounded bg-[#15803D]/50" />Grounded</span>
+                      <span className="inline-flex items-center gap-1"><span className="w-2.5 h-0.5 rounded bg-[#B45309]/60" />Partially grounded</span>
+                      <span className="inline-flex items-center gap-1"><span className="w-2.5 h-0.5 rounded bg-[#B91C1C]/60" />Not grounded</span>
+                    </div>
+                  )}
+                  <AnswerRenderer text={displayAnswer} citations={data.inlineCitations} onCitationClick={handleCitationClick} groundingSentences={data.faithfulness?.sentences} />
                 </div>
                 <div className="mt-7 pt-5 border-t border-[#E2E8F0]">
                   <ConfidenceGauge confidence={data.verification.confidence} />

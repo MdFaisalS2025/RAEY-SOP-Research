@@ -4,6 +4,63 @@ import { AlertTriangle, FileText } from "lucide-react"
 import { CitationChip, type InlineCitation } from "@/components/query/citation-chip"
 import { cn } from "@/lib/utils"
 
+export interface GroundingSentence {
+  text: string
+  grounded?: boolean
+  label?: "supported" | "partial" | "unsupported"
+  source_chunk?: string
+  confidence?: number
+}
+
+type GroundingStatus = "grounded" | "partial" | "ungrounded"
+
+function normalizeForMatch(s: string): string {
+  return s.toLowerCase().replace(/\[\d+\]/g, "").replace(/\*\*/g, "").replace(/\s+/g, " ").trim()
+}
+
+function sentenceStatus(s: GroundingSentence): GroundingStatus {
+  if (s.label === "unsupported") return "ungrounded"
+  if (s.label === "partial") return "partial"
+  if (s.label === "supported") return "grounded"
+  return s.grounded ? "grounded" : "ungrounded"
+}
+
+/**
+ * Attributes a rendered line (a steps/bullets item, a para, a kv value) to
+ * the faithfulness sentence(s) that overlap it. A single displayed line can
+ * correspond to more than one faithfulness "sentence" (the checker splits
+ * on sentence-ending punctuation, which is finer-grained than one numbered
+ * step), so this matches by substring in either direction and takes the
+ * worst status among all matches - one ungrounded clause makes the whole
+ * line worth flagging.
+ */
+function lineGrounding(lineText: string, sentences: GroundingSentence[] | undefined): { status: GroundingStatus; matches: GroundingSentence[] } | null {
+  if (!sentences || sentences.length === 0) return null
+  const normLine = normalizeForMatch(lineText)
+  if (!normLine) return null
+  const matches = sentences.filter((s) => {
+    const normS = normalizeForMatch(s.text)
+    return normS.length > 0 && (normLine.includes(normS) || normS.includes(normLine))
+  })
+  if (matches.length === 0) return null
+  const statuses = matches.map(sentenceStatus)
+  if (statuses.includes("ungrounded")) return { status: "ungrounded", matches }
+  if (statuses.includes("partial")) return { status: "partial", matches }
+  return { status: "grounded", matches }
+}
+
+const GROUNDING_STYLE: Record<GroundingStatus, { border: string; bg: string; label: string }> = {
+  grounded: { border: "border-l-2 border-[#15803D]/50", bg: "", label: "Grounded in source SOP" },
+  partial: { border: "border-l-2 border-[#B45309]/60", bg: "bg-[#FEF3C7]/40 dark:bg-amber-500/[0.06]", label: "Partially grounded - verify" },
+  ungrounded: { border: "border-l-2 border-[#B91C1C]/60", bg: "bg-[#FEE2E2]/40 dark:bg-red-500/[0.06]", label: "Not grounded in retrieved evidence - verify" },
+}
+
+function groundingTitle(g: { status: GroundingStatus; matches: GroundingSentence[] }): string {
+  const sources = Array.from(new Set(g.matches.map((m) => m.source_chunk).filter(Boolean)))
+  const base = GROUNDING_STYLE[g.status].label
+  return sources.length > 0 ? `${base} (${sources.join(", ")})` : base
+}
+
 export type AnswerBlock =
   | { type: "heading"; level: 1 | 2 | 3; text: string }
   | { type: "callout"; text: string }
@@ -113,7 +170,7 @@ export function parseAnswer(raw: string): AnswerBlock[] {
   return blocks
 }
 
-export function AnswerRenderer({ text, citations, onCitationClick }: { text: string; citations?: InlineCitation[]; onCitationClick?: (n: number) => void }) {
+export function AnswerRenderer({ text, citations, onCitationClick, groundingSentences }: { text: string; citations?: InlineCitation[]; onCitationClick?: (n: number) => void; groundingSentences?: GroundingSentence[] }) {
   const blocks = parseAnswer(text)
   const ctx: CitationCtx = {
     byNumber: new Map((citations ?? []).map((c) => [c.number, c])),
@@ -142,41 +199,71 @@ export function AnswerRenderer({ text, citations, onCitationClick }: { text: str
           )
         }
         if (block.type === "para") {
-          return <p key={i} className="text-[16px] leading-[1.7] text-[#1A2332]">{renderInline(block.text, ctx)}</p>
+          const g = lineGrounding(block.text, groundingSentences)
+          return (
+            <p
+              key={i}
+              title={g ? groundingTitle(g) : undefined}
+              className={cn("text-[16px] leading-[1.7] text-[#1A2332] pl-2 -ml-2", g && GROUNDING_STYLE[g.status].border, g && GROUNDING_STYLE[g.status].bg)}
+            >
+              {renderInline(block.text, ctx)}
+            </p>
+          )
         }
         if (block.type === "kv") {
           return (
             <dl key={i} className="rounded-xl border border-[#E2E8F0] divide-y divide-[#EDF1F5] overflow-hidden">
-              {block.pairs.map((p, j) => (
-                <div key={j} className="flex flex-col sm:flex-row sm:items-baseline gap-0.5 sm:gap-4 px-4 py-3 odd:bg-muted even:bg-transparent">
-                  <dt className="text-[13px] font-semibold uppercase tracking-wide text-[#64748B] sm:w-36 shrink-0">{p.label}</dt>
-                  <dd className="text-[16px] leading-snug text-[#1A2332] font-medium">{renderInline(p.value, ctx)}</dd>
-                </div>
-              ))}
+              {block.pairs.map((p, j) => {
+                const g = lineGrounding(p.value, groundingSentences)
+                return (
+                  <div
+                    key={j}
+                    title={g ? groundingTitle(g) : undefined}
+                    className={cn("flex flex-col sm:flex-row sm:items-baseline gap-0.5 sm:gap-4 px-4 py-3 odd:bg-muted even:bg-transparent", g && GROUNDING_STYLE[g.status].border, g && GROUNDING_STYLE[g.status].bg)}
+                  >
+                    <dt className="text-[13px] font-semibold uppercase tracking-wide text-[#64748B] sm:w-36 shrink-0">{p.label}</dt>
+                    <dd className="text-[16px] leading-snug text-[#1A2332] font-medium">{renderInline(p.value, ctx)}</dd>
+                  </div>
+                )
+              })}
             </dl>
           )
         }
         if (block.type === "steps") {
           return (
             <ol key={i} className="space-y-2.5">
-              {block.items.map((s, j) => (
-                <li key={j} className="flex gap-3 items-start">
-                  <span className="shrink-0 mt-0.5 w-7 h-7 rounded-full bg-[#0B6BCB]/10 text-[#0B6BCB] text-[13px] font-bold flex items-center justify-center">{s.num}</span>
-                  <span className="text-[16px] leading-[1.6] text-[#1A2332] pt-0.5">{renderInline(s.text, ctx)}</span>
-                </li>
-              ))}
+              {block.items.map((s, j) => {
+                const g = lineGrounding(s.text, groundingSentences)
+                return (
+                  <li
+                    key={j}
+                    title={g ? groundingTitle(g) : undefined}
+                    className={cn("flex gap-3 items-start pl-2 -ml-2", g && GROUNDING_STYLE[g.status].border, g && GROUNDING_STYLE[g.status].bg)}
+                  >
+                    <span className="shrink-0 mt-0.5 w-7 h-7 rounded-full bg-[#0B6BCB]/10 text-[#0B6BCB] text-[13px] font-bold flex items-center justify-center">{s.num}</span>
+                    <span className="text-[16px] leading-[1.6] text-[#1A2332] pt-0.5">{renderInline(s.text, ctx)}</span>
+                  </li>
+                )
+              })}
             </ol>
           )
         }
         if (block.type === "bullets") {
           return (
             <ul key={i} className="space-y-2">
-              {block.items.map((b, j) => (
-                <li key={j} className="flex gap-2.5 items-start">
-                  <span className="shrink-0 mt-2.5 w-1.5 h-1.5 rounded-full bg-[#0B6BCB]" />
-                  <span className="text-[16px] leading-[1.6] text-[#1A2332]">{renderInline(b, ctx)}</span>
-                </li>
-              ))}
+              {block.items.map((b, j) => {
+                const g = lineGrounding(b, groundingSentences)
+                return (
+                  <li
+                    key={j}
+                    title={g ? groundingTitle(g) : undefined}
+                    className={cn("flex gap-2.5 items-start pl-2 -ml-2", g && GROUNDING_STYLE[g.status].border, g && GROUNDING_STYLE[g.status].bg)}
+                  >
+                    <span className="shrink-0 mt-2.5 w-1.5 h-1.5 rounded-full bg-[#0B6BCB]" />
+                    <span className="text-[16px] leading-[1.6] text-[#1A2332]">{renderInline(b, ctx)}</span>
+                  </li>
+                )
+              })}
             </ul>
           )
         }

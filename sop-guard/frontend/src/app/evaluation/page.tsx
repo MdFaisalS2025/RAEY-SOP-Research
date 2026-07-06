@@ -57,6 +57,7 @@ interface RagasSummary {
 
 interface AblationResult {
   queries: number
+  queries_compared: number
   reranker_on: { avg_top1_relevance: number }
   reranker_off: { avg_top1_relevance: number }
   order_change_rate: number

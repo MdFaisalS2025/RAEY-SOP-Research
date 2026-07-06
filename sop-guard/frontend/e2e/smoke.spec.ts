@@ -67,11 +67,25 @@ test.describe("upload flow", () => {
 })
 
 test.describe("proposal flow", () => {
-  test("proposals list links to a detail page", async ({ page }) => {
-    await loginAsDemoUser(page, "Tariq Farooq")
-    await page.goto("/proposals")
-    await page.locator('a[href*="/proposals/"]').first().click()
-    await page.waitForURL(/\/proposals\/.+/, { timeout: 15_000 })
+  test("proposals list links to a detail page", async ({ page, request }) => {
+    // The real governance API starts empty - create one real proposal so
+    // there's something to click into, then delete it afterward so this
+    // test doesn't leave permanent junk rows in the shared dev database.
+    const created = await request.post("http://localhost:8000/api/governance/proposals", {
+      data: { title: `smoke-test-proposal-${Date.now()}`, department: "Quality", priority: "low" },
+    })
+    expect(created.ok()).toBeTruthy()
+    const { id } = await created.json()
+
+    try {
+      await loginAsDemoUser(page, "Tariq Farooq")
+      await page.goto("/proposals")
+      await page.locator('a[href*="/proposals/"]').first().click()
+      await page.waitForURL(/\/proposals\/.+/, { timeout: 15_000 })
+    } finally {
+      const cleanup = await request.delete(`http://localhost:8000/api/governance/proposals/${id}`)
+      expect(cleanup.ok()).toBeTruthy()
+    }
   })
 })
 

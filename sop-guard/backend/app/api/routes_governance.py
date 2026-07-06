@@ -201,6 +201,17 @@ async def get_proposal(proposal_id: int, db: AsyncSession = Depends(get_db)):
     return _proposal_to_response(proposal)
 
 
+@router.delete("/api/governance/proposals/{proposal_id}")
+async def delete_proposal(proposal_id: int, db: AsyncSession = Depends(get_db)):
+    proposal = (await db.execute(
+        select(ProposalRecord).where(ProposalRecord.id == proposal_id)
+    )).scalar_one_or_none()
+    if not proposal:
+        raise HTTPException(status_code=404, detail=f"Proposal {proposal_id} not found.")
+    await db.delete(proposal)
+    return {"message": f"Proposal {proposal_id} deleted.", "proposal_id": proposal_id}
+
+
 @router.post("/api/governance/proposals/{proposal_id}/vote", response_model=ProposalResponse)
 async def cast_vote(proposal_id: int, req: VoteCreate, db: AsyncSession = Depends(get_db)):
     if req.vote not in _VALID_VOTES:

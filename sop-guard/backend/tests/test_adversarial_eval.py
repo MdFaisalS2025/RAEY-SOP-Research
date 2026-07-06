@@ -119,10 +119,10 @@ async def test_adversarial_eval_compare_nli(client):
 
     assert "verifier_comparison" in data
     comparison = data["verifier_comparison"]
-    for key in ("rule_based", "nli_lite", "note"):
+    for key in ("rule_based", "nli_lite", "ensemble", "note"):
         assert key in comparison
 
-    for metrics in (comparison["rule_based"], comparison["nli_lite"]):
+    for metrics in (comparison["rule_based"], comparison["nli_lite"], comparison["ensemble"]):
         for key in ("sensitivity", "specificity", "pairwise_separation"):
             assert 0.0 <= metrics[key] <= 1.0
 
@@ -130,3 +130,9 @@ async def test_adversarial_eval_compare_nli(client):
     # numbers - compare_nli should be additive, not change the main result.
     assert comparison["rule_based"]["sensitivity"] == data["sensitivity"]
     assert comparison["rule_based"]["specificity"] == data["specificity"]
+
+    # The ensemble's whole reason to exist is a better sensitivity/
+    # specificity balance than rule_based alone (its specificity problem)
+    # without collapsing sensitivity.
+    assert comparison["ensemble"]["specificity"] > comparison["rule_based"]["specificity"]
+    assert comparison["ensemble"]["sensitivity"] > 0.7

@@ -234,14 +234,17 @@ async def run_adversarial_evaluation(
     to support a percentage claim on its own.
 
     compare_nli=true additionally runs the same test cases through
-    NLIVerifier (app/verifier/nli_verifier.py), a second, independently
-    implemented generic-entailment checker, and reports its metrics
-    alongside the primary rule-based verifier for comparison. On the full
-    120-case perturbation benchmark the two disagree in an informative way:
-    the rule-based verifier has much higher sensitivity but lower
-    specificity (it over-flags correct answers), while the NLI-lite
-    verifier is the opposite (conservative: it misses more violations but
-    rarely false-alarms). Neither dominates the other.
+    NLIVerifier (app/verifier/nli_verifier.py) and EnsembleVerifier
+    (app/verifier/ensemble_verifier.py), reporting all three alongside the
+    primary rule-based verifier for comparison. On the full 120-case
+    perturbation benchmark the two base verifiers disagree in an
+    informative way: the rule-based verifier has much higher sensitivity
+    but lower specificity (it over-flags correct answers), while the
+    NLI-lite verifier is the opposite (conservative: it misses more
+    violations but rarely false-alarms). The ensemble combines them with a
+    measured, better sensitivity/specificity balance than either alone -
+    see ensemble_verifier.py's docstring for why naive union/veto
+    strategies were tried first and didn't work.
     """
     from app.demo_data.adversarial_tests import ADVERSARIAL_TESTS
     from app.verifier.verifier import ProceduralFaithfulnessVerifier
@@ -364,6 +367,7 @@ async def run_adversarial_evaluation(
 
     if compare_nli:
         from app.verifier.nli_verifier import NLIVerifier
+        from app.verifier.ensemble_verifier import EnsembleVerifier
 
         rule_based_metrics = {
             "sensitivity": response["sensitivity"],
@@ -373,9 +377,11 @@ async def run_adversarial_evaluation(
             "mean_correct_score": response["mean_correct_score"],
         }
         nli_metrics = _run_verifier_over_cases(NLIVerifier(), test_cases, structured_lookup)
+        ensemble_metrics = _run_verifier_over_cases(EnsembleVerifier(), test_cases, structured_lookup)
         response["verifier_comparison"] = {
             "rule_based": rule_based_metrics,
             "nli_lite": nli_metrics,
+            "ensemble": ensemble_metrics,
             "note": (
                 "Two independently-implemented verifiers over the same test cases. "
                 "rule_based (ProceduralFaithfulnessVerifier) uses type-specific "
@@ -383,7 +389,15 @@ async def run_adversarial_evaluation(
                 "treats every answer generically as an entailment problem against "
                 "a combined premise built from the SOP's structured facts. They "
                 "trade off differently: rule_based tends toward higher sensitivity "
-                "and lower specificity, nli_lite the reverse - neither dominates."
+                "and lower specificity, nli_lite the reverse - neither dominates. "
+                "ensemble (EnsembleVerifier) trusts rule_based as primary but "
+                "upgrades its WARNING verdicts to PASSED when nli_lite confidently "
+                "disagrees - rule_based's specificity problem turned out to live "
+                "almost entirely in its WARNING bucket (51/120 correct answers) "
+                "rather than FAILED (14/120), so this is where nli_lite actually "
+                "helps. Naive union/veto combinations were tried first and didn't "
+                "improve the sensitivity/specificity balance - see "
+                "ensemble_verifier.py's docstring for the comparison."
             ),
         }
 

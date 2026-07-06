@@ -38,6 +38,7 @@ interface BenchmarkResult {
   verifier_comparison?: {
     rule_based: VerifierMetrics
     nli_lite: VerifierMetrics
+    ensemble: VerifierMetrics
     note: string
   }
 }
@@ -554,6 +555,12 @@ export default function AdversarialPage() {
                         <td className="py-2 px-3 text-right font-mono">{Math.round(benchmark.verifier_comparison.nli_lite.sensitivity * 100)}%</td>
                         <td className="py-2 px-3 text-right font-mono">{Math.round(benchmark.verifier_comparison.nli_lite.specificity * 100)}%</td>
                         <td className="py-2 px-3 text-right font-mono">{Math.round(benchmark.verifier_comparison.nli_lite.pairwise_separation * 100)}%</td>
+                      </tr>
+                      <tr className="border-t border-[#EDF1F5] bg-[#DCFCE7]/40 dark:bg-green-500/[0.06]">
+                        <td className="py-2 px-3 font-semibold text-[#15803D] dark:text-green-400">Ensemble</td>
+                        <td className="py-2 px-3 text-right font-mono font-semibold text-[#15803D] dark:text-green-400">{Math.round(benchmark.verifier_comparison.ensemble.sensitivity * 100)}%</td>
+                        <td className="py-2 px-3 text-right font-mono font-semibold text-[#15803D] dark:text-green-400">{Math.round(benchmark.verifier_comparison.ensemble.specificity * 100)}%</td>
+                        <td className="py-2 px-3 text-right font-mono font-semibold text-[#15803D] dark:text-green-400">{Math.round(benchmark.verifier_comparison.ensemble.pairwise_separation * 100)}%</td>
                       </tr>
                     </tbody>
                   </table>

@@ -11,6 +11,20 @@ interface PubMedRecord {
   pmid: string
   url: string
   source_type: string
+  study_type?: string
+}
+
+// Rough evidence-hierarchy tinting, same spirit as the GRADE-style tags
+// UpToDate uses - a scannable hint, not a substitute for full appraisal.
+const STUDY_TYPE_STYLE: Record<string, string> = {
+  "Meta-Analysis": "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30",
+  "Systematic Review": "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30",
+  "Practice Guideline": "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30",
+  "Guideline": "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30",
+  "Randomized Controlled Trial": "bg-[#0B6BCB]/10 text-[#0B6BCB] border-[#0B6BCB]/30",
+  "Clinical Trial": "bg-[#0B6BCB]/10 text-[#0B6BCB] border-[#0B6BCB]/30",
+  "Review": "bg-card text-[#475569] border-[#CBD5E1]",
+  "Case Reports": "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30",
 }
 
 interface QueryEntities {
@@ -107,6 +121,11 @@ export function PubMedEvidencePanel({ entities, queryText }: { entities: QueryEn
         <div className="space-y-3">
           {results.map((r) => (
             <div key={r.pmid} className="p-3 rounded-xl bg-muted border border-[#E2E8F0] space-y-1.5">
+              {r.study_type && (
+                <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium border ${STUDY_TYPE_STYLE[r.study_type] ?? "bg-card text-[#475569] border-[#CBD5E1]"}`}>
+                  {r.study_type}
+                </span>
+              )}
               <p className="text-[13px] font-medium text-[#1A2332] leading-snug line-clamp-2">{r.title || "(untitled)"}</p>
               <p className="text-[11px] text-[#64748B]">{r.journal}{r.authors ? ` · ${r.authors}` : ""}</p>
               <div className="flex items-center justify-between pt-1">

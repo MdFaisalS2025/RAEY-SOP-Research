@@ -29,7 +29,10 @@ async def submit_query(req: QueryRequest, db: AsyncSession = Depends(get_db)):
     """
     # Load all chunks from DB
     chunk_rows = (await db.execute(
-        select(SOPChunk, SOP.sop_id.label("sop_sop_id"), SOP.title.label("sop_title"), SOP.structured_json)
+        select(
+            SOPChunk, SOP.sop_id.label("sop_sop_id"), SOP.title.label("sop_title"), SOP.structured_json,
+            SOP.version, SOP.effective_date, SOP.review_date, SOP.status,
+        )
         .join(SOP, SOPChunk.sop_id == SOP.id)
     )).all()
 
@@ -45,6 +48,10 @@ async def submit_query(req: QueryRequest, db: AsyncSession = Depends(get_db)):
             "sop_id": row.sop_sop_id,
             "chunk_type": getattr(chunk, "chunk_type", "section") or "section",
             "chunk_index": chunk.chunk_index,
+            "version": row.version or "",
+            "effective_date": row.effective_date or "",
+            "review_date": row.review_date or "",
+            "status": row.status or "active",
         })
         if row.sop_sop_id not in structured_sops and row.structured_json:
             structured_sops[row.sop_sop_id] = row.structured_json
@@ -176,7 +183,10 @@ async def export_query_report(req: QueryRequest, db: AsyncSession = Depends(get_
     """Run a query and return a downloadable JSON report."""
     # Load all chunks from DB
     chunk_rows = (await db.execute(
-        select(SOPChunk, SOP.sop_id.label("sop_sop_id"), SOP.title.label("sop_title"), SOP.structured_json)
+        select(
+            SOPChunk, SOP.sop_id.label("sop_sop_id"), SOP.title.label("sop_title"), SOP.structured_json,
+            SOP.version, SOP.effective_date, SOP.review_date, SOP.status,
+        )
         .join(SOP, SOPChunk.sop_id == SOP.id)
     )).all()
 
@@ -192,6 +202,10 @@ async def export_query_report(req: QueryRequest, db: AsyncSession = Depends(get_
             "sop_id": row.sop_sop_id,
             "chunk_type": getattr(chunk, "chunk_type", "section") or "section",
             "chunk_index": chunk.chunk_index,
+            "version": row.version or "",
+            "effective_date": row.effective_date or "",
+            "review_date": row.review_date or "",
+            "status": row.status or "active",
         })
         if row.sop_sop_id not in structured_sops and row.structured_json:
             structured_sops[row.sop_sop_id] = row.structured_json
@@ -246,7 +260,10 @@ async def export_query_report(req: QueryRequest, db: AsyncSession = Depends(get_
 async def generate_report(req: QueryRequest, db: AsyncSession = Depends(get_db)):
     """Generate a comprehensive query report for printing or archiving."""
     chunk_rows = (await db.execute(
-        select(SOPChunk, SOP.sop_id.label("sop_sop_id"), SOP.title.label("sop_title"), SOP.structured_json)
+        select(
+            SOPChunk, SOP.sop_id.label("sop_sop_id"), SOP.title.label("sop_title"), SOP.structured_json,
+            SOP.version, SOP.effective_date, SOP.review_date, SOP.status,
+        )
         .join(SOP, SOPChunk.sop_id == SOP.id)
     )).all()
 
@@ -262,6 +279,10 @@ async def generate_report(req: QueryRequest, db: AsyncSession = Depends(get_db))
             "sop_id": row.sop_sop_id,
             "chunk_type": getattr(chunk, "chunk_type", "section") or "section",
             "chunk_index": chunk.chunk_index,
+            "version": row.version or "",
+            "effective_date": row.effective_date or "",
+            "review_date": row.review_date or "",
+            "status": row.status or "active",
         })
         if row.sop_sop_id not in structured_sops and row.structured_json:
             structured_sops[row.sop_sop_id] = row.structured_json

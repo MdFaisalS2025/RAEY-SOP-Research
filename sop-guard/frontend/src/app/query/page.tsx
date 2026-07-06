@@ -134,6 +134,10 @@ function mapCitations(raw: unknown): InlineCitation[] {
       snippet: c.snippet ?? "",
       relevance_score: typeof c.relevance_score === "number" ? c.relevance_score : 0,
       cited_in_answer: c.cited_in_answer ?? false,
+      version: c.version ?? "",
+      effective_date: c.effective_date ?? "",
+      review_date: c.review_date ?? "",
+      status: c.status ?? "active",
     }))
 }
 

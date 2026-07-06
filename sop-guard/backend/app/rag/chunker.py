@@ -18,6 +18,7 @@ def create_sop_chunks(
     version: str = "",
     status: str = "active",
     effective_date: str = "",
+    review_date: str = "",
 ) -> list[dict[str, Any]]:
     """
     Create SOP-aware typed chunks from raw text and structured extraction.
@@ -32,6 +33,7 @@ def create_sop_chunks(
         "version": version,
         "status": status,
         "effective_date": effective_date,
+        "review_date": review_date,
         "created_at": datetime.utcnow().isoformat(),
     }
 

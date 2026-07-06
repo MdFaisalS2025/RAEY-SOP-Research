@@ -62,9 +62,34 @@ def _format_authors(author_list: list[dict[str, Any]] | None) -> str:
     return ", ".join(names)
 
 
+# Rough evidence-hierarchy ordering (highest first) for picking one
+# headline study-type label out of NCBI's pubtype list, which is often
+# several tags at once (e.g. ["Journal Article", "Meta-Analysis"]).
+# Not a substitute for GRADE appraisal - just a scannable hint, the same
+# spirit as UpToDate's evidence-quality tags.
+_STUDY_TYPE_PRIORITY = [
+    "Meta-Analysis",
+    "Systematic Review",
+    "Practice Guideline",
+    "Guideline",
+    "Randomized Controlled Trial",
+    "Clinical Trial",
+    "Review",
+    "Case Reports",
+]
+
+
+def _classify_study_type(pub_types: list[str]) -> str:
+    for candidate in _STUDY_TYPE_PRIORITY:
+        if candidate in pub_types:
+            return candidate
+    return "Journal Article"
+
+
 def _parse_summary(uid: str, doc: dict[str, Any]) -> dict[str, Any]:
     """Map a single esummary document to a normalized record."""
     pmid = str(doc.get("uid", uid))
+    pub_types = [p for p in (doc.get("pubtype") or []) if isinstance(p, str)]
     return {
         "title": (doc.get("title") or "").strip(),
         "authors": _format_authors(doc.get("authors")),
@@ -73,6 +98,8 @@ def _parse_summary(uid: str, doc: dict[str, Any]) -> dict[str, Any]:
         "pmid": pmid,
         "url": f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/",
         "source_type": "pubmed",
+        "pub_types": pub_types,
+        "study_type": _classify_study_type(pub_types),
     }
 
 

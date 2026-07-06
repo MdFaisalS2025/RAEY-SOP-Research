@@ -98,3 +98,35 @@ async def test_empty_term_returns_empty():
 def test_parse_esummary_unit():
     records = pubmed.parse_esummary(ESUMMARY_JSON)
     assert [r["pmid"] for r in records] == ["111", "222"]
+
+
+class TestStudyTypeClassification:
+    def test_meta_analysis_ranked_above_journal_article(self):
+        result = pubmed._classify_study_type(["Journal Article", "Meta-Analysis"])
+        assert result == "Meta-Analysis"
+
+    def test_practice_guideline_ranked_above_review(self):
+        result = pubmed._classify_study_type(["Review", "Practice Guideline"])
+        assert result == "Practice Guideline"
+
+    def test_defaults_to_journal_article_when_no_priority_match(self):
+        result = pubmed._classify_study_type(["Journal Article", "Comment"])
+        assert result == "Journal Article"
+
+    def test_defaults_to_journal_article_when_pubtype_empty(self):
+        assert pubmed._classify_study_type([]) == "Journal Article"
+
+    async def test_parsed_record_includes_study_type(self, monkeypatch):
+        payload = {
+            "result": {
+                "uids": ["333"],
+                "333": {
+                    "uid": "333",
+                    "title": "RCT of vasopressor timing in septic shock",
+                    "pubtype": ["Journal Article", "Randomized Controlled Trial"],
+                },
+            }
+        }
+        records = pubmed.parse_esummary(payload)
+        assert records[0]["study_type"] == "Randomized Controlled Trial"
+        assert records[0]["pub_types"] == ["Journal Article", "Randomized Controlled Trial"]

@@ -70,6 +70,10 @@ def build_numbered_context(chunks: list[dict], max_chars: int = 4000) -> tuple[s
             "snippet": text[:200],
             "relevance_score": chunk.get("relevance_score", 0.0),
             "cited_in_answer": False,
+            "version": chunk.get("version", ""),
+            "effective_date": chunk.get("effective_date", ""),
+            "review_date": chunk.get("review_date", ""),
+            "status": chunk.get("status", "active"),
         })
 
     return "\n".join(context_parts), citation_records

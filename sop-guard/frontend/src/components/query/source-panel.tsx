@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { ChevronDown, ChevronRight, ExternalLink, FileText } from "lucide-react"
 import { cn } from "@/lib/utils"
-import type { InlineCitation } from "./citation-chip"
+import { reviewStaleness, type InlineCitation } from "./citation-chip"
 
 function SourceRow({
   citation,
@@ -39,6 +39,28 @@ function SourceRow({
             )}
           </div>
           <p className="text-xs text-[#64748B] mt-0.5">{citation.section_title}</p>
+          <div className="flex flex-wrap gap-1.5 mt-1.5">
+            {citation.version && (
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-card text-[#475569] border border-[#CBD5E1]">
+                v{citation.version}
+              </span>
+            )}
+            {citation.effective_date && (
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-card text-[#475569] border border-[#CBD5E1]">
+                Effective {citation.effective_date}
+              </span>
+            )}
+            {reviewStaleness(citation.review_date) && (
+              <span className={cn("px-1.5 py-0.5 rounded text-[10px] font-medium border", reviewStaleness(citation.review_date)!.className)}>
+                {reviewStaleness(citation.review_date)!.label}
+              </span>
+            )}
+            {citation.status && citation.status !== "active" && (
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30 capitalize">
+                {citation.status}
+              </span>
+            )}
+          </div>
           <p className="text-[13px] leading-relaxed text-[#334155] mt-1.5 line-clamp-3">{citation.snippet}</p>
           <div className="flex items-center justify-between gap-3 mt-2.5">
             <div className="flex items-center gap-2 flex-1 max-w-[220px]">

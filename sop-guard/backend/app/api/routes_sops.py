@@ -319,6 +319,7 @@ async def create_sop(
             version=version,
             status=status,
             effective_date=effective_date,
+            review_date=review_date,
         )
         for idx, ch in enumerate(sop_chunks):
             db.add(SOPChunk(

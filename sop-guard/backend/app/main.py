@@ -57,6 +57,7 @@ async def _load_demo_data() -> None:
                 version=data.get("version", "1.0"),
                 status="active",
                 effective_date=data.get("effective_date", ""),
+                review_date=data.get("review_date", ""),
             )
             idx_counter = 0
             for ch in sop_chunks:

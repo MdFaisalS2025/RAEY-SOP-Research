@@ -13,7 +13,10 @@ from app.models.models import SOP, SOPChunk
 
 async def load_chunks(db: AsyncSession) -> tuple[list[dict], dict[str, dict]]:
     chunk_rows = (await db.execute(
-        select(SOPChunk, SOP.sop_id.label("sop_sop_id"), SOP.title.label("sop_title"), SOP.structured_json)
+        select(
+            SOPChunk, SOP.sop_id.label("sop_sop_id"), SOP.title.label("sop_title"), SOP.structured_json,
+            SOP.version, SOP.effective_date, SOP.review_date, SOP.status,
+        )
         .join(SOP, SOPChunk.sop_id == SOP.id)
     )).all()
 
@@ -29,6 +32,10 @@ async def load_chunks(db: AsyncSession) -> tuple[list[dict], dict[str, dict]]:
             "sop_id": row.sop_sop_id,
             "chunk_type": getattr(chunk, "chunk_type", "section") or "section",
             "chunk_index": chunk.chunk_index,
+            "version": row.version or "",
+            "effective_date": row.effective_date or "",
+            "review_date": row.review_date or "",
+            "status": row.status or "active",
         })
         if row.sop_sop_id not in structured_sops and row.structured_json:
             structured_sops[row.sop_sop_id] = row.structured_json

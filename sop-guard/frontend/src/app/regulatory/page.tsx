@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { motion } from "framer-motion"
 import {
   AlertTriangle, CheckCircle, Clock, Download, Shield,
@@ -9,10 +9,31 @@ import {
 import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { cn } from "@/lib/utils"
-import { MOCK_SOPS } from "@/lib/mock-data"
-import type { RegulatoryStandard } from "@/lib/governance-types"
 
-// ─── mock data (local) ────────────────────────────────────────────────────────
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
+
+interface RealSOP {
+  id: number
+  sop_id: string
+  title: string
+  department: string
+  review_date?: string | null
+}
+
+// ─── Regulatory reference content ──────────────────────────────────────────────
+// Standard codes/titles/descriptions are real TJC/CMS/OSHA reference text.
+// `department` links each standard to the real hospital department whose SOPs
+// are most relevant, so compliance_status below can be derived from real,
+// live review_date data instead of a hardcoded status.
+
+interface RegulatoryStandard {
+  id: string
+  framework: "TJC" | "CMS" | "OSHA"
+  standard_code: string
+  title: string
+  description: string
+  department: string
+}
 
 const REGULATORY_STANDARDS: RegulatoryStandard[] = [
   {
@@ -21,10 +42,7 @@ const REGULATORY_STANDARDS: RegulatoryStandard[] = [
     standard_code: "IC.01.05.01",
     title: "Infection Prevention and Control Program",
     description: "The hospital has an infection prevention and control program",
-    mapped_sop_ids: ["IC-PPE-001", "IC-CL-005"],
-    compliance_status: "compliant",
-    last_assessed: "2026-03-15",
-    next_survey_due: "2027-Q1",
+    department: "Infection Control",
   },
   {
     id: "tjc-rc-01",
@@ -32,10 +50,7 @@ const REGULATORY_STANDARDS: RegulatoryStandard[] = [
     standard_code: "RC.01.02.01",
     title: "Medical Record Documentation",
     description: "Entries in the medical record are dated, timed, and authenticated",
-    mapped_sop_ids: ["HVAP-FALL-004"],
-    compliance_status: "compliant",
-    last_assessed: "2026-03-15",
-    next_survey_due: "2027-Q1",
+    department: "Nursing",
   },
   {
     id: "cms-cop-482",
@@ -44,10 +59,7 @@ const REGULATORY_STANDARDS: RegulatoryStandard[] = [
     title: "Condition of Participation: Quality Assessment",
     description:
       "Hospital must have effective quality assessment and performance improvement program",
-    mapped_sop_ids: ["ICU-SEP-002", "ICU-RR-006"],
-    compliance_status: "compliant",
-    last_assessed: "2026-01-10",
-    next_survey_due: "2027-Q2",
+    department: "ICU",
   },
   {
     id: "osha-1910",
@@ -56,10 +68,7 @@ const REGULATORY_STANDARDS: RegulatoryStandard[] = [
     title: "Bloodborne Pathogen Standard",
     description:
       "Exposure control plan for occupational exposure to bloodborne pathogens",
-    mapped_sop_ids: ["IC-PPE-001", "IC-CL-005"],
-    compliance_status: "needs_review",
-    last_assessed: "2025-09-01",
-    next_survey_due: "2026-Q3",
+    department: "Infection Control",
   },
   {
     id: "tjc-mm-01",
@@ -67,46 +76,26 @@ const REGULATORY_STANDARDS: RegulatoryStandard[] = [
     standard_code: "MM.04.01.01",
     title: "Medication Management: High-Alert Medications",
     description: "The hospital identifies and manages high-alert medications",
-    mapped_sop_ids: ["PHARM-MED-007", "ONCO-CHEMO-003"],
-    compliance_status: "compliant",
-    last_assessed: "2026-02-20",
-    next_survey_due: "2027-Q1",
+    department: "Pharmacy",
   },
 ]
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
-type Framework = "All" | "TJC" | "CMS" | "OSHA" | "State"
+type Framework = "All" | "TJC" | "CMS" | "OSHA"
 
-const FRAMEWORK_TABS: Framework[] = ["All", "TJC", "CMS", "OSHA", "State"]
+const FRAMEWORK_TABS: Framework[] = ["All", "TJC", "CMS", "OSHA"]
 
 const FRAMEWORK_COLORS: Record<string, string> = {
   TJC: "bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30",
   CMS: "bg-[#0D9488]/10 text-[#0D9488] border border-[#0D9488]/30",
   OSHA: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30",
-  State: "bg-card text-[#475569] border border-[#CBD5E1]",
-  Other: "bg-card text-[#64748B] border border-[#CBD5E1]",
 }
 
 const STATUS_META: Record<string, { label: string; cls: string; icon: typeof CheckCircle }> = {
   compliant: { label: "Compliant", cls: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30", icon: CheckCircle },
   needs_review: { label: "Needs Review", cls: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30", icon: Clock },
-  non_compliant: { label: "Non-Compliant", cls: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30", icon: AlertTriangle },
   not_assessed: { label: "Not Assessed", cls: "bg-card text-[#64748B] border border-[#CBD5E1]", icon: Clock },
-}
-
-// Compute compliance rates per framework from mock data
-function complianceRate(fw: string, standards: RegulatoryStandard[]): number {
-  const fwStds = standards.filter((s) => s.framework === fw)
-  if (fwStds.length === 0) return 0
-  const compliant = fwStds.filter((s) => s.compliance_status === "compliant").length
-  return Math.round((compliant / fwStds.length) * 100)
-}
-
-// Look up SOP title by sop_id
-function sopTitle(sopId: string): string {
-  const sop = MOCK_SOPS.find((s) => s.sop_id === sopId)
-  return sop ? sop.title : sopId
 }
 
 // ─── page ─────────────────────────────────────────────────────────────────────
@@ -114,18 +103,43 @@ function sopTitle(sopId: string): string {
 export default function RegulatoryPage() {
   const [activeTab, setActiveTab] = useState<Framework>("All")
   const [exportState, setExportState] = useState<"idle" | "loading" | "success">("idle")
+  const [sops, setSops] = useState<RealSOP[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/sops`)
+      .then((r) => r.json())
+      .then((data) => setSops(Array.isArray(data) ? data : (data.sops ?? data.items ?? [])))
+      .catch(() => setSops([]))
+      .finally(() => setLoading(false))
+  }, [])
+
+  // Derive each standard's mapped SOPs and compliance status live from the
+  // real corpus - a standard is "needs_review" if any real SOP in its linked
+  // department is past its review_date, "not_assessed" if the department has
+  // no SOPs in the corpus at all, otherwise "compliant".
+  const enrichedStandards = useMemo(() => {
+    const now = new Date()
+    return REGULATORY_STANDARDS.map((std) => {
+      const mapped = sops.filter((s) => s.department === std.department)
+      const overdue = mapped.filter((s) => s.review_date && new Date(s.review_date) < now)
+      const status = mapped.length === 0 ? "not_assessed" : overdue.length > 0 ? "needs_review" : "compliant"
+      return { ...std, mapped, overdue, status }
+    })
+  }, [sops])
 
   const filtered = useMemo(() => {
-    if (activeTab === "All") return REGULATORY_STANDARDS
-    return REGULATORY_STANDARDS.filter((s) => s.framework === activeTab)
-  }, [activeTab])
+    if (activeTab === "All") return enrichedStandards
+    return enrichedStandards.filter((s) => s.framework === activeTab)
+  }, [activeTab, enrichedStandards])
 
-  const needsReview = filtered.filter((s) => s.compliance_status === "needs_review")
+  const needsReview = filtered.filter((s) => s.status === "needs_review")
 
-  const frameworkRates = ["TJC", "CMS", "OSHA"].map((fw) => ({
-    fw,
-    rate: complianceRate(fw, REGULATORY_STANDARDS),
-  }))
+  const frameworkRates = ["TJC", "CMS", "OSHA"].map((fw) => {
+    const fwStds = enrichedStandards.filter((s) => s.framework === fw)
+    const compliant = fwStds.filter((s) => s.status === "compliant").length
+    return { fw, rate: fwStds.length > 0 ? Math.round((compliant / fwStds.length) * 100) : 0 }
+  })
 
   const handleExport = () => {
     setExportState("loading")
@@ -177,7 +191,10 @@ export default function RegulatoryPage() {
         {/* Mapping note */}
         <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 text-[#0959AC] text-sm">
           <FileText className="w-4 h-4 shrink-0" />
-          <span>Mapping maintained by Compliance Officer. Last verified June 2026.</span>
+          <span>
+            Standard-to-department mapping is curated; compliance status is derived live from each linked
+            department&apos;s real SOP review dates in the current corpus - not a per-standard tracked assessment.
+          </span>
         </div>
 
         {/* Framework compliance rates */}
@@ -246,6 +263,11 @@ export default function RegulatoryPage() {
         </div>
 
         {/* Standards list */}
+        {loading ? (
+          <div className="flex items-center justify-center py-12 text-muted-foreground gap-2">
+            <Loader2 className="w-5 h-5 animate-spin" /> Loading SOP corpus...
+          </div>
+        ) : (
         <div className="space-y-4">
           {filtered.length === 0 && (
             <div className="rounded-2xl bg-card border border-[#E2E8F0] p-8 text-center text-muted-foreground text-sm">
@@ -253,7 +275,7 @@ export default function RegulatoryPage() {
             </div>
           )}
           {filtered.map((std, i) => {
-            const stMeta = STATUS_META[std.compliance_status] ?? STATUS_META.not_assessed
+            const stMeta = STATUS_META[std.status] ?? STATUS_META.not_assessed
             const StatusIcon = stMeta.icon
             return (
               <motion.div
@@ -263,7 +285,7 @@ export default function RegulatoryPage() {
                 transition={{ delay: i * 0.05 }}
                 className={cn(
                   "rounded-2xl bg-card border border-[#E2E8F0] p-5",
-                  std.compliance_status === "needs_review" && "border-[#FDE68A] dark:border-amber-500/30"
+                  std.status === "needs_review" && "border-[#FDE68A] dark:border-amber-500/30"
                 )}
               >
                 <div className="flex flex-col md:flex-row md:items-start gap-4">
@@ -284,35 +306,40 @@ export default function RegulatoryPage() {
                     <h3 className="font-medium text-sm mb-1">{std.title}</h3>
                     <p className="text-xs text-muted-foreground mb-3">{std.description}</p>
 
-                    {/* Mapped SOPs */}
+                    {/* Mapped SOPs (real, from the current corpus) */}
                     <div>
-                      <p className="text-xs text-muted-foreground mb-1.5">Mapped SOPs</p>
-                      <div className="flex flex-wrap gap-2">
-                        {std.mapped_sop_ids.map((sopId) => (
-                          <span
-                            key={sopId}
-                            title={sopTitle(sopId)}
-                            className="text-xs px-2.5 py-1 rounded-lg bg-muted border border-[#E2E8F0] text-foreground/80 hover:bg-muted transition-colors cursor-default"
-                          >
-                            {sopId}
-                          </span>
-                        ))}
-                      </div>
+                      <p className="text-xs text-muted-foreground mb-1.5">
+                        Real SOPs in {std.department} ({std.mapped.length})
+                      </p>
+                      {std.mapped.length === 0 ? (
+                        <p className="text-xs text-muted-foreground italic">No SOPs in this department yet.</p>
+                      ) : (
+                        <div className="flex flex-wrap gap-2">
+                          {std.mapped.map((sop) => (
+                            <span
+                              key={sop.sop_id}
+                              title={sop.title}
+                              className={cn(
+                                "text-xs px-2.5 py-1 rounded-lg border transition-colors cursor-default",
+                                std.overdue.some((o) => o.sop_id === sop.sop_id)
+                                  ? "bg-[#FEE2E2] dark:bg-red-500/10 border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400"
+                                  : "bg-muted border-[#E2E8F0] text-foreground/80"
+                              )}
+                            >
+                              {sop.sop_id}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  {/* Right: dates */}
+                  {/* Right: real review status */}
                   <div className="shrink-0 text-xs space-y-2 min-w-[160px]">
                     <div>
-                      <p className="text-muted-foreground">Last assessed</p>
-                      <p className="font-medium text-foreground">{std.last_assessed}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Next survey due</p>
-                      <p className={cn("font-medium",
-                        std.compliance_status === "needs_review" ? "text-[#B45309] dark:text-amber-400" : "text-foreground"
-                      )}>
-                        {std.next_survey_due}
+                      <p className="text-muted-foreground">SOPs overdue for review</p>
+                      <p className={cn("font-medium", std.overdue.length > 0 ? "text-[#B45309] dark:text-amber-400" : "text-foreground")}>
+                        {std.overdue.length} / {std.mapped.length}
                       </p>
                     </div>
                   </div>
@@ -321,6 +348,7 @@ export default function RegulatoryPage() {
             )
           })}
         </div>
+        )}
 
         {/* Frameworks legend */}
         <div className="rounded-2xl bg-card border border-[#E2E8F0] p-4">
@@ -330,7 +358,6 @@ export default function RegulatoryPage() {
               { fw: "TJC", name: "The Joint Commission", desc: "Accreditation standards" },
               { fw: "CMS", name: "Centers for Medicare and Medicaid", desc: "Conditions of Participation" },
               { fw: "OSHA", name: "Occupational Safety and Health", desc: "Worker safety standards" },
-              { fw: "State", name: "State Health Department", desc: "Facility-specific requirements" },
             ].map(({ fw, name, desc }) => (
               <div key={fw} className="space-y-1">
                 <span className={cn("inline-block text-[11px] px-2 py-0.5 rounded-full font-semibold", FRAMEWORK_COLORS[fw])}>

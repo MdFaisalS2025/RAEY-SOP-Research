@@ -1,143 +1,45 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { motion } from "framer-motion"
+import Link from "next/link"
 import {
   AlertTriangle, CheckCircle, Clock, Download,
-  Loader2, Check, FileText, ExternalLink, Plus
+  Loader2, Check, ExternalLink
 } from "lucide-react"
 import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { cn } from "@/lib/utils"
-import { MOCK_SOPS } from "@/lib/mock-data"
 
-// ─── Inline data ──────────────────────────────────────────────────────────────
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
+
+interface RealSOP {
+  id: number
+  sop_id: string
+  title: string
+  department: string
+  review_date?: string | null
+}
+
+// ─── TJC chapter reference content ─────────────────────────────────────────────
+// Chapter codes/titles/descriptions are real TJC accreditation manual chapter
+// names. `department` links each chapter to the real hospital department whose
+// SOPs are most relevant, so readiness below is computed live from real SOP
+// review-date currency instead of a hardcoded percentage.
 
 const TJC_CHAPTERS = [
-  {
-    code: "LD",
-    title: "Leadership",
-    description: "Governance, leadership structure, culture of safety",
-    readiness_pct: 92,
-    mapped_sops: ["ICU-SEP-002", "ICU-RR-006"],
-    gaps: ["Leadership safety briefing not documented"],
-    last_reviewed: "2026-05-10",
-    status: "ready",
-  },
-  {
-    code: "IC",
-    title: "Infection Prevention and Control",
-    description: "Infection surveillance, prevention, and control program",
-    readiness_pct: 78,
-    mapped_sops: ["IC-PPE-001", "IC-CL-005"],
-    gaps: ["N95 fit-test records incomplete for 12 staff", "Hand hygiene observation rate below 90%"],
-    last_reviewed: "2026-06-01",
-    status: "needs_attention",
-  },
-  {
-    code: "MM",
-    title: "Medication Management",
-    description: "Safe medication ordering, dispensing, administration, monitoring",
-    readiness_pct: 95,
-    mapped_sops: ["PHARM-MED-007", "ONCO-CHEMO-003"],
-    gaps: [],
-    last_reviewed: "2026-06-15",
-    status: "ready",
-  },
-  {
-    code: "RC",
-    title: "Record of Care",
-    description: "Medical record documentation, completeness, timeliness",
-    readiness_pct: 81,
-    mapped_sops: ["HVAP-FALL-004"],
-    gaps: ["Fall risk re-assessment not documented in 18% of cases"],
-    last_reviewed: "2026-04-20",
-    status: "needs_attention",
-  },
-  {
-    code: "NPSG",
-    title: "National Patient Safety Goals",
-    description: "Patient identification, communication, medication safety, falls",
-    readiness_pct: 89,
-    mapped_sops: ["HVAP-FALL-004", "PHARM-MED-007"],
-    gaps: ["Bedside alarm management log missing"],
-    last_reviewed: "2026-05-28",
-    status: "ready",
-  },
-  {
-    code: "EC",
-    title: "Environment of Care",
-    description: "Safety management, hazardous materials, fire safety",
-    readiness_pct: 74,
-    mapped_sops: [],
-    gaps: ["No SOP mapped to this chapter", "Last safety inspection not documented"],
-    last_reviewed: "2026-03-01",
-    status: "at_risk",
-  },
-  {
-    code: "HR",
-    title: "Human Resources",
-    description: "Staff qualifications, competency, orientation, training",
-    readiness_pct: 91,
-    mapped_sops: [],
-    gaps: ["Annual competency sign-off pending for 3 staff"],
-    last_reviewed: "2026-06-10",
-    status: "ready",
-  },
-  {
-    code: "RI",
-    title: "Rights and Responsibilities",
-    description: "Patient rights, grievance process, informed consent",
-    readiness_pct: 96,
-    mapped_sops: ["ONCO-CHEMO-003"],
-    gaps: [],
-    last_reviewed: "2026-06-20",
-    status: "ready",
-  },
-  {
-    code: "PI",
-    title: "Performance Improvement",
-    description: "Data collection, analysis, quality improvement activities",
-    readiness_pct: 83,
-    mapped_sops: ["ICU-SEP-002"],
-    gaps: ["Quality dashboard not updated since April"],
-    last_reviewed: "2026-04-15",
-    status: "needs_attention",
-  },
-  {
-    code: "MRI",
-    title: "Medical Imaging",
-    description: "Radiology, MRI, CT safety and quality standards",
-    readiness_pct: 69,
-    mapped_sops: ["RAD-MRI-008"],
-    gaps: ["MRI safety screening SOP still under review", "MRI safety officer not designated"],
-    last_reviewed: "2026-02-10",
-    status: "at_risk",
-  },
+  { code: "IC", title: "Infection Prevention and Control", description: "Infection surveillance, prevention, and control program", department: "Infection Control" },
+  { code: "MM", title: "Medication Management", description: "Safe medication ordering, dispensing, administration, monitoring", department: "Pharmacy" },
+  { code: "RC", title: "Record of Care", description: "Medical record documentation, completeness, timeliness", department: "Nursing" },
+  { code: "PI", title: "Performance Improvement", description: "Data collection, analysis, quality improvement activities", department: "ICU" },
+  { code: "MRI", title: "Medical Imaging", description: "Radiology, MRI, CT safety and quality standards", department: "Radiology" },
+  { code: "EC", title: "Environment of Care", description: "Safety management, hazardous materials, fire safety", department: "Emergency" },
 ]
 
 const TRACER_ITEMS = [
-  {
-    type: "System Tracer",
-    area: "Medication Management",
-    description:
-      "Verify double-check protocol is being followed in ICU. Observe nurse administering high-alert medication and validate independent verification step.",
-    sop: "PHARM-MED-007",
-  },
-  {
-    type: "Patient Tracer",
-    area: "Sepsis Care Path",
-    description:
-      "Follow a sepsis patient's care path against ICU-SEP-002 requirements. Verify 1-hour bundle completion times and blood culture documentation.",
-    sop: "ICU-SEP-002",
-  },
-  {
-    type: "Document Tracer",
-    area: "Fall Risk Documentation",
-    description:
-      "Verify fall risk documentation completeness against HVAP-FALL-004. Confirm Morse scale scores documented each shift and prevention measures implemented within required timeframe.",
-    sop: "HVAP-FALL-004",
-  },
+  { type: "System Tracer", area: "Medication Management", description: "Verify double-check protocol is being followed. Observe staff administering high-alert medication and validate independent verification step.", department: "Pharmacy" },
+  { type: "Patient Tracer", area: "Sepsis Care Path", description: "Follow a sepsis patient's care path against the current ICU protocol. Verify 1-hour bundle completion times and blood culture documentation.", department: "ICU" },
+  { type: "Document Tracer", area: "Infection Control Documentation", description: "Verify infection-control documentation completeness. Confirm isolation precautions and PPE use are documented each shift.", department: "Infection Control" },
 ]
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -162,25 +64,42 @@ const STATUS_META: Record<string, { label: string; className: string }> = {
   at_risk: { label: "At Risk", className: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30" },
 }
 
-function getSopTitle(sopId: string): string {
-  const sop = MOCK_SOPS.find((s) => s.sop_id === sopId)
-  return sop ? sop.title : sopId
-}
-
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function SurveyPrepPage() {
   const [activeTab, setActiveTab] = useState<FilterTab>("all")
   const [exportState, setExportState] = useState<"idle" | "loading" | "success">("idle")
+  const [sops, setSops] = useState<RealSOP[]>([])
+  const [loading, setLoading] = useState(true)
   const [tracerToast, setTracerToast] = useState<string | null>(null)
 
-  const filtered = TJC_CHAPTERS.filter((c) => {
-    if (activeTab === "all") return true
-    if (activeTab === "ready") return c.status === "ready"
-    if (activeTab === "needs_attention") return c.status === "needs_attention"
-    if (activeTab === "at_risk") return c.status === "at_risk"
-    return true
-  })
+  useEffect(() => {
+    fetch(`${API_BASE}/api/sops`)
+      .then((r) => r.json())
+      .then((data) => setSops(Array.isArray(data) ? data : (data.sops ?? data.items ?? [])))
+      .catch(() => setSops([]))
+      .finally(() => setLoading(false))
+  }, [])
+
+  // Derive readiness live: readiness_pct = share of the chapter's real SOPs
+  // that are current (not past review_date). Gaps become real, specific
+  // findings - "no SOPs mapped" or "SOP X is overdue for review" - instead of
+  // fabricated inspection notes.
+  const enrichedChapters = useMemo(() => {
+    const now = new Date()
+    return TJC_CHAPTERS.map((chapter) => {
+      const mapped = sops.filter((s) => s.department === chapter.department)
+      const overdue = mapped.filter((s) => s.review_date && new Date(s.review_date) < now)
+      const readiness_pct = mapped.length === 0 ? 0 : Math.round(((mapped.length - overdue.length) / mapped.length) * 100)
+      const gaps = mapped.length === 0
+        ? ["No SOPs in this department yet"]
+        : overdue.map((s) => `${s.sop_id} (${s.title}) is overdue for review`)
+      const status = mapped.length === 0 ? "at_risk" : readiness_pct >= 90 ? "ready" : readiness_pct >= 70 ? "needs_attention" : "at_risk"
+      return { ...chapter, mapped, gaps, readiness_pct, status }
+    })
+  }, [sops])
+
+  const filtered = enrichedChapters.filter((c) => activeTab === "all" || c.status === activeTab)
 
   const handleExport = () => {
     setExportState("loading")
@@ -193,18 +112,23 @@ export default function SurveyPrepPage() {
     setTimeout(() => setTracerToast(null), 3000)
   }
 
+  const overallReadiness = enrichedChapters.length > 0
+    ? Math.round(enrichedChapters.reduce((sum, c) => sum + c.readiness_pct, 0) / enrichedChapters.length)
+    : 0
+  const chaptersReady = enrichedChapters.filter((c) => c.status === "ready").length
+  const openGaps = enrichedChapters.reduce((sum, c) => sum + c.gaps.length, 0)
+
   const stats = [
-    { label: "Overall Readiness", value: "87%", color: "text-[#15803D] dark:text-green-400", bg: "bg-[#DCFCE7] dark:bg-green-500/10" },
-    { label: "Chapters Reviewed", value: "8/12", color: "text-[#0B6BCB]", bg: "bg-[#0B6BCB]/10" },
-    { label: "Open Gaps", value: "6", color: "text-[#B45309] dark:text-amber-400", bg: "bg-[#FEF3C7] dark:bg-amber-500/10" },
-    { label: "Est. Survey Date", value: "Q1 2027", color: "text-[#334155]", bg: "bg-muted" },
+    { label: "Overall Readiness", value: `${overallReadiness}%`, color: "text-[#15803D] dark:text-green-400", bg: "bg-[#DCFCE7] dark:bg-green-500/10" },
+    { label: "Chapters Ready", value: `${chaptersReady}/${enrichedChapters.length}`, color: "text-[#0B6BCB]", bg: "bg-[#0B6BCB]/10" },
+    { label: "Open Gaps", value: String(openGaps), color: "text-[#B45309] dark:text-amber-400", bg: "bg-[#FEF3C7] dark:bg-amber-500/10" },
   ]
 
   const tabs: { key: FilterTab; label: string; count: number }[] = [
-    { key: "all", label: "All", count: TJC_CHAPTERS.length },
-    { key: "ready", label: "Ready", count: TJC_CHAPTERS.filter((c) => c.status === "ready").length },
-    { key: "needs_attention", label: "Needs Attention", count: TJC_CHAPTERS.filter((c) => c.status === "needs_attention").length },
-    { key: "at_risk", label: "At Risk", count: TJC_CHAPTERS.filter((c) => c.status === "at_risk").length },
+    { key: "all", label: "All", count: enrichedChapters.length },
+    { key: "ready", label: "Ready", count: enrichedChapters.filter((c) => c.status === "ready").length },
+    { key: "needs_attention", label: "Needs Attention", count: enrichedChapters.filter((c) => c.status === "needs_attention").length },
+    { key: "at_risk", label: "At Risk", count: enrichedChapters.filter((c) => c.status === "at_risk").length },
   ]
 
   return (
@@ -244,6 +168,12 @@ export default function SurveyPrepPage() {
           </span>
         </div>
 
+        {loading ? (
+          <div className="flex items-center justify-center py-12 text-[#64748B] gap-2">
+            <Loader2 className="w-5 h-5 animate-spin" /> Loading SOP corpus...
+          </div>
+        ) : (
+        <>
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {stats.map((s, i) => (
@@ -321,25 +251,25 @@ export default function SurveyPrepPage() {
                 />
               </div>
 
-              {/* Mapped SOPs */}
-              {chapter.mapped_sops.length > 0 && (
+              {/* Mapped SOPs (real, from the current corpus) */}
+              {chapter.mapped.length > 0 && (
                 <div>
-                  <p className="text-xs text-[#94A3B8] mb-1.5">Mapped SOPs</p>
+                  <p className="text-xs text-[#94A3B8] mb-1.5">Real SOPs in {chapter.department}</p>
                   <div className="flex flex-wrap gap-1.5">
-                    {chapter.mapped_sops.map((sopId) => (
+                    {chapter.mapped.map((sop) => (
                       <span
-                        key={sopId}
-                        title={getSopTitle(sopId)}
+                        key={sop.sop_id}
+                        title={sop.title}
                         className="text-xs text-[#0B6BCB] border border-[#0B6BCB]/30 bg-[#0B6BCB]/10 rounded px-2 py-0.5 cursor-default"
                       >
-                        {sopId}
+                        {sop.sop_id}
                       </span>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Gaps */}
+              {/* Gaps - real findings derived from review_date currency */}
               {chapter.gaps.length > 0 && (
                 <div>
                   <p className="text-xs text-[#94A3B8] mb-1.5">Open Gaps</p>
@@ -358,18 +288,14 @@ export default function SurveyPrepPage() {
               <div className="flex items-center justify-between pt-1">
                 <div className="flex items-center gap-1 text-xs text-[#94A3B8]">
                   <Clock className="w-3 h-3" />
-                  Last reviewed {chapter.last_reviewed}
+                  {chapter.mapped.length} SOP{chapter.mapped.length !== 1 ? "s" : ""} in scope
                 </div>
-                <div className="flex items-center gap-2">
-                  {chapter.mapped_sops.length > 0 && (
-                    <button className="text-xs text-[#0B6BCB] hover:text-[#0959AC] flex items-center gap-1 transition-colors">
-                      <ExternalLink className="w-3 h-3" /> View SOP
-                    </button>
-                  )}
-                  <button className="text-xs text-[#64748B] hover:text-[#334155] flex items-center gap-1 transition-colors border border-[#E2E8F0] rounded px-2 py-0.5">
-                    <Plus className="w-3 h-3" /> Add Gap Note
-                  </button>
-                </div>
+                <Link
+                  href="/library"
+                  className="text-xs text-[#0B6BCB] hover:text-[#0959AC] flex items-center gap-1 transition-colors"
+                >
+                  <ExternalLink className="w-3 h-3" /> View in Library
+                </Link>
               </div>
             </motion.div>
           ))}
@@ -379,36 +305,41 @@ export default function SurveyPrepPage() {
         <section>
           <h2 className="text-lg font-medium text-[#1A2332] mb-3">Tracer Simulation</h2>
           <div className="grid md:grid-cols-3 gap-4">
-            {TRACER_ITEMS.map((tracer, i) => (
-              <motion.div
-                key={tracer.type}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.08 }}
-                className="bg-card border border-[#E2E8F0] rounded-xl p-5 space-y-3"
-              >
-                <div>
-                  <span className="text-xs text-[#64748B] border border-[#CBD5E1] rounded px-2 py-0.5">
-                    {tracer.type}
-                  </span>
-                  <p className="text-sm font-medium text-[#1A2332] mt-2">{tracer.area}</p>
-                </div>
-                <p className="text-xs text-[#64748B] leading-relaxed">{tracer.description}</p>
-                <div className="flex items-center justify-between pt-1">
-                  <span className="text-xs text-[#0B6BCB] border border-[#0B6BCB]/30 bg-[#0B6BCB]/10 rounded px-2 py-0.5">
-                    {tracer.sop}
-                  </span>
-                  <button
-                    onClick={() => handleSimulate(tracer.type)}
-                    className="text-xs px-3 py-1.5 rounded-lg bg-[#0B6BCB]/10 text-[#0B6BCB] hover:bg-[#0B6BCB]/20 border border-[#0B6BCB]/30 transition-colors font-medium"
-                  >
-                    Simulate
-                  </button>
-                </div>
-              </motion.div>
-            ))}
+            {TRACER_ITEMS.map((tracer, i) => {
+              const relevantSop = sops.find((s) => s.department === tracer.department)
+              return (
+                <motion.div
+                  key={tracer.type}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.08 }}
+                  className="bg-card border border-[#E2E8F0] rounded-xl p-5 space-y-3"
+                >
+                  <div>
+                    <span className="text-xs text-[#64748B] border border-[#CBD5E1] rounded px-2 py-0.5">
+                      {tracer.type}
+                    </span>
+                    <p className="text-sm font-medium text-[#1A2332] mt-2">{tracer.area}</p>
+                  </div>
+                  <p className="text-xs text-[#64748B] leading-relaxed">{tracer.description}</p>
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-xs text-[#0B6BCB] border border-[#0B6BCB]/30 bg-[#0B6BCB]/10 rounded px-2 py-0.5">
+                      {relevantSop ? relevantSop.sop_id : "No SOP mapped"}
+                    </span>
+                    <button
+                      onClick={() => handleSimulate(tracer.type)}
+                      className="text-xs px-3 py-1.5 rounded-lg bg-[#0B6BCB]/10 text-[#0B6BCB] hover:bg-[#0B6BCB]/20 border border-[#0B6BCB]/30 transition-colors font-medium"
+                    >
+                      Simulate
+                    </button>
+                  </div>
+                </motion.div>
+              )
+            })}
           </div>
         </section>
+        </>
+        )}
 
         {/* Export */}
         <button

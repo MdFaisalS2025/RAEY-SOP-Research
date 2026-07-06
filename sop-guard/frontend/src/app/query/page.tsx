@@ -45,7 +45,7 @@ import {
 } from "lucide-react"
 import { type InlineCitation } from "@/components/query/citation-chip"
 import { SourcePanel } from "@/components/query/source-panel"
-import { EvidenceMeter, EvidenceQualityTags } from "@/components/query/evidence-meter"
+import { PubMedEvidencePanel } from "@/components/query/pubmed-evidence-panel"
 import { FollowupChips } from "@/components/query/followup-chips"
 import { FeedbackRow } from "@/components/query/feedback-row"
 import { AnswerRenderer } from "@/components/query/answer-renderer"
@@ -56,7 +56,6 @@ import { OverrideModal } from "@/components/ui/override-modal"
 import { VoiceRecorder } from "@/components/voice/voice-recorder"
 import { querySOPs, submitFeedback } from "@/lib/api"
 import { cn } from "@/lib/utils"
-import { MOCK_EVIDENCE } from "@/lib/mock-data"
 import { useRole } from "@/lib/role-context"
 
 const suggestedQueries = [
@@ -110,6 +109,7 @@ export type AssistantData = {
   generationMode: string | null
   responseTimeMs: number | null
   answerId: string | null
+  entities: { drugs?: string[]; conditions?: string[] }
   error?: boolean
 }
 
@@ -183,42 +183,11 @@ function mapResponse(query: string, response: any, startedAt: number): Assistant
     generationMode: typeof ext.generation_mode === "string" ? ext.generation_mode : null,
     responseTimeMs: typeof ext.response_time_ms === "number" ? ext.response_time_ms : Date.now() - startedAt,
     answerId: ext.answer_id != null ? String(ext.answer_id) : null,
+    entities: (ext.entities && typeof ext.entities === "object") ? ext.entities as { drugs?: string[]; conditions?: string[] } : {},
   }
 }
 
 // ─── Badges and small components ─────────────────────────────────────────────
-
-function AlignmentBadge({ status }: { status: string }) {
-  const configs: Record<string, { label: string; className: string; icon?: typeof AlertTriangle }> = {
-    aligned: { label: "Aligned with SOP", className: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30" },
-    partially_aligned: { label: "Partially Aligned", className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30" },
-    possible_update: { label: "Possible Update Needed", className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30" },
-    conflict_detected: { label: "CONFLICT DETECTED", className: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30", icon: AlertTriangle },
-    not_reviewed: { label: "Not Reviewed", className: "bg-muted text-[#64748B] border-[#E2E8F0]" },
-  }
-  const c = configs[status] ?? configs["not_reviewed"]
-  return (
-    <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border", c.className)}>
-      {c.icon && <c.icon className="w-3 h-3" />}
-      {c.label}
-    </span>
-  )
-}
-
-function EvidenceStrengthBadge({ strength }: { strength: string }) {
-  const map: Record<string, string> = {
-    high: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30",
-    moderate: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30",
-    low: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30",
-    insufficient: "bg-muted text-[#64748B] border-[#E2E8F0]",
-    expert_opinion: "bg-card text-[#475569] border-[#CBD5E1]",
-  }
-  return (
-    <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border capitalize", map[strength] ?? map["insufficient"])}>
-      {strength}
-    </span>
-  )
-}
 
 function VerificationBadge({ status }: { status: "passed" | "warning" | "failed" }) {
   const config = {
@@ -432,8 +401,7 @@ function AssistantAnswer({
   const [highlightedSource, setHighlightedSource] = useState<number | null>(null)
   const [feedbackGiven, setFeedbackGiven] = useState<string | null>(null)
 
-  const evidenceConflicts = MOCK_EVIDENCE.filter(e => e.alignment_status === "conflict_detected")
-  const hasConflict = data.sopConflicts.length > 0 || evidenceConflicts.length > 0
+  const hasConflict = data.sopConflicts.length > 0
   const firstCitation = data.sources[0]?.sop_title ?? ""
   const wordCount = (text: string) => text.split(/\s+/).filter(Boolean).length
 
@@ -519,12 +487,6 @@ function AssistantAnswer({
                 <div key={i} className="p-3 rounded-lg bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 text-sm">
                   <p className="font-semibold text-[#B91C1C] dark:text-red-400">{c.message}</p>
                   <p className="text-[#64748B] text-xs mt-1">Values in {c.sop_a}: {c.values_a?.join(", ")} vs {c.sop_b}: {c.values_b?.join(", ")}</p>
-                </div>
-              ))}
-              {evidenceConflicts.map((e) => (
-                <div key={e.id} className="p-3 rounded-lg bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 text-sm">
-                  <p className="font-semibold text-[#B91C1C] dark:text-red-400">Evidence conflict: {e.source_name}</p>
-                  <p className="text-[#64748B] text-xs mt-1">{e.summary.substring(0, 120)}…</p>
                 </div>
               ))}
             </div>
@@ -961,42 +923,7 @@ function AssistantAnswer({
             <BookOpen className="w-4 h-4 text-[#0B6BCB]" />
             <h2 className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">External Evidence</h2>
           </div>
-          <div className="p-5 rounded-2xl bg-card border border-[#E2E8F0] shadow-sm h-fit">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-semibold flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-[#0B6BCB]" />
-                External Evidence
-              </h3>
-              <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30">MOCK</span>
-            </div>
-            <EvidenceMeter items={MOCK_EVIDENCE} />
-            <div className="space-y-3">
-              {MOCK_EVIDENCE.map((ev) => (
-                <div key={ev.id} className="p-3 rounded-xl bg-muted border border-[#E2E8F0] space-y-2">
-                  <div className="flex items-start justify-between gap-2">
-                    <span className="text-[11px] font-semibold text-[#64748B] uppercase tracking-wide">{ev.source_name}</span>
-                    <EvidenceStrengthBadge strength={ev.evidence_strength} />
-                  </div>
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <AlignmentBadge status={ev.alignment_status} />
-                    <EvidenceQualityTags strength={ev.evidence_strength} publicationDate={ev.publication_date} />
-                  </div>
-                  <p className="text-[13px] font-medium text-[#1A2332] leading-snug line-clamp-2">{ev.title}</p>
-                  <p className="text-[12px] text-[#64748B] leading-relaxed line-clamp-2">{ev.summary}</p>
-                  <div className="flex items-center justify-between pt-1">
-                    <span className="text-[11px] text-[#64748B]">{new Date(ev.publication_date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</span>
-                    {ev.doi && (
-                      <a href={`https://doi.org/${ev.doi}`} target="_blank" rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-[11px] text-[#0B6BCB] hover:underline">
-                        View Full Evidence
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <PubMedEvidencePanel entities={data.entities} queryText={data.query} />
         </div>
       </div>
 
@@ -1251,6 +1178,7 @@ export default function QueryPage() {
         generationMode: null,
         responseTimeMs: null,
         answerId: null,
+        entities: {},
         error: true,
       }
       setQueryHistory(prev => [{ query: q, confidence: 0, type: "error", timestamp: Date.now() }, ...prev].slice(0, 10))

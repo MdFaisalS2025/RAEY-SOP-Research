@@ -124,6 +124,7 @@ class SOPGuardPipeline:
                 reasoning_trace=reasoning,
                 query_type=query_type,
                 abstained=True,
+                entities=analysis.get("entities", {}),
             )
 
         # 3. Generate
@@ -185,6 +186,7 @@ class SOPGuardPipeline:
             inline_citations=gen_result.get("inline_citations", []),
             followup_questions=gen_result.get("followup_questions", []),
             abstained=gen_result.get("abstained", False),
+            entities=analysis.get("entities", {}),
         )
 
     def _classify_query(self, query: str) -> str:

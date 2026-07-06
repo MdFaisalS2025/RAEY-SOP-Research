@@ -76,6 +76,7 @@ class QueryResponse(BaseModel):
     followup_questions: list[str] = []
     abstained: bool = False
     answer_id: Optional[int] = None
+    entities: dict[str, list[str]] = {}
 
 
 # ── SOP ────────────────────────────────────────────────────────

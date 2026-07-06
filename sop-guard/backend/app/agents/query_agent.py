@@ -182,7 +182,11 @@ class QueryUnderstandingAgent:
             "diphenhydramine", "amiodarone", "lidocaine", "atropine",
         ]
         for drug in drug_patterns:
-            if drug in q_lower:
+            # Word-boundary match - a plain substring check matched
+            # "epinephrine" inside "norepinephrine", polluting downstream
+            # consumers (e.g. the PubMed evidence search term) with an
+            # unrelated second drug on every norepinephrine query.
+            if re.search(r"\b" + re.escape(drug) + r"\b", q_lower):
                 entities["drugs"].append(drug)
 
         # Extract conditions
@@ -192,7 +196,7 @@ class QueryUnderstandingAgent:
             "hemorrhage", "coagulopathy", "thrombocytopenia", "renal failure",
         ]
         for cond in condition_patterns:
-            if cond in q_lower:
+            if re.search(r"\b" + re.escape(cond) + r"\b", q_lower):
                 entities["conditions"].append(cond)
 
         # Extract numbers

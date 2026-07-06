@@ -61,6 +61,29 @@ function groundingTitle(g: { status: GroundingStatus; matches: GroundingSentence
   return sources.length > 0 ? `${base} (${sources.join(", ")})` : base
 }
 
+// Threshold answers come through as a bullet list of mostly "Parameter:
+// value" lines (see generator.py's _build_threshold_answer) - though the
+// generator sometimes tacks a plain scope/context sentence onto the same
+// list. When at least half the items (and at least 2) match the "label:
+// value" shape, render those as a real two-column table instead of a
+// generic bullet list - closer to how a clinician scans a values table
+// on paper - and keep any non-matching lines as bullets below it rather
+// than silently dropping them.
+const KV_BULLET_RE = /^([A-Za-z][\w\s/()%<>=.-]{1,40}?):\s+(.+)$/
+
+function tryParseThresholdTable(items: string[]): { rows: { label: string; value: string; sourceItem: string }[]; leftover: string[] } | null {
+  if (items.length < 2) return null
+  const rows: { label: string; value: string; sourceItem: string }[] = []
+  const leftover: string[] = []
+  for (const item of items) {
+    const m = item.match(KV_BULLET_RE)
+    if (m) rows.push({ label: m[1].trim(), value: m[2].trim(), sourceItem: item })
+    else leftover.push(item)
+  }
+  if (rows.length < 2 || rows.length < items.length / 2) return null
+  return { rows, leftover }
+}
+
 export type AnswerBlock =
   | { type: "heading"; level: 1 | 2 | 3; text: string }
   | { type: "callout"; text: string }
@@ -249,6 +272,51 @@ export function AnswerRenderer({ text, citations, onCitationClick, groundingSent
           )
         }
         if (block.type === "bullets") {
+          const thresholdTable = tryParseThresholdTable(block.items)
+          if (thresholdTable) {
+            return (
+              <div key={i} className="space-y-2">
+                <div className="overflow-x-auto rounded-xl border border-[#E2E8F0]">
+                  <table className="w-full min-w-[360px] text-[15px] border-collapse">
+                    <tbody>
+                      {thresholdTable.rows.map((row, j) => {
+                        const g = lineGrounding(row.sourceItem, groundingSentences)
+                        return (
+                          <tr
+                            key={j}
+                            title={g ? groundingTitle(g) : undefined}
+                            className={cn("border-b border-[#EDF1F5] last:border-b-0", g && GROUNDING_STYLE[g.status].bg)}
+                          >
+                            <td className={cn("py-2 px-3 font-semibold text-[#1A2332] w-2/5 align-top", g && GROUNDING_STYLE[g.status].border)}>
+                              {row.label}
+                            </td>
+                            <td className="py-2 px-3 text-[#334155] align-top">{renderInline(row.value, ctx)}</td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                {thresholdTable.leftover.length > 0 && (
+                  <ul className="space-y-2">
+                    {thresholdTable.leftover.map((b, j) => {
+                      const g = lineGrounding(b, groundingSentences)
+                      return (
+                        <li
+                          key={j}
+                          title={g ? groundingTitle(g) : undefined}
+                          className={cn("flex gap-2.5 items-start pl-2 -ml-2", g && GROUNDING_STYLE[g.status].border, g && GROUNDING_STYLE[g.status].bg)}
+                        >
+                          <span className="shrink-0 mt-2.5 w-1.5 h-1.5 rounded-full bg-[#0B6BCB]" />
+                          <span className="text-[16px] leading-[1.6] text-[#1A2332]">{renderInline(b, ctx)}</span>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                )}
+              </div>
+            )
+          }
           return (
             <ul key={i} className="space-y-2">
               {block.items.map((b, j) => {

@@ -17,7 +17,7 @@ type Phase = "idle" | "typing-question" | "thinking" | "streaming-answer" | "cit
  * the shape of the real streaming query experience (see
  * frontend/src/app/query/page.tsx's SSE consumption) so it previews the
  * product honestly, but it never hits the network - it's a fixed script
- * that loops for the "Watch 2-Minute Demo" CTA.
+ * that loops for the "Watch Product Tour" CTA.
  */
 export function ProductShowcase({ embedded = false }: { embedded?: boolean }) {
   const ref = useRef<HTMLDivElement>(null)
@@ -80,28 +80,28 @@ export function ProductShowcase({ embedded = false }: { embedded?: boolean }) {
       transition={{ duration: 0.9, ease: EASE_EXPO_OUT }}
     >
       <GlassCard className="p-0 overflow-hidden">
-            <div className="flex items-center gap-2 px-5 py-3.5 border-b border-white/10 bg-white/[0.02]">
+            <div className="flex items-center gap-2 px-5 py-3.5 border-b border-border bg-muted/40">
               <span className="w-2.5 h-2.5 rounded-full bg-[#FF5252]/60" />
               <span className="w-2.5 h-2.5 rounded-full bg-[#FFD600]/60" />
               <span className="w-2.5 h-2.5 rounded-full bg-[#00C853]/60" />
-              <span className="ml-3 text-xs text-white/35 font-medium">Meridian · Preview Session</span>
+              <span className="ml-3 text-xs text-subtle font-medium">Meridian · Preview Session</span>
             </div>
 
             <div className="p-6 md:p-8 min-h-[280px] flex flex-col justify-between">
               <div className="space-y-5">
                 {/* user question bubble */}
                 <div className="flex justify-end">
-                  <div className="max-w-[85%] px-4 py-2.5 rounded-2xl rounded-br-md bg-[#00E5FF]/[0.09] border border-[#00E5FF]/15 text-[14px] text-white/90">
+                  <div className="max-w-[85%] px-4 py-2.5 rounded-2xl rounded-br-md bg-[#0B6BCB]/[0.08] dark:bg-[#00E5FF]/[0.09] border border-[#0B6BCB]/15 dark:border-[#00E5FF]/15 text-[14px] text-foreground">
                     {QUESTION.slice(0, questionChars)}
-                    {phase === "typing-question" && <span className="inline-block w-0.5 h-3.5 ml-0.5 bg-[#00E5FF] animate-pulse align-middle" />}
+                    {phase === "typing-question" && <span className="inline-block w-0.5 h-3.5 ml-0.5 bg-[#0B6BCB] dark:bg-[#00E5FF] animate-pulse align-middle" />}
                   </div>
                 </div>
 
                 {/* thinking indicator */}
                 <AnimatePresence>
                   {phase === "thinking" && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2 text-white/35 text-xs">
-                      <Sparkles className="w-3.5 h-3.5 text-[#00E5FF] animate-pulse" />
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2 text-muted-foreground text-xs">
+                      <Sparkles className="w-3.5 h-3.5 text-[#0B6BCB] dark:text-[#00E5FF] animate-pulse" />
                       Searching indexed SOPs...
                     </motion.div>
                   )}
@@ -109,9 +109,9 @@ export function ProductShowcase({ embedded = false }: { embedded?: boolean }) {
 
                 {/* answer */}
                 {showAnswer && (
-                  <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 text-[14px] leading-relaxed text-white/80">
+                  <div className="p-4 rounded-2xl bg-muted border border-border text-[14px] leading-relaxed text-foreground">
                     {ANSWER.slice(0, answerChars)}
-                    {phase === "streaming-answer" && <span className="inline-block w-0.5 h-3.5 ml-0.5 bg-white/60 animate-pulse align-middle" />}
+                    {phase === "streaming-answer" && <span className="inline-block w-0.5 h-3.5 ml-0.5 bg-foreground/60 animate-pulse align-middle" />}
                   </div>
                 )}
               </div>
@@ -124,15 +124,15 @@ export function ProductShowcase({ embedded = false }: { embedded?: boolean }) {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -6 }}
                     transition={{ duration: 0.5, ease: EASE_EXPO_OUT }}
-                    className="flex flex-wrap items-center gap-2 mt-6 pt-5 border-t border-white/10"
+                    className="flex flex-wrap items-center gap-2 mt-6 pt-5 border-t border-border"
                   >
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#00C853]/10 text-[#00C853] border border-[#00C853]/25">
                       <ShieldCheck className="w-3 h-3" /> 94% confidence · Verified
                     </span>
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] text-white/50 border border-white/10">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] text-muted-foreground border border-border">
                       <FileText className="w-3 h-3" /> {SOURCE.title} — {SOURCE.section}
                     </span>
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] text-white/30 border border-white/10 ml-auto">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] text-subtle border border-border ml-auto">
                       <Mic className="w-3 h-3" /> Voice input available
                     </span>
                   </motion.div>
@@ -146,16 +146,16 @@ export function ProductShowcase({ embedded = false }: { embedded?: boolean }) {
   if (embedded) return card
 
   return (
-    <section id="product-showcase" className="relative py-24 md:py-32 px-6 bg-[#07090c] border-y border-white/5">
+    <section id="product-showcase" className="relative py-24 md:py-32 px-6 bg-background">
       <div className="max-w-4xl mx-auto">
         <motion.div initial="hidden" whileInView="visible" viewport={viewportOnce} variants={stagger} className="text-center mb-14">
           <div className="flex justify-center">
             <SectionKicker>Product Preview</SectionKicker>
           </div>
-          <motion.h2 variants={fadeUp} custom={1} className="font-display text-3xl md:text-4xl font-bold text-white text-balance mb-3">
+          <motion.h2 variants={fadeUp} custom={1} className="font-display text-3xl md:text-4xl font-bold text-foreground text-balance mb-3">
             Watch a question become a verified answer
           </motion.h2>
-          <motion.p variants={fadeUp} custom={2} className="text-white/45 text-sm max-w-lg mx-auto">
+          <motion.p variants={fadeUp} custom={2} className="text-muted-foreground text-sm max-w-lg mx-auto">
             A scripted preview of the interaction - try it for real in the live demo below.
           </motion.p>
         </motion.div>

@@ -6,6 +6,7 @@ MockGenerator (deterministic templates, no model) when Ollama is unavailable.
 Research prototype. Not for clinical use.
 """
 
+import asyncio
 import json
 import re
 import logging
@@ -15,9 +16,9 @@ import httpx
 from app.config import settings
 from app.rag.generator import MockGenerator
 from app.rag.hallucination_checker import check_faithfulness
-from app.rag.faithfulness_nli import check_faithfulness_semantic
+from app.rag.faithfulness_nli import check_faithfulness_semantic, get_similarity_fn
 from app.rag.conflict_detector import detect_sop_conflicts
-from app.rag.citation_tracker import build_numbered_context, extract_citations
+from app.rag.citation_tracker import build_numbered_context, build_numbered_texts, extract_citations, auto_insert_citations
 from app.rag.entity_graph import conflicts_for_sops
 
 
@@ -42,6 +43,27 @@ def _merge_graph_conflicts(sop_conflicts: list[dict], retrieved_chunks: list[dic
         return sop_conflicts
 
 logger = logging.getLogger(__name__)
+
+# Shared across every LLMGenerator instance (a new one is created per
+# request) so concurrent requests actually queue against the same limit
+# instead of each instance thinking it's the only caller. A single local
+# Ollama process serializes inference internally - sending it concurrent
+# requests doesn't parallelize anything, it contends and can fail requests
+# outright (observed directly: a second concurrent request mid-generation
+# came back as a 500). See settings.LLM_MAX_CONCURRENT_REQUESTS.
+_OLLAMA_SEMAPHORE = asyncio.Semaphore(max(1, settings.LLM_MAX_CONCURRENT_REQUESTS))
+
+
+def _is_retryable(exc: Exception) -> bool:
+    """Network/timeout failures and 5xx responses are worth a retry - a
+    busy or momentarily-restarting Ollama process often recovers within a
+    second or two. 4xx responses (bad request, model not found, etc.)
+    won't fix themselves on retry."""
+    if isinstance(exc, (httpx.TransportError, httpx.TimeoutException)):
+        return True
+    if isinstance(exc, httpx.HTTPStatusError):
+        return exc.response.status_code >= 500
+    return False
 
 SYSTEM_PROMPT = """You are Meridian, a clinical SOP assistant for hospital staff. Answer questions based ONLY on the provided SOP content.
 
@@ -229,6 +251,22 @@ Answer:"""
             # fine - fall back to the same per-query-type templates the
             # mock generator uses rather than showing no follow-ups at all.
             followup_questions = self._mock._template_followups(query_type)
+
+        # Server-side citation safety net: the model is asked to cite
+        # inline as [1], [2] but frequently doesn't - fill in any sentence
+        # left without a marker by matching it to its most similar source
+        # chunk, the same way the faithfulness checker already does. This
+        # runs BEFORE extract_citations so the markers it inserts get
+        # validated and counted as cited_in_answer exactly like ones the
+        # model wrote itself. Never fatal - a matching failure just means
+        # citations stay however the model left them.
+        try:
+            numbered_texts = build_numbered_texts(retrieved_chunks)
+            sim_fn = get_similarity_fn()
+            answer_text = auto_insert_citations(answer_text, numbered_texts, sim_fn)
+        except Exception as e:
+            logger.warning(f"auto_insert_citations failed, continuing without it: {e}")
+
         answer_text, citation_records = extract_citations(answer_text, citation_records)
         abstained = "not covered in the available sops" in answer_text.lower()
 
@@ -384,58 +422,97 @@ Answer:"""
         raise ValueError(f"Unsupported provider: {self.provider} (only 'ollama' and 'mock' are supported)")
 
     async def _call_ollama(self, prompt: str) -> str:
-        """Call Ollama API (non-streaming)."""
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            response = await client.post(
-                f"{self.base_url}/api/generate",
-                json={
-                    "model": self.model,
-                    "prompt": prompt,
-                    "system": SYSTEM_PROMPT,
-                    "stream": False,
-                    "options": {
-                        "temperature": 0.1,
-                        "num_predict": 1024,
-                    },
-                },
-            )
-            response.raise_for_status()
-            data = response.json()
-            return data.get("response", "").strip()
+        """Call Ollama API (non-streaming). Serialized via a shared
+        semaphore and retried with backoff on transient failures - see
+        _OLLAMA_SEMAPHORE and _is_retryable above."""
+        last_exc: Optional[Exception] = None
+        for attempt in range(settings.LLM_MAX_RETRIES + 1):
+            try:
+                async with _OLLAMA_SEMAPHORE:
+                    async with httpx.AsyncClient(timeout=60.0) as client:
+                        response = await client.post(
+                            f"{self.base_url}/api/generate",
+                            json={
+                                "model": self.model,
+                                "prompt": prompt,
+                                "system": SYSTEM_PROMPT,
+                                "stream": False,
+                                "options": {
+                                    "temperature": 0.1,
+                                    "num_predict": 1024,
+                                },
+                            },
+                        )
+                        response.raise_for_status()
+                        data = response.json()
+                        return data.get("response", "").strip()
+            except Exception as e:  # noqa: BLE001 - classified by _is_retryable below
+                last_exc = e
+                if attempt < settings.LLM_MAX_RETRIES and _is_retryable(e):
+                    backoff = 0.5 * (3 ** attempt)
+                    logger.warning(f"Ollama call failed (attempt {attempt + 1}/{settings.LLM_MAX_RETRIES + 1}): {e}. Retrying in {backoff}s.")
+                    await asyncio.sleep(backoff)
+                    continue
+                raise
+        raise last_exc  # pragma: no cover - loop always returns or raises above
 
     async def _stream_ollama(self, prompt: str) -> AsyncIterator[str]:
         """Call Ollama's /api/generate with stream:true and yield each
         response fragment as it arrives. Ollama streams newline-delimited
         JSON objects, each with a "response" fragment and a "done" flag on
-        the last line."""
-        async with httpx.AsyncClient(timeout=120.0) as client:
-            async with client.stream(
-                "POST",
-                f"{self.base_url}/api/generate",
-                json={
-                    "model": self.model,
-                    "prompt": prompt,
-                    "system": SYSTEM_PROMPT,
-                    "stream": True,
-                    "options": {
-                        "temperature": 0.1,
-                        "num_predict": 1024,
-                    },
-                },
-            ) as response:
-                response.raise_for_status()
-                async for line in response.aiter_lines():
-                    if not line.strip():
-                        continue
-                    try:
-                        data = json.loads(line)
-                    except json.JSONDecodeError:
-                        continue
-                    fragment = data.get("response", "")
-                    if fragment:
-                        yield fragment
-                    if data.get("done"):
-                        break
+        the last line.
+
+        Serialized via the same shared semaphore as _call_ollama. Retries
+        only apply before any fragment has been yielded - once tokens are
+        already flowing to the caller (and, for the SSE routes, already on
+        the wire to the client), retrying would mean re-sending duplicate
+        content, so a mid-stream failure is left to the caller's existing
+        mock-fallback handling instead."""
+        last_exc: Optional[Exception] = None
+        for attempt in range(settings.LLM_MAX_RETRIES + 1):
+            started = False
+            try:
+                async with _OLLAMA_SEMAPHORE:
+                    async with httpx.AsyncClient(timeout=120.0) as client:
+                        async with client.stream(
+                            "POST",
+                            f"{self.base_url}/api/generate",
+                            json={
+                                "model": self.model,
+                                "prompt": prompt,
+                                "system": SYSTEM_PROMPT,
+                                "stream": True,
+                                "options": {
+                                    "temperature": 0.1,
+                                    "num_predict": 1024,
+                                },
+                            },
+                        ) as response:
+                            response.raise_for_status()
+                            async for line in response.aiter_lines():
+                                if not line.strip():
+                                    continue
+                                try:
+                                    data = json.loads(line)
+                                except json.JSONDecodeError:
+                                    continue
+                                fragment = data.get("response", "")
+                                if fragment:
+                                    started = True
+                                    yield fragment
+                                if data.get("done"):
+                                    return
+                return
+            except Exception as e:  # noqa: BLE001 - classified by _is_retryable below
+                if started or attempt >= settings.LLM_MAX_RETRIES or not _is_retryable(e):
+                    raise
+                last_exc = e
+                backoff = 0.5 * (3 ** attempt)
+                logger.warning(f"Ollama stream failed before any tokens (attempt {attempt + 1}/{settings.LLM_MAX_RETRIES + 1}): {e}. Retrying in {backoff}s.")
+                await asyncio.sleep(backoff)
+                continue
+        if last_exc:
+            raise last_exc  # pragma: no cover - loop always returns or raises above
 
 
 def get_generator() -> LLMGenerator:

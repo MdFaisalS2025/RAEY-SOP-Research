@@ -115,6 +115,16 @@ SYNONYM_GROUPS: list[set[str]] = [
     {"glucose", "blood sugar", "blood glucose", "glucose level", "bg"},
     {"warfarin", "coumadin", "inr", "anticoagulation", "blood thinner"},
     {"insulin", "insulin therapy", "glycemic control", "blood sugar management"},
+    # Dose-phrasing variants: SOPs state doses as a starting rate + a
+    # titration/escalation trigger ("start at 0.05, titrate to...", "if
+    # exceeds 0.5, add..."), not always as an explicit "maximum" figure.
+    # A query asking for "the maximum dose" should still retrieve that
+    # titration/escalation language, not just chunks containing the literal
+    # word "maximum".
+    {"maximum dose", "max dose", "highest dose", "dose limit", "dose ceiling", "upper dose limit"},
+    {"starting dose", "initial dose", "how much to give", "how much should be given"},
+    {"titrate", "titration", "dose adjustment", "up-titrate", "escalate dose"},
+    {"dose", "dosage", "dosing"},
 ]
 
 

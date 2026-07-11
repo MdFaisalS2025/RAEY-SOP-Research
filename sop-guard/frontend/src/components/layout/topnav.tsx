@@ -418,19 +418,13 @@ export function TopNav() {
     // drawer's fixed inset-0 z-50 on /query) so the header stays clickable -
     // a click on Home while a drawer is open should navigate immediately,
     // not get swallowed by the backdrop dismissing the drawer first.
-    <header className="sticky top-0 z-[55] flex flex-col">
+    <header className="sticky top-0 z-[55] flex flex-col bg-background isolate">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-[#0B6BCB] focus:text-white focus:text-sm focus:font-medium"
       >
         Skip to main content
       </a>
-
-      {/* Disclaimer banner */}
-      <div className="flex items-center justify-center gap-1.5 px-4 py-1 bg-amber-500/10 border-b border-amber-500/20 text-amber-600 dark:text-[#FFD600] text-[11px] font-medium">
-        <AlertTriangle className="w-3 h-3" />
-        <span>Research Only - Not for Clinical Use</span>
-      </div>
 
       {/* Main nav bar */}
       <div className="glass-clinical border-b border-gray-200 dark:border-white/[0.08] shadow-sm dark:shadow-black/20">
@@ -549,6 +543,19 @@ export function TopNav() {
 
           {/* Right cluster */}
           <div className="flex items-center gap-1 ml-auto">
+            {/* Research-only disclaimer - a compact badge rather than a
+                full-width banner on every page. Still always visible (not
+                buried in a menu) since it's a compliance-relevant notice,
+                just sized to match the rest of the utility row instead of
+                dominating the header. */}
+            <div
+              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-100 dark:bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-[#FFD600] text-[11px] font-medium shrink-0"
+              title="Research Only - Not for Clinical Use"
+            >
+              <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden 2xl:inline whitespace-nowrap">Research Only</span>
+            </div>
+
             {/* Backend status dot */}
             <div
               className="hidden xl:flex items-center justify-center w-8 h-8 shrink-0"

@@ -20,6 +20,7 @@ from app.agents.query_agent import QueryUnderstandingAgent
 from app.rag.citation_tracker import citation_coverage
 from app.agents.routing import classify_intent, build_external_evidence_answer, build_no_evidence_answer
 from app.integrations.evidence_registry import search_all as search_external_evidence
+from app.services import answer_cache
 
 
 class MeridianPipeline:
@@ -285,7 +286,21 @@ class MeridianPipeline:
 
         Yields ``{"type": "token", "text": str}`` events, then exactly one
         ``{"type": "final", "response": QueryResponse}`` event.
+
+        Cache-only for standalone questions (no conversation history - see
+        answer_cache.py for why): a hit is delivered as a single token
+        event carrying the whole cached answer, so the caller's streaming
+        UI works identically whether the answer was just generated or
+        served from cache.
         """
+        cache_eligible = not history_context
+        if cache_eligible:
+            cached = answer_cache.get(query, news2_score)
+            if cached is not None:
+                yield {"type": "token", "text": cached.answer}
+                yield {"type": "final", "response": cached}
+                return
+
         prep = await self._prepare(query, news2_score=news2_score, use_hyde=use_hyde, retrieval_query=retrieval_query)
         if "abstain" in prep:
             yield {"type": "final", "response": prep["abstain"]}
@@ -318,6 +333,8 @@ class MeridianPipeline:
             }
 
         response = self._finalize(gen_result, retrieved, query_type, reasoning, evidence, analysis, t_start, t_generate, route=route, external_evidence=external_evidence)
+        if cache_eligible and not response.abstained:
+            answer_cache.set(query, news2_score, response)
         yield {"type": "final", "response": response}
 
     async def run(
@@ -330,7 +347,16 @@ class MeridianPipeline:
         retrieval_query: str | None = None,
         history_context: str = "",
     ) -> QueryResponse:
-        """Execute the full pipeline."""
+        """Execute the full pipeline.
+
+        Cache-only for standalone questions (no conversation history) - see
+        answer_cache.py for what that trades off and why.
+        """
+        cache_eligible = not history_context
+        if cache_eligible:
+            cached = answer_cache.get(query, news2_score)
+            if cached is not None:
+                return cached
 
         prep = await self._prepare(query, news2_score=news2_score, use_hyde=use_hyde, retrieval_query=retrieval_query)
         if "abstain" in prep:
@@ -351,7 +377,10 @@ class MeridianPipeline:
         t_generate = round((time.perf_counter() - t0) * 1000)
 
         # 4-5. Verify, confidence-gate, and build the response
-        return self._finalize(gen_result, retrieved, query_type, reasoning, evidence, analysis, t_start, t_generate, route=route, external_evidence=external_evidence)
+        response = self._finalize(gen_result, retrieved, query_type, reasoning, evidence, analysis, t_start, t_generate, route=route, external_evidence=external_evidence)
+        if cache_eligible and not response.abstained:
+            answer_cache.set(query, news2_score, response)
+        return response
 
     def _classify_query(self, query: str) -> str:
         """Classify query type using keyword matching."""

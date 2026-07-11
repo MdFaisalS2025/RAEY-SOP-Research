@@ -28,6 +28,14 @@ class Settings(BaseSettings):
     LLM_PROVIDER: str = "ollama"  # mock | ollama
     LLM_MODEL: str = "llama3.2"
     LLM_BASE_URL: Optional[str] = "http://localhost:11434"
+    # A single local Ollama instance serializes inference internally - firing
+    # concurrent requests at it doesn't parallelize, it contends and can
+    # error out (observed: a second concurrent request mid-generation
+    # returned 500). Cap concurrent calls so requests queue politely instead
+    # of failing; raise this only if LLM_BASE_URL points at infrastructure
+    # that can actually handle concurrent inference (e.g. a scaled endpoint).
+    LLM_MAX_CONCURRENT_REQUESTS: int = 1
+    LLM_MAX_RETRIES: int = 2
 
     # --- Embeddings ---
     EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"

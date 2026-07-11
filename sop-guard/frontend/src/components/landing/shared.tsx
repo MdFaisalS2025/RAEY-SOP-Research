@@ -25,7 +25,12 @@ export const stagger: Variants = {
 
 export const viewportOnce = { once: true, margin: "-80px" }
 
-// ─── Glass card ───────────────────────────────────────────────────────────
+// ─── Card ─────────────────────────────────────────────────────────────────
+// Light-primary by design (see homepage research notes): a crisp bordered
+// surface with a real shadow, not a heavy translucent "glass" treatment -
+// glass/blur panels read as decorative in a light, editorial layout the
+// way they don't in a dark developer-tool UI. Dark mode (if the visitor's
+// app-wide preference is dark) gets a subtler equivalent.
 export function GlassCard({
   children,
   className,
@@ -38,9 +43,8 @@ export function GlassCard({
   return (
     <div
       className={cn(
-        "relative rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl",
-        "shadow-[0_1px_0_0_rgba(255,255,255,0.06)_inset]",
-        glow && "hover:border-[#00E5FF]/30 hover:shadow-[0_0_40px_-12px_#00E5FF40] transition-all duration-500",
+        "relative rounded-2xl border border-border bg-card shadow-sm",
+        glow && "hover:border-[#0B6BCB]/30 dark:hover:border-[#00E5FF]/30 hover:shadow-md transition-all duration-300",
         className
       )}
     >
@@ -50,7 +54,7 @@ export function GlassCard({
 }
 
 // ─── Magnetic button ──────────────────────────────────────────────────────
-// Cursor-follow translate + glow, capped to a small radius so it reads as a
+// Cursor-follow translate, capped to a small radius so it reads as a
 // premium micro-interaction rather than the button "chasing" the pointer.
 export function MagneticButton({
   children,
@@ -90,12 +94,9 @@ export function MagneticButton({
     "group relative inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full text-[15px] font-semibold transition-colors duration-300 overflow-hidden"
   const styles =
     variant === "primary"
-      ? "bg-[#00E5FF] text-[#04121a] hover:bg-[#33ebff]"
-      : "border border-white/15 bg-white/[0.04] text-white hover:bg-white/[0.08] hover:border-white/25"
+      ? "bg-[#0B6BCB] dark:bg-[#00E5FF] text-white dark:text-[#04121a] hover:bg-[#0959AC] dark:hover:bg-[#33ebff]"
+      : "border border-border bg-card text-foreground hover:bg-muted"
 
-  const glowOverlay = variant === "primary" && (
-    <span className="pointer-events-none absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.35),transparent_70%)]" />
-  )
   const inner = <span className="relative z-10 inline-flex items-center gap-2">{children}</span>
 
   if (href) {
@@ -109,7 +110,6 @@ export function MagneticButton({
         style={{ x: springX, y: springY }}
         className={cn(base, styles, className)}
       >
-        {glowOverlay}
         {inner}
       </motion.a>
     )
@@ -124,7 +124,6 @@ export function MagneticButton({
       style={{ x: springX, y: springY }}
       className={cn(base, styles, className)}
     >
-      {glowOverlay}
       {inner}
     </motion.button>
   )
@@ -136,26 +135,30 @@ export function SectionKicker({ children }: { children: ReactNode }) {
     <motion.span
       variants={fadeUp}
       custom={0}
-      className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#00E5FF]/80 mb-4"
+      className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#0B6BCB] dark:text-[#00E5FF] mb-4"
     >
-      <span className="w-6 h-px bg-[#00E5FF]/50" />
+      <span className="w-6 h-px bg-[#0B6BCB]/50 dark:bg-[#00E5FF]/50" />
       {children}
     </motion.span>
   )
 }
 
-// ─── Ambient background: soft glow + faint grid ──────────────────────────
+// ─── Ambient background ───────────────────────────────────────────────────
+// Deliberately restrained: a faint dot grid only, no glow blobs. Glowing
+// gradient orbs are one of the most-cited "this looks AI-generated" tells
+// (see homepage research notes) - real enterprise health-tech sites
+// (OpenEvidence, Abridge) use none at all. This exists only to keep large
+// flat sections from feeling completely inert, not as a visual centerpiece.
 export function AmbientGlow({ className }: { className?: string }) {
   return (
     <div className={cn("pointer-events-none absolute inset-0 overflow-hidden", className)}>
-      <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[900px] h-[900px] rounded-full bg-[#00E5FF]/[0.07] blur-[120px]" />
-      <div className="absolute top-1/3 -left-40 w-[500px] h-[500px] rounded-full bg-[#00C853]/[0.05] blur-[100px]" />
       <div
-        className="absolute inset-0 opacity-[0.03]"
+        className="absolute inset-0 opacity-[0.4] dark:opacity-[0.03]"
         style={{
           backgroundImage:
-            "linear-gradient(to right, white 1px, transparent 1px), linear-gradient(to bottom, white 1px, transparent 1px)",
-          backgroundSize: "64px 64px",
+            "radial-gradient(circle, currentColor 1px, transparent 1px)",
+          backgroundSize: "28px 28px",
+          color: "rgb(11 107 203 / 0.06)",
         }}
       />
     </div>

@@ -79,6 +79,26 @@ def build_numbered_context(chunks: list[dict], max_chars: int = 4000) -> tuple[s
     return "\n".join(context_parts), citation_records
 
 
+def build_numbered_texts(chunks: list[dict]) -> dict[int, str]:
+    """Same dedup + numbering order as build_numbered_context, but returns
+    the FULL chunk text keyed by citation number (build_numbered_context's
+    citation_records only keep a 200-char snippet, which is deliberately
+    kept small since those records get serialized to the frontend on every
+    answer - full text is only needed server-side, for auto_insert_citations
+    below, so it's kept out of the API payload)."""
+    texts: dict[int, str] = {}
+    seen: set[str] = set()
+    number = 0
+    for chunk in chunks:
+        cid = _chunk_id(chunk)
+        if cid in seen:
+            continue
+        seen.add(cid)
+        number += 1
+        texts[number] = chunk.get("text", chunk.get("chunk_text", "")) or ""
+    return texts
+
+
 _MARKER_RE = re.compile(r"\[(\d+)\]")
 
 
@@ -152,6 +172,97 @@ def attach_citation_numbers(answer: str, sentences: list[dict]) -> None:
         m = _TRAILING_MARKERS_RE.match(answer[end:end + 40])
         sent["citation_numbers"] = [int(n) for n in re.findall(r"\d+", m.group(0))] if m else []
         search_from = end
+
+
+def _split_sentences_for_citation(answer: str) -> list[str]:
+    raw = re.split(r"(?<=[.!?])\s+|\n+", answer.strip())
+    return [s.strip() for s in raw if s.strip()]
+
+
+def auto_insert_citations(
+    answer: str,
+    numbered_chunk_texts: dict[int, str],
+    sim_fn,
+    threshold: float = 0.55,
+) -> str:
+    """
+    Server-side safety net for citation coverage: for any substantive
+    sentence that has NO [N] marker at all, find the source chunk it's
+    most semantically similar to (same matching approach and threshold as
+    faithfulness_nli.check_faithfulness_semantic) and insert that
+    citation number - rather than depending on the model to reliably
+    follow the "cite inline as [1], [2]" prompt instruction, which smaller
+    local models in particular skip on a large fraction of answers.
+
+    Only fills gaps: sentences that already carry a marker - whether
+    immediately inside the sentence text or trailing right after it (e.g.
+    "...organism. [1]", where a naive split would separate the marker
+    from its sentence at the period+space) - are left untouched, using
+    the same find-in-original-text + read-trailing-marker approach as
+    attach_citation_numbers above, so this never overrides or
+    second-guesses a citation the model did provide.
+
+    `sim_fn` is the same cosine-similarity callable check_faithfulness_semantic
+    uses; when dense embeddings aren't available (sim_fn is None), this is a
+    no-op and the answer is returned unchanged - there is no keyword-based
+    equivalent precise enough to safely attribute a sentence to one specific
+    source among several.
+    """
+    if not sim_fn or not numbered_chunk_texts:
+        return answer
+
+    sentences = _split_sentences_for_citation(answer)
+    insertions: list[tuple[int, int]] = []  # (position, citation_number)
+    search_from = 0
+
+    for raw_sent in sentences:
+        # A marker trailing sentence N (e.g. "...shock. [1]") has no
+        # sentence-ending punctuation of its own to split on, so the naive
+        # splitter glues it onto the FRONT of sentence N+1's text instead
+        # (e.g. "[1] Vasopressin..."). Strip any such leading marker before
+        # treating what's left as this sentence's own content - otherwise
+        # sentence N+1 would be mistaken for already-cited using a marker
+        # that actually belongs to sentence N.
+        sent = _TRAILING_MARKERS_RE.sub("", raw_sent).strip()
+        if not sent:
+            continue
+        idx = answer.find(sent, search_from)
+        if idx == -1:
+            continue
+        end = idx + len(sent)
+        search_from = end
+
+        if (
+            len(sent) <= 20
+            or sent.startswith(("#", "Source:", "---", ">"))
+            or "research prototype" in sent.lower()
+            or _MARKER_RE.search(sent)  # marker inside the sentence itself
+            or _TRAILING_MARKERS_RE.match(answer[end:end + 40])  # marker right after it
+        ):
+            continue
+
+        best_num, best_sim = None, 0.0
+        for num, text in numbered_chunk_texts.items():
+            if not text:
+                continue
+            try:
+                sim = float(sim_fn(sent, text))
+            except Exception:
+                sim = 0.0
+            if sim > best_sim:
+                best_sim, best_num = sim, num
+
+        if best_num is not None and best_sim >= threshold:
+            insertions.append((end, best_num))
+
+    if not insertions:
+        return answer
+
+    # Splice right-to-left so earlier positions stay valid as we insert.
+    result = answer
+    for pos, num in sorted(insertions, key=lambda p: p[0], reverse=True):
+        result = f"{result[:pos]} [{num}]{result[pos:]}"
+    return result
 
 
 def citation_coverage(answer: str) -> float:

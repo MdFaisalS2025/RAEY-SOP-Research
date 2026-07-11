@@ -25,6 +25,14 @@ _GENERIC_CLINICAL_WORDS = {
     "dose", "administer", "patient", "patients", "therapy", "therapeutic",
     "management", "protocol", "consider", "initiate", "hold", "give",
     "adjust", "monitor", "assess", "check", "within", "before", "after",
+    # Time-unit / connector words: two thresholds about completely
+    # different parameters routinely share "hours"/"within X hours"
+    # phrasing purely because both happen to be time-bounded, not because
+    # they're the same topic - counting these toward context-overlap
+    # produced a real false positive (a "6-12 hours" source-control timing
+    # statement was matched to an unrelated "2-4 hours" lactate-recheck
+    # threshold because both windows shared "hours"/"within").
+    "hours", "hour", "minutes", "minute", "seconds", "second", "immediately",
 }
 
 # Negation / prohibition cues that indicate a contraindication or warning is
@@ -250,9 +258,18 @@ class ThresholdVerifier:
         return results
 
     def _context_matches(self, answer_ctx: str, sop_ctx: str) -> bool:
-        """Check if answer context roughly matches SOP context."""
-        a_words = set(re.findall(r"[a-z]+", answer_ctx.lower()))
-        s_words = set(re.findall(r"[a-z]+", sop_ctx.lower()))
+        """Check if answer context roughly matches SOP context.
+
+        Generic/filler words (see _GENERIC_CLINICAL_WORDS) are excluded
+        from the overlap calculation - two unrelated thresholds sharing
+        only words like "within"/"hours"/"administer" is coincidental
+        phrasing, not topical agreement, and counting it was producing
+        false "range mismatch" matches between genuinely unrelated values
+        (e.g. a source-control time window matched to a lactate threshold
+        purely because both statements mention "hours").
+        """
+        a_words = set(re.findall(r"[a-z]+", answer_ctx.lower())) - _GENERIC_CLINICAL_WORDS
+        s_words = set(re.findall(r"[a-z]+", sop_ctx.lower())) - _GENERIC_CLINICAL_WORDS
         if not s_words:
             return True
         overlap = len(a_words & s_words) / max(len(s_words), 1)
@@ -310,19 +327,35 @@ class SequenceVerifier:
                 f"step {step_num}" in answer_lower
                 or f"step{step_num}" in answer_lower
             )
+            # The generation prompt instructs numbered-list output ("1. Step
+            # description"), which models actually follow far more often
+            # than writing the word "step" - a numbered-list marker at the
+            # start of a line is a second strong, precise position signal.
+            marker_match = re.search(rf"(?:^|\n)\s*{step_num}[.)]\s", answer)
 
-            # Check content overlap  - extract key phrases from step
-            key_words = set(re.findall(r"[a-z]{4,}", step_text))
+            # Check content overlap - extract key phrases from step, excluding
+            # generic clinical filler words that carry no positional signal
+            # (two different steps sharing "administer"/"within" doesn't mean
+            # they're mentioned at the same place in the answer).
+            key_words = set(re.findall(r"[a-z]{4,}", step_text)) - _GENERIC_CLINICAL_WORDS
             answer_words = set(re.findall(r"[a-z]{4,}", answer_lower))
             content_overlap = len(key_words & answer_words) / max(len(key_words), 1)
 
-            if explicitly_mentioned or content_overlap > 0.4:
-                # Find position in answer for ordering check
+            if explicitly_mentioned or marker_match or content_overlap > 0.4:
+                # Find position in answer for ordering check. Prefer the
+                # most precise signal available: explicit "step N" phrase,
+                # then a numbered-list marker, then (least reliable) the
+                # earliest position of any shared distinctive keyword -
+                # which can be thrown off when a step's vocabulary
+                # coincidentally also appears earlier in an unrelated step,
+                # so it's only used when nothing more precise matched.
                 if explicitly_mentioned:
                     pos = answer_lower.find(f"step {step_num}")
+                elif marker_match:
+                    pos = marker_match.start()
                 else:
-                    # Use position of first matching keyword
-                    positions = [answer_lower.find(w) for w in (key_words & answer_words) if answer_lower.find(w) >= 0]
+                    shared = key_words & answer_words
+                    positions = [answer_lower.find(w) for w in shared if answer_lower.find(w) >= 0]
                     pos = min(positions) if positions else -1
 
                 mentioned_steps.append((step_num, pos))

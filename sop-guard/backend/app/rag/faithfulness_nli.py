@@ -57,6 +57,16 @@ def _default_embed_similarity():
     return False, None
 
 
+def get_similarity_fn():
+    """Public accessor for the same sim_fn check_faithfulness_semantic uses,
+    for other post-processing steps (see citation_tracker.auto_insert_citations)
+    that want the identical "how similar is this sentence to this chunk"
+    signal rather than reimplementing their own. Returns None when dense
+    embeddings aren't available."""
+    _, sim_fn = _default_embed_similarity()
+    return sim_fn
+
+
 def check_faithfulness_semantic(
     answer: str,
     chunks: list[dict[str, Any]],

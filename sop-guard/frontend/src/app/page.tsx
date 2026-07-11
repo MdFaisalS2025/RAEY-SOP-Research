@@ -4,24 +4,26 @@ import { HowItWorksSection } from "@/components/landing/how-it-works-section"
 import { FeaturesGrid } from "@/components/landing/features-grid"
 import { ProductShowcase } from "@/components/landing/product-showcase"
 import { LiveDemoSection } from "@/components/landing/live-demo-section"
-import { ResearchStatsSection } from "@/components/landing/research-stats-section"
+import { ResearchSection } from "@/components/landing/research-stats-section"
 import { LandingFooter } from "@/components/landing/landing-footer"
 
-// The marketing homepage is dark-first by design, independent of the
-// app's own light/dark toggle (which only applies once a visitor signs in
-// and reaches the actual product). Scoping the "dark" class to this root
-// - rather than toggling <html> - keeps every dark: variant and CSS
-// custom property in globals.css correctly scoped to just this page.
+// Light-primary by design: research on enterprise/healthcare buyer trust
+// perception (see homepage design notes) points at light mode reading as
+// more trustworthy for this audience than the dark-developer-tool
+// aesthetic (Linear/Vercel) this page used previously - and it matches
+// what OpenEvidence and Abridge actually ship. This page now follows the
+// app's normal theme (respects the visitor's light/dark preference like
+// every other route) instead of forcing dark unconditionally.
 export default function LandingPage() {
   return (
-    <div className="dark bg-[#0A0C10] min-h-screen">
+    <div className="bg-background min-h-screen">
       <HeroSection />
       <ProblemSection />
       <HowItWorksSection />
       <FeaturesGrid />
       <ProductShowcase />
       <LiveDemoSection />
-      <ResearchStatsSection />
+      <ResearchSection />
       <LandingFooter />
     </div>
   )

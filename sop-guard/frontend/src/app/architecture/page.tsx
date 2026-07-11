@@ -112,9 +112,9 @@ const colorMap: Record<string, { bg: string; border: string; text: string; highl
 
 const techStack = [
   { category: "Frontend", items: ["Next.js 14", "TypeScript", "Tailwind CSS", "Framer Motion", "Recharts"] },
-  { category: "Backend", items: ["FastAPI", "Python 3.11", "LangChain", "Pydantic"] },
-  { category: "AI/ML", items: ["OpenAI GPT-4", "text-embedding-3-small", "Whisper (voice)"] },
-  { category: "Infrastructure", items: ["ChromaDB (vectors)", "SQLite (metadata)", "Docker"] },
+  { category: "Backend", items: ["FastAPI", "Python 3.11", "SQLAlchemy (async)", "Pydantic"] },
+  { category: "AI/ML", items: ["Ollama (llama3.2, self-hosted)", "sentence-transformers (BAAI/bge-small-en-v1.5)", "Web Speech API (voice, browser-native)"] },
+  { category: "Infrastructure", items: ["In-memory vector search (no external vector DB)", "SQLite / PostgreSQL", "Docker"] },
 ]
 
 const demoTrace = [

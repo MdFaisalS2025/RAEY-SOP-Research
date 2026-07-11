@@ -173,6 +173,26 @@ async def evaluation_summary_eval(force: bool = False, db: AsyncSession = Depend
     return await get_eval_summary(pipeline, force=force)
 
 
+@router.get("/api/evaluation/ragas")
+async def run_ragas_evaluation(force: bool = False, db: AsyncSession = Depends(get_db)):
+    """
+    Real RAGAS library metrics (faithfulness, response relevancy, context
+    precision), judged by our self-hosted Ollama model - not a third-party
+    API. Falls back to an "available: false" payload with an explanation
+    when Ollama isn't reachable; the ragas-lite proxy metrics at
+    /api/evaluation/ragas-lite remain the zero-dependency default the
+    dashboard can always show.
+    """
+    from app.evaluation.ragas_real import get_ragas_summary
+
+    rows = (await db.execute(
+        select(SOPChunk, SOP.sop_id.label("sop_sop_id"), SOP.title.label("sop_title"), SOP.structured_json)
+        .join(SOP, SOPChunk.sop_id == SOP.id)
+    )).all()
+    pipeline = _pipeline_from_rows(rows)
+    return await get_ragas_summary(pipeline, force=force)
+
+
 @router.get("/api/evaluation/chunk-distribution")
 async def chunk_type_distribution(db: AsyncSession = Depends(get_db)):
     """Real chunk_type counts across the current live corpus (not a fixed test set)."""

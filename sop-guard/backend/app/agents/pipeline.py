@@ -7,7 +7,7 @@ Research prototype  - NOT for clinical use.
 
 import re
 import time
-from typing import Any
+from typing import Any, AsyncIterator
 
 from app.schemas.schemas import QueryResponse, RetrievedChunk, VerificationResult, VerificationStatus
 from app.rag.hybrid_retriever import HybridRetriever
@@ -42,18 +42,20 @@ class SOPGuardPipeline:
         self.query_agent = QueryUnderstandingAgent()
         self.structured_sops = structured_sops or {}
 
-    async def run(
+    async def _prepare(
         self,
         query: str,
-        user_role: str = "",
-        department: str = "",
         news2_score: int | None = None,
         use_hyde: bool = False,
         retrieval_query: str | None = None,
-        history_context: str = "",
-    ) -> QueryResponse:
-        """Execute the full pipeline."""
-
+    ) -> dict[str, Any]:
+        """Steps 1-2 shared by both the single-shot and streaming pipelines:
+        query understanding, optional HyDE expansion, retrieval, multi-hop,
+        and the evidence-sufficiency gate. Returns either
+        {"abstain": QueryResponse} when there isn't enough evidence to
+        answer, or {"retrieved": ..., "query_type": ..., "reasoning": ...,
+        "evidence": ..., "analysis": ...} to continue into generation.
+        """
         t_start = time.perf_counter()
 
         # 1. Query Understanding
@@ -117,27 +119,43 @@ class SOPGuardPipeline:
                 )
                 for c in retrieved
             ]
-            return QueryResponse(
-                answer="I could not find enough support in the SOP library to answer safely. "
-                       + ". ".join(evidence["recommendations"]),
-                citations=[],
-                confidence=0.1,
-                verification_result=None,
-                retrieved_chunks=response_chunks,
-                reasoning_trace=reasoning,
-                query_type=query_type,
-                abstained=True,
-                entities=analysis.get("entities", {}),
-            )
+            return {
+                "abstain": QueryResponse(
+                    answer="I could not find enough support in the SOP library to answer safely. "
+                           + ". ".join(evidence["recommendations"]),
+                    citations=[],
+                    confidence=0.1,
+                    verification_result=None,
+                    retrieved_chunks=response_chunks,
+                    reasoning_trace=reasoning,
+                    query_type=query_type,
+                    abstained=True,
+                    entities=analysis.get("entities", {}),
+                )
+            }
 
-        # 3. Generate
-        t0 = time.perf_counter()
-        gen_result = await self.generator.generate_answer(
-            query, retrieved, query_type,
-            news2_score=news2_score,
-            history_context=history_context,
-        )
-        t_generate = round((time.perf_counter() - t0) * 1000)
+        return {
+            "retrieved": retrieved,
+            "query_type": query_type,
+            "reasoning": reasoning,
+            "evidence": evidence,
+            "analysis": analysis,
+            "t_start": t_start,
+        }
+
+    def _finalize(
+        self,
+        gen_result: dict[str, Any],
+        retrieved: list[dict],
+        query_type: str,
+        reasoning: list[str],
+        evidence: dict,
+        analysis: dict,
+        t_start: float,
+        t_generate: float,
+    ) -> QueryResponse:
+        """Steps 4-5 shared by both pipelines: verify against the structured
+        SOP, gate confidence, and build the final QueryResponse."""
         answer = gen_result["answer"]
         citations = gen_result["citations"]
         confidence = gen_result["confidence"]
@@ -145,7 +163,6 @@ class SOPGuardPipeline:
         reasoning.extend(gen_result["reasoning_trace"])
         reasoning.append(f"Timing - Generation: {t_generate}ms")
 
-        # 4. Verify  - collect structured SOPs from retrieved chunks
         t0 = time.perf_counter()
         merged_structured = self._merge_structured_sops(retrieved)
         verification = self.verifier.verify(answer, retrieved, merged_structured)
@@ -153,7 +170,6 @@ class SOPGuardPipeline:
         reasoning.append(f"Verification: {verification.status.value} (score: {verification.overall_score})")
         reasoning.append(f"Timing - Verification: {t_verify}ms")
 
-        # 5. Confidence Gate
         coverage = citation_coverage(answer)
         reasoning.append(f"Citation coverage: {coverage}")
         final_confidence = self._confidence_gate(
@@ -167,7 +183,6 @@ class SOPGuardPipeline:
         reasoning.append(f"Final confidence after gating: {final_confidence}")
         reasoning.append(f"Timing - Total pipeline: {t_total}ms")
 
-        # Build response
         response_chunks = [
             RetrievedChunk(
                 chunk_text=c.get("chunk_text", ""),
@@ -194,6 +209,89 @@ class SOPGuardPipeline:
             abstained=gen_result.get("abstained", False),
             entities=analysis.get("entities", {}),
         )
+
+    async def run_streaming(
+        self,
+        query: str,
+        user_role: str = "",
+        department: str = "",
+        news2_score: int | None = None,
+        use_hyde: bool = False,
+        retrieval_query: str | None = None,
+        history_context: str = "",
+    ) -> AsyncIterator[dict[str, Any]]:
+        """Stream tokens as the model generates the answer, then yield one
+        final event carrying the same QueryResponse the non-streaming
+        pipeline returns (verification, citations, faithfulness all run
+        after the full text is assembled - see LLMGenerator.stream_answer).
+
+        Yields ``{"type": "token", "text": str}`` events, then exactly one
+        ``{"type": "final", "response": QueryResponse}`` event.
+        """
+        prep = await self._prepare(query, news2_score=news2_score, use_hyde=use_hyde, retrieval_query=retrieval_query)
+        if "abstain" in prep:
+            yield {"type": "final", "response": prep["abstain"]}
+            return
+
+        retrieved, query_type, reasoning, evidence, analysis, t_start = (
+            prep["retrieved"], prep["query_type"], prep["reasoning"], prep["evidence"], prep["analysis"], prep["t_start"]
+        )
+
+        t0 = time.perf_counter()
+        gen_result: dict[str, Any] | None = None
+        async for event in self.generator.stream_answer(
+            query, retrieved, query_type,
+            news2_score=news2_score,
+            history_context=history_context,
+        ):
+            if event["type"] == "token":
+                yield {"type": "token", "text": event["text"]}
+            elif event["type"] == "final":
+                gen_result = {k: v for k, v in event.items() if k != "type"}
+        t_generate = round((time.perf_counter() - t0) * 1000)
+
+        if gen_result is None:
+            # Defensive fallback - stream_answer always yields a final
+            # event, but never leave the client hanging if that changes.
+            gen_result = {
+                "answer": "Generation did not complete.", "citations": [], "confidence": 0.1,
+                "reasoning_trace": [], "generation_mode": "error",
+            }
+
+        response = self._finalize(gen_result, retrieved, query_type, reasoning, evidence, analysis, t_start, t_generate)
+        yield {"type": "final", "response": response}
+
+    async def run(
+        self,
+        query: str,
+        user_role: str = "",
+        department: str = "",
+        news2_score: int | None = None,
+        use_hyde: bool = False,
+        retrieval_query: str | None = None,
+        history_context: str = "",
+    ) -> QueryResponse:
+        """Execute the full pipeline."""
+
+        prep = await self._prepare(query, news2_score=news2_score, use_hyde=use_hyde, retrieval_query=retrieval_query)
+        if "abstain" in prep:
+            return prep["abstain"]
+
+        retrieved, query_type, reasoning, evidence, analysis, t_start = (
+            prep["retrieved"], prep["query_type"], prep["reasoning"], prep["evidence"], prep["analysis"], prep["t_start"]
+        )
+
+        # 3. Generate
+        t0 = time.perf_counter()
+        gen_result = await self.generator.generate_answer(
+            query, retrieved, query_type,
+            news2_score=news2_score,
+            history_context=history_context,
+        )
+        t_generate = round((time.perf_counter() - t0) * 1000)
+
+        # 4-5. Verify, confidence-gate, and build the response
+        return self._finalize(gen_result, retrieved, query_type, reasoning, evidence, analysis, t_start, t_generate)
 
     def _classify_query(self, query: str) -> str:
         """Classify query type using keyword matching."""

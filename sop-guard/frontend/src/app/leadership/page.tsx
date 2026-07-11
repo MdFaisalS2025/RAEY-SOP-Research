@@ -23,9 +23,7 @@ import { cn } from "@/lib/utils"
 
 const LEADERSHIP_ROLES = [
   "system_admin",
-  "compliance_officer",
-  "department_admin",
-  "committee_member",
+  "governance_compliance",
 ]
 
 type KpiStatus = "green" | "amber" | "red"

@@ -9,7 +9,6 @@ import {
   MessageSquare,
   BookOpen,
   GitBranch,
-  BarChart3,
   ShieldCheck,
   Settings,
   Shield,
@@ -27,19 +26,13 @@ import {
   ClipboardList,
   GraduationCap,
   Activity,
-  Network,
   LogOut,
   ChevronDown,
-  UserCircle,
   RefreshCw,
   Check,
-  Clock,
   Landmark,
-  ClipboardCheck,
   AlertOctagon,
-  FileWarning,
   Gauge,
-  Bug,
   Wrench,
   Info,
   ShieldOff,
@@ -55,6 +48,9 @@ type NavItem = {
   href: string
   label: string
   icon: React.ComponentType<{ className?: string }>
+  // Roles that should see this item. Omitted = visible to every role (used
+  // for baseline items like Training/Settings that every role needs).
+  roles?: UserRole[]
 }
 
 type NavGroup = {
@@ -81,42 +77,39 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: "Governance",
     items: [
-      { href: "/evidence-watch", label: "Evidence Watch", icon: FlaskConical },
-      { href: "/proposals", label: "Proposals", icon: GitBranch },
-      { href: "/committee", label: "Committee", icon: Users },
-      { href: "/conflict-resolution", label: "Conflicts", icon: AlertTriangle },
-      { href: "/impact-map", label: "Impact Map", icon: Network },
+      { href: "/evidence-watch", label: "Evidence Watch", icon: FlaskConical, roles: ["governance_compliance", "system_admin"] },
+      { href: "/proposals", label: "Proposals", icon: GitBranch, roles: ["governance_compliance", "system_admin"] },
+      { href: "/committee", label: "Committee", icon: Users, roles: ["governance_compliance", "system_admin"] },
+      { href: "/conflict-resolution", label: "Conflicts & Impact", icon: AlertTriangle, roles: ["governance_compliance", "system_admin"] },
     ],
   },
   {
     label: "Compliance",
     items: [
-      { href: "/compliance", label: "Compliance", icon: ShieldCheck },
+      { href: "/compliance", label: "Compliance", icon: ShieldCheck, roles: ["educator", "governance_compliance", "system_admin"] },
       { href: "/training", label: "Training", icon: GraduationCap },
-      { href: "/legal", label: "Legal & Risk", icon: Scale },
-      { href: "/audit", label: "Audit", icon: ClipboardList },
-      { href: "/expiry", label: "Expiry", icon: Clock },
-      { href: "/regulatory", label: "Regulatory", icon: Landmark },
+      { href: "/legal", label: "Legal & Risk", icon: Scale, roles: ["governance_compliance", "system_admin"] },
+      { href: "/audit", label: "Audit", icon: ClipboardList, roles: ["governance_compliance", "system_admin"] },
+      { href: "/regulatory", label: "Regulatory & Accreditation", icon: Landmark, roles: ["governance_compliance", "system_admin"] },
     ],
   },
   {
     label: "Quality",
     items: [
-      { href: "/leadership", label: "Leadership", icon: BarChart3 },
-      { href: "/effectiveness", label: "Effectiveness", icon: Activity },
-      { href: "/survey-prep", label: "Survey Prep", icon: ClipboardCheck },
-      { href: "/incidents", label: "Incidents", icon: AlertOctagon },
-      { href: "/exceptions", label: "Exceptions", icon: FileWarning },
+      // Leadership is reachable via the "Leadership Overview" shortcut on the
+      // Dashboard for governance/admin roles rather than a separate nav item
+      // - it duplicated the Dashboard's own metrics.
+      { href: "/effectiveness", label: "Effectiveness", icon: Activity, roles: ["clinical_staff", "governance_compliance", "system_admin"] },
+      { href: "/incidents", label: "Deviations & Incidents", icon: AlertOctagon, roles: ["clinical_staff", "governance_compliance", "system_admin"] },
+      { href: "/alert-stewardship", label: "Alert Stewardship", icon: ShieldOff, roles: ["governance_compliance", "system_admin"] },
     ],
   },
   {
     label: "System",
     items: [
-      { href: "/evaluation", label: "Evaluation", icon: Gauge },
-      { href: "/adversarial", label: "Adversarial", icon: Bug },
-      { href: "/alert-stewardship", label: "Alert Stewardship", icon: ShieldOff },
+      { href: "/evaluation", label: "AI Evaluation", icon: Gauge, roles: ["system_admin"] },
       { href: "/settings", label: "Settings", icon: Settings },
-      { href: "/admin", label: "Admin", icon: Wrench },
+      { href: "/admin", label: "Admin", icon: Wrench, roles: ["system_admin"] },
     ],
   },
 ]
@@ -160,38 +153,47 @@ function getSeenInterruptiveIds(): Set<string> {
   }
 }
 
-// Desktop dropdown groups exclude the always-visible direct links
-const DESKTOP_GROUPS: NavGroup[] = NAV_GROUPS.map((g) => ({
-  label: g.label,
-  items: g.items.filter((i) => !DIRECT_HREFS.includes(i.href)),
-})).filter((g) => g.items.length > 0)
+// Nav items are trimmed per role so each role sees only what's relevant to
+// its job (an item with no `roles` is visible to everyone). Desktop dropdown
+// groups additionally exclude the always-visible direct links.
+function groupsForRole(role: UserRole): NavGroup[] {
+  return NAV_GROUPS
+    .map((g) => ({
+      label: g.label,
+      items: g.items.filter((i) => !i.roles || i.roles.includes(role)),
+    }))
+    .filter((g) => g.items.length > 0)
+}
+
+function desktopGroupsForRole(role: UserRole): NavGroup[] {
+  return groupsForRole(role)
+    .map((g) => ({
+      label: g.label,
+      items: g.items.filter((i) => !DIRECT_HREFS.includes(i.href)),
+    }))
+    .filter((g) => g.items.length > 0)
+}
 
 const ROLE_AVATAR_COLORS: Record<UserRole, { bg: string; text: string }> = {
-  physician: { bg: "bg-blue-500/20", text: "text-blue-300" },
-  nurse: { bg: "bg-teal-500/20", text: "text-teal-300" },
-  department_admin: { bg: "bg-violet-500/20", text: "text-violet-300" },
-  compliance_officer: { bg: "bg-amber-500/20", text: "text-amber-300" },
-  committee_member: { bg: "bg-emerald-500/20", text: "text-emerald-300" },
-  legal_risk: { bg: "bg-red-500/20", text: "text-red-300" },
-  nurse_educator: { bg: "bg-pink-500/20", text: "text-pink-300" },
+  clinical_staff: { bg: "bg-blue-500/20", text: "text-blue-300" },
+  governance_compliance: { bg: "bg-emerald-500/20", text: "text-emerald-300" },
+  educator: { bg: "bg-pink-500/20", text: "text-pink-300" },
   system_admin: { bg: "bg-gray-500/20", text: "text-gray-300" },
 }
 
 const ROLE_LABELS: Record<UserRole, string> = {
-  physician: "Physician",
-  nurse: "Nurse",
-  department_admin: "Dept. Admin",
-  compliance_officer: "Compliance Officer",
-  committee_member: "Committee Member",
-  legal_risk: "Legal / Risk",
-  nurse_educator: "Nurse Educator",
+  clinical_staff: "Clinical Staff",
+  governance_compliance: "Governance & Compliance",
+  educator: "Educator / Trainer",
   system_admin: "System Admin",
 }
 
 export function TopNav() {
   const pathname = usePathname()
   const auth = useAuth()
-  const { roleConfig, hierarchyLevel } = useRole()
+  const { role, roleConfig, hierarchyLevel } = useRole()
+  const desktopGroups = desktopGroupsForRole(role)
+  const mobileGroups = groupsForRole(role)
   const router = useRouter()
   const [isDark, setIsDark] = useState(true)
   const [backendUp, setBackendUp] = useState<boolean | null>(null)
@@ -412,7 +414,11 @@ export function TopNav() {
   }
 
   return (
-    <header className="sticky top-0 z-40 flex flex-col">
+    // z-[55]: must outrank transient overlay backdrops (e.g. the source-detail
+    // drawer's fixed inset-0 z-50 on /query) so the header stays clickable -
+    // a click on Home while a drawer is open should navigate immediately,
+    // not get swallowed by the backdrop dismissing the drawer first.
+    <header className="sticky top-0 z-[55] flex flex-col">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-[#0B6BCB] focus:text-white focus:text-sm focus:font-medium"
@@ -472,7 +478,7 @@ export function TopNav() {
 
               <div className="w-px h-5 bg-[#E2E8F0] dark:bg-white/10 mx-1.5 shrink-0" />
 
-              {DESKTOP_GROUPS.map((group) => {
+              {desktopGroups.map((group) => {
                 const groupActive = group.items.some((item) => isActiveLink(item.href))
                 const isOpen = openGroup === group.label
                 return (
@@ -760,8 +766,8 @@ export function TopNav() {
                           </div>
                         </div>
                         <p className="text-[10px] text-[#64748B] dark:text-slate-500">
-                          Access Level {level} of 8
-                          {level === 8 ? " - Full platform control" : level === 1 ? " - Basic access" : ""}
+                          Access Level {level} of 4
+                          {level === 4 ? " - Full platform control" : level === 1 ? " - Basic access" : ""}
                         </p>
                       </div>
 
@@ -822,7 +828,7 @@ export function TopNav() {
               className="relative z-40 lg:hidden overflow-hidden glass-clinical border-b border-gray-200 dark:border-white/[0.08] shadow-md"
             >
               <nav aria-label="Mobile navigation" className="flex flex-col gap-0 p-3">
-                {NAV_GROUPS.map((group, gi) => (
+                {mobileGroups.map((group, gi) => (
                   <div key={group.label} className={cn("flex flex-col gap-0.5", gi > 0 && "mt-3")}>
                     <p className="text-[10px] text-[#94A3B8] dark:text-slate-500 uppercase tracking-widest font-semibold px-3 py-1">
                       {group.label}

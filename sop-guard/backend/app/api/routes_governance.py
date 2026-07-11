@@ -7,7 +7,8 @@ AI query audit log. CRUD-lite over async SQLAlchemy.
 Research prototype  - NOT for clinical use.
 """
 
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Query as QueryParam
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -22,10 +23,15 @@ from app.models.models import (
     AcknowledgmentRecord,
     QueryLogRecord,
     NotificationRecord,
+    SOP,
 )
+from app.services.text_diff import compute_word_diff, diff_stats
+from app.services.change_impact import assess_change_impact
+from app.services.signature_chain import GENESIS_HASH, compute_content_hash, verify_chain
 from app.schemas.schemas import (
     ProposalCreate,
     ProposalResponse,
+    ProposalScheduleUpdate,
     VoteCreate,
     AttestationCreate,
     AttestationResponse,
@@ -114,6 +120,30 @@ def _compute_quorum(votes: list[VoteRecord]) -> dict:
     }
 
 
+def _compute_effective_status(status: str, scheduled_effective_date: str) -> Optional[str]:
+    """
+    None when not meaningful (proposal isn't approved yet). Otherwise:
+      - "effective": no scheduled date (immediate-on-approval, the
+        backward-compatible default) or the scheduled date has arrived.
+      - "pending": a scheduled_effective_date was set and is still in the
+        future - the committee approved the change but deliberately
+        deferred when it takes effect (e.g. next shift changeover, after
+        staff are trained on the new procedure).
+    Computed on every read rather than by a background job/scheduler (none
+    exists in this codebase - see regulatory/page.tsx's review_date check
+    for the same on-read-comparison idiom).
+    """
+    if status != "approved":
+        return None
+    if not scheduled_effective_date:
+        return "effective"
+    try:
+        scheduled = date.fromisoformat(scheduled_effective_date)
+    except ValueError:
+        return "effective"
+    return "effective" if scheduled <= date.today() else "pending"
+
+
 def _proposal_to_response(p: ProposalRecord) -> ProposalResponse:
     votes = list(p.votes) if p.votes is not None else []
     return ProposalResponse(
@@ -127,6 +157,8 @@ def _proposal_to_response(p: ProposalRecord) -> ProposalResponse:
         ai_summary=p.ai_summary or "",
         legal_review_required=(str(p.legal_review_required).lower() == "true"),
         payload=p.payload or {},
+        scheduled_effective_date=p.scheduled_effective_date or "",
+        effective_status=_compute_effective_status(p.status or "open", p.scheduled_effective_date or ""),
         created_at=p.created_at,
         tally=_compute_tally(votes),
         quorum=_compute_quorum(votes),
@@ -174,6 +206,7 @@ async def create_proposal(req: ProposalCreate, db: AsyncSession = Depends(get_db
         ai_summary=req.ai_summary,
         legal_review_required="true" if req.legal_review_required else "false",
         payload=req.payload or {},
+        scheduled_effective_date=req.scheduled_effective_date or "",
         status="open",
     )
     db.add(proposal)
@@ -199,6 +232,138 @@ async def get_proposal(proposal_id: int, db: AsyncSession = Depends(get_db)):
     if not proposal:
         raise HTTPException(status_code=404, detail=f"Proposal {proposal_id} not found.")
     return _proposal_to_response(proposal)
+
+
+@router.put("/api/governance/proposals/{proposal_id}/schedule", response_model=ProposalResponse)
+async def schedule_proposal_effective_date(
+    proposal_id: int, req: ProposalScheduleUpdate, db: AsyncSession = Depends(get_db)
+):
+    """
+    Set (or clear, with "") when an approved proposal's change actually
+    takes effect - separate from the vote that approved it. Lets committee
+    approve a change today but defer when it goes live (e.g. next shift
+    changeover, after staff are trained), rather than every approval being
+    implicitly "effective immediately." Can be set before or after quorum
+    is reached; it only affects the computed effective_status once the
+    proposal is actually approved.
+    """
+    proposal = (await db.execute(
+        select(ProposalRecord)
+        .options(selectinload(ProposalRecord.votes))
+        .where(ProposalRecord.id == proposal_id)
+    )).scalar_one_or_none()
+    if not proposal:
+        raise HTTPException(status_code=404, detail=f"Proposal {proposal_id} not found.")
+
+    if req.scheduled_effective_date:
+        try:
+            date.fromisoformat(req.scheduled_effective_date)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="scheduled_effective_date must be an ISO date (YYYY-MM-DD).")
+
+    proposal.scheduled_effective_date = req.scheduled_effective_date
+    await db.flush()
+    if proposal.scheduled_effective_date:
+        _emit_notification(
+            db, "proposal",
+            f"Effective date scheduled: {proposal.title}",
+            f"Takes effect {proposal.scheduled_effective_date}.",
+            link=f"/governance/proposals/{proposal.id}",
+        )
+    return _proposal_to_response(proposal)
+
+
+@router.get("/api/governance/proposals/{proposal_id}/diff")
+async def get_proposal_diff(proposal_id: int, db: AsyncSession = Depends(get_db)):
+    """
+    Word-level redline diff for a proposal's text change (Word "Track
+    Changes"-style). Reads old_text/new_text from the proposal's payload;
+    if old_text is missing but the proposal names an affected SOP, falls
+    back to that SOP's current raw_text as the "before" side, so a
+    proposal only needs to carry the proposed new_text, not a copy of the
+    unchanged original.
+
+    Returns available=false (not a 404) when neither side of the diff has
+    any text - not every proposal is a text-edit proposal (e.g. a process
+    or policy change with no SOP document attached), so this is a normal,
+    expected outcome, not an error.
+    """
+    proposal = (await db.execute(
+        select(ProposalRecord).where(ProposalRecord.id == proposal_id)
+    )).scalar_one_or_none()
+    if not proposal:
+        raise HTTPException(status_code=404, detail=f"Proposal {proposal_id} not found.")
+
+    payload = proposal.payload or {}
+    new_text = str(payload.get("new_text") or "")
+    old_text = str(payload.get("old_text") or "")
+
+    sop_title = ""
+    if not old_text and proposal.affected_sop_id:
+        sop = (await db.execute(
+            select(SOP).where(SOP.sop_id == proposal.affected_sop_id)
+        )).scalar_one_or_none()
+        if sop:
+            old_text = sop.raw_text or ""
+            sop_title = sop.title or ""
+
+    if not old_text and not new_text:
+        return {
+            "proposal_id": proposal_id,
+            "available": False,
+            "reason": "This proposal has no old_text/new_text in its payload and no affected SOP with existing text to compare against.",
+            "segments": [],
+        }
+
+    segments = compute_word_diff(old_text, new_text)
+    return {
+        "proposal_id": proposal_id,
+        "available": True,
+        "sop_title": sop_title,
+        "segments": segments,
+        "stats": diff_stats(segments),
+    }
+
+
+@router.get("/api/governance/proposals/{proposal_id}/impact")
+async def get_proposal_impact(proposal_id: int, db: AsyncSession = Depends(get_db)):
+    """
+    Proactive change-impact assessment: what would actually be affected if
+    this proposal's new_text replaced the current SOP - computed from real
+    data (entity-graph conflicts, current acknowledgment/attestation
+    counts, historical query citations), not a guess. Meant to surface
+    this *before* a vote, not just after, so committee can weigh real
+    consequences (how many staff would need to re-acknowledge, whether
+    this contradicts another SOP) while deciding.
+
+    Returns available=false (not a 404) when the proposal has no
+    new_text to assess - not every proposal is a text-edit proposal.
+    """
+    proposal = (await db.execute(
+        select(ProposalRecord).where(ProposalRecord.id == proposal_id)
+    )).scalar_one_or_none()
+    if not proposal:
+        raise HTTPException(status_code=404, detail=f"Proposal {proposal_id} not found.")
+
+    new_text = str((proposal.payload or {}).get("new_text") or "")
+    if not new_text:
+        return {
+            "proposal_id": proposal_id,
+            "available": False,
+            "reason": "This proposal has no new_text in its payload to assess impact for.",
+        }
+
+    sop_title = ""
+    if proposal.affected_sop_id:
+        sop = (await db.execute(
+            select(SOP).where(SOP.sop_id == proposal.affected_sop_id)
+        )).scalar_one_or_none()
+        if sop:
+            sop_title = sop.title or ""
+
+    report = await assess_change_impact(db, new_text, proposal.affected_sop_id or "", sop_title)
+    report["proposal_id"] = proposal_id
+    return report
 
 
 @router.delete("/api/governance/proposals/{proposal_id}")
@@ -280,7 +445,52 @@ async def list_attestations(
 async def create_attestation(
     req: AttestationCreate, request: Request, db: AsyncSession = Depends(get_db)
 ):
+    """
+    Records a Part-11-styled e-signature: the meaning of the signature is
+    captured explicitly (signature_meaning), the signer must re-type their
+    own name as a second identification factor distinct from already
+    being "logged in" (second_factor_confirmation - see AttestationRecord
+    docstring for the honest limits of what this app can offer here), and
+    the record is chained into the tamper-evident signature hash chain
+    (app/services/signature_chain.py) before being persisted. There is no
+    update/delete endpoint for this table - once signed, a record is only
+    ever appended to, never edited.
+    """
+    if not req.second_factor_confirmation.strip():
+        raise HTTPException(status_code=400, detail="second_factor_confirmation is required to sign.")
+    if req.second_factor_confirmation.strip().lower() != (req.user_name or "").strip().lower():
+        raise HTTPException(
+            status_code=400,
+            detail="second_factor_confirmation must match your full name exactly to confirm your identity.",
+        )
+
     ip = request.client.host if request.client else ""
+    attested_at = datetime.now(timezone.utc)
+
+    last = (await db.execute(
+        select(AttestationRecord).order_by(AttestationRecord.id.desc()).limit(1)
+    )).scalar_one_or_none()
+    prev_hash = last.content_hash if last and last.content_hash else GENESIS_HASH
+
+    field_values = {
+        "sop_id": req.sop_id,
+        "sop_version": req.sop_version,
+        "user_id": req.user_id,
+        "user_name": req.user_name,
+        "user_role": req.user_role,
+        "department": req.department,
+        "legal_text": req.legal_text,
+        "signature_meaning": req.signature_meaning,
+        "second_factor_confirmation": req.second_factor_confirmation,
+        "ip_address": ip,
+        # SQLite's generic DateTime column drops tzinfo on round-trip, so a
+        # freshly-computed hash (from this tz-aware in-memory value) would
+        # never match a later recomputation from the DB-read (naive) value
+        # unless both sides normalize the same way first.
+        "attested_at": attested_at.replace(tzinfo=None).isoformat(),
+    }
+    content_hash = compute_content_hash(field_values, prev_hash)
+
     rec = AttestationRecord(
         sop_id=req.sop_id,
         sop_version=req.sop_version,
@@ -289,7 +499,12 @@ async def create_attestation(
         user_role=req.user_role,
         department=req.department,
         legal_text=req.legal_text,
+        signature_meaning=req.signature_meaning,
+        second_factor_confirmation=req.second_factor_confirmation,
         ip_address=ip,
+        attested_at=attested_at,
+        prev_hash=prev_hash,
+        content_hash=content_hash,
     )
     db.add(rec)
     await db.flush()
@@ -300,6 +515,35 @@ async def create_attestation(
         link="/governance/attestations",
     )
     return AttestationResponse.model_validate(rec)
+
+
+@router.get("/api/governance/attestations/verify-chain")
+async def verify_attestation_chain(db: AsyncSession = Depends(get_db)):
+    """
+    Recomputes the signature hash chain over every attestation record (in
+    signing order) and reports whether it's intact - i.e. whether any
+    record's fields were altered, or any record deleted/reordered, after
+    it was originally signed. See app/services/signature_chain.py for
+    what this does and does not protect against.
+    """
+    rows = (await db.execute(
+        select(AttestationRecord).order_by(AttestationRecord.id.asc())
+    )).scalars().all()
+    records = [
+        {
+            "id": r.id,
+            "sop_id": r.sop_id, "sop_version": r.sop_version,
+            "user_id": r.user_id, "user_name": r.user_name,
+            "user_role": r.user_role, "department": r.department,
+            "legal_text": r.legal_text, "signature_meaning": r.signature_meaning,
+            "second_factor_confirmation": r.second_factor_confirmation,
+            "ip_address": r.ip_address,
+            "attested_at": r.attested_at.replace(tzinfo=None).isoformat() if r.attested_at else "",
+            "content_hash": r.content_hash, "prev_hash": r.prev_hash,
+        }
+        for r in rows
+    ]
+    return verify_chain(records)
 
 
 # ── Acknowledgments ────────────────────────────────────────────

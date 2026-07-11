@@ -89,12 +89,11 @@ test.describe("proposal flow", () => {
   })
 })
 
-test.describe("learning / credits", () => {
-  test("learning page loads leaderboard and credit totals from the API", async ({ page }) => {
+test.describe("learning redirect", () => {
+  test("old /learning link redirects to /training", async ({ page }) => {
     await loginAsDemoUser(page, "Sarah Mitchell")
     await page.goto("/learning")
-    await expect(page.getByText("Total Credits Earned")).toBeVisible()
-    await expect(page.getByText(/leaderboard/i)).toBeVisible()
+    await page.waitForURL("**/training", { timeout: 15_000 })
   })
 })
 

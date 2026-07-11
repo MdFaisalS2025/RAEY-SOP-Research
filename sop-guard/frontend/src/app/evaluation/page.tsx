@@ -18,8 +18,14 @@ import {
 import AppShell from "@/components/layout/app-shell"
 import { cn } from "@/lib/utils"
 import { useRole } from "@/lib/role-context"
+import { AdversarialContent } from "@/components/evaluation/adversarial-content"
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+// "" (not an absolute localhost URL) so requests go through the Next.js
+// rewrite proxy same-origin, like every other page - an absolute
+// http://localhost:8000 fallback would bypass the proxy, hit CORS in any
+// non-default dev port, and silently fail in production where the backend
+// isn't actually on localhost.
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
 
 // ── Response shapes (subset of fields actually rendered) ──────────────────────
 
@@ -84,6 +90,30 @@ interface LlmStatus {
   mode: string
 }
 
+interface RagasRealPerQuery {
+  query: string
+  category: string
+  faithfulness: number
+  response_relevancy: number
+  context_precision: number
+}
+
+interface RagasRealResult {
+  available: boolean
+  reason?: string
+  disclaimer?: string
+  judge_model?: string
+  sample_size?: number
+  skipped?: string[]
+  _cached?: boolean
+  aggregate?: {
+    avg_faithfulness: number
+    avg_response_relevancy: number
+    avg_context_precision: number
+  }
+  per_query?: RagasRealPerQuery[]
+}
+
 const CHUNK_COLORS: Record<string, string> = {
   step: "bg-[#0B6BCB]",
   section: "bg-[#94A3B8]",
@@ -135,6 +165,10 @@ function StatTile({
 export default function EvaluationPage() {
   useRole()
   const [showMethodology, setShowMethodology] = useState(false)
+  const [tab, setTab] = useState<"metrics" | "adversarial">(() => {
+    if (typeof window === "undefined") return "metrics"
+    return new URLSearchParams(window.location.search).get("tab") === "adversarial" ? "adversarial" : "metrics"
+  })
 
   const [ragResult, setRagResult] = useState<RagEvalResult | null>(null)
   const [ragasSummary, setRagasSummary] = useState<RagasSummary | null>(null)
@@ -145,6 +179,22 @@ export default function EvaluationPage() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState("")
+
+  // Real RAGAS is judge-LLM-call-heavy (minutes, not milliseconds) - fetched
+  // on demand rather than blocking the rest of the dashboard on page load.
+  const [ragasReal, setRagasReal] = useState<RagasRealResult | null>(null)
+  const [ragasRealLoading, setRagasRealLoading] = useState(false)
+
+  async function loadRagasReal(force: boolean) {
+    setRagasRealLoading(true)
+    try {
+      const res = await fetch(`${API_BASE}/api/evaluation/ragas?force=${force}`)
+      setRagasReal(await res.json())
+    } catch {
+      setRagasReal({ available: false, reason: "Could not reach the evaluation backend." })
+    }
+    setRagasRealLoading(false)
+  }
 
   async function loadAll(force: boolean) {
     setError("")
@@ -250,19 +300,42 @@ export default function EvaluationPage() {
           </div>
         </motion.div>
 
-        {loading && (
+        {/* AI Evaluation merges Standard Evals + Adversarial Testing - both
+            are AI-QA views for System Admin, not daily-use pages. */}
+        <div className="flex gap-1 p-1 rounded-xl bg-muted border border-[#E2E8F0] w-fit">
+          {[
+            { key: "metrics" as const, label: "Standard Evals", icon: Activity },
+            { key: "adversarial" as const, label: "Adversarial Testing", icon: ShieldAlert },
+          ].map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={cn(
+                "flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors",
+                tab === t.key ? "bg-card text-[#0B6BCB] shadow-sm" : "text-[#64748B] hover:text-[#1A2332]"
+              )}
+            >
+              <t.icon className="w-4 h-4" />
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {tab === "adversarial" && <AdversarialContent />}
+
+        {tab === "metrics" && loading && (
           <div className="flex items-center justify-center py-24 text-[#64748B] gap-2">
             <Loader2 className="w-5 h-5 animate-spin" /> Running live evaluation...
           </div>
         )}
 
-        {error && !loading && (
+        {tab === "metrics" && error && !loading && (
           <div className="p-4 rounded-xl bg-red-500/5 border border-red-500/20 text-sm text-red-400 flex items-center gap-2">
             <AlertTriangle className="w-4 h-4" /> {error}
           </div>
         )}
 
-        {!loading && !error && (
+        {tab === "metrics" && !loading && !error && (
           <>
             {/* ── Section 1: Overall Performance ── */}
             <motion.div {...fade(0.05)}>
@@ -309,6 +382,70 @@ export default function EvaluationPage() {
                   description={`Verifier catch rate across ${adversarial?.total_tests ?? 0} adversarial test cases`}
                 />
               </div>
+            </motion.div>
+
+            {/* ── Section 1b: Real RAGAS ── */}
+            <motion.div {...fade(0.08)}>
+              <div className="flex items-center justify-between gap-3 mb-5">
+                <SectionTitle
+                  icon={FlaskConical}
+                  title="Real RAGAS Metrics"
+                  subtitle={
+                    ragasReal?.available
+                      ? `${ragasReal.sample_size ?? 0}-query sample · judged by self-hosted model '${ragasReal.judge_model}'${ragasReal._cached ? " · cached" : ""}`
+                      : "Actual RAGAS library metrics (github.com/explodinggradients/ragas), not the zero-dependency proxy above"
+                  }
+                />
+                <button
+                  onClick={() => loadRagasReal(true)}
+                  disabled={ragasRealLoading}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-[#0B6BCB]/30 text-[#0B6BCB] hover:bg-[#0B6BCB]/5 transition-colors disabled:opacity-50 shrink-0"
+                >
+                  {ragasRealLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+                  {ragasReal ? "Re-run" : "Run Real RAGAS"}
+                </button>
+              </div>
+
+              {!ragasReal && !ragasRealLoading && (
+                <p className="text-xs text-[#94A3B8]">
+                  Not run yet - judge-LLM calls take a while (several minutes for a sample), so this isn&apos;t fetched automatically on page load.
+                </p>
+              )}
+
+              {ragasReal && !ragasReal.available && (
+                <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-amber-500/5 border border-amber-500/20 text-xs text-[#334155]">
+                  <AlertTriangle className="w-4 h-4 shrink-0 text-amber-500 mt-0.5" />
+                  <span>{ragasReal.reason ?? "Real RAGAS is unavailable."}</span>
+                </div>
+              )}
+
+              {ragasReal?.available && ragasReal.aggregate && (
+                <>
+                  <div className="grid grid-cols-3 gap-4">
+                    <StatTile
+                      i={0} icon={Brain}
+                      value={ragasReal.aggregate.avg_faithfulness.toFixed(2)}
+                      label="Faithfulness"
+                      description="RAGAS's own claim-decomposition faithfulness metric (LLM-judged, not our keyword heuristic)"
+                    />
+                    <StatTile
+                      i={1} icon={Target}
+                      value={ragasReal.aggregate.avg_response_relevancy.toFixed(2)}
+                      label="Response Relevancy"
+                      description="Embedding similarity between the query and questions generated from the answer"
+                    />
+                    <StatTile
+                      i={2} icon={BarChart3}
+                      value={ragasReal.aggregate.avg_context_precision.toFixed(2)}
+                      label="Context Precision"
+                      description="LLM judgment of whether each retrieved chunk was actually useful for the answer"
+                    />
+                  </div>
+                  {ragasReal.disclaimer && (
+                    <p className="text-xs text-[#94A3B8] mt-3">{ragasReal.disclaimer}</p>
+                  )}
+                </>
+              )}
             </motion.div>
 
             {/* ── Section 2: Retrieval Ablation ── */}

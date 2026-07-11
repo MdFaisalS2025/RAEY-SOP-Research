@@ -74,6 +74,7 @@ async def init_db() -> None:
             AcknowledgmentRecord, QueryLogRecord,
             ChatSessionRecord, ChatMessageRecord, NotificationRecord,
             OverrideRecord, CreditRecord,
+            IncidentRecord, CAPARecord,
         )
         await conn.run_sync(Base.metadata.create_all)
 
@@ -113,3 +114,25 @@ async def init_db() -> None:
             ))
     except Exception:
         pass  # Column already exists (or backend handles it via create_all)
+
+    try:
+        from sqlalchemy import text
+        async with engine.begin() as conn:
+            await conn.execute(text(
+                "ALTER TABLE proposal_records ADD COLUMN scheduled_effective_date VARCHAR(32) DEFAULT ''"
+            ))
+    except Exception:
+        pass  # Column already exists (or backend handles it via create_all)
+
+    for ddl in (
+        "ALTER TABLE attestation_records ADD COLUMN signature_meaning TEXT DEFAULT ''",
+        "ALTER TABLE attestation_records ADD COLUMN second_factor_confirmation VARCHAR(256) DEFAULT ''",
+        "ALTER TABLE attestation_records ADD COLUMN content_hash VARCHAR(64) DEFAULT ''",
+        "ALTER TABLE attestation_records ADD COLUMN prev_hash VARCHAR(64) DEFAULT ''",
+    ):
+        try:
+            from sqlalchemy import text
+            async with engine.begin() as conn:
+                await conn.execute(text(ddl))
+        except Exception:
+            pass  # Column already exists (or backend handles it via create_all)

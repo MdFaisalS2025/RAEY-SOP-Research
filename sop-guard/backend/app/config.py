@@ -23,10 +23,11 @@ class Settings(BaseSettings):
     # For PostgreSQL: postgresql+asyncpg://user:pass@localhost:5432/sopguard
 
     # --- LLM ---
-    LLM_PROVIDER: str = "mock"  # mock | openai | anthropic | ollama
-    LLM_MODEL: str = "gpt-4o-mini"
-    LLM_API_KEY: Optional[str] = None
-    LLM_BASE_URL: Optional[str] = None
+    # In-house only: no patient/query data is ever sent to a third-party LLM API.
+    # mock = no model, template answers (offline demo). ollama = local self-hosted model.
+    LLM_PROVIDER: str = "ollama"  # mock | ollama
+    LLM_MODEL: str = "llama3.2"
+    LLM_BASE_URL: Optional[str] = "http://localhost:11434"
 
     # --- Embeddings ---
     EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"

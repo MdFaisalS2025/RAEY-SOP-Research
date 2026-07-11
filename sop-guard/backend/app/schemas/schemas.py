@@ -192,6 +192,11 @@ class ProposalCreate(BaseModel):
     ai_summary: str = ""
     legal_review_required: bool = False
     payload: dict = {}
+    scheduled_effective_date: str = ""
+
+
+class ProposalScheduleUpdate(BaseModel):
+    scheduled_effective_date: str  # "" clears scheduling (effective immediately on approval)
 
 
 class ProposalResponse(BaseModel):
@@ -205,6 +210,8 @@ class ProposalResponse(BaseModel):
     ai_summary: str = ""
     legal_review_required: bool = False
     payload: dict = {}
+    scheduled_effective_date: str = ""
+    effective_status: Optional[str] = None  # None | "pending" | "effective" (only meaningful when status == "approved")
     created_at: Optional[datetime] = None
     tally: dict = {}
     quorum: dict = {}
@@ -226,6 +233,12 @@ class AttestationCreate(BaseModel):
     user_role: str = ""
     department: str = ""
     legal_text: str = ""
+    signature_meaning: str = ""
+    # Second identification factor: the signer re-types their own full
+    # name at the moment of signing (see AttestationRecord docstring for
+    # why this - not a password/PIN - is what this app can honestly offer
+    # as a second factor). Server validates this matches user_name.
+    second_factor_confirmation: str = ""
 
 
 class AttestationResponse(BaseModel):
@@ -238,6 +251,10 @@ class AttestationResponse(BaseModel):
     department: str = ""
     ip_address: str = ""
     legal_text: str = ""
+    signature_meaning: str = ""
+    second_factor_confirmation: str = ""
+    content_hash: str = ""
+    prev_hash: str = ""
     attested_at: Optional[datetime] = None
 
     model_config = {"from_attributes": True}
@@ -303,5 +320,70 @@ class CreditResponse(BaseModel):
     activity_title: str = ""
     credits: float = 0.0
     created_at: Optional[datetime] = None
+
+    model_config = {"from_attributes": True}
+
+
+# ── Incidents + CAPA ───────────────────────────────────────────
+
+class IncidentCreate(BaseModel):
+    incident_type: str = "near_miss"  # near_miss | adverse_event | sentinel_event
+    title: str
+    description: str = ""
+    department: str = ""
+    severity: str = "medium"  # low | medium | high | critical
+    reporter: str = ""
+    linked_sop_ids: list[str] = []
+
+
+class IncidentResponse(BaseModel):
+    id: int
+    incident_type: str = "near_miss"
+    title: str
+    description: str = ""
+    department: str = ""
+    severity: str = "medium"
+    reporter: str = ""
+    linked_sop_ids: list[str] = []
+    occurred_at: Optional[datetime] = None
+    created_at: Optional[datetime] = None
+    capa_count: int = 0
+    open_capa_count: int = 0
+
+
+class CAPACreate(BaseModel):
+    title: str = ""
+    root_cause: str = ""
+    corrective_action: str = ""
+    preventive_action: str = ""
+    owner: str = ""
+    due_date: str = ""
+
+
+class CAPAUpdate(BaseModel):
+    title: Optional[str] = None
+    root_cause: Optional[str] = None
+    corrective_action: Optional[str] = None
+    preventive_action: Optional[str] = None
+    status: Optional[str] = None  # open | investigating | action_planned | closed
+    owner: Optional[str] = None
+    due_date: Optional[str] = None
+    linked_proposal_id: Optional[int] = None
+
+
+class CAPAResponse(BaseModel):
+    id: int
+    incident_id: int
+    title: str = ""
+    root_cause: str = ""
+    corrective_action: str = ""
+    preventive_action: str = ""
+    status: str = "open"
+    owner: str = ""
+    due_date: str = ""
+    linked_proposal_id: Optional[int] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    closed_at: Optional[datetime] = None
 
     model_config = {"from_attributes": True}

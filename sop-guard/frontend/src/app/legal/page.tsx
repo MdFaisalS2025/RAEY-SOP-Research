@@ -46,7 +46,7 @@ function isUrgent(dateStr?: string) {
 export default function LegalPage() {
   const { role } = useRole()
   const [expandedNotes, setExpandedNotes] = useState<Record<string, boolean>>({})
-  const canEdit = role === "legal_risk" || role === "compliance_officer" || role === "system_admin"
+  const canEdit = role === "governance_compliance" || role === "system_admin"
 
   const proposalsNeedingLegal = MOCK_PROPOSALS.filter((p) => p.legal_review_required)
 

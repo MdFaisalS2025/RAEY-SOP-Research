@@ -4,10 +4,11 @@ SOP-Guard Query Route
 Research prototype  - NOT for clinical use.
 """
 
+import json
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -21,13 +22,9 @@ from app.services.activity import log_activity
 router = APIRouter(tags=["Query"])
 
 
-@router.post("/api/query", response_model=QueryResponse)
-async def submit_query(req: QueryRequest, db: AsyncSession = Depends(get_db)):
-    """
-    Submit a clinical SOP question. The pipeline retrieves relevant SOP
-    chunks, generates an answer, and verifies procedural faithfulness.
-    """
-    # Load all chunks from DB
+async def _load_chunks(db: AsyncSession) -> tuple[list[dict], dict[str, dict]]:
+    """Load all SOP chunks + structured SOP data from the DB. Shared by the
+    streaming and non-streaming query endpoints."""
     chunk_rows = (await db.execute(
         select(
             SOPChunk, SOP.sop_id.label("sop_sop_id"), SOP.title.label("sop_title"), SOP.structured_json,
@@ -56,20 +53,14 @@ async def submit_query(req: QueryRequest, db: AsyncSession = Depends(get_db)):
         if row.sop_sop_id not in structured_sops and row.structured_json:
             structured_sops[row.sop_sop_id] = row.structured_json
 
-    if not chunks:
-        raise HTTPException(status_code=404, detail="No SOPs loaded. Upload SOPs first or restart to load demo data.")
+    return chunks, structured_sops
 
-    # Run pipeline
-    pipeline = SOPGuardPipeline(chunks, structured_sops)
-    result = await pipeline.run(
-        query=req.query,
-        user_role=req.user_role or "",
-        department=req.department or "",
-        news2_score=req.news2_score,
-        use_hyde=req.use_hyde,
-    )
 
-    # Log activity
+async def _persist_query_result(req: QueryRequest, result: QueryResponse, db: AsyncSession) -> None:
+    """Activity log + DB storage for a completed query result. Never raises
+    - a storage failure must not fail the response, since the answer has
+    already been generated and verified. Shared by the streaming and
+    non-streaming query endpoints. Mutates result.answer_id in place."""
     log_activity(
         "query_submitted",
         sop_id=result.retrieved_chunks[0].sop_id if result.retrieved_chunks else "",
@@ -80,7 +71,6 @@ async def submit_query(req: QueryRequest, db: AsyncSession = Depends(get_db)):
         confidence=result.confidence,
     )
 
-    # Store query in DB (non-blocking: return result even if storage fails)
     try:
         query_record = Query(
             query_text=req.query,
@@ -95,10 +85,8 @@ async def submit_query(req: QueryRequest, db: AsyncSession = Depends(get_db)):
         await db.commit()
     except Exception as e:
         await db.rollback()
-        # Log but do not fail the response
         print(f"[SOP-Guard] Warning: failed to store query record: {e}")
 
-    # Best-effort AI audit log (never fail the request)
     try:
         from app.models.models import QueryLogRecord
         faith = result.faithfulness or {}
@@ -128,7 +116,68 @@ async def submit_query(req: QueryRequest, db: AsyncSession = Depends(get_db)):
         await db.rollback()
         print(f"[SOP-Guard] Warning: failed to write query audit log: {e}")
 
+
+@router.post("/api/query", response_model=QueryResponse)
+async def submit_query(req: QueryRequest, db: AsyncSession = Depends(get_db)):
+    """
+    Submit a clinical SOP question. The pipeline retrieves relevant SOP
+    chunks, generates an answer, and verifies procedural faithfulness.
+    """
+    chunks, structured_sops = await _load_chunks(db)
+    if not chunks:
+        raise HTTPException(status_code=404, detail="No SOPs loaded. Upload SOPs first or restart to load demo data.")
+
+    pipeline = SOPGuardPipeline(chunks, structured_sops)
+    result = await pipeline.run(
+        query=req.query,
+        user_role=req.user_role or "",
+        department=req.department or "",
+        news2_score=req.news2_score,
+        use_hyde=req.use_hyde,
+    )
+
+    await _persist_query_result(req, result, db)
     return result
+
+
+@router.post("/api/query/stream")
+async def submit_query_stream(req: QueryRequest, db: AsyncSession = Depends(get_db)):
+    """
+    Streaming variant of /api/query: tokens are sent to the client as the
+    self-hosted model generates them (Server-Sent Events), so the UI can
+    render the answer live instead of waiting for the full response.
+    Verification, citations, and faithfulness still only run once the full
+    text is assembled - the same as the non-streaming endpoint - and are
+    delivered in one final SSE event with the complete QueryResponse.
+    """
+    chunks, structured_sops = await _load_chunks(db)
+    if not chunks:
+        raise HTTPException(status_code=404, detail="No SOPs loaded. Upload SOPs first or restart to load demo data.")
+
+    pipeline = SOPGuardPipeline(chunks, structured_sops)
+
+    async def event_stream():
+        async for event in pipeline.run_streaming(
+            query=req.query,
+            user_role=req.user_role or "",
+            department=req.department or "",
+            news2_score=req.news2_score,
+            use_hyde=req.use_hyde,
+        ):
+            if event["type"] == "token":
+                yield f"data: {json.dumps({'type': 'token', 'text': event['text']})}\n\n"
+            elif event["type"] == "final":
+                result: QueryResponse = event["response"]
+                await _persist_query_result(req, result, db)
+                payload = json.loads(result.model_dump_json())
+                yield f"data: {json.dumps({'type': 'final', 'response': payload})}\n\n"
+        yield "data: [DONE]\n\n"
+
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
 
 @router.get("/api/answers/{answer_id}")

@@ -1,5 +1,6 @@
 "use client"
 
+import { motion } from "framer-motion"
 import { AlertTriangle, FileText } from "lucide-react"
 import { CitationChip, type InlineCitation } from "@/components/query/citation-chip"
 import { cn } from "@/lib/utils"
@@ -10,6 +11,7 @@ export interface GroundingSentence {
   label?: "supported" | "partial" | "unsupported"
   source_chunk?: string
   confidence?: number
+  citation_numbers?: number[]
 }
 
 type GroundingStatus = "grounded" | "partial" | "ungrounded"
@@ -57,8 +59,10 @@ const GROUNDING_STYLE: Record<GroundingStatus, { border: string; bg: string; lab
 
 function groundingTitle(g: { status: GroundingStatus; matches: GroundingSentence[] }): string {
   const sources = Array.from(new Set(g.matches.map((m) => m.source_chunk).filter(Boolean)))
+  const citationNums = Array.from(new Set(g.matches.flatMap((m) => m.citation_numbers ?? []))).sort((a, b) => a - b)
   const base = GROUNDING_STYLE[g.status].label
-  return sources.length > 0 ? `${base} (${sources.join(", ")})` : base
+  const withCitations = citationNums.length > 0 ? `${base} [${citationNums.join(", ")}]` : base
+  return sources.length > 0 ? `${withCitations} (${sources.join(", ")})` : withCitations
 }
 
 // Threshold answers come through as a bullet list of mostly "Parameter:
@@ -193,7 +197,25 @@ export function parseAnswer(raw: string): AnswerBlock[] {
   return blocks
 }
 
-export function AnswerRenderer({ text, citations, onCitationClick, groundingSentences }: { text: string; citations?: InlineCitation[]; onCitationClick?: (n: number) => void; groundingSentences?: GroundingSentence[] }) {
+// Reveals each block (heading/paragraph/step/table/...) in sequence rather
+// than dumping the whole answer at once - makes structured content read as
+// "arriving" like a live AI response instead of a static page render. Only
+// the newest answer should animate (see `animate` prop) - older, already-read
+// messages render with no motion.
+function BlockWrap({ index, animate, children }: { index: number; animate: boolean; children: React.ReactNode }) {
+  if (!animate) return <>{children}</>
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: Math.min(index * 0.09, 1.2), duration: 0.28, ease: "easeOut" }}
+    >
+      {children}
+    </motion.div>
+  )
+}
+
+export function AnswerRenderer({ text, citations, onCitationClick, groundingSentences, animate = false }: { text: string; citations?: InlineCitation[]; onCitationClick?: (n: number) => void; groundingSentences?: GroundingSentence[]; animate?: boolean }) {
   const blocks = parseAnswer(text)
   const ctx: CitationCtx = {
     byNumber: new Map((citations ?? []).map((c) => [c.number, c])),
@@ -201,7 +223,17 @@ export function AnswerRenderer({ text, citations, onCitationClick, groundingSent
   }
   return (
     <div className="space-y-4">
-      {blocks.map((block, i) => {
+      {blocks.map((block, i) => (
+        <BlockWrap key={i} index={i} animate={animate}>
+          {renderBlock(block, i, ctx, groundingSentences)}
+        </BlockWrap>
+      ))}
+    </div>
+  )
+}
+
+function renderBlock(block: AnswerBlock, i: number, ctx: CitationCtx, groundingSentences: GroundingSentence[] | undefined): React.ReactNode {
+  {
         if (block.type === "heading") {
           const sizeClass = block.level === 1 ? "text-xl font-bold" : block.level === 2 ? "text-lg font-semibold" : "text-base font-semibold"
           const marginClass = block.level === 1 ? "" : block.level === 2 ? "pt-2 border-t border-[#EDF1F5]" : ""
@@ -352,7 +384,5 @@ export function AnswerRenderer({ text, citations, onCitationClick, groundingSent
           )
         }
         return null
-      })}
-    </div>
-  )
+  }
 }

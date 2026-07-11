@@ -1,13 +1,15 @@
 """
 SOP-Guard LLM Generator
-Generates grounded answers using Ollama or OpenAI-compatible LLMs.
-Falls back to MockGenerator when no LLM is available.
+Generates grounded answers using a self-hosted Ollama model only - no patient
+or query data is ever sent to a third-party LLM API. Falls back to
+MockGenerator (deterministic templates, no model) when Ollama is unavailable.
 Research prototype. Not for clinical use.
 """
 
+import json
 import re
 import logging
-from typing import Any, Optional
+from typing import Any, AsyncIterator, Optional
 import httpx
 
 from app.config import settings
@@ -106,18 +108,22 @@ def _parse_followups(answer: str) -> tuple[str, list[str]]:
 
 
 class LLMGenerator:
-    """Generator that uses Ollama or OpenAI-compatible API for answer generation."""
+    """Generator that uses a self-hosted Ollama model for answer generation.
+
+    No provider in this class ever calls a third-party LLM API - patient and
+    query data stays on infrastructure the hospital controls. If Ollama is
+    unreachable, generation falls back to MockGenerator rather than to any
+    external service.
+    """
 
     def __init__(
         self,
         provider: str = "",
         model: str = "",
-        api_key: Optional[str] = None,
         base_url: Optional[str] = None,
     ):
         self.provider = provider or settings.LLM_PROVIDER
         self.model = model or settings.LLM_MODEL
-        self.api_key = api_key or settings.LLM_API_KEY
         self.base_url = base_url or settings.LLM_BASE_URL
         self._mock = MockGenerator()
         self._available: Optional[bool] = None
@@ -128,65 +134,37 @@ class LLMGenerator:
             self.model = self.model or "llama3.2"
 
     async def _check_available(self) -> bool:
-        """Check if the LLM backend is reachable."""
+        """Check if the local Ollama backend is reachable."""
         if self._available is not None:
             return self._available
 
-        if self.provider == "mock":
+        if self.provider != "ollama":
             self._available = False
             return False
 
         try:
-            if self.provider == "ollama":
-                async with httpx.AsyncClient(timeout=3.0) as client:
-                    r = await client.get(f"{self.base_url}/api/tags")
-                    self._available = r.status_code == 200
-            elif self.provider in ("openai", "anthropic"):
-                self._available = bool(self.api_key)
-            else:
-                self._available = False
+            async with httpx.AsyncClient(timeout=3.0) as client:
+                r = await client.get(f"{self.base_url}/api/tags")
+                self._available = r.status_code == 200
         except Exception:
             self._available = False
 
         logger.info(f"LLM provider '{self.provider}' available: {self._available}")
         return self._available
 
-    async def generate_answer(
+    def _build_prompt(
         self,
         query: str,
         retrieved_chunks: list[dict[str, Any]],
-        query_type: str = "general",
-        news2_score: Optional[int] = None,
-        history_context: str = "",
-    ) -> dict[str, Any]:
-        """Generate answer using LLM if available, otherwise fall back to mock."""
-
-        available = await self._check_available()
-        if not available:
-            result = self._mock.generate_answer(query, retrieved_chunks, query_type)
-            result["generation_mode"] = "mock"
-            # Still run faithfulness + conflict checks on mock answers.
-            # Primary signal is semantic (falls back to keyword automatically).
-            result["faithfulness"] = check_faithfulness_semantic(result.get("answer", ""), retrieved_chunks)
-            result["faithfulness_keyword"] = check_faithfulness(result.get("answer", ""), retrieved_chunks)
-            result["sop_conflicts"] = _merge_graph_conflicts(
-                detect_sop_conflicts(retrieved_chunks), retrieved_chunks
-            )
-            # Respect the mock generator's own inline_citations/
-            # followup_questions/abstained values instead of hardcoding
-            # them here - the mock generator now builds real [N] markers
-            # and template follow-ups, so overwriting them unconditionally
-            # would silently discard that data on every mock-mode query
-            # (the default install, with no LLM configured).
-            result.setdefault("inline_citations", [])
-            result.setdefault("followup_questions", [])
-            result["abstained"] = result.get("abstained", False)
-            return result
-
-        # Build numbered citation context from chunks
+        query_type: str,
+        news2_score: Optional[int],
+        history_context: str,
+    ) -> tuple[str, str, list]:
+        """Build the user prompt for a query. Shared by the single-shot and
+        streaming generation paths so prompt construction can't drift
+        between the two."""
         context, citation_records = build_numbered_context(retrieved_chunks)
 
-        # Build prompt
         if query_type in ("procedure_steps", "sequence"):
             instruction = "List the procedure steps in numbered order. Include all steps from the SOP. Include specific values and time frames."
         elif query_type == "threshold":
@@ -217,7 +195,6 @@ After your answer, on a new line write 'FOLLOWUPS:' followed by exactly 3 short 
 
 Answer:"""
 
-        # Append NEWS2 context if provided
         if news2_score is not None:
             news2_context = f"\n\nPatient Context: NEWS2 Score = {news2_score}"
             if news2_score >= 7:
@@ -230,85 +207,178 @@ Answer:"""
                 news2_context += " (LOW risk — routine monitoring)"
             user_prompt = user_prompt + news2_context
 
+        return user_prompt, context, citation_records
+
+    def _postprocess(
+        self,
+        raw_answer_text: str,
+        retrieved_chunks: list[dict[str, Any]],
+        citation_records: list,
+        query_type: str,
+        context_len: int,
+    ) -> dict[str, Any]:
+        """Everything that happens once the full answer text exists,
+        regardless of whether it arrived as one response or was assembled
+        from a token stream: follow-up parsing, citation validation,
+        abstention detection, faithfulness/conflict checks. Shared by the
+        single-shot and streaming generation paths."""
+        answer_text, followup_questions = _parse_followups(raw_answer_text)
+        answer_text, citation_records = extract_citations(answer_text, citation_records)
+        abstained = "not covered in the available sops" in answer_text.lower()
+
+        sop_titles = []
+        seen = set()
+        for chunk in retrieved_chunks[:5]:
+            title = chunk.get("sop_title", "Unknown SOP")
+            if title not in seen:
+                seen.add(title)
+                sop_titles.append(title)
+
+        citations = [f"[Source: {t}]" for t in sop_titles]
+
+        answer_text += "\n\nSource: " + ", ".join(sop_titles)
+        answer_text += "\n\n---\nResearch prototype. Check the source SOP before acting on this information."
+
+        top_score = retrieved_chunks[0].get("relevance_score", 0) if retrieved_chunks else 0
+        confidence = min(0.95, max(0.5, top_score * 8))
+
+        faithfulness = check_faithfulness_semantic(answer_text, retrieved_chunks)
+        faithfulness_keyword = check_faithfulness(answer_text, retrieved_chunks)
+
+        sop_conflicts = _merge_graph_conflicts(
+            detect_sop_conflicts(retrieved_chunks), retrieved_chunks
+        )
+
+        return {
+            "answer": answer_text,
+            "citations": citations,
+            "reasoning_trace": [
+                f"Query type: {query_type}",
+                f"LLM provider: {self.provider} ({self.model})",
+                f"Context: {len(retrieved_chunks)} chunks, {context_len} chars",
+                f"Generated answer: {len(answer_text)} chars",
+            ],
+            "confidence": round(confidence, 2),
+            "generation_mode": "llm",
+            "faithfulness": faithfulness,
+            "faithfulness_keyword": faithfulness_keyword,
+            "sop_conflicts": sop_conflicts,
+            "inline_citations": citation_records,
+            "followup_questions": followup_questions,
+            "abstained": abstained,
+        }
+
+    async def generate_answer(
+        self,
+        query: str,
+        retrieved_chunks: list[dict[str, Any]],
+        query_type: str = "general",
+        news2_score: Optional[int] = None,
+        history_context: str = "",
+    ) -> dict[str, Any]:
+        """Generate answer using LLM if available, otherwise fall back to mock."""
+
+        available = await self._check_available()
+        if not available:
+            return self._mock_with_checks(query, retrieved_chunks, query_type, "mock")
+
+        user_prompt, context, citation_records = self._build_prompt(
+            query, retrieved_chunks, query_type, news2_score, history_context
+        )
+
         try:
-            answer_text = await self._call_llm(user_prompt)
-
-            # Parse follow-up questions out of the answer
-            answer_text, followup_questions = _parse_followups(answer_text)
-
-            # Validate inline [N] citation markers
-            answer_text, citation_records = extract_citations(answer_text, citation_records)
-
-            # Structured abstention detection
-            abstained = "not covered in the available sops" in answer_text.lower()
-
-            # Build citations
-            sop_titles = []
-            seen = set()
-            for chunk in retrieved_chunks[:5]:
-                title = chunk.get("sop_title", "Unknown SOP")
-                if title not in seen:
-                    seen.add(title)
-                    sop_titles.append(title)
-
-            citations = [f"[Source: {t}]" for t in sop_titles]
-
-            # Add disclaimer
-            answer_text += "\n\nSource: " + ", ".join(sop_titles)
-            answer_text += "\n\n---\nResearch prototype. Check the source SOP before acting on this information."
-
-            # Estimate confidence from chunk scores
-            top_score = retrieved_chunks[0].get("relevance_score", 0) if retrieved_chunks else 0
-            confidence = min(0.95, max(0.5, top_score * 8))
-
-            # Faithfulness check (semantic primary, keyword kept alongside)
-            faithfulness = check_faithfulness_semantic(answer_text, retrieved_chunks)
-            faithfulness_keyword = check_faithfulness(answer_text, retrieved_chunks)
-
-            # Conflict detection (pairwise + entity graph)
-            sop_conflicts = _merge_graph_conflicts(
-                detect_sop_conflicts(retrieved_chunks), retrieved_chunks
-            )
-
-            return {
-                "answer": answer_text,
-                "citations": citations,
-                "reasoning_trace": [
-                    f"Query type: {query_type}",
-                    f"LLM provider: {self.provider} ({self.model})",
-                    f"Context: {len(retrieved_chunks)} chunks, {len(context)} chars",
-                    f"Generated answer: {len(answer_text)} chars",
-                ],
-                "confidence": round(confidence, 2),
-                "generation_mode": "llm",
-                "faithfulness": faithfulness,
-                "faithfulness_keyword": faithfulness_keyword,
-                "sop_conflicts": sop_conflicts,
-                "inline_citations": citation_records,
-                "followup_questions": followup_questions,
-                "abstained": abstained,
-            }
+            raw_answer_text = await self._call_llm(user_prompt)
+            return self._postprocess(raw_answer_text, retrieved_chunks, citation_records, query_type, len(context))
         except Exception as e:
             logger.warning(f"LLM generation failed: {e}. Falling back to mock.")
-            result = self._mock.generate_answer(query, retrieved_chunks, query_type)
-            result["generation_mode"] = "mock_fallback"
+            result = self._mock_with_checks(query, retrieved_chunks, query_type, "mock_fallback")
             result["reasoning_trace"].append(f"LLM failed ({e}), used mock fallback")
-            result.setdefault("inline_citations", [])
-            result.setdefault("followup_questions", [])
-            result["abstained"] = result.get("abstained", False)
             return result
+
+    def _mock_with_checks(
+        self, query: str, retrieved_chunks: list[dict[str, Any]], query_type: str, mode: str,
+    ) -> dict[str, Any]:
+        """Mock generation plus the same faithfulness/conflict checks the
+        LLM path runs - shared by both the "no LLM available" and "LLM
+        call failed" fallback branches, which previously duplicated this
+        (and the mock_fallback branch had silently drifted to skip it
+        entirely, leaving faithfulness/sop_conflicts unset whenever a
+        configured-but-unreachable-model LLM call failed)."""
+        result = self._mock.generate_answer(query, retrieved_chunks, query_type)
+        result["generation_mode"] = mode
+        # Primary signal is semantic (falls back to keyword automatically).
+        result["faithfulness"] = check_faithfulness_semantic(result.get("answer", ""), retrieved_chunks)
+        result["faithfulness_keyword"] = check_faithfulness(result.get("answer", ""), retrieved_chunks)
+        result["sop_conflicts"] = _merge_graph_conflicts(
+            detect_sop_conflicts(retrieved_chunks), retrieved_chunks
+        )
+        # Respect the mock generator's own inline_citations/
+        # followup_questions/abstained values instead of hardcoding
+        # them here - the mock generator now builds real [N] markers
+        # and template follow-ups, so overwriting them unconditionally
+        # would silently discard that data on every mock-mode query
+        # (the default install, with no LLM configured).
+        result.setdefault("inline_citations", [])
+        result.setdefault("followup_questions", [])
+        result["abstained"] = result.get("abstained", False)
+        return result
+
+    async def stream_answer(
+        self,
+        query: str,
+        retrieved_chunks: list[dict[str, Any]],
+        query_type: str = "general",
+        news2_score: Optional[int] = None,
+        history_context: str = "",
+    ) -> AsyncIterator[dict[str, Any]]:
+        """Stream the answer as the model generates it.
+
+        Yields ``{"type": "token", "text": str}`` for each chunk of text as
+        it arrives, then exactly one ``{"type": "final", ...}`` event with
+        the same shape ``generate_answer()`` returns (citations,
+        faithfulness, conflicts, etc.) once the full text is assembled and
+        post-processed. When no live model is available (mock mode, or
+        Ollama unreachable), the whole answer is emitted as a single token
+        chunk immediately so callers can treat both paths identically.
+        """
+        available = await self._check_available()
+        if not available:
+            result = await self.generate_answer(
+                query, retrieved_chunks, query_type,
+                news2_score=news2_score, history_context=history_context,
+            )
+            yield {"type": "token", "text": result.get("answer", "")}
+            yield {"type": "final", **result}
+            return
+
+        user_prompt, context, citation_records = self._build_prompt(
+            query, retrieved_chunks, query_type, news2_score, history_context
+        )
+
+        full_text = ""
+        try:
+            async for chunk in self._stream_ollama(user_prompt):
+                full_text += chunk
+                yield {"type": "token", "text": chunk}
+        except Exception as e:
+            logger.warning(f"Streaming LLM generation failed: {e}. Falling back to mock.")
+            result = self._mock_with_checks(query, retrieved_chunks, query_type, "mock_fallback")
+            result["reasoning_trace"].append(f"Streaming LLM failed ({e}), used mock fallback")
+            yield {"type": "token", "text": result.get("answer", "")}
+            yield {"type": "final", **result}
+            return
+
+        final = self._postprocess(full_text, retrieved_chunks, citation_records, query_type, len(context))
+        yield {"type": "final", **final}
 
     async def _call_llm(self, prompt: str) -> str:
         """Call the configured LLM."""
         if self.provider == "ollama":
             return await self._call_ollama(prompt)
-        elif self.provider == "openai":
-            return await self._call_openai(prompt)
-        else:
-            raise ValueError(f"Unknown provider: {self.provider}")
+        raise ValueError(f"Unsupported provider: {self.provider} (only 'ollama' and 'mock' are supported)")
 
     async def _call_ollama(self, prompt: str) -> str:
-        """Call Ollama API."""
+        """Call Ollama API (non-streaming)."""
         async with httpx.AsyncClient(timeout=60.0) as client:
             response = await client.post(
                 f"{self.base_url}/api/generate",
@@ -327,28 +397,39 @@ Answer:"""
             data = response.json()
             return data.get("response", "").strip()
 
-    async def _call_openai(self, prompt: str) -> str:
-        """Call OpenAI-compatible API."""
-        base = self.base_url or "https://api.openai.com/v1"
-        headers = {"Authorization": f"Bearer {self.api_key}"}
-
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            response = await client.post(
-                f"{base}/chat/completions",
-                headers=headers,
+    async def _stream_ollama(self, prompt: str) -> AsyncIterator[str]:
+        """Call Ollama's /api/generate with stream:true and yield each
+        response fragment as it arrives. Ollama streams newline-delimited
+        JSON objects, each with a "response" fragment and a "done" flag on
+        the last line."""
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            async with client.stream(
+                "POST",
+                f"{self.base_url}/api/generate",
                 json={
                     "model": self.model,
-                    "messages": [
-                        {"role": "system", "content": SYSTEM_PROMPT},
-                        {"role": "user", "content": prompt},
-                    ],
-                    "temperature": 0.1,
-                    "max_tokens": 1024,
+                    "prompt": prompt,
+                    "system": SYSTEM_PROMPT,
+                    "stream": True,
+                    "options": {
+                        "temperature": 0.1,
+                        "num_predict": 1024,
+                    },
                 },
-            )
-            response.raise_for_status()
-            data = response.json()
-            return data["choices"][0]["message"]["content"].strip()
+            ) as response:
+                response.raise_for_status()
+                async for line in response.aiter_lines():
+                    if not line.strip():
+                        continue
+                    try:
+                        data = json.loads(line)
+                    except json.JSONDecodeError:
+                        continue
+                    fragment = data.get("response", "")
+                    if fragment:
+                        yield fragment
+                    if data.get("done"):
+                        break
 
 
 def get_generator() -> LLMGenerator:
@@ -356,6 +437,5 @@ def get_generator() -> LLMGenerator:
     return LLMGenerator(
         provider=settings.LLM_PROVIDER,
         model=settings.LLM_MODEL,
-        api_key=settings.LLM_API_KEY,
         base_url=settings.LLM_BASE_URL,
     )

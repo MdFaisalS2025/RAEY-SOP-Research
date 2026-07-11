@@ -11,7 +11,6 @@ import {
   FileText,
   ChevronDown,
   ChevronRight,
-  Shield,
   ShieldCheck,
   ShieldAlert,
   ShieldX,
@@ -27,7 +26,6 @@ import {
   Database,
   FlaskConical,
   Gauge,
-  GitBranch,
   ExternalLink,
   Download,
   History,
@@ -36,7 +34,6 @@ import {
   User,
   PlusCircle,
   Activity,
-  SearchX,
   Layers,
   RotateCcw,
   Link2,
@@ -45,7 +42,7 @@ import {
 } from "lucide-react"
 import { type InlineCitation } from "@/components/query/citation-chip"
 import { SourcePanel } from "@/components/query/source-panel"
-import { PubMedEvidencePanel } from "@/components/query/pubmed-evidence-panel"
+import { EvidencePanel } from "@/components/query/evidence-panel"
 import { FollowupChips } from "@/components/query/followup-chips"
 import { FeedbackRow } from "@/components/query/feedback-row"
 import { AnswerRenderer } from "@/components/query/answer-renderer"
@@ -141,6 +138,50 @@ function mapCitations(raw: unknown): InlineCitation[] {
     }))
 }
 
+/**
+ * POSTs to an SSE endpoint and parses "data: {...}\n\n" frames as they
+ * arrive, invoking onToken live and resolving with the final response
+ * payload once the "final" event lands. Falls back to null on any
+ * failure so callers can retry against the non-streaming endpoint.
+ */
+async function streamSSE(
+  url: string,
+  body: unknown,
+  onToken: (text: string) => void,
+): Promise<any | null> {
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  })
+  if (!res.ok || !res.body) return null
+
+  const reader = res.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ""
+  let final: any = null
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    buffer += decoder.decode(value, { stream: true })
+    const frames = buffer.split("\n\n")
+    buffer = frames.pop() ?? ""
+    for (const frame of frames) {
+      const line = frame.trim()
+      if (!line.startsWith("data: ")) continue
+      const payload = line.slice("data: ".length)
+      if (payload === "[DONE]") continue
+      try {
+        const event = JSON.parse(payload)
+        if (event.type === "token") onToken(event.text)
+        else if (event.type === "final") final = event.response
+      } catch { /* ignore malformed frame */ }
+    }
+  }
+  return final
+}
+
 function mapResponse(query: string, response: any, startedAt: number): AssistantData {
   const ext = response as Record<string, unknown>
   const vr = response.verification_result
@@ -193,49 +234,6 @@ function mapResponse(query: string, response: any, startedAt: number): Assistant
 }
 
 // ─── Badges and small components ─────────────────────────────────────────────
-
-function VerificationBadge({ status }: { status: "passed" | "warning" | "failed" }) {
-  const config = {
-    passed: { icon: ShieldCheck, label: "Verified", className: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30" },
-    warning: { icon: ShieldAlert, label: "Caution", className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30" },
-    failed: { icon: ShieldX, label: "Unverified", className: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30" },
-  }
-  const c = config[status]
-  return (
-    <span className={cn("inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border", c.className)}>
-      <c.icon className="w-4 h-4" />
-      {c.label}
-    </span>
-  )
-}
-
-function ConfidenceGauge({ confidence }: { confidence: number }) {
-  const pct = Math.round(confidence * 100)
-  const level = confidence >= 0.7 ? "high" : confidence >= 0.5 ? "medium" : "low"
-  const colors = {
-    high: { ring: "text-[#15803D] dark:text-green-400", bg: "bg-[#DCFCE7] dark:bg-green-500/10", label: "High Confidence", text: "text-[#15803D] dark:text-green-400", explanation: "Well supported by SOP evidence. All key details verified." },
-    medium: { ring: "text-[#B45309] dark:text-amber-400", bg: "bg-[#FEF3C7] dark:bg-amber-500/10", label: "Medium Confidence", text: "text-[#B45309] dark:text-amber-400", explanation: "Partially supported. Some details may need manual verification." },
-    low: { ring: "text-[#B91C1C] dark:text-red-400", bg: "bg-[#FEE2E2] dark:bg-red-500/10", label: "Low Confidence", text: "text-[#B91C1C] dark:text-red-400", explanation: "Limited evidence found. Check the source SOP before acting." },
-  }
-  const c = colors[level]
-  return (
-    <div className="flex items-center gap-3">
-      <div className={cn("relative w-14 h-14 rounded-full flex items-center justify-center", c.bg)}>
-        <svg className="absolute inset-0 w-14 h-14 -rotate-90" viewBox="0 0 56 56">
-          <circle cx="28" cy="28" r="24" fill="none" stroke="currentColor" strokeWidth="3" className="text-[#E2E8F0]" />
-          <circle cx="28" cy="28" r="24" fill="none" stroke="currentColor" strokeWidth="3" className={c.ring}
-            strokeDasharray={`${pct * 1.508} 150.8`} strokeLinecap="round" />
-        </svg>
-        <span className={cn("text-sm font-bold", c.text)}>{pct}</span>
-      </div>
-      <div>
-        <p className={cn("text-sm font-semibold", c.text)}>{c.label}</p>
-        <p className="text-xs text-[#64748B]">Verification score</p>
-        <p className="text-xs text-[#64748B] mt-0.5">{c.explanation}</p>
-      </div>
-    </div>
-  )
-}
 
 function PipelineStages({ currentStage }: { currentStage: number }) {
   return (
@@ -292,25 +290,168 @@ function news2RiskConfig(score: number) {
   return { label: "Low Risk", className: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30" }
 }
 
-function FaithfulnessBadge({ score }: { score: number }) {
-  const pct = Math.round(score * 100)
-  if (score >= 0.9) return (
-    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30">
-      <ShieldCheck className="w-4 h-4" />
-      High Faithfulness ({pct}%)
-    </span>
-  )
-  if (score >= 0.7) return (
-    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30">
-      <ShieldAlert className="w-4 h-4" />
-      Moderate Faithfulness ({pct}%)
-    </span>
-  )
+// ─── Trust & Verification panel ──────────────────────────────────────────────
+// One consolidated place for every trust signal (verification status,
+// confidence, faithfulness, safety checks, provenance) instead of four
+// separate always-visible blocks competing for attention. A single summary
+// row is always shown; "Trust details" reveals the rest on demand.
+
+function TrustPanel({ data }: { data: AssistantData }) {
+  const [expanded, setExpanded] = useState(false)
+  const [showSentenceCheck, setShowSentenceCheck] = useState(false)
+
+  const status = data.verification.status
+  const statusConfig = {
+    passed: { icon: ShieldCheck, label: "Verified", className: "text-[#15803D] dark:text-green-400" },
+    warning: { icon: ShieldAlert, label: "Caution", className: "text-[#B45309] dark:text-amber-400" },
+    failed: { icon: ShieldX, label: "Unverified", className: "text-[#B91C1C] dark:text-red-400" },
+  }
+  const sc = statusConfig[status]
+
+  const confidencePct = Math.round(data.verification.confidence * 100)
+  const confidenceLevel = data.verification.confidence >= 0.7 ? "high" : data.verification.confidence >= 0.5 ? "medium" : "low"
+  const confidenceColor = confidenceLevel === "high" ? "text-[#15803D] dark:text-green-400" : confidenceLevel === "medium" ? "text-[#B45309] dark:text-amber-400" : "text-[#B91C1C] dark:text-red-400"
+
+  const faithfulness = data.faithfulness
+  const faithfulnessPct = faithfulness ? Math.round(faithfulness.overall_faithfulness * 100) : null
+  const faithfulnessColor = faithfulnessPct === null ? "" : faithfulnessPct >= 90 ? "text-[#15803D] dark:text-green-400" : faithfulnessPct >= 70 ? "text-[#B45309] dark:text-amber-400" : "text-[#B91C1C] dark:text-red-400"
+
+  const evScore = extractEvidenceScore(data.reasoning)
+  const distinctSopTitles = Array.from(new Set(data.inlineCitations.map(c => c.sop_title)))
+
+  const allChecks = [
+    ...data.verification.thresholdChecks,
+    ...data.verification.sequenceChecks.map((c) => ({ status: c.correct ? "pass" : "fail" })),
+    ...data.verification.contraindicationChecks.map((c) => ({ status: c.safe ? "pass" : "fail" })),
+  ]
+  const checksPassed = allChecks.filter((c) => c.status === "pass").length
+
   return (
-    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30">
-      <ShieldX className="w-4 h-4" />
-      Low Faithfulness - Verify Manually ({pct}%)
-    </span>
+    <div className="rounded-2xl bg-card border border-[#E2E8F0] overflow-hidden">
+      {/* Always-visible summary row - the "at a glance" trust story */}
+      <button onClick={() => setExpanded(!expanded)} className="w-full flex flex-wrap items-center gap-x-4 gap-y-2 p-4 text-left hover:bg-muted/40 transition-colors">
+        <span className={cn("inline-flex items-center gap-1.5 text-sm font-semibold", sc.className)}>
+          <sc.icon className="w-4 h-4" />
+          {sc.label}
+        </span>
+        <span className={cn("inline-flex items-center gap-1.5 text-sm font-medium", confidenceColor)}>
+          <Gauge className="w-3.5 h-3.5" />
+          {confidencePct}% confidence
+        </span>
+        {faithfulnessPct !== null && (
+          <span className={cn("inline-flex items-center gap-1.5 text-sm font-medium", faithfulnessColor)}>
+            <Layers className="w-3.5 h-3.5" />
+            {faithfulnessPct}% grounded in source
+          </span>
+        )}
+        <span className="inline-flex items-center gap-1.5 text-xs text-[#94A3B8]">
+          <Cpu className="w-3 h-3" />
+          {data.generationMode === "llm" ? "In-house model" : data.generationMode === "mock_fallback" ? "Extractive (model fallback)" : "Extractive (no model configured)"}
+        </span>
+        <span className="ml-auto inline-flex items-center gap-1 text-xs text-[#0B6BCB] font-medium">
+          {expanded ? "Hide trust details" : "Trust details"}
+          {expanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+        </span>
+      </button>
+
+      <AnimatePresence>
+        {expanded && (
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+            <div className="px-4 pb-4 space-y-4 border-t border-[#E2E8F0] pt-4">
+
+              {/* Why this confidence / verification status */}
+              <p className="text-xs text-[#64748B]">
+                {confidenceLevel === "high" && "Well supported by SOP evidence. All key details verified."}
+                {confidenceLevel === "medium" && "Partially supported. Some details may need manual verification."}
+                {confidenceLevel === "low" && "Limited evidence found. Check the source SOP before acting."}
+                {allChecks.length > 0 && ` ${checksPassed} of ${allChecks.length} safety checks passed`}
+                {evScore !== null && ` · evidence score ${evScore.toFixed(2)}`}
+                {distinctSopTitles.length > 0 && ` · ${distinctSopTitles.length} SOP${distinctSopTitles.length === 1 ? "" : "s"} consulted`}
+                {` · ${new Date(data.answeredAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`}
+              </p>
+
+              {/* Safety checks */}
+              {allChecks.length > 0 && (
+                <div className="space-y-3">
+                  {data.verification.thresholdChecks.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold uppercase text-[#64748B] mb-2">Threshold Checks</p>
+                      <div className="space-y-2">
+                        {data.verification.thresholdChecks.map((c, i) => (
+                          <div key={i} className="flex items-center gap-2 p-2.5 rounded-lg bg-muted">
+                            {c.status === "pass" ? <CheckCircle2 className="w-4 h-4 text-[#15803D] dark:text-green-400 shrink-0" /> : <XCircle className="w-4 h-4 text-[#B91C1C] dark:text-red-400 shrink-0" />}
+                            <span className="flex-1 text-sm text-[#1A2332]">{c.parameter}: <span className="font-mono text-[#0B6BCB]">{c.value}</span></span>
+                            <span className={cn("text-xs font-semibold", c.status === "pass" ? "text-[#15803D] dark:text-green-400" : "text-[#B91C1C] dark:text-red-400")}>{c.status.toUpperCase()}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {data.verification.sequenceChecks.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold uppercase text-[#64748B] mb-2">Sequence Checks</p>
+                      <div className="space-y-2">
+                        {data.verification.sequenceChecks.map((c, i) => (
+                          <div key={i} className="flex items-center gap-2 p-2.5 rounded-lg bg-muted">
+                            {c.correct ? <CheckCircle2 className="w-4 h-4 text-[#15803D] dark:text-green-400" /> : <XCircle className="w-4 h-4 text-[#B91C1C] dark:text-red-400" />}
+                            <span className="text-sm text-[#1A2332]">{c.procedure}</span>
+                            <span className="text-[#64748B] text-xs ml-auto">{c.correct ? "Correct order" : "Order issue"}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {data.verification.contraindicationChecks.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold uppercase text-[#64748B] mb-2">Contraindication Checks</p>
+                      <div className="space-y-2">
+                        {data.verification.contraindicationChecks.map((c, i) => (
+                          <div key={i} className="flex items-center gap-2 p-2.5 rounded-lg bg-muted">
+                            {c.safe ? <CheckCircle2 className="w-4 h-4 text-[#15803D] dark:text-green-400" /> : <AlertTriangle className="w-4 h-4 text-[#B45309] dark:text-amber-400" />}
+                            <span className="flex-1 text-sm text-[#1A2332]">{c.item}</span>
+                            <span className="text-xs text-[#64748B]">{c.note}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Sentence-level faithfulness */}
+              {faithfulness?.sentences && faithfulness.sentences.length > 0 && (
+                <div>
+                  <button onClick={() => setShowSentenceCheck(!showSentenceCheck)}
+                    className="text-xs text-[#64748B] hover:text-[#1A2332] transition-colors inline-flex items-center gap-1">
+                    {showSentenceCheck ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                    Sentence-level grounding check ({faithfulness.total_checked} sentences)
+                  </button>
+                  <AnimatePresence>
+                    {showSentenceCheck && (
+                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                        <div className="space-y-2 pt-2">
+                          {faithfulness.sentences.map((s: any, i: number) => (
+                            <div key={i} className={cn("p-2.5 rounded-lg text-[13px] leading-relaxed", s.grounded ? "bg-muted" : "bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30")}>
+                              <span className="text-[#1A2332]">{s.text}</span>
+                              {!s.grounded && (
+                                <span className="ml-2 text-[#B45309] dark:text-amber-400 text-xs font-semibold">Not found in SOP</span>
+                              )}
+                              {s.source_chunk && s.source_chunk !== "Unknown" && s.source_chunk !== "General context" && (
+                                <span className="ml-2 text-[11px] text-[#64748B]">- {s.source_chunk}</span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   )
 }
 
@@ -399,7 +540,6 @@ function AssistantAnswer({
   const { hasPermission } = useRole()
   const [activePanel, setActivePanel] = useState<string | null>(null)
   const [showConflictDetails, setShowConflictDetails] = useState(false)
-  const [showSentenceCheck, setShowSentenceCheck] = useState(false)
   const [selectedSource, setSelectedSource] = useState<SourceData | null>(null)
   const [highlightedSource, setHighlightedSource] = useState<number | null>(null)
   const [feedbackGiven, setFeedbackGiven] = useState<string | null>(null)
@@ -512,12 +652,21 @@ function AssistantAnswer({
           {isAbstained ? (
             <div className="p-6 sm:p-8 rounded-2xl bg-card border border-[#0B6BCB]/30">
               <div className="flex items-start gap-4">
-                <div className="w-11 h-11 rounded-xl bg-muted flex items-center justify-center shrink-0">
-                  <SearchX className="w-5 h-5 text-[#64748B]" />
+                <div className="w-11 h-11 rounded-xl bg-[#0B6BCB]/10 flex items-center justify-center shrink-0">
+                  <ShieldCheck className="w-5 h-5 text-[#0B6BCB]" />
                 </div>
                 <div className="min-w-0">
-                  <h2 className="text-lg font-semibold text-[#1A2332]">Not covered by current SOPs</h2>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h2 className="text-lg font-semibold text-[#1A2332]">No grounded answer - by design</h2>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30">
+                      Safe refusal
+                    </span>
+                  </div>
                   <p className="text-[15px] leading-relaxed text-[#64748B] mt-2">{data.answer.replace(/\[\d+\]/g, "")}</p>
+                  <p className="text-[13px] leading-relaxed text-[#64748B] mt-2">
+                    This is a deliberate safety decision, not a system failure: SOP-Guard only answers when it can point to
+                    grounded SOP evidence, and declines rather than guess when it can&apos;t.
+                  </p>
                 </div>
               </div>
               <div className="mt-6 pt-5 border-t border-[#E2E8F0]">
@@ -575,10 +724,7 @@ function AssistantAnswer({
               )}
 
               <div className="p-6 sm:p-8 rounded-2xl bg-card border border-[#E2E8F0] shadow-sm relative">
-                <div className="flex justify-end mb-4 sm:mb-0 sm:absolute sm:top-6 sm:right-6">
-                  <VerificationBadge status={data.verification.status} />
-                </div>
-                <div className="sm:pr-36">
+                <div>
                   {plain?.summary && (
                     <div className="mb-4 p-3.5 rounded-xl bg-[#0B6BCB]/[0.06] border border-[#0B6BCB]/20">
                       <p className="text-[15px] leading-relaxed text-[#1A2332]">
@@ -594,10 +740,7 @@ function AssistantAnswer({
                       <span className="inline-flex items-center gap-1"><span className="w-2.5 h-0.5 rounded bg-[#B91C1C]/60" />Not grounded</span>
                     </div>
                   )}
-                  <AnswerRenderer text={displayAnswer} citations={data.inlineCitations} onCitationClick={handleCitationClick} groundingSentences={data.faithfulness?.sentences} />
-                </div>
-                <div className="mt-7 pt-5 border-t border-[#E2E8F0]">
-                  <ConfidenceGauge confidence={data.verification.confidence} />
+                  <AnswerRenderer text={displayAnswer} citations={data.inlineCitations} onCitationClick={handleCitationClick} groundingSentences={data.faithfulness?.sentences} animate />
                 </div>
               </div>
 
@@ -610,70 +753,9 @@ function AssistantAnswer({
             <FollowupChips questions={data.followupQuestions} onSelect={onFollowup} />
           )}
 
-          {/* Faithfulness badge */}
-          {data.faithfulness && (
-            <div className="p-4 rounded-2xl bg-card border border-[#E2E8F0] space-y-3">
-              <div className="flex items-center justify-between">
-                <FaithfulnessBadge score={data.faithfulness.overall_faithfulness} />
-                <button onClick={() => setShowSentenceCheck(!showSentenceCheck)}
-                  className="text-xs text-[#64748B] hover:text-[#1A2332] transition-colors inline-flex items-center gap-1">
-                  {showSentenceCheck ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
-                  Sentence-level check ({data.faithfulness.total_checked} sentences)
-                </button>
-              </div>
-              <AnimatePresence>
-                {showSentenceCheck && data.faithfulness.sentences && (
-                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-                    className="overflow-hidden">
-                    <div className="space-y-2 pt-1">
-                      {data.faithfulness.sentences.map((s: any, i: number) => (
-                        <div key={i} className={cn("p-2.5 rounded-lg text-[13px] leading-relaxed", s.grounded ? "bg-muted" : "bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30")}>
-                          <span className="text-[#1A2332]">{s.text}</span>
-                          {!s.grounded && (
-                            <span className="ml-2 text-[#B45309] dark:text-amber-400 text-xs font-semibold">Not found in SOP</span>
-                          )}
-                          {s.source_chunk && s.source_chunk !== "Unknown" && s.source_chunk !== "General context" && (
-                            <span className="ml-2 text-[11px] text-[#64748B]">- {s.source_chunk}</span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          )}
-
-          {/* Answer provenance footer */}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 px-1 text-[11px] text-[#94A3B8]">
-            <span className="inline-flex items-center gap-1">
-              <Cpu className="w-3 h-3" />
-              {data.generationMode === "llm" ? "LLM-generated" : data.generationMode === "mock_fallback" ? "Extractive (LLM fallback)" : "Extractive (no LLM configured)"}
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <ShieldCheck className="w-3 h-3" />
-              Verifier: {data.verification.status}
-            </span>
-            {(() => {
-              const evScore = extractEvidenceScore(data.reasoning)
-              return evScore !== null ? (
-                <span className="inline-flex items-center gap-1">
-                  <Database className="w-3 h-3" />
-                  Evidence score: {evScore.toFixed(2)}
-                </span>
-              ) : null
-            })()}
-            {distinctSopTitles.length > 0 && (
-              <span className="inline-flex items-center gap-1">
-                <FileText className="w-3 h-3" />
-                {distinctSopTitles.length} SOP{distinctSopTitles.length === 1 ? "" : "s"} consulted
-              </span>
-            )}
-            <span className="inline-flex items-center gap-1">
-              <Clock className="w-3 h-3" />
-              {new Date(data.answeredAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-            </span>
-          </div>
+          {/* Trust & Verification - one consolidated place for every trust
+              signal instead of four separate always-visible blocks. */}
+          {!isAbstained && <TrustPanel data={data} />}
 
           {/* Create Update Proposal button */}
           {hasPermission("create_proposal") && (
@@ -691,7 +773,6 @@ function AssistantAnswer({
           <div className="flex flex-wrap gap-2">
             {[
               { key: "sources", icon: FileText, label: `View Sources (${data.inlineCitations.length > 0 ? data.inlineCitations.length : data.sources.length})` },
-              { key: "safety", icon: ShieldCheck, label: "Safety Check" },
               { key: "trace", icon: Brain, label: "Pipeline Trace" },
               { key: "feedback", icon: ThumbsUp, label: "Give Feedback" },
               { key: "export", icon: Download, label: "Export" },
@@ -714,7 +795,11 @@ function AssistantAnswer({
 
                 {/* Sources Panel */}
                 {activePanel === "sources" && data.inlineCitations.length > 0 && (
-                  <SourcePanel citations={data.inlineCitations} highlightedNumber={highlightedSource} />
+                  <SourcePanel
+                    citations={data.inlineCitations}
+                    highlightedNumber={highlightedSource}
+                    onSelect={(c) => setSelectedSource({ id: String(c.number), sop_title: c.sop_title, section: c.section_title, content: c.snippet, score: c.relevance_score })}
+                  />
                 )}
                 {activePanel === "sources" && data.inlineCitations.length === 0 && (
                   <div className="p-5 rounded-2xl bg-card border border-[#E2E8F0]">
@@ -735,69 +820,6 @@ function AssistantAnswer({
                         </button>
                       ))}
                     </div>
-                  </div>
-                )}
-
-                {/* Safety Check Panel */}
-                {activePanel === "safety" && (
-                  <div className="p-5 rounded-2xl bg-card border border-[#E2E8F0]">
-                    <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
-                      <Shield className="w-4 h-4 text-[#0B6BCB]" />
-                      Safety Verification Results
-                    </h3>
-                    <p className="text-[15px] leading-relaxed text-[#1A2332] mb-4">
-                      {(() => {
-                        const allChecks = [
-                          ...data.verification.thresholdChecks,
-                          ...data.verification.sequenceChecks.map((c) => ({ status: c.correct ? "pass" : "fail" })),
-                          ...data.verification.contraindicationChecks.map((c) => ({ status: c.safe ? "pass" : "fail" })),
-                        ]
-                        const passed = allChecks.filter((c) => c.status === "pass").length
-                        return `${passed} of ${allChecks.length} checks passed.`
-                      })()}
-                    </p>
-                    {data.verification.thresholdChecks.length > 0 && (
-                      <div className="mb-4">
-                        <p className="text-xs font-semibold uppercase text-[#64748B] mb-2">Threshold Checks</p>
-                        <div className="space-y-2">
-                          {data.verification.thresholdChecks.map((c, i) => (
-                            <div key={i} className="flex items-center gap-2 p-3 rounded-lg bg-card">
-                              {c.status === "pass" ? <CheckCircle2 className="w-4 h-4 text-[#15803D] dark:text-green-400 shrink-0" /> : <XCircle className="w-4 h-4 text-[#B91C1C] dark:text-red-400 shrink-0" />}
-                              <span className="flex-1 text-[15px] leading-relaxed text-[#1A2332]">{c.parameter}: <span className="font-mono text-[#0B6BCB]">{c.value}</span></span>
-                              <span className={cn("text-xs font-semibold", c.status === "pass" ? "text-[#15803D] dark:text-green-400" : "text-[#B91C1C] dark:text-red-400")}>{c.status.toUpperCase()}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {data.verification.sequenceChecks.length > 0 && (
-                      <div className="mb-4">
-                        <p className="text-xs font-semibold uppercase text-[#64748B] mb-2">Sequence Checks</p>
-                        <div className="space-y-2">
-                          {data.verification.sequenceChecks.map((c, i) => (
-                            <div key={i} className="flex items-center gap-2 p-3 rounded-lg bg-card">
-                              {c.correct ? <CheckCircle2 className="w-4 h-4 text-[#15803D] dark:text-green-400" /> : <XCircle className="w-4 h-4 text-[#B91C1C] dark:text-red-400" />}
-                              <span className="text-[15px] leading-relaxed text-[#1A2332]">{c.procedure}</span>
-                              <span className="text-[#64748B] text-xs ml-auto">{c.correct ? "Correct order" : "Order issue"}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {data.verification.contraindicationChecks.length > 0 && (
-                      <div>
-                        <p className="text-xs font-semibold uppercase text-[#64748B] mb-2">Contraindication Checks</p>
-                        <div className="space-y-2">
-                          {data.verification.contraindicationChecks.map((c, i) => (
-                            <div key={i} className="flex items-center gap-2 p-3 rounded-lg bg-card">
-                              {c.safe ? <CheckCircle2 className="w-4 h-4 text-[#15803D] dark:text-green-400" /> : <AlertTriangle className="w-4 h-4 text-[#B45309] dark:text-amber-400" />}
-                              <span className="flex-1 text-[15px] leading-relaxed text-[#1A2332]">{c.item}</span>
-                              <span className="text-xs text-[#64748B]">{c.note}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                   </div>
                 )}
 
@@ -916,7 +938,7 @@ function AssistantAnswer({
             <BookOpen className="w-4 h-4 text-[#0B6BCB]" />
             <h2 className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">External Evidence</h2>
           </div>
-          <PubMedEvidencePanel entities={data.entities} queryText={data.query} />
+          <EvidencePanel entities={data.entities} queryText={data.query} />
         </div>
       </div>
 
@@ -988,6 +1010,7 @@ export default function QueryPage() {
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [currentStage, setCurrentStage] = useState(0)
+  const [streamingText, setStreamingText] = useState("")
   const [queryHistory, setQueryHistory] = useState<Array<{ query: string; confidence: number; type: string; timestamp: number }>>([])
   const [showHistory, setShowHistory] = useState(false)
   const [userRole, setUserRole] = useState("viewer")
@@ -1049,6 +1072,8 @@ export default function QueryPage() {
               generationMode: null,
               responseTimeMs: null,
               answerId: m.answer_id != null ? String(m.answer_id) : null,
+              entities: {},
+              answeredAt: m.created_at ? new Date(m.created_at).getTime() : Date.now(),
             },
           }
         })
@@ -1099,6 +1124,7 @@ export default function QueryPage() {
     setSessionId(null)
     setQuery("")
     setLoading(false)
+    setStreamingText("")
     chatDisabledRef.current = false
     try { sessionStorage.removeItem(CHAT_SESSION_KEY) } catch { /* ignore */ }
   }
@@ -1109,9 +1135,11 @@ export default function QueryPage() {
     setQuery("")
     setMessages(prev => [...prev, { id: nextId(), role: "user", content: q }])
     setLoading(true)
+    setStreamingText("")
 
     const startedAt = Date.now()
     let data: AssistantData | null = null
+    const onToken = (t: string) => setStreamingText(prev => prev + t)
 
     try {
       let response: any = null
@@ -1135,18 +1163,28 @@ export default function QueryPage() {
         }
         if (sid) {
           try {
-            const r = await fetch(`/api/chat/sessions/${sid}/messages`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ content: q, news2_score: news2Score ?? null }),
-            })
-            if (!r.ok) throw new Error("chat message failed")
-            response = await r.json()
+            response = await streamSSE(
+              `/api/chat/sessions/${sid}/messages/stream`,
+              { content: q, news2_score: news2Score ?? null },
+              onToken,
+            )
+            if (!response) throw new Error("chat stream failed")
           } catch {
             chatDisabledRef.current = true
             response = null
           }
         }
+      }
+
+      if (!response) {
+        setStreamingText("")
+        try {
+          response = await streamSSE(
+            "/api/query/stream",
+            { query: q, news2_score: news2Score ?? null },
+            onToken,
+          )
+        } catch { /* fall through to non-streaming */ }
       }
 
       if (!response) {
@@ -1177,16 +1215,77 @@ export default function QueryPage() {
       setQueryHistory(prev => [{ query: q, confidence: 0, type: "error", timestamp: Date.now() }, ...prev].slice(0, 10))
     }
 
-    const elapsed = Date.now() - startedAt
-    const totalDuration = pipelineStages.reduce((sum, s) => sum + s.duration, 0)
-    const remaining = Math.max(0, totalDuration - elapsed)
-    setTimeout(() => {
-      setLoading(false)
-      if (data) setMessages(prev => [...prev, { id: nextId(), role: "assistant", data }])
-    }, remaining)
+    setLoading(false)
+    setStreamingText("")
+    if (data) setMessages(prev => [...prev, { id: nextId(), role: "assistant", data }])
   }
 
   const lastAssistantId = [...messages].reverse().find(m => m.role === "assistant")?.id ?? null
+
+  // Composer and patient-context toggle are defined once and placed
+  // conditionally below: centered above an empty conversation, or pinned
+  // after the thread once a conversation exists - so the page reads like a
+  // real chat (history above, input where you'd expect it, near the latest
+  // message) instead of a form bolted above a results list.
+  const patientContextToggle = (
+    <div className="mb-3">
+      <button onClick={() => setShowPatientContext(!showPatientContext)}
+        className="inline-flex items-center gap-1.5 text-sm text-[#64748B] hover:text-[#1A2332] transition-colors">
+        {showPatientContext ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+        <Activity className="w-4 h-4" />
+        Add Patient Context (NEWS2)
+      </button>
+      <AnimatePresence>
+        {showPatientContext && (
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden mt-2">
+            <div className="p-4 rounded-xl bg-card border border-[#E2E8F0] space-y-3">
+              <div className="flex items-center gap-4">
+                <label className="text-sm font-medium shrink-0">NEWS2 Score</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={20}
+                  value={news2Score ?? ""}
+                  onChange={e => setNews2Score(e.target.value === "" ? null : Number(e.target.value))}
+                  placeholder="0-20"
+                  className="w-24 px-3 py-1.5 rounded-lg bg-muted border border-[#E2E8F0] text-sm text-[#1A2332] focus:outline-none focus:ring-2 focus:ring-[#0B6BCB]/40"
+                />
+                {news2Score !== null && (
+                  <span className={cn("inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border", news2RiskConfig(news2Score).className)}>
+                    {news2RiskConfig(news2Score).label}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-[#64748B]">
+                Applies to your next question. Higher scores indicate greater deterioration risk.
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+
+  const composer = (
+    <div className="relative">
+      <textarea
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSubmit() } }}
+        placeholder={submitted ? "Ask a follow-up..." : "Ask a clinical SOP question..."}
+        rows={3}
+        className="w-full p-4 sm:pr-28 rounded-2xl bg-muted border border-[#E2E8F0] text-[#1A2332] placeholder:text-[#94A3B8] caret-[#0B6BCB] resize-none focus:outline-none focus:ring-2 focus:ring-[#0B6BCB]/40 text-base"
+      />
+      <div className="max-sm:relative max-sm:mt-2 max-sm:justify-end absolute bottom-3 right-3 flex items-center gap-2">
+        <VoiceRecorder onTranscript={(t) => { setQuery(t) }} />
+        <button onClick={() => handleSubmit()} disabled={!query.trim() || loading}
+          className="p-3 rounded-xl bg-[#0B6BCB] hover:bg-[#0959AC] disabled:opacity-40 disabled:cursor-not-allowed text-white transition-colors">
+          <Send className="w-5 h-5" />
+        </button>
+      </div>
+    </div>
+  )
 
   return (
     <AppShell>
@@ -1194,90 +1293,36 @@ export default function QueryPage() {
         <Breadcrumb items={[{ label: "Query SOPs" }]} />
 
         {/* Toolbar */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <button onClick={() => setShowHistory(!showHistory)}
-                className={cn("p-2 rounded-lg transition-colors", showHistory ? "bg-[#0B6BCB]/10 text-[#0B6BCB]" : "text-[#64748B] hover:text-[#1A2332]")}
-                title="Query history">
-                <History className="w-5 h-5" />
-              </button>
-              {submitted && (
-                <button onClick={resetConversation}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border border-[#E2E8F0] text-[#64748B] hover:text-[#1A2332] hover:border-[#CBD5E1] transition-all"
-                  title="Start a new conversation">
-                  <RotateCcw className="w-4 h-4" />
-                  New conversation
-                </button>
-              )}
-            </div>
-            <div className="flex items-center gap-2 text-xs text-[#64748B]">
-              <User className="w-3.5 h-3.5" />
-              <span className="capitalize">{userRole}</span>
-              {userRole === "admin" && <span className="px-1.5 py-0.5 rounded bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 text-[10px] font-semibold">ADMIN</span>}
-              {userRole === "editor" && <span className="px-1.5 py-0.5 rounded bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 text-[10px] font-semibold">EDITOR</span>}
-            </div>
-          </div>
-
-          {/* Patient Context (NEWS2) collapsible */}
-          <div className="mb-3">
-            <button onClick={() => setShowPatientContext(!showPatientContext)}
-              className="inline-flex items-center gap-1.5 text-sm text-[#64748B] hover:text-[#1A2332] transition-colors">
-              {showPatientContext ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-              <Activity className="w-4 h-4" />
-              Add Patient Context (NEWS2)
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <button onClick={() => setShowHistory(!showHistory)}
+              className={cn("p-2 rounded-lg transition-colors", showHistory ? "bg-[#0B6BCB]/10 text-[#0B6BCB]" : "text-[#64748B] hover:text-[#1A2332]")}
+              title="Query history">
+              <History className="w-5 h-5" />
             </button>
-            <AnimatePresence>
-              {showPatientContext && (
-                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-                  className="overflow-hidden mt-2">
-                  <div className="p-4 rounded-xl bg-card border border-[#E2E8F0] space-y-3">
-                    <div className="flex items-center gap-4">
-                      <label className="text-sm font-medium shrink-0">NEWS2 Score</label>
-                      <input
-                        type="number"
-                        min={0}
-                        max={20}
-                        value={news2Score ?? ""}
-                        onChange={e => setNews2Score(e.target.value === "" ? null : Number(e.target.value))}
-                        placeholder="0-20"
-                        className="w-24 px-3 py-1.5 rounded-lg bg-muted border border-[#E2E8F0] text-sm text-[#1A2332] focus:outline-none focus:ring-2 focus:ring-[#0B6BCB]/40"
-                      />
-                      {news2Score !== null && (
-                        <span className={cn("inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border", news2RiskConfig(news2Score).className)}>
-                          {news2RiskConfig(news2Score).label}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-[#64748B]">
-                      Applies to your next question. Higher scores indicate greater deterioration risk.
-                    </p>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          <div className="relative">
-            <textarea
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSubmit() } }}
-              placeholder={submitted ? "Ask a follow-up..." : "Ask a clinical SOP question..."}
-              rows={3}
-              className="w-full p-4 sm:pr-28 rounded-2xl bg-muted border border-[#E2E8F0] text-[#1A2332] placeholder:text-[#94A3B8] caret-[#0B6BCB] resize-none focus:outline-none focus:ring-2 focus:ring-[#0B6BCB]/40 text-base"
-            />
-            <div className="max-sm:relative max-sm:mt-2 max-sm:justify-end absolute bottom-3 right-3 flex items-center gap-2">
-              <VoiceRecorder onTranscript={(t) => { setQuery(t) }} />
-              <button onClick={() => handleSubmit()} disabled={!query.trim() || loading}
-                className="p-3 rounded-xl bg-[#0B6BCB] hover:bg-[#0959AC] disabled:opacity-40 disabled:cursor-not-allowed text-white transition-colors">
-                <Send className="w-5 h-5" />
+            {submitted && (
+              <button onClick={resetConversation}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border border-[#E2E8F0] text-[#64748B] hover:text-[#1A2332] hover:border-[#CBD5E1] transition-all"
+                title="Start a new conversation">
+                <RotateCcw className="w-4 h-4" />
+                New conversation
               </button>
-            </div>
+            )}
           </div>
+          <div className="flex items-center gap-2 text-xs text-[#64748B]">
+            <User className="w-3.5 h-3.5" />
+            <span className="capitalize">{userRole}</span>
+            {userRole === "admin" && <span className="px-1.5 py-0.5 rounded bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 text-[10px] font-semibold">ADMIN</span>}
+            {userRole === "editor" && <span className="px-1.5 py-0.5 rounded bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 text-[10px] font-semibold">EDITOR</span>}
+          </div>
+        </div>
 
-          {/* Suggested queries */}
-          {!submitted && (
+        {/* Composer + suggested queries live above the empty state; once a
+            conversation exists they move below the thread (see bottom). */}
+        {!submitted && (
+          <div className="mb-6">
+            {patientContextToggle}
+            {composer}
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
               className="mt-4 flex gap-2 overflow-x-auto pb-2 scrollbar-thin sm:flex-wrap">
               {suggestedQueries.map((q) => (
@@ -1287,8 +1332,8 @@ export default function QueryPage() {
                 </button>
               ))}
             </motion.div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Query History Panel */}
         <AnimatePresence>
@@ -1356,16 +1401,36 @@ export default function QueryPage() {
             )
           })}
 
-          {/* Inline processing pipeline where the next answer will appear */}
+          {/* Inline processing pipeline where the next answer will appear.
+              Once real tokens start arriving from the self-hosted model,
+              swap the fake stage timer for the live text itself - the
+              growing answer is a clearer progress signal than a checklist. */}
           <AnimatePresence>
             {loading && (
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-                <PipelineStages currentStage={currentStage} />
+                {streamingText ? (
+                  <div className="p-6 sm:p-8 rounded-2xl bg-card border border-[#E2E8F0] shadow-sm">
+                    <AnswerRenderer text={streamingText} citations={[]} />
+                    <span className="inline-block w-1.5 h-4 ml-0.5 bg-[#0B6BCB] animate-pulse align-text-bottom" />
+                  </div>
+                ) : (
+                  <PipelineStages currentStage={currentStage} />
+                )}
               </motion.div>
             )}
           </AnimatePresence>
           <div ref={threadEndRef} />
         </div>
+
+        {/* Composer follows the thread once a conversation exists, like a
+            real chat input, instead of sitting above the messages it's
+            about to add to. */}
+        {submitted && (
+          <div className="mt-6 pt-4 border-t border-[#E2E8F0]">
+            {patientContextToggle}
+            {composer}
+          </div>
+        )}
       </div>
     </AppShell>
   )

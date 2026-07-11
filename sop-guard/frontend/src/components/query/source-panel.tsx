@@ -9,16 +9,25 @@ function SourceRow({
   citation,
   highlighted,
   dimmed,
+  onSelect,
 }: {
   citation: InlineCitation
   highlighted: boolean
   dimmed?: boolean
+  onSelect?: (citation: InlineCitation) => void
 }) {
   return (
     <div
       id={`source-entry-${citation.number}`}
+      role={onSelect ? "button" : undefined}
+      tabIndex={onSelect ? 0 : undefined}
+      onClick={() => onSelect?.(citation)}
+      onKeyDown={(e) => {
+        if (onSelect && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); onSelect(citation) }
+      }}
       className={cn(
         "p-4 rounded-xl border transition-colors duration-200",
+        onSelect && "cursor-pointer hover:border-[#0B6BCB]/40",
         highlighted
           ? "bg-[#0B6BCB]/[0.06] border-[#0B6BCB]/40"
           : "bg-card border-[#E2E8F0]",
@@ -77,6 +86,7 @@ function SourceRow({
             </div>
             <a
               href="/library"
+              onClick={(e) => e.stopPropagation()}
               className="inline-flex items-center gap-1 text-[11px] text-[#0B6BCB] hover:underline shrink-0"
             >
               View in Library
@@ -92,9 +102,11 @@ function SourceRow({
 export function SourcePanel({
   citations,
   highlightedNumber,
+  onSelect,
 }: {
   citations: InlineCitation[]
   highlightedNumber: number | null
+  onSelect?: (citation: InlineCitation) => void
 }) {
   const [showUncited, setShowUncited] = useState(false)
   const cited = citations.filter((c) => c.cited_in_answer)
@@ -108,7 +120,7 @@ export function SourcePanel({
       </h3>
       <div className="space-y-3">
         {cited.map((c) => (
-          <SourceRow key={c.number} citation={c} highlighted={highlightedNumber === c.number} />
+          <SourceRow key={c.number} citation={c} highlighted={highlightedNumber === c.number} onSelect={onSelect} />
         ))}
       </div>
       {uncited.length > 0 && (
@@ -123,7 +135,7 @@ export function SourcePanel({
           {showUncited && (
             <div className="space-y-3 mt-3">
               {uncited.map((c) => (
-                <SourceRow key={c.number} citation={c} highlighted={highlightedNumber === c.number} dimmed />
+                <SourceRow key={c.number} citation={c} highlighted={highlightedNumber === c.number} dimmed onSelect={onSelect} />
               ))}
             </div>
           )}

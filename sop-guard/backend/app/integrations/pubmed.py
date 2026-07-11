@@ -20,6 +20,8 @@ from typing import Any
 
 import httpx
 
+from app.integrations.evidence_source import DEFAULT_HEADERS, EvidenceSource, parse_pub_date
+
 logger = logging.getLogger(__name__)
 
 _EUTILS_BASE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
@@ -90,11 +92,13 @@ def _parse_summary(uid: str, doc: dict[str, Any]) -> dict[str, Any]:
     """Map a single esummary document to a normalized record."""
     pmid = str(doc.get("uid", uid))
     pub_types = [p for p in (doc.get("pubtype") or []) if isinstance(p, str)]
+    pub_date = (doc.get("pubdate") or "").strip()
     return {
         "title": (doc.get("title") or "").strip(),
         "authors": _format_authors(doc.get("authors")),
         "journal": (doc.get("fulljournalname") or doc.get("source") or "").strip(),
-        "pub_date": (doc.get("pubdate") or "").strip(),
+        "pub_date": pub_date,
+        "pub_date_parsed": parse_pub_date(pub_date),
         "pmid": pmid,
         "url": f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/",
         "source_type": "pubmed",
@@ -136,7 +140,7 @@ async def search_pubmed(term: str, max_results: int = 5) -> list[dict[str, Any]]
         return cached
 
     try:
-        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
+        async with httpx.AsyncClient(timeout=_TIMEOUT, headers=DEFAULT_HEADERS) as client:
             # 1. esearch: term -> list of PMIDs
             esearch = await client.get(
                 f"{_EUTILS_BASE}/esearch.fcgi",
@@ -145,7 +149,9 @@ async def search_pubmed(term: str, max_results: int = 5) -> list[dict[str, Any]]
                     "term": term,
                     "retmax": max_results,
                     "retmode": "json",
-                    "sort": "relevance",
+                    # Recency-first: relevance alone can surface decades-old
+                    # articles ahead of newer, more clinically current ones.
+                    "sort": "pub_date",
                 },
             )
             esearch.raise_for_status()
@@ -174,3 +180,15 @@ async def search_pubmed(term: str, max_results: int = 5) -> list[dict[str, Any]]
     except Exception as e:  # noqa: BLE001 - deliberately swallow all failures
         logger.warning(f"PubMed lookup failed for term '{term}': {e}")
         return []
+
+
+class PubMedSource(EvidenceSource):
+    """EvidenceSource adapter over the module-level search_pubmed() above,
+    kept as a plain function for backward compatibility with existing
+    callers/tests."""
+
+    source_type = "pubmed"
+    display_name = "PubMed"
+
+    async def search(self, term: str, max_results: int = 5) -> list[dict[str, Any]]:
+        return await search_pubmed(term, max_results=max_results)

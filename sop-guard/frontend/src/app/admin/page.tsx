@@ -14,13 +14,9 @@ import { DEMO_USERS } from "@/lib/mock-data"
 import { useRole } from "@/lib/role-context"
 
 const ROLE_LABELS: Record<string, string> = {
-  physician: "Physician",
-  nurse: "Nurse",
-  department_admin: "Dept Admin",
-  compliance_officer: "Compliance Officer",
-  committee_member: "Committee Member",
-  legal_risk: "Legal / Risk",
-  nurse_educator: "Nurse Educator",
+  clinical_staff: "Clinical Staff",
+  educator: "Educator / Trainer",
+  governance_compliance: "Governance & Compliance",
   system_admin: "System Admin",
 }
 
@@ -32,15 +28,18 @@ interface EvidenceSource {
   lastCheck: string
 }
 
+// Mirrors the backend's actual EvidenceSource registry
+// (backend/app/integrations/evidence_registry.py) - these are the only
+// sources the app really queries live from /api/evidence/search. Trust
+// score/last-check here are still illustrative (the backend doesn't expose
+// per-source trust scoring), but the source names/types are real, not
+// placeholder journal names that were never wired up.
 const INITIAL_SOURCES: EvidenceSource[] = [
-  { name: "CDC HICPAC", type: "cdc", trustScore: 98, status: "active", lastCheck: "Today" },
-  { name: "FDA MedWatch", type: "fda", trustScore: 99, status: "active", lastCheck: "Today" },
-  { name: "WHO Guidelines", type: "who", trustScore: 96, status: "active", lastCheck: "Yesterday" },
-  { name: "NEJM", type: "nejm", trustScore: 96, status: "active", lastCheck: "Today" },
-  { name: "PubMed/PMC", type: "pubmed/pmc", trustScore: 93, status: "active", lastCheck: "Today" },
-  { name: "Cochrane", type: "cochrane", trustScore: 97, status: "active", lastCheck: "Yesterday" },
-  { name: "SCCM/SSC", type: "professional", trustScore: 97, status: "active", lastCheck: "2 days ago" },
-  { name: "NCCN", type: "nccn", trustScore: 94, status: "active", lastCheck: "Today" },
+  { name: "PubMed", type: "pubmed", trustScore: 95, status: "active", lastCheck: "Today" },
+  { name: "Europe PMC", type: "europepmc", trustScore: 93, status: "active", lastCheck: "Today" },
+  { name: "CDC", type: "cdc", trustScore: 97, status: "active", lastCheck: "Today" },
+  { name: "WHO Guidelines", type: "who", trustScore: 96, status: "active", lastCheck: "Today" },
+  { name: "ClinicalTrials.gov", type: "clinicaltrials", trustScore: 92, status: "active", lastCheck: "Today" },
 ]
 
 // Non-auth integrations (Authentication card is replaced with SSO section below)
@@ -52,11 +51,11 @@ const otherIntegrations = [
 
 const systemStatus = [
   { name: "Backend API", detail: "FastAPI (Python)", status: "online" as const, icon: Server },
-  { name: "LLM Provider", detail: "Groq / llama-3.3-70b-versatile", status: "online" as const, icon: Brain },
+  { name: "LLM Provider", detail: "Ollama (self-hosted) / llama3.2 — no third-party API calls", status: "online" as const, icon: Brain },
   { name: "Embedding Model", detail: "BAAI/bge-small-en-v1.5", status: "online" as const, icon: Activity },
   { name: "Database", detail: "SQLite (Demo) - PostgreSQL (Production)", status: "demo" as const, icon: HardDrive },
-  { name: "Evidence Watch", detail: "Active: 8 sources monitored", status: "online" as const, icon: Eye },
-  { name: "Vector Index", detail: "FAISS: 847 chunks indexed", status: "online" as const, icon: Database },
+  { name: "Evidence Watch", detail: "Active: 5 sources monitored", status: "online" as const, icon: Eye },
+  { name: "Vector Index", detail: "In-memory cosine similarity (sentence-transformers, TF-IDF fallback)", status: "online" as const, icon: Database },
 ]
 
 type SSOProtocol = "saml" | "oauth" | "ldap"

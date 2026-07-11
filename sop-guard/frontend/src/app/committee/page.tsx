@@ -207,7 +207,7 @@ function CommitteeProposalCard({ proposal, index, onVoteCast }: {
 }
 
 const committeeUsers = DEMO_USERS.filter(
-  (u) => u.role === "committee_member" || u.role === "compliance_officer" || u.role === "legal_risk" || u.role === "physician"
+  (u) => u.role === "governance_compliance" || u.role === "clinical_staff"
 ).slice(0, 5)
 
 export default function CommitteePage() {

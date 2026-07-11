@@ -81,6 +81,12 @@ function eventLabel(eventType: AuditEventType) {
 }
 
 const roleLabel: Record<string, string> = {
+  // Current roles
+  clinical_staff: "Clinical Staff",
+  educator: "Educator / Trainer",
+  governance_compliance: "Governance & Compliance",
+  system_admin: "Sys Admin",
+  // Pre-consolidation roles, still referenced by historical audit entries
   physician: "Physician",
   nurse: "Nurse",
   department_admin: "Dept Admin",
@@ -88,7 +94,6 @@ const roleLabel: Record<string, string> = {
   committee_member: "Committee",
   legal_risk: "Legal/Risk",
   nurse_educator: "Nurse Educator",
-  system_admin: "Sys Admin",
 }
 
 export default function AuditPage() {

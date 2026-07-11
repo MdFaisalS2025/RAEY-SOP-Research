@@ -37,18 +37,18 @@ export type Permission =
   | "complete_training"
   | "manage_acknowledgments"
 
-// Hierarchy levels: system_admin=8 (highest) down to nurse=1 (lowest)
+// Hierarchy levels: system_admin=4 (highest) down to clinical_staff=1 (lowest)
 export const ROLE_HIERARCHY: Record<UserRole, number> = {
-  system_admin: 8,
-  compliance_officer: 7,
-  legal_risk: 6,
-  committee_member: 5,
-  department_admin: 4,
-  nurse_educator: 3,
-  physician: 2,
-  nurse: 1,
+  system_admin: 4,
+  governance_compliance: 3,
+  educator: 2,
+  clinical_staff: 1,
 }
 
+// governance_compliance's permissions are the union of the four roles it
+// absorbed (department_admin, compliance_officer, committee_member,
+// legal_risk) - a merged role should not lose capabilities any of its
+// constituents had.
 const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   system_admin: [
     "view_sops", "query_ai", "create_proposal", "review_proposal",
@@ -58,41 +58,26 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "manage_committee", "view_all_departments", "configure_system",
     "acknowledge_sop", "complete_training", "manage_acknowledgments",
   ],
-  compliance_officer: [
-    "view_sops", "query_ai", "create_proposal", "review_proposal",
-    "view_audit", "view_compliance", "view_legal", "export_reports",
-    "view_all_departments", "manage_acknowledgments",
-  ],
-  legal_risk: [
-    "view_sops", "query_ai", "legal_review", "view_audit",
-    "view_legal", "view_compliance", "review_proposal", "export_reports",
-  ],
-  committee_member: [
+  governance_compliance: [
     "view_sops", "query_ai", "create_proposal", "review_proposal",
     "vote_committee", "publish_sop", "view_audit", "manage_committee",
-    "view_compliance",
+    "view_compliance", "view_legal", "legal_review", "export_reports",
+    "view_all_departments", "manage_acknowledgments",
   ],
-  department_admin: [
-    "view_sops", "query_ai", "create_proposal", "review_proposal",
-    "view_compliance", "view_audit", "manage_acknowledgments",
-    "view_all_departments",
-  ],
-  nurse_educator: [
+  educator: [
     "view_sops", "query_ai", "manage_training", "view_compliance",
     "create_proposal",
   ],
-  physician: [
+  clinical_staff: [
     "view_sops", "query_ai", "create_proposal", "review_proposal",
-  ],
-  nurse: [
-    "view_sops", "query_ai", "acknowledge_sop", "complete_training",
+    "acknowledge_sop", "complete_training",
   ],
 }
 
 const RoleContext = createContext<RoleContextValue | null>(null)
 
 export function RoleProvider({ children }: { children: React.ReactNode }) {
-  const [role, setRoleState] = useState<UserRole>("physician")
+  const [role, setRoleState] = useState<UserRole>("clinical_staff")
 
   useEffect(() => {
     const saved = localStorage.getItem("sop-guard-demo-role") as UserRole | null

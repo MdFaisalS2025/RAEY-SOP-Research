@@ -1,12 +1,14 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   AlertTriangle, CheckCircle, Clock, Flag, FileText,
   TrendingUp, Download, Eye, GitBranch, Loader2, Check,
-  Shield, ChevronDown, ChevronUp, X, Printer, Plus
+  Shield, ChevronDown, ChevronUp, X, Printer, Plus,
+  CalendarClock, ArrowRight, Calendar, Bell,
 } from "lucide-react"
+import Link from "next/link"
 import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { cn } from "@/lib/utils"
@@ -26,8 +28,14 @@ interface RealAttestation {
   department: string
   ip_address: string
   legal_text: string
+  signature_meaning: string
+  second_factor_confirmation: string
+  content_hash: string
+  prev_hash: string
   attested_at: string | null
 }
+
+const SIGNATURE_MEANING = "I have read, understood, and will comply with this SOP in my clinical practice."
 
 function scoreColor(score: number) {
   if (score >= 90) return "text-[#15803D] dark:text-green-400"
@@ -49,6 +57,12 @@ const statusLabel: Record<string, { label: string; className: string }> = {
 }
 
 const roleLabel: Record<string, string> = {
+  // Current roles
+  clinical_staff: "Clinical Staff",
+  educator: "Educator / Trainer",
+  governance_compliance: "Governance & Compliance",
+  system_admin: "Admin",
+  // Pre-consolidation roles, still referenced by historical records
   physician: "Physician",
   nurse: "Nurse",
   department_admin: "Dept Admin",
@@ -56,7 +70,6 @@ const roleLabel: Record<string, string> = {
   committee_member: "Committee",
   legal_risk: "Legal/Risk",
   nurse_educator: "Educator",
-  system_admin: "Admin",
 }
 
 function formatAttestedAt(iso: string): string {
@@ -196,9 +209,16 @@ function TestAttestationModal({
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState("")
   const [result, setResult] = useState<RealAttestation | null>(null)
+  const [nameConfirmation, setNameConfirmation] = useState("")
+
+  const nameMatches = nameConfirmation.trim().toLowerCase() === currentUser.name.trim().toLowerCase()
 
   const handleAttest = async () => {
     if (!sop) return
+    if (!nameMatches) {
+      setError("Type your full name exactly as shown to confirm your identity.")
+      return
+    }
     setSubmitting(true)
     setError("")
     try {
@@ -213,15 +233,20 @@ function TestAttestationModal({
           user_role: role,
           department: currentUser.department,
           legal_text: LEGAL_TEXT,
+          signature_meaning: SIGNATURE_MEANING,
+          second_factor_confirmation: nameConfirmation.trim(),
         }),
       })
-      if (!res.ok) throw new Error("Failed to record attestation")
+      if (!res.ok) {
+        const body = await res.json().catch(() => null)
+        throw new Error(body?.detail || "Failed to record attestation")
+      }
       const record: RealAttestation = await res.json()
       setResult(record)
       setAttested(true)
       onAttest(record)
-    } catch {
-      setError("Could not record the attestation. Is the backend running?")
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not record the attestation. Is the backend running?")
     } finally {
       setSubmitting(false)
     }
@@ -267,10 +292,30 @@ function TestAttestationModal({
                 </p>
               </div>
 
+              <div className="rounded-xl bg-[#0B6BCB]/[0.06] border border-[#0B6BCB]/20 p-4 text-xs text-[#0B6BCB] leading-relaxed">
+                <p className="font-semibold mb-1">Meaning of this signature</p>
+                <p>{SIGNATURE_MEANING}</p>
+              </div>
+
+              <div>
+                <label className="text-xs font-medium text-[#64748B] mb-1 block">
+                  Type your full name to confirm your identity: <span className="font-semibold text-[#1A2332]">{currentUser.name}</span>
+                </label>
+                <input
+                  value={nameConfirmation}
+                  onChange={(e) => setNameConfirmation(e.target.value)}
+                  placeholder="Type your full name exactly"
+                  className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] bg-background text-sm focus:outline-none focus:border-[#0B6BCB]/50"
+                />
+                <p className="text-[11px] text-[#94A3B8] mt-1">
+                  A second identification step at the moment of signing, separate from being logged in.
+                </p>
+              </div>
+
               <div className="flex items-center gap-3 pt-1">
                 <button
                   onClick={handleAttest}
-                  disabled={submitting}
+                  disabled={submitting || !nameMatches}
                   className="flex-1 py-2.5 rounded-xl bg-[#0B6BCB] hover:bg-[#0959AC] disabled:opacity-50 text-white font-semibold text-sm transition-colors flex items-center justify-center gap-2"
                 >
                   {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
@@ -306,6 +351,12 @@ function TestAttestationModal({
                   <span className="text-[#94A3B8]">Version</span>
                   <span className="text-[#0B6BCB] font-mono">{sop.version || "1"}</span>
                 </div>
+                {result?.content_hash && (
+                  <div className="pt-1.5 mt-1.5 border-t border-[#EDF1F5]">
+                    <span className="text-[#94A3B8] block mb-0.5">Tamper-evidence hash (chained to prior signature)</span>
+                    <span className="text-[#334155] font-mono text-[10px] break-all">{result.content_hash}</span>
+                  </div>
+                )}
               </div>
               <button
                 onClick={onClose}
@@ -321,12 +372,53 @@ function TestAttestationModal({
   )
 }
 
+function ChainIntegrityBadge() {
+  const [state, setState] = useState<"idle" | "checking" | "intact" | "broken" | "error">("idle")
+  const [detail, setDetail] = useState("")
+
+  async function check() {
+    setState("checking")
+    try {
+      const res = await fetch(`${API_BASE}/api/governance/attestations/verify-chain`)
+      const data = await res.json()
+      setState(data.intact ? "intact" : "broken")
+      setDetail(data.intact
+        ? `${data.checked} signature(s) verified, chain intact.`
+        : `Tampering detected in record(s): ${(data.broken_at ?? []).join(", ")}`)
+    } catch {
+      setState("error")
+      setDetail("Could not reach the backend to verify.")
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <button
+        onClick={check}
+        title={detail}
+        className={cn(
+          "flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors",
+          state === "intact" && "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30",
+          state === "broken" && "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30",
+          (state === "idle" || state === "checking" || state === "error") && "bg-muted text-[#64748B] border-[#E2E8F0]",
+        )}
+      >
+        {state === "checking" && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+        {state === "idle" && "Verify Chain Integrity"}
+        {state === "checking" && "Verifying..."}
+        {state === "intact" && "Chain Intact"}
+        {state === "broken" && "Tampering Detected"}
+        {state === "error" && "Verify Chain Integrity"}
+      </button>
+    </div>
+  )
+}
+
 // ─────────────────────────────────────────────
-// Main page
+// Acknowledgments tab (formerly the whole Compliance page)
 // ─────────────────────────────────────────────
 
-export default function CompliancePage() {
-  const { role } = useRole()
+function AcknowledgmentsTab() {
   const [exportState, setExportState] = useState<"idle" | "loading" | "success">("idle")
   const [infoExpanded, setInfoExpanded] = useState(false)
   const [certRecord, setCertRecord] = useState<RealAttestation | null>(null)
@@ -384,197 +476,167 @@ export default function CompliancePage() {
   ]
 
   return (
-    <AppShell>
-      <div className="p-6 max-w-7xl mx-auto space-y-6">
-        {/* Modals */}
-        <AnimatePresence>
-          {certRecord && (
-            <CertificateModal
-              record={certRecord}
-              sopTitle={sopTitleById[certRecord.sop_id] ?? certRecord.sop_id}
-              onClose={() => setCertRecord(null)}
-            />
-          )}
-          {showTestModal && (
-            <TestAttestationModal
-              sop={firstRealSop}
-              onClose={() => setShowTestModal(false)}
-              onAttest={(r) => {
-                handleNewAttestation(r)
-                setTimeout(() => setShowTestModal(false), 2200)
-              }}
-            />
-          )}
-        </AnimatePresence>
+    <div className="space-y-6">
+      <AnimatePresence>
+        {certRecord && (
+          <CertificateModal
+            record={certRecord}
+            sopTitle={sopTitleById[certRecord.sop_id] ?? certRecord.sop_id}
+            onClose={() => setCertRecord(null)}
+          />
+        )}
+        {showTestModal && (
+          <TestAttestationModal
+            sop={firstRealSop}
+            onClose={() => setShowTestModal(false)}
+            onAttest={(r) => {
+              handleNewAttestation(r)
+              setTimeout(() => setShowTestModal(false), 2200)
+            }}
+          />
+        )}
+      </AnimatePresence>
 
-        {/* Breadcrumb */}
-        <Breadcrumb items={[{ label: "Compliance" }]} />
-
-        {/* Header */}
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-[#0B6BCB]/10 flex items-center justify-center">
-              <CheckCircle className="w-6 h-6 text-[#0B6BCB]" />
+      {/* Stats row */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {stats.map((s, i) => (
+          <motion.div
+            key={s.label}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.07 }}
+            className="rounded-2xl bg-card border border-[#E2E8F0] p-4 flex items-center gap-3"
+          >
+            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", s.bg)}>
+              <s.icon className={cn("w-5 h-5", s.color)} />
             </div>
             <div>
-              <h1 className="text-2xl font-bold font-display">Compliance Dashboard</h1>
-              <p className="text-sm text-[#64748B]">Accreditation &amp; Policy Acknowledgment Status</p>
+              <p className={cn("text-2xl font-bold", s.color)}>{s.value}</p>
+              <p className="text-xs text-[#64748B]">{s.label}</p>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        ))}
+      </div>
 
-        {/* Research disclaimer */}
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400 text-sm">
-          <AlertTriangle className="w-4 h-4 shrink-0" />
-          <span><strong>Research Prototype. Not for Clinical Use.</strong> For demonstration only. All clinical decisions must follow institutional protocols.</span>
-        </div>
-
-        {/* Responsible AI note */}
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 text-sm">
-          <AlertTriangle className="w-4 h-4 shrink-0" />
-          <span>For audit preparation only. Verify all data against live records before regulatory submission.</span>
-        </div>
-
-        {/* Stats row */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {stats.map((s, i) => (
+      {/* Department Compliance Heatmap */}
+      <section>
+        <h2 className="text-lg font-semibold font-display mb-3">Department Compliance Heatmap</h2>
+        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {MOCK_COMPLIANCE.map((dept, i) => (
             <motion.div
-              key={s.label}
+              key={dept.department}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.07 }}
-              className="rounded-2xl bg-card border border-[#E2E8F0] p-4 flex items-center gap-3"
+              transition={{ delay: i * 0.05 }}
+              className="rounded-2xl bg-card border border-[#E2E8F0] p-4 space-y-3"
             >
-              <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", s.bg)}>
-                <s.icon className={cn("w-5 h-5", s.color)} />
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-sm">{dept.department}</h3>
+                <span className={cn("text-3xl font-bold", scoreColor(dept.compliance_score))}>
+                  {dept.compliance_score}%
+                </span>
               </div>
-              <div>
-                <p className={cn("text-2xl font-bold", s.color)}>{s.value}</p>
-                <p className="text-xs text-[#64748B]">{s.label}</p>
+              <div className="h-2 rounded-full bg-[#E2E8F0] overflow-hidden">
+                <div
+                  className={cn("h-full rounded-full transition-all", progressColor(dept.compliance_score))}
+                  style={{ width: `${dept.compliance_score}%` }}
+                />
+              </div>
+              <div className="grid grid-cols-3 gap-1.5 text-xs">
+                <div className="rounded-lg bg-muted p-1.5 text-center">
+                  <p className="font-semibold text-[#1A2332]">{dept.total_sops}</p>
+                  <p className="text-[#64748B]">Total SOPs</p>
+                </div>
+                <div className="rounded-lg bg-muted p-1.5 text-center">
+                  <p className="font-semibold text-[#15803D] dark:text-green-400">{dept.acknowledged}</p>
+                  <p className="text-[#64748B]">Ack&apos;d</p>
+                </div>
+                <div className="rounded-lg bg-muted p-1.5 text-center">
+                  <p className="font-semibold text-[#B91C1C] dark:text-red-400">{dept.overdue_acknowledgments}</p>
+                  <p className="text-[#64748B]">Overdue</p>
+                </div>
+                <div className="rounded-lg bg-muted p-1.5 text-center">
+                  <p className="font-semibold text-[#0B6BCB]">{dept.training_completion_rate}%</p>
+                  <p className="text-[#64748B]">Training</p>
+                </div>
+                <div className="rounded-lg bg-muted p-1.5 text-center">
+                  <p className="font-semibold text-[#B45309] dark:text-amber-400">{dept.risk_flags}</p>
+                  <p className="text-[#64748B]">Risk Flags</p>
+                </div>
+                <div className="rounded-lg bg-muted p-1.5 text-center">
+                  <p className="font-semibold text-[#64748B]">{dept.open_proposals}</p>
+                  <p className="text-[#64748B]">Proposals</p>
+                </div>
+              </div>
+              <div className="flex items-center justify-between pt-1">
+                <p className="text-xs text-[#64748B]">Last audit: {dept.last_audit_date}</p>
+                <button className="text-xs text-[#0B6BCB] hover:text-[#0B6BCB] transition-colors font-medium">
+                  View Details &rarr;
+                </button>
               </div>
             </motion.div>
           ))}
         </div>
+      </section>
 
-        {/* Department Compliance Heatmap */}
-        <section>
-          <h2 className="text-lg font-semibold font-display mb-3">Department Compliance Heatmap</h2>
-          <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {MOCK_COMPLIANCE.map((dept, i) => (
-              <motion.div
-                key={dept.department}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
-                className="rounded-2xl bg-card border border-[#E2E8F0] p-4 space-y-3"
-              >
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-sm">{dept.department}</h3>
-                  <span className={cn("text-3xl font-bold", scoreColor(dept.compliance_score))}>
-                    {dept.compliance_score}%
-                  </span>
-                </div>
-                {/* Mini progress bar */}
-                <div className="h-2 rounded-full bg-[#E2E8F0] overflow-hidden">
-                  <div
-                    className={cn("h-full rounded-full transition-all", progressColor(dept.compliance_score))}
-                    style={{ width: `${dept.compliance_score}%` }}
-                  />
-                </div>
-                {/* Mini stats */}
-                <div className="grid grid-cols-3 gap-1.5 text-xs">
-                  <div className="rounded-lg bg-muted p-1.5 text-center">
-                    <p className="font-semibold text-[#1A2332]">{dept.total_sops}</p>
-                    <p className="text-[#64748B]">Total SOPs</p>
-                  </div>
-                  <div className="rounded-lg bg-muted p-1.5 text-center">
-                    <p className="font-semibold text-[#15803D] dark:text-green-400">{dept.acknowledged}</p>
-                    <p className="text-[#64748B]">Ack&apos;d</p>
-                  </div>
-                  <div className="rounded-lg bg-muted p-1.5 text-center">
-                    <p className="font-semibold text-[#B91C1C] dark:text-red-400">{dept.overdue_acknowledgments}</p>
-                    <p className="text-[#64748B]">Overdue</p>
-                  </div>
-                  <div className="rounded-lg bg-muted p-1.5 text-center">
-                    <p className="font-semibold text-[#0B6BCB]">{dept.training_completion_rate}%</p>
-                    <p className="text-[#64748B]">Training</p>
-                  </div>
-                  <div className="rounded-lg bg-muted p-1.5 text-center">
-                    <p className="font-semibold text-[#B45309] dark:text-amber-400">{dept.risk_flags}</p>
-                    <p className="text-[#64748B]">Risk Flags</p>
-                  </div>
-                  <div className="rounded-lg bg-muted p-1.5 text-center">
-                    <p className="font-semibold text-[#64748B]">{dept.open_proposals}</p>
-                    <p className="text-[#64748B]">Proposals</p>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between pt-1">
-                  <p className="text-xs text-[#64748B]">Last audit: {dept.last_audit_date}</p>
-                  <button className="text-xs text-[#0B6BCB] hover:text-[#0B6BCB] transition-colors font-medium">
-                    View Details &rarr;
-                  </button>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </section>
-
-        {/* SOPs Requiring Review */}
-        <section>
-          <h2 className="text-lg font-semibold font-display mb-3">SOPs Requiring Review</h2>
-          <div className="rounded-2xl bg-card border border-[#E2E8F0] overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-[#E2E8F0] text-xs text-[#64748B] uppercase tracking-wider">
-                  <th className="p-4 text-left">SOP Title</th>
-                  <th className="p-4 text-left">Department</th>
-                  <th className="p-4 text-left">Status</th>
-                  <th className="p-4 text-left">Review Due</th>
-                  <th className="p-4 text-left">Owner</th>
-                  <th className="p-4 text-left">Actions</th>
+      {/* SOPs Requiring Review */}
+      <section>
+        <h2 className="text-lg font-semibold font-display mb-3">SOPs Requiring Review</h2>
+        <div className="rounded-2xl bg-card border border-[#E2E8F0] overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-[#E2E8F0] text-xs text-[#64748B] uppercase tracking-wider">
+                <th className="p-4 text-left">SOP Title</th>
+                <th className="p-4 text-left">Department</th>
+                <th className="p-4 text-left">Status</th>
+                <th className="p-4 text-left">Review Due</th>
+                <th className="p-4 text-left">Owner</th>
+                <th className="p-4 text-left">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sopsNeedingReview.map((sop) => (
+                <tr key={sop.id} className="border-b border-[#EDF1F5] hover:bg-[#F8FAFC] transition-colors">
+                  <td className="p-4">
+                    <p className="font-medium text-[#1A2332] truncate max-w-[240px]">{sop.title}</p>
+                    <p className="text-xs text-[#64748B]">{sop.sop_id}</p>
+                  </td>
+                  <td className="p-4 text-[#64748B]">{sop.department}</td>
+                  <td className="p-4">
+                    <span className={cn("px-2 py-0.5 rounded-full text-xs font-medium", statusLabel[sop.status]?.className)}>
+                      {statusLabel[sop.status]?.label ?? sop.status}
+                    </span>
+                  </td>
+                  <td className="p-4 text-[#B45309] dark:text-amber-400 text-xs">{sop.review_due_date}</td>
+                  <td className="p-4 text-[#64748B] text-xs">{sop.owner}</td>
+                  <td className="p-4">
+                    <div className="flex items-center gap-2">
+                      <button className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-[#0B6BCB]/10 text-[#0B6BCB] hover:bg-[#0B6BCB]/20 transition-colors">
+                        <Eye className="w-3 h-3" /> View SOP
+                      </button>
+                      <button className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-muted text-[#64748B] hover:bg-[#E2E8F0] transition-colors">
+                        <GitBranch className="w-3 h-3" /> Create Proposal
+                      </button>
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {sopsNeedingReview.map((sop) => (
-                  <tr key={sop.id} className="border-b border-[#EDF1F5] hover:bg-[#F8FAFC] transition-colors">
-                    <td className="p-4">
-                      <p className="font-medium text-[#1A2332] truncate max-w-[240px]">{sop.title}</p>
-                      <p className="text-xs text-[#64748B]">{sop.sop_id}</p>
-                    </td>
-                    <td className="p-4 text-[#64748B]">{sop.department}</td>
-                    <td className="p-4">
-                      <span className={cn("px-2 py-0.5 rounded-full text-xs font-medium", statusLabel[sop.status]?.className)}>
-                        {statusLabel[sop.status]?.label ?? sop.status}
-                      </span>
-                    </td>
-                    <td className="p-4 text-[#B45309] dark:text-amber-400 text-xs">{sop.review_due_date}</td>
-                    <td className="p-4 text-[#64748B] text-xs">{sop.owner}</td>
-                    <td className="p-4">
-                      <div className="flex items-center gap-2">
-                        <button className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-[#0B6BCB]/10 text-[#0B6BCB] hover:bg-[#0B6BCB]/20 transition-colors">
-                          <Eye className="w-3 h-3" /> View SOP
-                        </button>
-                        <button className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-muted text-[#64748B] hover:bg-[#E2E8F0] transition-colors">
-                          <GitBranch className="w-3 h-3" /> Create Proposal
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            </div>
+              ))}
+            </tbody>
+          </table>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* ─── LEGAL ATTESTATION SECTION ─── */}
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Shield className="w-5 h-5 text-[#0B6BCB]" />
-              <h2 className="text-lg font-semibold font-display">Staff Attestation Records</h2>
-            </div>
+      {/* ─── LEGAL ATTESTATION SECTION ─── */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Shield className="w-5 h-5 text-[#0B6BCB]" />
+            <h2 className="text-lg font-semibold font-display">Staff Attestation Records</h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <ChainIntegrityBadge />
             <button
               onClick={() => setShowTestModal(true)}
               className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-[#0B6BCB]/10 text-[#0B6BCB] hover:bg-[#0B6BCB]/20 transition-colors border border-[#0B6BCB]/30 font-medium"
@@ -582,140 +644,554 @@ export default function CompliancePage() {
               <Plus className="w-3.5 h-3.5" /> Attest to a SOP
             </button>
           </div>
+        </div>
 
-          {/* Attestation stats row */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            {attestationStats.map((s) => (
-              <div key={s.label} className="rounded-xl bg-card border border-[#E2E8F0] p-3">
-                <p className={cn("text-xl font-bold", s.color)}>{s.value}</p>
-                <p className="text-xs text-[#64748B] mt-0.5">{s.label}</p>
-              </div>
-            ))}
-          </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {attestationStats.map((s) => (
+            <div key={s.label} className="rounded-xl bg-card border border-[#E2E8F0] p-3">
+              <p className={cn("text-xl font-bold", s.color)}>{s.value}</p>
+              <p className="text-xs text-[#64748B] mt-0.5">{s.label}</p>
+            </div>
+          ))}
+        </div>
 
-          {/* "What is Legal Attestation?" info card */}
-          <div className="rounded-xl bg-card border border-[#E2E8F0] overflow-hidden">
-            <button
-              onClick={() => setInfoExpanded((v) => !v)}
-              className="w-full flex items-center justify-between px-4 py-3 text-sm text-[#334155] hover:bg-[#F8FAFC] transition-colors"
-            >
-              <div className="flex items-center gap-2">
-                <FileText className="w-4 h-4 text-[#64748B]" />
-                <span className="font-medium">What is Legal Attestation?</span>
-              </div>
-              {infoExpanded ? <ChevronUp className="w-4 h-4 text-[#94A3B8]" /> : <ChevronDown className="w-4 h-4 text-[#94A3B8]" />}
-            </button>
-            <AnimatePresence>
-              {infoExpanded && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="overflow-hidden"
-                >
-                  <div className="px-4 pb-4 text-sm text-[#64748B] leading-relaxed border-t border-[#E2E8F0]">
-                    <p className="mt-3">
-                      Electronic attestation records provide legally defensible proof that staff have read
-                      and acknowledged specific SOP versions. Each record includes: staff identity, timestamp,
-                      IP address, exact SOP version attested to, and the legal text agreed to. Admissible in
-                      litigation as evidence of policy awareness (per PowerDMS legal standards).
-                    </p>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+        <div className="rounded-xl bg-card border border-[#E2E8F0] overflow-hidden">
+          <button
+            onClick={() => setInfoExpanded((v) => !v)}
+            className="w-full flex items-center justify-between px-4 py-3 text-sm text-[#334155] hover:bg-[#F8FAFC] transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <FileText className="w-4 h-4 text-[#64748B]" />
+              <span className="font-medium">What is Legal Attestation?</span>
+            </div>
+            {infoExpanded ? <ChevronUp className="w-4 h-4 text-[#94A3B8]" /> : <ChevronDown className="w-4 h-4 text-[#94A3B8]" />}
+          </button>
+          <AnimatePresence>
+            {infoExpanded && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <div className="px-4 pb-4 text-sm text-[#64748B] leading-relaxed border-t border-[#E2E8F0]">
+                  <p className="mt-3">
+                    Electronic attestation records provide legally defensible proof that staff have read
+                    and acknowledged specific SOP versions. Each record includes: staff identity, timestamp,
+                    IP address, exact SOP version attested to, and the legal text agreed to. Admissible in
+                    litigation as evidence of policy awareness (per PowerDMS legal standards).
+                  </p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
-          {/* Attestation records table */}
-          <div className="rounded-2xl bg-card border border-[#E2E8F0] overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm min-w-[860px]">
-                <thead>
-                  <tr className="border-b border-[#E2E8F0] text-xs text-[#64748B] uppercase tracking-wider">
-                    <th className="p-4 text-left">Staff Member</th>
-                    <th className="p-4 text-left">Department</th>
-                    <th className="p-4 text-left">SOP</th>
-                    <th className="p-4 text-left">Version</th>
-                    <th className="p-4 text-left">Date &amp; Time</th>
-                    <th className="p-4 text-left">IP Address</th>
-                    <th className="p-4 text-left">Valid</th>
-                    <th className="p-4 text-left"></th>
+        <div className="rounded-2xl bg-card border border-[#E2E8F0] overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm min-w-[860px]">
+              <thead>
+                <tr className="border-b border-[#E2E8F0] text-xs text-[#64748B] uppercase tracking-wider">
+                  <th className="p-4 text-left">Staff Member</th>
+                  <th className="p-4 text-left">Department</th>
+                  <th className="p-4 text-left">SOP</th>
+                  <th className="p-4 text-left">Version</th>
+                  <th className="p-4 text-left">Date &amp; Time</th>
+                  <th className="p-4 text-left">IP Address</th>
+                  <th className="p-4 text-left">Valid</th>
+                  <th className="p-4 text-left"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {attestations.length === 0 && (
+                  <tr>
+                    <td colSpan={8} className="p-6 text-center text-xs text-[#64748B]">No attestations recorded yet.</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {attestations.length === 0 && (
-                    <tr>
-                      <td colSpan={8} className="p-6 text-center text-xs text-[#64748B]">No attestations recorded yet.</td>
-                    </tr>
-                  )}
-                  {attestations.map((rec) => {
-                    const title = sopTitleById[rec.sop_id] ?? rec.sop_id
-                    return (
-                    <tr key={rec.id} className="border-b border-[#EDF1F5] hover:bg-[#F8FAFC] transition-colors">
-                      <td className="p-4">
-                        <p className="font-medium text-[#1A2332]">{rec.user_name}</p>
-                        <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded bg-muted text-[#64748B] text-[10px] border border-[#E2E8F0]">
-                          {roleLabel[rec.user_role] ?? rec.user_role}
-                        </span>
-                      </td>
-                      <td className="p-4 text-[#64748B] text-xs">{rec.department}</td>
-                      <td className="p-4">
-                        <p className="text-[#1A2332] text-xs truncate max-w-[200px]" title={title}>
-                          {title.length > 30 ? title.slice(0, 30) + "..." : title}
-                        </p>
-                      </td>
-                      <td className="p-4">
-                        <span className="px-2 py-0.5 rounded bg-[#0B6BCB]/10 text-[#0B6BCB] text-xs border border-[#0B6BCB]/30 font-mono">
-                          v{rec.sop_version || "?"}
-                        </span>
-                      </td>
-                      <td className="p-4 text-xs text-[#64748B] whitespace-nowrap">
-                        {rec.attested_at ? formatAttestedAt(rec.attested_at) : "unknown"}
-                      </td>
-                      <td className="p-4">
-                        <span className="font-mono text-xs text-[#64748B]">{rec.ip_address || "unknown"}</span>
-                      </td>
-                      <td className="p-4">
-                        <span className="flex items-center gap-1 text-[#15803D] dark:text-green-400 text-xs">
-                          <Check className="w-3.5 h-3.5" /> Valid
-                        </span>
-                      </td>
-                      <td className="p-4">
-                        <button
-                          onClick={() => setCertRecord(rec)}
-                          className="text-xs px-2.5 py-1 rounded-lg bg-muted text-[#334155] hover:bg-[#E2E8F0] transition-colors border border-[#E2E8F0]"
-                        >
-                          View Certificate
-                        </button>
-                      </td>
-                    </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
+                )}
+                {attestations.map((rec) => {
+                  const title = sopTitleById[rec.sop_id] ?? rec.sop_id
+                  return (
+                  <tr key={rec.id} className="border-b border-[#EDF1F5] hover:bg-[#F8FAFC] transition-colors">
+                    <td className="p-4">
+                      <p className="font-medium text-[#1A2332]">{rec.user_name}</p>
+                      <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded bg-muted text-[#64748B] text-[10px] border border-[#E2E8F0]">
+                        {roleLabel[rec.user_role] ?? rec.user_role}
+                      </span>
+                    </td>
+                    <td className="p-4 text-[#64748B] text-xs">{rec.department}</td>
+                    <td className="p-4">
+                      <p className="text-[#1A2332] text-xs truncate max-w-[200px]" title={title}>
+                        {title.length > 30 ? title.slice(0, 30) + "..." : title}
+                      </p>
+                    </td>
+                    <td className="p-4">
+                      <span className="px-2 py-0.5 rounded bg-[#0B6BCB]/10 text-[#0B6BCB] text-xs border border-[#0B6BCB]/30 font-mono">
+                        v{rec.sop_version || "?"}
+                      </span>
+                    </td>
+                    <td className="p-4 text-xs text-[#64748B] whitespace-nowrap">
+                      {rec.attested_at ? formatAttestedAt(rec.attested_at) : "unknown"}
+                    </td>
+                    <td className="p-4">
+                      <span className="font-mono text-xs text-[#64748B]">{rec.ip_address || "unknown"}</span>
+                    </td>
+                    <td className="p-4">
+                      <span className="flex items-center gap-1 text-[#15803D] dark:text-green-400 text-xs">
+                        <Check className="w-3.5 h-3.5" /> Valid
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <button
+                        onClick={() => setCertRecord(rec)}
+                        className="text-xs px-2.5 py-1 rounded-lg bg-muted text-[#334155] hover:bg-[#E2E8F0] transition-colors border border-[#E2E8F0]"
+                      >
+                        View Certificate
+                      </button>
+                    </td>
+                  </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      {/* Export Report */}
+      <div className="flex justify-center pt-2">
+        <button
+          onClick={handleExport}
+          disabled={exportState === "loading"}
+          className={cn(
+            "flex items-center gap-2 px-8 py-3 rounded-xl text-sm font-semibold transition-all",
+            exportState === "success"
+              ? "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30"
+              : "bg-[#0B6BCB] hover:bg-[#0959AC] text-white"
+          )}
+        >
+          {exportState === "loading" && <Loader2 className="w-4 h-4 animate-spin" />}
+          {exportState === "success" && <Check className="w-4 h-4" />}
+          {exportState === "idle" && <Download className="w-4 h-4" />}
+          {exportState === "loading" ? "Generating..." : exportState === "success" ? "Report Generated" : "Export Compliance Report"}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────
+// Reviews tab (formerly the whole Expiry page)
+// ─────────────────────────────────────────────
+
+interface RealSOPWithReview {
+  id: number
+  sop_id: string
+  title: string
+  department: string
+  version: string
+  effective_date: string
+  review_date: string
+  status: string
+}
+
+function daysUntil(dateStr: string): number {
+  const now = new Date()
+  const due = new Date(dateStr)
+  const diff = due.getTime() - now.getTime()
+  return Math.ceil(diff / (1000 * 60 * 60 * 24))
+}
+
+type ExpiryStatus = "expired" | "due_soon" | "upcoming" | "current"
+
+function expiryStatus(days: number): ExpiryStatus {
+  if (days < 0) return "expired"
+  if (days <= 30) return "due_soon"
+  if (days <= 90) return "upcoming"
+  return "current"
+}
+
+const EXPIRY_STATUS_META: Record<ExpiryStatus, { label: string; badgeClass: string; rowClass: string }> = {
+  expired: {
+    label: "EXPIRED",
+    badgeClass: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30",
+    rowClass: "border-l-2 border-[#B91C1C]",
+  },
+  due_soon: {
+    label: "DUE SOON",
+    badgeClass: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30",
+    rowClass: "border-l-2 border-[#B45309]",
+  },
+  upcoming: {
+    label: "UPCOMING",
+    badgeClass: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30",
+    rowClass: "border-l-2 border-[#B45309]",
+  },
+  current: {
+    label: "CURRENT",
+    badgeClass: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30",
+    rowClass: "border-l-2 border-[#15803D]",
+  },
+}
+
+function daysLabel(days: number) {
+  if (days < 0) return `${Math.abs(days)} days overdue`
+  if (days === 0) return "Due today"
+  return `${days} days remaining`
+}
+
+function daysColor(days: number) {
+  if (days < 0) return "text-[#B91C1C] dark:text-red-400"
+  if (days <= 30) return "text-[#B45309] dark:text-amber-400"
+  if (days <= 90) return "text-[#B45309] dark:text-amber-400"
+  return "text-[#15803D] dark:text-green-400"
+}
+
+type AlertTier = "current" | "owner_notified" | "dept_notified" | "compliance_notified" | "cmo_escalation" | "expired_frozen"
+
+function getAlertTier(days: number): AlertTier {
+  if (days < 0) return "expired_frozen"
+  if (days <= 7) return "cmo_escalation"
+  if (days <= 30) return "compliance_notified"
+  if (days <= 60) return "dept_notified"
+  if (days <= 90) return "owner_notified"
+  return "current"
+}
+
+const ALERT_TIER_META: Record<AlertTier, { label: string; badgeClass: string }> = {
+  current: { label: "Current", badgeClass: "bg-card text-[#64748B] border border-[#CBD5E1]" },
+  owner_notified: { label: "Owner Notified", badgeClass: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30" },
+  dept_notified: { label: "Dept Head Notified", badgeClass: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30" },
+  compliance_notified: { label: "Compliance Notified", badgeClass: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30" },
+  cmo_escalation: { label: "CMO Escalation", badgeClass: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30" },
+  expired_frozen: { label: "EXPIRED - SOP Frozen", badgeClass: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30" },
+}
+
+const ESCALATION_STEPS = [
+  { label: "90 days out", action: "Notify Owner", tier: "owner_notified" as AlertTier, color: "bg-[#64748B]", textColor: "text-[#64748B]", borderColor: "border-[#64748B]" },
+  { label: "60 days out", action: "Notify Dept Head", tier: "dept_notified" as AlertTier, color: "bg-[#B45309]", textColor: "text-[#B45309] dark:text-amber-400", borderColor: "border-[#B45309]" },
+  { label: "30 days out", action: "Notify Compliance", tier: "compliance_notified" as AlertTier, color: "bg-[#B45309]", textColor: "text-[#B45309] dark:text-amber-400", borderColor: "border-[#B45309]" },
+  { label: "7 days out", action: "CMO Escalation", tier: "cmo_escalation" as AlertTier, color: "bg-[#B91C1C]", textColor: "text-[#B91C1C] dark:text-red-400", borderColor: "border-[#B91C1C]" },
+  { label: "EXPIRED", action: "Freeze SOP", tier: "expired_frozen" as AlertTier, color: "bg-[#7F1D1D]", textColor: "text-[#B91C1C] dark:text-red-400", borderColor: "border-[#7F1D1D]" },
+]
+
+function ReviewsTab() {
+  const [sops, setSops] = useState<RealSOPWithReview[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch("/api/sops")
+      .then((r) => r.json())
+      .then((data) => setSops(Array.isArray(data?.sops) ? data.sops : []))
+      .catch(() => setSops([]))
+      .finally(() => setLoading(false))
+  }, [])
+
+  const unscheduledCount = useMemo(() => sops.filter((s) => !s.review_date).length, [sops])
+
+  const items = useMemo(() => {
+    return sops
+      .filter((sop) => !!sop.review_date)
+      .map((sop) => ({
+        sop,
+        days: daysUntil(sop.review_date),
+        status: expiryStatus(daysUntil(sop.review_date)),
+        alertTier: getAlertTier(daysUntil(sop.review_date)),
+      }))
+      .sort((a, b) => a.days - b.days)
+  }, [sops])
+
+  const counts = useMemo(() => ({
+    expired: items.filter((i) => i.status === "expired").length,
+    due_soon: items.filter((i) => i.status === "due_soon").length,
+    upcoming: items.filter((i) => i.status === "upcoming").length,
+    current: items.filter((i) => i.status === "current").length,
+  }), [items])
+
+  const stats = [
+    { label: "Expired", value: counts.expired, icon: AlertTriangle, color: "text-[#B91C1C] dark:text-red-400", bg: "bg-[#FEE2E2] dark:bg-red-500/10" },
+    { label: "Expiring in 30 days", value: counts.due_soon, icon: Clock, color: "text-[#B45309] dark:text-amber-400", bg: "bg-[#FEF3C7] dark:bg-amber-500/10" },
+    { label: "Expiring in 90 days", value: counts.upcoming, icon: CalendarClock, color: "text-[#B45309] dark:text-amber-400", bg: "bg-[#FEF3C7] dark:bg-amber-500/10" },
+    { label: "Current", value: counts.current, icon: CheckCircle, color: "text-[#15803D] dark:text-green-400", bg: "bg-[#DCFCE7] dark:bg-green-500/10" },
+  ]
+
+  const mostCriticalTier: AlertTier = items.length > 0 ? items[0].alertTier : "current"
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 text-[#0959AC] text-sm">
+        <FileText className="w-4 h-4 shrink-0 mt-0.5" />
+        <span>
+          <strong>Regulatory Basis:</strong> TJC Standard LD.04.03.07 requires that all policies are reviewed at least every 3 years.
+          CMS Conditions of Participation require policies to be current and accessible to relevant staff at all times.
+        </span>
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {stats.map((s, i) => (
+          <motion.div
+            key={s.label}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.07 }}
+            className="rounded-2xl bg-card border border-[#E2E8F0] p-4 flex items-center gap-3"
+          >
+            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", s.bg)}>
+              <s.icon className={cn("w-5 h-5", s.color)} />
+            </div>
+            <div>
+              <p className={cn("text-2xl font-bold", s.color)}>{s.value}</p>
+              <p className="text-xs text-muted-foreground leading-tight">{s.label}</p>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      <section className="rounded-2xl bg-card border border-[#E2E8F0] p-5">
+        <div className="mb-4">
+          <h2 className="text-base font-semibold">Staged Escalation Protocol</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">TJC LD.04.03.07 - Automated notification escalation based on days until review due date</p>
+        </div>
+
+        <div className="relative flex items-start justify-between gap-2 overflow-x-auto pb-2">
+          <div className="absolute top-4 left-0 right-0 h-px bg-[#E2E8F0] z-0 mx-8" />
+
+          {ESCALATION_STEPS.map((step, i) => {
+            const isActive = step.tier === mostCriticalTier
+            return (
+              <div key={step.tier} className="flex flex-col items-center gap-2 min-w-[100px] flex-1 z-10">
+                <p className={cn(
+                  "text-[10px] font-semibold text-center whitespace-nowrap",
+                  isActive ? step.textColor : "text-muted-foreground"
+                )}>
+                  {step.label}
+                </p>
+                <div className={cn(
+                  "w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all",
+                  isActive
+                    ? `${step.color} ${step.borderColor} shadow-lg`
+                    : "bg-muted border-[#CBD5E1]"
+                )}>
+                  <span className={cn("text-xs font-bold", isActive ? "text-white" : "text-[#94A3B8]")}>{i + 1}</span>
+                </div>
+                <p className={cn(
+                  "text-[10px] text-center leading-tight",
+                  isActive ? "text-foreground font-semibold" : "text-muted-foreground"
+                )}>
+                  {step.action}
+                </p>
+              </div>
+            )
+          })}
+        </div>
+
+        {mostCriticalTier !== "current" && (
+          <div className="mt-3 px-3 py-2 rounded-lg bg-[#F8FAFC] border border-[#EDF1F5]">
+            <p className="text-xs text-muted-foreground">
+              Most critical SOP is at tier:{" "}
+              <span className={cn("font-semibold", ALERT_TIER_META[mostCriticalTier].badgeClass.includes("red") ? "text-[#B91C1C] dark:text-red-400" : "text-[#B45309] dark:text-amber-400")}>
+                {ALERT_TIER_META[mostCriticalTier].label}
+              </span>
+            </p>
+          </div>
+        )}
+      </section>
+
+      <section>
+        <h2 className="text-lg font-medium mb-3">Review Timeline - sorted by urgency</h2>
+
+        {loading && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground py-8 justify-center">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Loading SOPs...
+          </div>
+        )}
+
+        {!loading && items.length === 0 && (
+          <div className="p-8 rounded-2xl bg-card border border-[#E2E8F0] text-center text-sm text-muted-foreground">
+            No SOPs with a scheduled review date yet.
+          </div>
+        )}
+
+        {!loading && unscheduledCount > 0 && (
+          <div className="mb-3 px-3 py-2 rounded-lg bg-[#F8FAFC] border border-[#EDF1F5] text-xs text-muted-foreground">
+            {unscheduledCount} SOP{unscheduledCount === 1 ? "" : "s"} without a scheduled review date {unscheduledCount === 1 ? "is" : "are"} not shown below.
+          </div>
+        )}
+
+        <div className="space-y-3">
+          {items.map(({ sop, days, status, alertTier }, i) => {
+            const meta = EXPIRY_STATUS_META[status]
+            const tierMeta = ALERT_TIER_META[alertTier]
+            return (
+              <motion.div
+                key={sop.id}
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.04 }}
+                className={cn(
+                  "rounded-2xl bg-card border border-[#E2E8F0] p-5",
+                  meta.rowClass
+                )}
+              >
+                <div className="flex flex-col md:flex-row md:items-center gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start gap-2 mb-1 flex-wrap">
+                      <span className={cn("px-2 py-0.5 rounded-full text-[11px] font-semibold tracking-wide shrink-0", meta.badgeClass)}>
+                        {meta.label}
+                      </span>
+                      <span className={cn("px-2 py-0.5 rounded text-[11px] font-medium shrink-0", tierMeta.badgeClass)}>
+                        {tierMeta.label}
+                      </span>
+                      <p className="font-medium text-sm leading-snug truncate">{sop.title}</p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground mt-1.5">
+                      <span className="flex items-center gap-1">
+                        <FileText className="w-3 h-3" />
+                        {sop.sop_id} - v{sop.version}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        {sop.department}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs mt-2">
+                      <span className="text-muted-foreground">
+                        Effective since: <span className="text-foreground">{sop.effective_date || "—"}</span>
+                      </span>
+                      <span className="text-muted-foreground">
+                        Review due: <span className="text-foreground">{sop.review_date}</span>
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row md:flex-col items-start sm:items-center md:items-end gap-3 shrink-0">
+                    <p className={cn("text-sm font-semibold tabular-nums", daysColor(days))}>
+                      {daysLabel(days)}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <Link
+                        href="/proposals"
+                        className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-[#0B6BCB]/10 text-[#0B6BCB] hover:bg-[#0B6BCB]/20 transition-colors font-medium"
+                      >
+                        Initiate Review <ArrowRight className="w-3 h-3" />
+                      </Link>
+                      <button
+                        disabled
+                        title="Coming in v2"
+                        className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-muted text-muted-foreground cursor-not-allowed opacity-50 font-medium"
+                      >
+                        Assign Reviewer
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )
+          })}
+        </div>
+      </section>
+
+      <div className="rounded-2xl bg-card border border-[#E2E8F0] p-4">
+        <h3 className="text-sm font-medium mb-3 text-muted-foreground">Alert Tier Reference</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+          {(["expired", "due_soon", "upcoming", "current"] as ExpiryStatus[]).map((s) => (
+            <div key={s} className="flex items-center gap-2">
+              <span className={cn("px-2 py-0.5 rounded-full text-[11px] font-semibold", EXPIRY_STATUS_META[s].badgeClass)}>
+                {EXPIRY_STATUS_META[s].label}
+              </span>
+              <span className="text-muted-foreground">
+                {s === "expired" ? "Past due date" : s === "due_soon" ? "Within 30 days" : s === "upcoming" ? "30-90 days" : "Over 90 days"}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="rounded-2xl bg-card border border-[#E2E8F0] p-5 space-y-4">
+        <div className="flex items-center gap-2">
+          <Bell className="w-4 h-4 text-muted-foreground" />
+          <h3 className="text-sm font-semibold">Notification Settings</h3>
+        </div>
+
+        <div className="space-y-2 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2 py-2 border-b border-[#EDF1F5]">
+            <span className="w-40 shrink-0 text-foreground font-medium">Alert recipients:</span>
+            <span>Configured in</span>
+            <Link href="/admin" className="text-[#0B6BCB] hover:text-[#0959AC] underline">/admin</Link>
+          </div>
+          <div className="flex items-center gap-2 py-2 border-b border-[#EDF1F5]">
+            <span className="w-40 shrink-0 text-foreground font-medium">Email notifications:</span>
+            <span>Not configured (connect to hospital email system)</span>
+          </div>
+          <div className="flex items-center gap-2 py-2 border-b border-[#EDF1F5]">
+            <span className="w-40 shrink-0 text-foreground font-medium">Push notifications:</span>
+            <span>Not configured</span>
+          </div>
+        </div>
+
+        <p className="text-xs text-muted-foreground/70 italic">
+          These settings require IT integration in production.
+        </p>
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────
+// Merged page
+// ─────────────────────────────────────────────
+
+export default function CompliancePage() {
+  const [tab, setTab] = useState<"acknowledgments" | "reviews">(() => {
+    if (typeof window === "undefined") return "acknowledgments"
+    return new URLSearchParams(window.location.search).get("tab") === "reviews" ? "reviews" : "acknowledgments"
+  })
+
+  const TABS = [
+    { key: "acknowledgments" as const, label: "Acknowledgments", icon: CheckCircle },
+    { key: "reviews" as const, label: "Upcoming & Overdue Reviews", icon: CalendarClock },
+  ]
+
+  return (
+    <AppShell>
+      <div className="p-6 max-w-7xl mx-auto space-y-6">
+        <Breadcrumb items={[{ label: "Compliance" }]} />
+
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-[#0B6BCB]/10 flex items-center justify-center">
+              <CheckCircle className="w-6 h-6 text-[#0B6BCB]" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold font-display">Compliance</h1>
+              <p className="text-sm text-[#64748B]">Policy acknowledgment status and SOP review currency</p>
             </div>
           </div>
-        </section>
-
-        {/* Export Report */}
-        <div className="flex justify-center pt-2">
-          <button
-            onClick={handleExport}
-            disabled={exportState === "loading"}
-            className={cn(
-              "flex items-center gap-2 px-8 py-3 rounded-xl text-sm font-semibold transition-all",
-              exportState === "success"
-                ? "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30"
-                : "bg-[#0B6BCB] hover:bg-[#0959AC] text-white"
-            )}
-          >
-            {exportState === "loading" && <Loader2 className="w-4 h-4 animate-spin" />}
-            {exportState === "success" && <Check className="w-4 h-4" />}
-            {exportState === "idle" && <Download className="w-4 h-4" />}
-            {exportState === "loading" ? "Generating..." : exportState === "success" ? "Report Generated" : "Export Compliance Report"}
-          </button>
         </div>
+
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400 text-sm">
+          <AlertTriangle className="w-4 h-4 shrink-0" />
+          <span><strong>Research Prototype. Not for Clinical Use.</strong> For demonstration only. All clinical decisions must follow institutional protocols.</span>
+        </div>
+
+        <div className="flex gap-1 p-1 rounded-xl bg-muted border border-[#E2E8F0] w-fit">
+          {TABS.map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={cn(
+                "flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors",
+                tab === t.key ? "bg-card text-[#0B6BCB] shadow-sm" : "text-[#64748B] hover:text-[#1A2332]"
+              )}
+            >
+              <t.icon className="w-4 h-4" />
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {tab === "acknowledgments" ? <AcknowledgmentsTab /> : <ReviewsTab />}
       </div>
     </AppShell>
   )

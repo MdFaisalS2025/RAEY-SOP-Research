@@ -165,6 +165,9 @@ function NewProposalModal({ onClose, onCreated }: { onClose: () => void; onCreat
   const [priority, setPriority] = useState("normal")
   const [aiSummary, setAiSummary] = useState("")
   const [legalReview, setLegalReview] = useState(false)
+  const [showTextChange, setShowTextChange] = useState(false)
+  const [oldText, setOldText] = useState("")
+  const [newText, setNewText] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState("")
 
@@ -174,6 +177,9 @@ function NewProposalModal({ onClose, onCreated }: { onClose: () => void; onCreat
     setSubmitting(true)
     setError("")
     try {
+      const payload: Record<string, string> = {}
+      if (newText.trim()) payload.new_text = newText.trim()
+      if (oldText.trim()) payload.old_text = oldText.trim()
       const res = await fetch(`${API_BASE}/api/governance/proposals`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -185,6 +191,7 @@ function NewProposalModal({ onClose, onCreated }: { onClose: () => void; onCreat
           ai_summary: aiSummary,
           legal_review_required: legalReview,
           initiated_by: currentUser.name,
+          payload,
         }),
       })
       if (!res.ok) throw new Error("Failed to create proposal")
@@ -246,6 +253,26 @@ function NewProposalModal({ onClose, onCreated }: { onClose: () => void; onCreat
             <input type="checkbox" checked={legalReview} onChange={(e) => setLegalReview(e.target.checked)} />
             Requires legal review
           </label>
+          <div className="pt-1 border-t border-[#EDF1F5]">
+            <button type="button" onClick={() => setShowTextChange((v) => !v)}
+              className="text-xs font-medium text-[#0B6BCB] hover:underline">
+              {showTextChange ? "Hide" : "+ Add"} specific text change (for redline review)
+            </button>
+            {showTextChange && (
+              <div className="mt-2 space-y-2">
+                <div>
+                  <label className="text-xs font-medium text-[#64748B]">Current text (optional - defaults to the affected SOP&apos;s current text)</label>
+                  <textarea value={oldText} onChange={(e) => setOldText(e.target.value)} rows={3}
+                    className="w-full mt-1 px-3 py-2 rounded-lg border border-[#E2E8F0] bg-background text-sm font-mono" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-[#64748B]">Proposed new text</label>
+                  <textarea value={newText} onChange={(e) => setNewText(e.target.value)} rows={3}
+                    className="w-full mt-1 px-3 py-2 rounded-lg border border-[#E2E8F0] bg-background text-sm font-mono" />
+                </div>
+              </div>
+            )}
+          </div>
           {error && <p className="text-xs text-red-400">{error}</p>}
           <button type="submit" disabled={submitting}
             className="w-full py-2.5 rounded-xl bg-[#0B6BCB] hover:bg-[#0959AC] disabled:opacity-50 text-white text-sm font-semibold flex items-center justify-center gap-2">

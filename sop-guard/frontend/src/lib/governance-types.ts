@@ -1,14 +1,16 @@
 // SOP-Guard Governance Platform — Core Type Definitions
 // Replace stub IDs/names with real database entities when integrating
 
+// Reduced from 8 roles to 4: hospitals realistically need far fewer
+// distinct access levels than one-per-job-title. Clinical work (physician +
+// nurse) shares one journey; governance/compliance/legal/committee work
+// (department admin + compliance officer + committee member + legal/risk)
+// shares another - those four differed by which governance page they used,
+// not by what they were fundamentally allowed to do.
 export type UserRole =
-  | "physician"
-  | "nurse"
-  | "department_admin"
-  | "compliance_officer"
-  | "committee_member"
-  | "legal_risk"
-  | "nurse_educator"
+  | "clinical_staff"
+  | "educator"
+  | "governance_compliance"
   | "system_admin"
 
 export type SOPStatus =

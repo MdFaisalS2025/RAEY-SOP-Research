@@ -1,18 +1,18 @@
 {
   "eval": "ragas_lite",
   "disclaimer": "Research prototype. Reference-free proxy metrics, not clinical validation.",
-  "generated_at": "2026-07-06T07:33:31.010829+00:00",
+  "generated_at": "2026-07-09T21:44:39.408691+00:00",
   "aggregate": {
     "total_queries": 20,
     "completed": 20,
-    "avg_faithfulness": 1.0,
+    "avg_faithfulness": 0.0,
     "avg_citation_coverage": 0.17,
     "avg_top_chunk_relevance_score": 0.3408,
     "abstention_accuracy": 0.0,
     "out_of_scope_cases": 2,
-    "generation_mode": "mock",
+    "generation_mode": "mock_fallback",
     "generation_mode_breakdown": {
-      "mock": 20
+      "mock_fallback": 20
     },
     "faithfulness_note": "avg_faithfulness sits near its 1.0 ceiling in mock mode because the mock generator is purely extractive (answers are built from verbatim chunk phrases), so keyword-grounding checks trivially pass. It only becomes a meaningful discriminator for LLM-generated answers, which can paraphrase or add unsupported content."
   },
@@ -20,222 +20,222 @@
     {
       "query": "What is the maximum dose of norepinephrine for septic shock?",
       "category": "medication",
-      "faithfulness": 1.0,
+      "faithfulness": 0.0,
       "citation_coverage": 0.4,
       "top_chunk_relevance_score": 0.159,
       "abstained": false,
       "abstention_correct": null,
       "confidence": 0.7,
-      "generation_mode": "mock"
+      "generation_mode": "mock_fallback"
     },
     {
       "query": "What is the initial fluid bolus dose for sepsis resuscitation?",
       "category": "medication",
-      "faithfulness": 1.0,
+      "faithfulness": 0.0,
       "citation_coverage": 0.429,
       "top_chunk_relevance_score": 0.3345,
       "abstained": false,
       "abstention_correct": null,
       "confidence": 0.7,
-      "generation_mode": "mock"
+      "generation_mode": "mock_fallback"
     },
     {
       "query": "When should vasopressors be started in sepsis management?",
       "category": "medication",
-      "faithfulness": 1.0,
+      "faithfulness": 0.0,
       "citation_coverage": 0.375,
       "top_chunk_relevance_score": 0.212,
       "abstained": false,
       "abstention_correct": null,
       "confidence": 0.7,
-      "generation_mode": "mock"
+      "generation_mode": "mock_fallback"
     },
     {
       "query": "What antibiotics timing is required after sepsis recognition?",
       "category": "medication",
-      "faithfulness": 1.0,
+      "faithfulness": 0.0,
       "citation_coverage": 0.5,
       "top_chunk_relevance_score": 0.3082,
       "abstained": false,
       "abstention_correct": null,
       "confidence": 0.9,
-      "generation_mode": "mock"
+      "generation_mode": "mock_fallback"
     },
     {
       "query": "What lactate level indicates severe sepsis requiring immediate action?",
       "category": "threshold",
-      "faithfulness": 1.0,
+      "faithfulness": 0.0,
       "citation_coverage": 0.3,
       "top_chunk_relevance_score": 0.1696,
       "abstained": false,
       "abstention_correct": null,
       "confidence": 0.65,
-      "generation_mode": "mock"
+      "generation_mode": "mock_fallback"
     },
     {
       "query": "What is the target mean arterial pressure in septic shock?",
       "category": "threshold",
-      "faithfulness": 1.0,
+      "faithfulness": 0.0,
       "citation_coverage": 0.333,
       "top_chunk_relevance_score": 0.2365,
       "abstained": false,
       "abstention_correct": null,
       "confidence": 0.7,
-      "generation_mode": "mock"
+      "generation_mode": "mock_fallback"
     },
     {
       "query": "At what hemoglobin level is a blood transfusion indicated?",
       "category": "threshold",
-      "faithfulness": 1.0,
+      "faithfulness": 0.0,
       "citation_coverage": 0.667,
       "top_chunk_relevance_score": 0.6194,
       "abstained": false,
       "abstention_correct": null,
       "confidence": 0.9,
-      "generation_mode": "mock"
+      "generation_mode": "mock_fallback"
     },
     {
       "query": "What NEWS2 score requires urgent clinical review?",
       "category": "threshold",
-      "faithfulness": 1.0,
+      "faithfulness": 0.0,
       "citation_coverage": 0.0,
       "top_chunk_relevance_score": 0.0872,
       "abstained": false,
       "abstention_correct": null,
       "confidence": 0.65,
-      "generation_mode": "mock"
+      "generation_mode": "mock_fallback"
     },
     {
       "query": "What are the steps for donning PPE in the correct order?",
       "category": "sequence",
-      "faithfulness": 1.0,
+      "faithfulness": 0.0,
       "citation_coverage": 0.0,
       "top_chunk_relevance_score": 0.5083,
       "abstained": false,
       "abstention_correct": null,
       "confidence": 0.65,
-      "generation_mode": "mock"
+      "generation_mode": "mock_fallback"
     },
     {
       "query": "Walk me through the blood transfusion procedure step by step.",
       "category": "sequence",
-      "faithfulness": 1.0,
+      "faithfulness": 0.0,
       "citation_coverage": 0.0,
       "top_chunk_relevance_score": 1.5485,
       "abstained": false,
       "abstention_correct": null,
       "confidence": 0.65,
-      "generation_mode": "mock"
+      "generation_mode": "mock_fallback"
     },
     {
       "query": "What is the correct sequence for doffing PPE after patient contact?",
       "category": "sequence",
-      "faithfulness": 1.0,
+      "faithfulness": 0.0,
       "citation_coverage": 0.0,
       "top_chunk_relevance_score": 0.3942,
       "abstained": false,
       "abstention_correct": null,
       "confidence": 0.65,
-      "generation_mode": "mock"
+      "generation_mode": "mock_fallback"
     },
     {
       "query": "What are the initial assessment steps for a suspected sepsis patient?",
       "category": "sequence",
-      "faithfulness": 1.0,
+      "faithfulness": 0.0,
       "citation_coverage": 0.0,
       "top_chunk_relevance_score": 0.1604,
       "abstained": false,
       "abstention_correct": null,
       "confidence": 0.65,
-      "generation_mode": "mock"
+      "generation_mode": "mock_fallback"
     },
     {
       "query": "When should a blood transfusion NOT be given?",
       "category": "contraindication",
-      "faithfulness": 1.0,
+      "faithfulness": 0.0,
       "citation_coverage": 0.0,
       "top_chunk_relevance_score": 0.6371,
       "abstained": false,
       "abstention_correct": null,
       "confidence": 0.65,
-      "generation_mode": "mock"
+      "generation_mode": "mock_fallback"
     },
     {
       "query": "What are the contraindications for aggressive fluid resuscitation?",
       "category": "contraindication",
-      "faithfulness": 1.0,
+      "faithfulness": 0.0,
       "citation_coverage": 0.0,
       "top_chunk_relevance_score": 0.3559,
       "abstained": false,
       "abstention_correct": null,
       "confidence": 0.65,
-      "generation_mode": "mock"
+      "generation_mode": "mock_fallback"
     },
     {
       "query": "What must be avoided during a transfusion reaction?",
       "category": "contraindication",
-      "faithfulness": 1.0,
+      "faithfulness": 0.0,
       "citation_coverage": 0.0,
       "top_chunk_relevance_score": 0.2639,
       "abstained": false,
       "abstention_correct": null,
       "confidence": 0.65,
-      "generation_mode": "mock"
+      "generation_mode": "mock_fallback"
     },
     {
       "query": "How often should vital signs be monitored during a blood transfusion?",
       "category": "monitoring",
-      "faithfulness": 1.0,
+      "faithfulness": 0.0,
       "citation_coverage": 0.0,
       "top_chunk_relevance_score": 0.2073,
       "abstained": false,
       "abstention_correct": null,
       "confidence": 0.65,
-      "generation_mode": "mock"
+      "generation_mode": "mock_fallback"
     },
     {
       "query": "What should be monitored after starting vasopressors?",
       "category": "monitoring",
-      "faithfulness": 1.0,
+      "faithfulness": 0.0,
       "citation_coverage": 0.0,
       "top_chunk_relevance_score": 0.1525,
       "abstained": false,
       "abstention_correct": null,
       "confidence": 0.65,
-      "generation_mode": "mock"
+      "generation_mode": "mock_fallback"
     },
     {
       "query": "What is the recommended dose of chemotherapy for stage 3 lung cancer?",
       "category": "out_of_scope",
-      "faithfulness": 1.0,
+      "faithfulness": 0.0,
       "citation_coverage": 0.4,
       "top_chunk_relevance_score": 0.164,
       "abstained": false,
       "abstention_correct": false,
       "confidence": 0.7,
-      "generation_mode": "mock"
+      "generation_mode": "mock_fallback"
     },
     {
       "query": "How do I calibrate the hospital MRI scanner magnets?",
       "category": "out_of_scope",
-      "faithfulness": 1.0,
+      "faithfulness": 0.0,
       "citation_coverage": 0.0,
       "top_chunk_relevance_score": 0.1102,
       "abstained": false,
       "abstention_correct": false,
       "confidence": 0.65,
-      "generation_mode": "mock"
+      "generation_mode": "mock_fallback"
     },
     {
       "query": "If a septic patient also needs a transfusion, which monitoring rules from both protocols apply?",
       "category": "cross_sop",
-      "faithfulness": 1.0,
+      "faithfulness": 0.0,
       "citation_coverage": 0.0,
       "top_chunk_relevance_score": 0.1879,
       "abstained": false,
       "abstention_correct": null,
       "confidence": 0.65,
-      "generation_mode": "mock"
+      "generation_mode": "mock_fallback"
     }
   ],
   "_cached": false

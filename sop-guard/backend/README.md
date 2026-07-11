@@ -26,14 +26,16 @@ Demo SOPs load automatically on first startup if the database is empty.
 | Var | Purpose | Example |
 | --- | --- | --- |
 | `DATABASE_URL` | Async DB URL | `sqlite+aiosqlite:///./sop_guard.db` |
-| `LLM_PROVIDER` | `mock` \| `openai` \| `ollama` | `openai` |
-| `LLM_MODEL` | Model id | `gpt-4o-mini` |
-| `LLM_API_KEY` | LLM key (leave unset for mock mode) | `sk-...` |
-| `LLM_BASE_URL` | Optional OpenAI-compatible base URL | |
+| `LLM_PROVIDER` | `mock` \| `ollama` | `ollama` |
+| `LLM_MODEL` | Ollama model tag | `llama3.2` |
+| `LLM_BASE_URL` | Ollama server URL | `http://localhost:11434` |
 | `CORS_ORIGINS` | Allowed frontend origins (JSON list) | `["http://localhost:5173"]` |
 
-With no `LLM_API_KEY` the pipeline runs in deterministic mock mode, so the
-whole system (retrieval, verification, faithfulness, governance) works offline.
+No third-party LLM API is ever called - patient/query data never leaves
+infrastructure the hospital controls. Run `ollama pull llama3.2 && ollama serve`
+locally to enable real generation. If Ollama is unreachable, the pipeline
+falls back to deterministic mock mode, so the rest of the system (retrieval,
+verification, faithfulness, governance) still works offline.
 
 ### Run the tests
 
@@ -48,7 +50,10 @@ python -m pytest -q            # tests/ and app/tests/
 - `GET/POST /api/governance/proposals`, `POST /api/governance/proposals/{id}/vote`
 - `GET/POST /api/governance/attestations`, `/api/governance/acknowledgments`
 - `GET  /api/governance/query-log?limit=50` - AI usage audit trail
-- `GET  /api/evaluation/summary` - cached RAGAS-lite eval run
+- `GET  /api/evaluation/summary` - cached RAGAS-lite (zero-dependency proxy metrics) eval run
+- `GET  /api/evaluation/ragas` - cached real RAGAS library eval run (faithfulness, response relevancy,
+  context precision), judged by the self-hosted Ollama model - requires `ragas` + Ollama with the
+  configured model pulled; degrades to `{"available": false, "reason": ...}` otherwise
 - `GET  /api/evaluation/ablation` - reranker on-vs-off comparison
 
 ## Deploy to Render
@@ -58,8 +63,8 @@ A `render.yaml` blueprint is included.
 1. Push this repository to GitHub.
 2. In Render: **New + -> Blueprint**, select the repo. Render reads
    `sop-guard/backend/render.yaml`.
-3. Set the secret `LLM_API_KEY` (and optionally `LLM_BASE_URL`) in the Render
-   dashboard - it is marked `sync: false` so it is never committed.
+3. Set `LLM_BASE_URL` in the Render dashboard to point at an Ollama instance
+   the hospital controls - it is marked `sync: false` so it is never committed.
 4. Deploy. Health check is `GET /api/health`; start command is
    `uvicorn app.main:app --host 0.0.0.0 --port $PORT`.
 

@@ -11,37 +11,25 @@ import { cn } from "@/lib/utils"
 import type { UserRole } from "@/lib/governance-types"
 
 const ROLE_COLORS: Record<UserRole, { bg: string; text: string; border: string }> = {
-  system_admin:       { bg: "bg-muted",   text: "text-[#475569]", border: "border-[#CBD5E1]" },
-  compliance_officer: { bg: "bg-[#FEF3C7] dark:bg-amber-500/10",   text: "text-[#B45309] dark:text-amber-400", border: "border-[#FDE68A] dark:border-amber-500/30" },
-  legal_risk:         { bg: "bg-[#FEE2E2] dark:bg-red-500/10",   text: "text-[#B91C1C] dark:text-red-400", border: "border-[#FECACA] dark:border-red-500/30" },
-  committee_member:   { bg: "bg-[#DCFCE7] dark:bg-green-500/10",   text: "text-[#15803D] dark:text-green-400", border: "border-[#BBF7D0] dark:border-green-500/30" },
-  department_admin:   { bg: "bg-muted",   text: "text-[#475569]", border: "border-[#CBD5E1]" },
-  nurse_educator:     { bg: "bg-muted",   text: "text-[#475569]", border: "border-[#CBD5E1]" },
-  physician:          { bg: "bg-[#0B6BCB]/10", text: "text-[#0B6BCB]", border: "border-[#0B6BCB]/30" },
-  nurse:              { bg: "bg-[#0D9488]/10", text: "text-[#0D9488]", border: "border-[#0D9488]/30" },
+  system_admin:           { bg: "bg-muted",   text: "text-[#475569]", border: "border-[#CBD5E1]" },
+  governance_compliance:  { bg: "bg-[#DCFCE7] dark:bg-green-500/10",   text: "text-[#15803D] dark:text-green-400", border: "border-[#BBF7D0] dark:border-green-500/30" },
+  educator:               { bg: "bg-muted",   text: "text-[#475569]", border: "border-[#CBD5E1]" },
+  clinical_staff:         { bg: "bg-[#0B6BCB]/10", text: "text-[#0B6BCB]", border: "border-[#0B6BCB]/30" },
 }
 
 const ROLE_LABELS: Record<UserRole, string> = {
-  system_admin:       "System Admin",
-  compliance_officer: "Compliance Officer",
-  legal_risk:         "Legal / Risk",
-  committee_member:   "Committee Member",
-  department_admin:   "Dept. Admin",
-  nurse_educator:     "Nurse Educator",
-  physician:          "Physician",
-  nurse:              "Nurse",
+  system_admin:          "System Admin",
+  governance_compliance: "Governance & Compliance",
+  educator:              "Educator / Trainer",
+  clinical_staff:        "Clinical Staff",
 }
 
 // Sorted highest to lowest for the hierarchy ladder
 const HIERARCHY_LADDER: { role: UserRole; label: string; title: string }[] = [
-  { role: "system_admin",       label: "System Admin",        title: "CMIO / IT Director" },
-  { role: "compliance_officer", label: "Compliance Officer",  title: "Quality / Patient Safety" },
-  { role: "legal_risk",         label: "Legal / Risk",        title: "Risk Manager / Counsel" },
-  { role: "committee_member",   label: "Committee Member",    title: "P&T / Quality Committee" },
-  { role: "department_admin",   label: "Dept. Admin",         title: "Dept. Director / Nurse Mgr" },
-  { role: "nurse_educator",     label: "Nurse Educator",      title: "Clinical Education" },
-  { role: "physician",          label: "Physician",           title: "Attending / Specialist" },
-  { role: "nurse",              label: "Nurse / RN",          title: "Staff Nurse" },
+  { role: "system_admin",          label: "System Admin",              title: "CMIO / IT Director" },
+  { role: "governance_compliance", label: "Governance & Compliance",   title: "Compliance, Legal, Committee & Dept. Admin" },
+  { role: "educator",              label: "Educator / Trainer",        title: "Clinical Education" },
+  { role: "clinical_staff",        label: "Clinical Staff",            title: "Physician / Nurse" },
 ]
 
 const FEATURES = [
@@ -280,7 +268,8 @@ function LoginPageInner() {
             {SORTED_DEMO_USERS.map((demoUser, i) => {
               const colors = ROLE_COLORS[demoUser.role]
               const level = ROLE_HIERARCHY[demoUser.role]
-              const isHighest = level === 8
+              const maxLevel = 4
+              const isHighest = level === maxLevel
               const isLowest = level === 1
               return (
                 <motion.div
@@ -309,10 +298,10 @@ function LoginPageInner() {
                       {/* Access level badge */}
                       <p className="text-[9px] text-[#94A3B8] mt-0.5">
                         {isHighest
-                          ? "Level 8 - Highest access"
+                          ? `Level ${maxLevel} - Highest access`
                           : isLowest
                           ? "Level 1 - Basic access"
-                          : `Level ${level} of 8`}
+                          : `Level ${level} of ${maxLevel}`}
                       </p>
                     </div>
                   </div>

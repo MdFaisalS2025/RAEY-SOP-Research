@@ -9,24 +9,16 @@ import { cn } from "@/lib/utils"
 import type { UserRole } from "@/lib/governance-types"
 
 const ROLE_TEXT_COLORS: Record<UserRole, string> = {
-  physician: "text-[#0B6BCB]",
-  nurse: "text-[#0D9488]",
-  department_admin: "text-[#475569]",
-  compliance_officer: "text-[#B45309] dark:text-amber-400",
-  committee_member: "text-[#15803D] dark:text-green-400",
-  legal_risk: "text-[#B91C1C] dark:text-red-400",
-  nurse_educator: "text-[#475569]",
+  clinical_staff: "text-[#0B6BCB]",
+  governance_compliance: "text-[#15803D] dark:text-green-400",
+  educator: "text-[#475569]",
   system_admin: "text-[#475569]",
 }
 
 const ROLE_DOT_COLORS: Record<UserRole, string> = {
-  physician: "#0B6BCB",
-  nurse: "#0D9488",
-  department_admin: "#64748B",
-  compliance_officer: "#B45309",
-  committee_member: "#15803D",
-  legal_risk: "#B91C1C",
-  nurse_educator: "#64748B",
+  clinical_staff: "#0B6BCB",
+  governance_compliance: "#15803D",
+  educator: "#64748B",
   system_admin: "#64748B",
 }
 

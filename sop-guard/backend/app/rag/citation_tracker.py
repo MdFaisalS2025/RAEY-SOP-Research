@@ -113,6 +113,47 @@ def extract_citations(answer: str, citation_records: list[dict]) -> tuple[str, l
     return cleaned, updated
 
 
+def extract_citation_numbers(text: str) -> list[int]:
+    """[N] markers present in a piece of text, in order, deduped."""
+    seen: list[int] = []
+    for m in _MARKER_RE.finditer(text):
+        n = int(m.group(1))
+        if n not in seen:
+            seen.append(n)
+    return seen
+
+
+_TRAILING_MARKERS_RE = re.compile(r"^(?:\s*\[(\d+)\])+")
+
+
+def attach_citation_numbers(answer: str, sentences: list[dict]) -> None:
+    """
+    Mutates `sentences` in place, adding a `citation_numbers` field to each.
+
+    Both faithfulness checkers split the answer into sentences with a regex
+    that splits *between* a sentence's ending punctuation and a following
+    "[N]" marker (e.g. "...organism. [1]" becomes "...organism." and "[1]"
+    as separate fragments), and drops short marker-only fragments - so the
+    marker is never actually inside any kept sentence's text. Rather than
+    fight that in the splitter, locate each (already-split, already
+    truncated-to-200-chars) sentence back in the original answer and read
+    off whatever [N] marker(s) immediately follow it there instead - robust
+    to exactly how the splitter fragmented things, since it works from the
+    source text rather than the split output.
+    """
+    search_from = 0
+    for sent in sentences:
+        text = sent.get("text", "")
+        idx = answer.find(text, search_from) if text else -1
+        if idx == -1:
+            sent["citation_numbers"] = []
+            continue
+        end = idx + len(text)
+        m = _TRAILING_MARKERS_RE.match(answer[end:end + 40])
+        sent["citation_numbers"] = [int(n) for n in re.findall(r"\d+", m.group(0))] if m else []
+        search_from = end
+
+
 def citation_coverage(answer: str) -> float:
     """
     Fraction of substantive answer sentences that carry a [N] marker.

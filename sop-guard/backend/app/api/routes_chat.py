@@ -5,9 +5,11 @@ Multi-turn chat sessions over the existing agentic RAG pipeline.
 Research prototype. Not for clinical use.
 """
 
+import json
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -77,18 +79,10 @@ async def get_session(session_id: int, db: AsyncSession = Depends(get_db)):
     }
 
 
-@router.post("/api/chat/sessions/{session_id}/messages")
-async def post_message(
-    session_id: int, req: ChatMessageCreate, db: AsyncSession = Depends(get_db)
-):
-    """Send a message in a chat session and get a pipeline-generated answer."""
-    session = (await db.execute(
-        select(ChatSessionRecord).where(ChatSessionRecord.id == session_id)
-    )).scalar_one_or_none()
-    if not session:
-        raise HTTPException(status_code=404, detail=f"Chat session {session_id} not found.")
-
-    # 1. Load last 6 messages as history (chronological order)
+async def _build_context(session_id: int, db: AsyncSession) -> tuple[list[ChatMessageRecord], str, str]:
+    """Load recent history and derive the contextualized retrieval query +
+    the Q/A history block for generation. Shared by the streaming and
+    non-streaming chat-message endpoints."""
     history = list(reversed((await db.execute(
         select(ChatMessageRecord)
         .where(ChatMessageRecord.session_id == session_id)
@@ -96,14 +90,6 @@ async def post_message(
         .limit(6)
     )).scalars().all()))
 
-    # 2. Contextualized retrieval query: prepend the last 2 user questions
-    retrieval_query = req.content
-    prior_user_questions = [m.content for m in history if m.role == "user"][-2:]
-    if prior_user_questions:
-        context_line = " ".join(prior_user_questions)
-        retrieval_query = f"{context_line} {req.content}"
-
-    # 4. History context block for generation: last 2 Q/A pairs, 200 chars each
     history_lines = []
     pairs: list[tuple[str, str]] = []
     pending_q: Optional[str] = None
@@ -118,20 +104,15 @@ async def post_message(
         history_lines.append(f"A: {a[:200]}")
     history_context = "\n".join(history_lines)
 
-    # 3. Run pipeline with contextualized retrieval query, raw display query
-    chunks, structured_sops = await load_chunks(db)
-    if not chunks:
-        raise HTTPException(status_code=404, detail="No SOPs loaded.")
+    return history, history_context
 
-    pipeline = SOPGuardPipeline(chunks, structured_sops)
-    result = await pipeline.run(
-        query=req.content,
-        news2_score=req.news2_score,
-        retrieval_query=retrieval_query,
-        history_context=history_context,
-    )
 
-    # 5. Persist both messages (best-effort)
+async def _persist_chat_messages(
+    session: ChatSessionRecord, session_id: int, req: ChatMessageCreate,
+    history: list[ChatMessageRecord], answer: str, citations: list, db: AsyncSession,
+) -> tuple[Optional[int], Optional[int]]:
+    """Best-effort persistence of the user + assistant messages. Never
+    raises - the answer has already been generated."""
     user_msg_id = None
     assistant_msg_id = None
     try:
@@ -139,14 +120,10 @@ async def post_message(
             session_id=session_id, role="user", content=req.content, citations=[]
         )
         assistant_msg = ChatMessageRecord(
-            session_id=session_id,
-            role="assistant",
-            content=result.answer,
-            citations=result.inline_citations or [],
+            session_id=session_id, role="assistant", content=answer, citations=citations or [],
         )
         db.add(user_msg)
         db.add(assistant_msg)
-        # Set a session title from the first question
         if not history and (not session.title or session.title == "New conversation"):
             session.title = req.content[:120]
         await db.flush()
@@ -159,10 +136,94 @@ async def post_message(
         except Exception:
             pass
         print(f"[SOP-Guard] Warning: failed to persist chat messages: {e}")
+    return user_msg_id, assistant_msg_id
 
-    # 6. Full QueryResponse shape plus session_id and message_id
+
+@router.post("/api/chat/sessions/{session_id}/messages")
+async def post_message(
+    session_id: int, req: ChatMessageCreate, db: AsyncSession = Depends(get_db)
+):
+    """Send a message in a chat session and get a pipeline-generated answer."""
+    session = (await db.execute(
+        select(ChatSessionRecord).where(ChatSessionRecord.id == session_id)
+    )).scalar_one_or_none()
+    if not session:
+        raise HTTPException(status_code=404, detail=f"Chat session {session_id} not found.")
+
+    history, history_context = await _build_context(session_id, db)
+    prior_user_questions = [m.content for m in history if m.role == "user"][-2:]
+    retrieval_query = f"{' '.join(prior_user_questions)} {req.content}" if prior_user_questions else req.content
+
+    chunks, structured_sops = await load_chunks(db)
+    if not chunks:
+        raise HTTPException(status_code=404, detail="No SOPs loaded.")
+
+    pipeline = SOPGuardPipeline(chunks, structured_sops)
+    result = await pipeline.run(
+        query=req.content,
+        news2_score=req.news2_score,
+        retrieval_query=retrieval_query,
+        history_context=history_context,
+    )
+
+    user_msg_id, assistant_msg_id = await _persist_chat_messages(
+        session, session_id, req, history, result.answer, result.inline_citations, db
+    )
+
     payload = result.model_dump()
     payload["session_id"] = session_id
     payload["message_id"] = assistant_msg_id
     payload["user_message_id"] = user_msg_id
     return payload
+
+
+@router.post("/api/chat/sessions/{session_id}/messages/stream")
+async def post_message_stream(
+    session_id: int, req: ChatMessageCreate, db: AsyncSession = Depends(get_db)
+):
+    """Streaming variant of post_message: tokens arrive live over SSE, the
+    final event carries the same payload shape (plus session_id/message_id)
+    the non-streaming endpoint returns, and both messages are persisted once
+    generation completes - identical guarantees, just delivered live."""
+    session = (await db.execute(
+        select(ChatSessionRecord).where(ChatSessionRecord.id == session_id)
+    )).scalar_one_or_none()
+    if not session:
+        raise HTTPException(status_code=404, detail=f"Chat session {session_id} not found.")
+
+    history, history_context = await _build_context(session_id, db)
+    prior_user_questions = [m.content for m in history if m.role == "user"][-2:]
+    retrieval_query = f"{' '.join(prior_user_questions)} {req.content}" if prior_user_questions else req.content
+
+    chunks, structured_sops = await load_chunks(db)
+    if not chunks:
+        raise HTTPException(status_code=404, detail="No SOPs loaded.")
+
+    pipeline = SOPGuardPipeline(chunks, structured_sops)
+
+    async def event_stream():
+        async for event in pipeline.run_streaming(
+            query=req.content,
+            news2_score=req.news2_score,
+            retrieval_query=retrieval_query,
+            history_context=history_context,
+        ):
+            if event["type"] == "token":
+                yield f"data: {json.dumps({'type': 'token', 'text': event['text']})}\n\n"
+            elif event["type"] == "final":
+                result = event["response"]
+                user_msg_id, assistant_msg_id = await _persist_chat_messages(
+                    session, session_id, req, history, result.answer, result.inline_citations, db
+                )
+                payload = json.loads(result.model_dump_json())
+                payload["session_id"] = session_id
+                payload["message_id"] = assistant_msg_id
+                payload["user_message_id"] = user_msg_id
+                yield f"data: {json.dumps({'type': 'final', 'response': payload})}\n\n"
+        yield "data: [DONE]\n\n"
+
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )

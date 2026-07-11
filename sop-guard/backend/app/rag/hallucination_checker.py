@@ -5,6 +5,8 @@ Checks if each claim in the answer is grounded in retrieved chunks.
 import re
 from typing import Any
 
+from app.rag.citation_tracker import attach_citation_numbers
+
 
 def check_faithfulness(answer: str, chunks: list[dict[str, Any]]) -> dict[str, Any]:
     """
@@ -88,6 +90,8 @@ def check_faithfulness(answer: str, chunks: list[dict[str, Any]]) -> dict[str, A
             "key_terms_found": len(matched) if key_terms else 0,
             "key_terms_total": len(key_terms),
         })
+
+    attach_citation_numbers(answer, results)
 
     total = len(results)
     overall = grounded_count / total if total > 0 else 1.0

@@ -60,9 +60,9 @@ export default function TrainingPage() {
   }, [])
 
   const roleBannerSubtitle =
-    role === "nurse"
+    role === "clinical_staff"
       ? "My Training: Complete scenarios and reviews to earn credit"
-      : role === "nurse_educator"
+      : role === "educator"
         ? "Training Management: Organization-wide training activity"
         : "Training Overview: Platform-wide training activity and credit"
 
@@ -115,7 +115,7 @@ export default function TrainingPage() {
 
         <div className="px-4 py-3 rounded-xl bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 text-[#0B6BCB] text-sm">
           <span className="font-semibold">
-            {role === "nurse" ? "My Training" : role === "nurse_educator" ? "Training Management" : "Training Overview"}
+            {role === "clinical_staff" ? "My Training" : role === "educator" ? "Training Management" : "Training Overview"}
             {": "}
           </span>
           <span className="text-[#0B6BCB]/80">{roleBannerSubtitle.split(":").slice(1).join(":").trim()}</span>

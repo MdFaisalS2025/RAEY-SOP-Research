@@ -1192,13 +1192,9 @@ export default function DashboardPage() {
   })()
 
   const ROLE_BADGE_COLORS: Record<typeof role, string> = {
-    physician: "bg-[#0B6BCB]/10 text-[#0B6BCB] border-[#0B6BCB]/30",
-    nurse: "bg-[#0B6BCB]/10 text-[#0B6BCB] border-[#0B6BCB]/30",
-    department_admin: "bg-card text-[#475569] border-[#CBD5E1]",
-    compliance_officer: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30",
-    committee_member: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30",
-    legal_risk: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30",
-    nurse_educator: "bg-card text-[#475569] border-[#CBD5E1]",
+    clinical_staff: "bg-[#0B6BCB]/10 text-[#0B6BCB] border-[#0B6BCB]/30",
+    governance_compliance: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30",
+    educator: "bg-card text-[#475569] border-[#CBD5E1]",
     system_admin: "bg-card text-[#475569] border-[#CBD5E1]",
   }
 
@@ -1234,7 +1230,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Leadership Overview shortcut */}
-        {["system_admin", "compliance_officer", "department_admin"].includes(role) && (
+        {["system_admin", "governance_compliance"].includes(role) && (
           <Link
             href="/leadership"
             className="flex items-center gap-3 bg-card border border-[#0B6BCB]/30 rounded-xl px-4 py-3 hover:border-[#0B6BCB]/40 transition-colors group"
@@ -1254,33 +1250,25 @@ export default function DashboardPage() {
           </Link>
         )}
 
-        {/* Learning and Credits shortcut */}
-        <Link
-          href="/learning"
-          className="flex items-center gap-3 bg-card border border-[#E2E8F0] rounded-xl px-4 py-3 hover:border-[#0B6BCB]/30 transition-colors group"
-        >
-          <div className="w-9 h-9 rounded-lg bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 flex items-center justify-center shrink-0">
-            <GraduationCap className="w-4 h-4 text-[#0B6BCB]" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-[13px] font-semibold text-[#1A2332] group-hover:text-[#0B6BCB] transition-colors">
-              Learning and Credits
-            </p>
-            <p className="text-[11px] text-[#64748B]">
-              Track CE and CPD credit for training and governance participation
-            </p>
-          </div>
-          <ChevronRight className="w-4 h-4 text-[#94A3B8] group-hover:text-[#0B6BCB] ml-auto shrink-0 transition-colors" />
-        </Link>
-
-        {/* Role-specific content */}
-        {role === "physician" && <PhysicianDashboard />}
-        {role === "nurse" && <NurseDashboard />}
-        {role === "department_admin" && <DeptAdminDashboard />}
-        {role === "compliance_officer" && <ComplianceOfficerDashboard />}
-        {role === "committee_member" && <CommitteeDashboard />}
-        {role === "legal_risk" && <LegalRiskDashboard />}
-        {role === "nurse_educator" && <NurseEducatorDashboard />}
+        {/* Role-specific content. clinical_staff merges the old
+            physician+nurse views; governance_compliance merges the old
+            department_admin+compliance_officer+committee_member+legal_risk
+            views (stacked, not picked-one, so no workflow is lost). */}
+        {role === "clinical_staff" && (
+          <>
+            <PhysicianDashboard />
+            <NurseDashboard />
+          </>
+        )}
+        {role === "educator" && <NurseEducatorDashboard />}
+        {role === "governance_compliance" && (
+          <>
+            <DeptAdminDashboard />
+            <CommitteeDashboard />
+            <ComplianceOfficerDashboard />
+            <LegalRiskDashboard />
+          </>
+        )}
         {role === "system_admin" && <SystemAdminDashboard />}
       </div>
     </div>

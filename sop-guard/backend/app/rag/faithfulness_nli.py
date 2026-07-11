@@ -21,6 +21,7 @@ import re
 from typing import Any, Callable, Optional
 
 from app.rag.hallucination_checker import check_faithfulness
+from app.rag.citation_tracker import attach_citation_numbers
 
 _SUPPORTED_THRESHOLD = 0.55
 _PARTIAL_THRESHOLD = 0.40
@@ -133,6 +134,8 @@ def check_faithfulness_semantic(
             "confidence": round(best_sim, 3),
             "source_chunk": chunk_titles[best_idx] if best_idx >= 0 else "Unknown",
         })
+
+    attach_citation_numbers(answer, results)
 
     total = len(results)
     overall = supported / total if total else 1.0

@@ -88,6 +88,118 @@ async def test_acknowledgment_roundtrip(client):
     assert len(listed.json()["acknowledgments"]) == 1
 
 
+async def test_proposal_diff_from_payload(client):
+    resp = await client.post("/api/governance/proposals", json={
+        "title": "Update norepinephrine max dose",
+        "payload": {
+            "old_text": "Max norepinephrine dose is 3 mcg/kg/min.",
+            "new_text": "Max norepinephrine dose is 3.5 mcg/kg/min, per updated guidance.",
+        },
+    })
+    pid = resp.json()["id"]
+
+    diff = await client.get(f"/api/governance/proposals/{pid}/diff")
+    assert diff.status_code == 200
+    data = diff.json()
+    assert data["available"] is True
+    types = [s["type"] for s in data["segments"]]
+    assert "insert" in types and "delete" in types
+    assert data["stats"]["words_added"] > 0
+
+
+async def test_proposal_diff_unavailable_without_text(client):
+    resp = await client.post("/api/governance/proposals", json={"title": "Process-only proposal, no SOP text"})
+    pid = resp.json()["id"]
+
+    diff = await client.get(f"/api/governance/proposals/{pid}/diff")
+    assert diff.status_code == 200
+    data = diff.json()
+    assert data["available"] is False
+    assert data["segments"] == []
+
+
+async def test_proposal_diff_falls_back_to_current_sop_text(client):
+    created = await client.post(
+        "/api/sops",
+        json={"sop_id": "SOP-TEST-001", "title": "Test Protocol", "raw_text": "Original SOP text here."},
+        headers={"X-User-Role": "admin"},
+    )
+    assert created.status_code == 200, created.text
+
+    resp = await client.post("/api/governance/proposals", json={
+        "title": "Revise Test Protocol",
+        "affected_sop_id": "SOP-TEST-001",
+        "payload": {"new_text": "Revised SOP text here."},
+    })
+    pid = resp.json()["id"]
+
+    diff = await client.get(f"/api/governance/proposals/{pid}/diff")
+    assert diff.status_code == 200
+    data = diff.json()
+    assert data["available"] is True
+    assert data["sop_title"] == "Test Protocol"
+
+
+async def test_approval_without_scheduled_date_is_immediately_effective(client):
+    resp = await client.post("/api/governance/proposals", json={"title": "Immediate change"})
+    pid = resp.json()["id"]
+    for i in range(3):
+        await client.post(f"/api/governance/proposals/{pid}/vote", json={
+            "user_id": f"m{i}", "user_name": f"M{i}", "vote": "approve",
+        })
+    got = (await client.get(f"/api/governance/proposals/{pid}")).json()
+    assert got["status"] == "approved"
+    assert got["effective_status"] == "effective"
+
+
+async def test_approval_with_future_scheduled_date_is_pending(client):
+    resp = await client.post("/api/governance/proposals", json={
+        "title": "Deferred change", "scheduled_effective_date": "2099-01-01",
+    })
+    pid = resp.json()["id"]
+    for i in range(3):
+        await client.post(f"/api/governance/proposals/{pid}/vote", json={
+            "user_id": f"m{i}", "user_name": f"M{i}", "vote": "approve",
+        })
+    got = (await client.get(f"/api/governance/proposals/{pid}")).json()
+    assert got["status"] == "approved"
+    assert got["effective_status"] == "pending"
+
+
+async def test_open_proposal_has_no_effective_status(client):
+    resp = await client.post("/api/governance/proposals", json={"title": "Still open"})
+    pid = resp.json()["id"]
+    got = (await client.get(f"/api/governance/proposals/{pid}")).json()
+    assert got["status"] == "open"
+    assert got["effective_status"] is None
+
+
+async def test_schedule_endpoint_sets_and_clears_date(client):
+    resp = await client.post("/api/governance/proposals", json={"title": "Schedulable"})
+    pid = resp.json()["id"]
+
+    scheduled = await client.put(f"/api/governance/proposals/{pid}/schedule", json={
+        "scheduled_effective_date": "2099-06-01",
+    })
+    assert scheduled.status_code == 200
+    assert scheduled.json()["scheduled_effective_date"] == "2099-06-01"
+
+    cleared = await client.put(f"/api/governance/proposals/{pid}/schedule", json={
+        "scheduled_effective_date": "",
+    })
+    assert cleared.status_code == 200
+    assert cleared.json()["scheduled_effective_date"] == ""
+
+
+async def test_schedule_endpoint_rejects_bad_date(client):
+    resp = await client.post("/api/governance/proposals", json={"title": "Bad date test"})
+    pid = resp.json()["id"]
+    bad = await client.put(f"/api/governance/proposals/{pid}/schedule", json={
+        "scheduled_effective_date": "not-a-date",
+    })
+    assert bad.status_code == 400
+
+
 async def test_proposals_list_respects_limit(client):
     """
     list_proposals previously had no limit/offset - a growing proposals

@@ -8,7 +8,7 @@ import { useRole } from "@/lib/role-context"
 
 const SEEN_KEY = "sop-guard-first-run-demo-seen"
 
-const NURSE_ROLES = new Set(["nurse", "nurse_educator"])
+const LIBRARY_FIRST_ROLES = new Set(["educator"])
 
 const EXAMPLE_QUERY = "What is the maximum norepinephrine dose?"
 
@@ -27,11 +27,11 @@ export function FirstRunDemo() {
     localStorage.setItem(SEEN_KEY, "true")
   }
 
-  const isNurseRole = NURSE_ROLES.has(role)
+  const isLibraryFirstRole = LIBRARY_FIRST_ROLES.has(role)
 
   const showMe = () => {
     dismiss()
-    router.push(isNurseRole ? "/library" : "/query")
+    router.push(isLibraryFirstRole ? "/library" : "/query")
   }
 
   if (!show) return null
@@ -58,14 +58,14 @@ export function FirstRunDemo() {
           </button>
 
           <div className="w-12 h-12 rounded-xl bg-[#0B6BCB]/10 flex items-center justify-center mb-4">
-            {isNurseRole ? (
+            {isLibraryFirstRole ? (
               <BookOpen className="w-6 h-6 text-[#0B6BCB]" />
             ) : (
               <MessageSquare className="w-6 h-6 text-[#0B6BCB]" />
             )}
           </div>
 
-          {isNurseRole ? (
+          {isLibraryFirstRole ? (
             <>
               <h3 className="text-lg font-bold text-[#1A2332] mb-2">See your protocols in one tap</h3>
               <p className="text-sm text-[#64748B] leading-relaxed mb-4">

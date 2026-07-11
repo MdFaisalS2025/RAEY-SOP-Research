@@ -15,7 +15,7 @@ from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.database.db import init_db, async_session
-from app.api import routes_query, routes_sops, routes_feedback, routes_voice, routes_evaluation, routes_activity, routes_evidence, routes_governance, routes_chat, routes_cds, routes_overrides, routes_credits, routes_analytics, routes_smart
+from app.api import routes_query, routes_sops, routes_feedback, routes_voice, routes_evaluation, routes_activity, routes_evidence, routes_governance, routes_chat, routes_cds, routes_overrides, routes_credits, routes_analytics, routes_smart, routes_capa
 
 
 async def _load_demo_data() -> None:
@@ -142,6 +142,100 @@ async def _backfill_review_dates(session) -> None:
         await session.commit()
 
 
+async def _seed_demo_incidents_if_empty(session) -> None:
+    """Seed demo incident + CAPA records once, mirroring the incidents
+    the frontend previously hardcoded as mock data - so /incidents shows
+    the same illustrative scenarios, now backed by real persisted rows
+    with a real CAPA workflow instead of static JSON."""
+    from sqlalchemy import select, func
+    from app.models.models import IncidentRecord, CAPARecord
+
+    count = (await session.execute(select(func.count(IncidentRecord.id)))).scalar() or 0
+    if count > 0:
+        return
+
+    demo_incidents = [
+        {
+            "incident_type": "near_miss", "title": "PPE shortage during isolation patient admission",
+            "description": "N95 supply depleted during night shift. Staff used surgical masks for aerosol-generating procedure.",
+            "department": "ICU", "severity": "high", "reporter": "Night Shift Charge Nurse",
+            "linked_sop_ids": ["IC-PPE-001"],
+            "capa": {
+                "root_cause": "PPE stockpile reorder trigger was set below actual night-shift consumption rate.",
+                "corrective_action": "Emergency N95 restock; night-shift supply check added to handoff checklist.",
+                "preventive_action": "Review PPE stockpile thresholds and reorder triggers in IC-PPE-001.",
+                "status": "investigating",
+            },
+        },
+        {
+            "incident_type": "adverse_event", "title": "Delayed sepsis bundle initiation",
+            "description": "1-hour bundle initiated at 82 minutes due to blood culture delay. Lactate not drawn concurrently.",
+            "department": "Emergency", "severity": "critical", "reporter": "Dr. Sarah Mitchell",
+            "linked_sop_ids": ["SOP-ICU-001"],
+            "capa": {
+                "root_cause": "SOP did not specify concurrent lactate + blood culture draw, allowing sequential ordering.",
+                "corrective_action": "Clarified lab-ordering sequence with ED nursing and pharmacy leads.",
+                "preventive_action": "Add concurrent lactate + culture step to the sepsis SOP.",
+                "status": "closed",
+            },
+        },
+        {
+            "incident_type": "near_miss", "title": "High-alert medication administered without double-check",
+            "description": "Insulin drip rate changed without second-nurse verification due to staffing shortage.",
+            "department": "Oncology", "severity": "critical", "reporter": "Emily Chen RN",
+            "linked_sop_ids": ["SOP-ENDO-004"],
+            "capa": {
+                "root_cause": "SOP assumes two-nurse coverage at all times; no fallback defined for single-nurse shifts.",
+                "corrective_action": "Escalated to pharmacy and nursing leadership; interim telephonic verification used.",
+                "preventive_action": "Add a telephonic double-check procedure for single-nurse-coverage scenarios.",
+                "status": "action_planned",
+            },
+        },
+        {
+            "incident_type": "sentinel_event", "title": "Patient fall with injury during Morse scale assessment",
+            "description": "Patient scored 65 (high risk) but fall prevention measures not implemented per SOP timing requirements.",
+            "department": "Medical Ward", "severity": "critical", "reporter": "Ward Nurse Manager",
+            "linked_sop_ids": [],
+            "capa": {
+                "root_cause": "SOP allowed up to 4 hours to implement prevention measures after a high-risk score.",
+                "corrective_action": "Immediate root-cause analysis; interim 1-hour implementation directive issued to ward staff.",
+                "preventive_action": "Tighten SOP timing: prevention measures within 1 hour of assessment, not 4 hours.",
+                "status": "closed",
+            },
+        },
+        {
+            "incident_type": "near_miss", "title": "MRI patient with undisclosed implant",
+            "description": "Patient with cardiac device not identified during pre-MRI screening. Caught by radiographer before scan.",
+            "department": "Radiology", "severity": "high", "reporter": "Senior Radiographer",
+            "linked_sop_ids": [],
+            "capa": {
+                "root_cause": "Pre-MRI screening relies on patient self-report with no independent registry cross-check.",
+                "corrective_action": "Manual implant registry check added for this case before rescheduling.",
+                "preventive_action": "Add mandatory electronic implant registry check to pre-MRI screening SOP.",
+                "status": "open",
+            },
+        },
+    ]
+
+    for data in demo_incidents:
+        capa_data = data.pop("capa")
+        incident = IncidentRecord(**data)
+        session.add(incident)
+        await session.flush()
+        capa = CAPARecord(
+            incident_id=incident.id,
+            title=f"CAPA for: {incident.title}",
+            root_cause=capa_data["root_cause"],
+            corrective_action=capa_data["corrective_action"],
+            preventive_action=capa_data["preventive_action"],
+            status=capa_data["status"],
+        )
+        session.add(capa)
+
+    await session.commit()
+    print(f"[SOP-Guard] Seeded {len(demo_incidents)} demo incidents with CAPA records.")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup: init DB and load demo data."""
@@ -152,6 +246,11 @@ async def lifespan(app: FastAPI):
             await routes_governance.seed_notifications_if_empty(session)
     except Exception as e:
         print(f"[SOP-Guard] Warning: notification seed skipped: {e}")
+    try:
+        async with async_session() as session:
+            await _seed_demo_incidents_if_empty(session)
+    except Exception as e:
+        print(f"[SOP-Guard] Warning: incident seed skipped: {e}")
     print("[SOP-Guard] Backend ready.")
     yield
     print("[SOP-Guard] Shutting down.")
@@ -203,6 +302,7 @@ app.include_router(routes_overrides.router)
 app.include_router(routes_credits.router)
 app.include_router(routes_analytics.router)
 app.include_router(routes_smart.router)
+app.include_router(routes_capa.router)
 
 
 @app.get("/")

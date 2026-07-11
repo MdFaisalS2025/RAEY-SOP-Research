@@ -1,6 +1,6 @@
 """Tests for the numbered citation tracker: numbering, dedupe, invalid stripping."""
 
-from app.rag.citation_tracker import build_numbered_context, extract_citations
+from app.rag.citation_tracker import build_numbered_context, extract_citations, attach_citation_numbers
 
 
 def _chunks():
@@ -41,3 +41,30 @@ def test_invalid_marker_stripped():
     cleaned, updated = extract_citations(answer, records)
     assert "[9]" not in cleaned
     assert not any(r["cited_in_answer"] for r in updated)
+
+
+def test_attach_citation_numbers_binds_trailing_marker():
+    answer = "1. Contact: private room or cohort. [1]\n2. Contact: don gloves. [1]\n3. No marker here."
+    sentences = [
+        {"text": "Contact: private room or cohort."},
+        {"text": "Contact: don gloves."},
+        {"text": "No marker here."},
+    ]
+    attach_citation_numbers(answer, sentences)
+    assert sentences[0]["citation_numbers"] == [1]
+    assert sentences[1]["citation_numbers"] == [1]
+    assert sentences[2]["citation_numbers"] == []
+
+
+def test_attach_citation_numbers_multiple_markers():
+    answer = "Combined finding from two sources. [1][2] Another line."
+    sentences = [{"text": "Combined finding from two sources."}, {"text": "Another line."}]
+    attach_citation_numbers(answer, sentences)
+    assert sentences[0]["citation_numbers"] == [1, 2]
+    assert sentences[1]["citation_numbers"] == []
+
+
+def test_attach_citation_numbers_sentence_not_found_is_safe():
+    sentences = [{"text": "This text is not in the answer at all."}]
+    attach_citation_numbers("Completely different answer text.", sentences)
+    assert sentences[0]["citation_numbers"] == []

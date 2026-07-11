@@ -1,5 +1,5 @@
 """
-SOP-Guard Governance Routes
+Meridian Governance Routes
 ---------------------------
 Persistence for proposals, votes, attestations, acknowledgments, and the
 AI query audit log. CRUD-lite over async SQLAlchemy.
@@ -88,7 +88,7 @@ def _emit_notification(
             link=link,
         ))
     except Exception as e:
-        print(f"[SOP-Guard] Warning: failed to emit notification: {e}")
+        print(f"[Meridian] Warning: failed to emit notification: {e}")
 
 
 def _compute_tally(votes: list[VoteRecord]) -> dict:
@@ -706,4 +706,4 @@ async def seed_notifications_if_empty(db: AsyncSession) -> None:
         ])
         await db.commit()
     except Exception as e:
-        print(f"[SOP-Guard] Warning: failed to seed notifications: {e}")
+        print(f"[Meridian] Warning: failed to seed notifications: {e}")

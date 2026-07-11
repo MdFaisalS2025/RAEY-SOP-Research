@@ -1,4 +1,4 @@
-"""Demo data package for SOP-Guard  - SYNTHETIC data for research only."""
+"""Demo data package for Meridian  - SYNTHETIC data for research only."""
 
 from app.demo_data.demo_sops import DEMO_SOPS
 from app.demo_data.demo_queries import DEMO_QUERIES

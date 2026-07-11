@@ -11,7 +11,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { useAuth } from "@/lib/auth-context"
 import { useRole } from "@/lib/role-context"
 
-const DEMO_BANNER_KEY = "sop-guard-demo-banner-dismissed"
+const DEMO_BANNER_KEY = "meridian-demo-banner-dismissed"
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const [bannerDismissed, setBannerDismissed] = useState(true) // start hidden to avoid flash
@@ -50,7 +50,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   // Apply saved density preference app-wide
   useEffect(() => {
     try {
-      const density = localStorage.getItem("sop-guard-density")
+      const density = localStorage.getItem("meridian-density")
       document.body.classList.toggle("compact", density === "compact")
     } catch {
       // ignore

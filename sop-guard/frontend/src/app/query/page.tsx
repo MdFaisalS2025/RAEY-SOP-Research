@@ -71,7 +71,7 @@ const pipelineStages = [
   { label: "Computing confidence score...", duration: 500 },
 ]
 
-const CHAT_SESSION_KEY = "sop-guard-chat-session"
+const CHAT_SESSION_KEY = "meridian-chat-session"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -96,6 +96,7 @@ export type AssistantData = {
   inlineCitations: InlineCitation[]
   followupQuestions: string[]
   abstained: boolean
+  route: string
   generationMode: string | null
   responseTimeMs: number | null
   answerId: string | null
@@ -225,6 +226,7 @@ function mapResponse(query: string, response: any, startedAt: number): Assistant
     abstained:
       (ext.abstained as boolean | undefined) ??
       /not covered in the available SOPs/i.test(response.answer || ""),
+    route: typeof ext.route === "string" ? ext.route : "sop_library",
     generationMode: typeof ext.generation_mode === "string" ? ext.generation_mode : null,
     responseTimeMs: typeof ext.response_time_ms === "number" ? ext.response_time_ms : Date.now() - startedAt,
     answerId: ext.answer_id != null ? String(ext.answer_id) : null,
@@ -237,16 +239,16 @@ function mapResponse(query: string, response: any, startedAt: number): Assistant
 
 function PipelineStages({ currentStage }: { currentStage: number }) {
   return (
-    <div className="p-6 rounded-2xl bg-card border border-[#E2E8F0]">
+    <div className="p-6 rounded-2xl bg-card border border-border">
       <h3 className="text-sm font-semibold mb-4">Processing Pipeline</h3>
       <div className="space-y-3">
         {pipelineStages.map((stage, i) => {
           const completed = i < currentStage
           const active = i === currentStage
           return (
-            <div key={i} className={cn("flex items-center gap-3 text-sm transition-all duration-300", completed ? "text-[#15803D] dark:text-green-400" : active ? "text-[#0B6BCB]" : "text-[#94A3B8]")}>
+            <div key={i} className={cn("flex items-center gap-3 text-sm transition-all duration-300", completed ? "text-[#15803D] dark:text-green-400" : active ? "text-[#0B6BCB]" : "text-subtle")}>
               {completed ? <CheckCircle2 className="w-5 h-5 text-[#15803D] dark:text-green-400 shrink-0" /> : active ? <Loader2 className="w-5 h-5 text-[#0B6BCB] animate-spin shrink-0" /> : <Circle className="w-5 h-5 shrink-0" />}
-              <span className={cn("font-medium", active && "text-[#1A2332]")}>{stage.label}</span>
+              <span className={cn("font-medium", active && "text-foreground")}>{stage.label}</span>
             </div>
           )
         })}
@@ -319,6 +321,14 @@ function TrustPanel({ data }: { data: AssistantData }) {
   const evScore = extractEvidenceScore(data.reasoning)
   const distinctSopTitles = Array.from(new Set(data.inlineCitations.map(c => c.sop_title)))
 
+  const routeConfig: Record<string, { label: string; className: string }> = {
+    sop_library: { label: "Sourced from: SOP Library", className: "bg-muted text-muted-foreground border-border" },
+    external_evidence: { label: "Sourced from: External Literature", className: "bg-[#0B6BCB]/10 dark:bg-[#00E5FF]/10 text-[#0B6BCB] dark:text-[#00E5FF] border-[#0B6BCB]/30 dark:border-[#00E5FF]/30" },
+    hybrid: { label: "Sourced from: SOP Library + External Literature", className: "bg-[#0B6BCB]/10 dark:bg-[#00E5FF]/10 text-[#0B6BCB] dark:text-[#00E5FF] border-[#0B6BCB]/30 dark:border-[#00E5FF]/30" },
+    no_evidence: { label: "No source available", className: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30" },
+  }
+  const routeInfo = routeConfig[data.route] ?? routeConfig.sop_library
+
   const allChecks = [
     ...data.verification.thresholdChecks,
     ...data.verification.sequenceChecks.map((c) => ({ status: c.correct ? "pass" : "fail" })),
@@ -327,7 +337,7 @@ function TrustPanel({ data }: { data: AssistantData }) {
   const checksPassed = allChecks.filter((c) => c.status === "pass").length
 
   return (
-    <div className="rounded-2xl bg-card border border-[#E2E8F0] overflow-hidden">
+    <div className="rounded-2xl bg-card border border-border overflow-hidden">
       {/* Always-visible summary row - the "at a glance" trust story */}
       <button onClick={() => setExpanded(!expanded)} className="w-full flex flex-wrap items-center gap-x-4 gap-y-2 p-4 text-left hover:bg-muted/40 transition-colors">
         <span className={cn("inline-flex items-center gap-1.5 text-sm font-semibold", sc.className)}>
@@ -344,9 +354,12 @@ function TrustPanel({ data }: { data: AssistantData }) {
             {faithfulnessPct}% grounded in source
           </span>
         )}
-        <span className="inline-flex items-center gap-1.5 text-xs text-[#94A3B8]">
+        <span className="inline-flex items-center gap-1.5 text-xs text-subtle">
           <Cpu className="w-3 h-3" />
           {data.generationMode === "llm" ? "In-house model" : data.generationMode === "mock_fallback" ? "Extractive (model fallback)" : "Extractive (no model configured)"}
+        </span>
+        <span className={cn("inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold border", routeInfo.className)}>
+          {routeInfo.label}
         </span>
         <span className="ml-auto inline-flex items-center gap-1 text-xs text-[#0B6BCB] font-medium">
           {expanded ? "Hide trust details" : "Trust details"}
@@ -357,10 +370,10 @@ function TrustPanel({ data }: { data: AssistantData }) {
       <AnimatePresence>
         {expanded && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-            <div className="px-4 pb-4 space-y-4 border-t border-[#E2E8F0] pt-4">
+            <div className="px-4 pb-4 space-y-4 border-t border-border pt-4">
 
               {/* Why this confidence / verification status */}
-              <p className="text-xs text-[#64748B]">
+              <p className="text-xs text-muted-foreground">
                 {confidenceLevel === "high" && "Well supported by SOP evidence. All key details verified."}
                 {confidenceLevel === "medium" && "Partially supported. Some details may need manual verification."}
                 {confidenceLevel === "low" && "Limited evidence found. Check the source SOP before acting."}
@@ -375,12 +388,12 @@ function TrustPanel({ data }: { data: AssistantData }) {
                 <div className="space-y-3">
                   {data.verification.thresholdChecks.length > 0 && (
                     <div>
-                      <p className="text-xs font-semibold uppercase text-[#64748B] mb-2">Threshold Checks</p>
+                      <p className="text-xs font-semibold uppercase text-muted-foreground mb-2">Threshold Checks</p>
                       <div className="space-y-2">
                         {data.verification.thresholdChecks.map((c, i) => (
                           <div key={i} className="flex items-center gap-2 p-2.5 rounded-lg bg-muted">
                             {c.status === "pass" ? <CheckCircle2 className="w-4 h-4 text-[#15803D] dark:text-green-400 shrink-0" /> : <XCircle className="w-4 h-4 text-[#B91C1C] dark:text-red-400 shrink-0" />}
-                            <span className="flex-1 text-sm text-[#1A2332]">{c.parameter}: <span className="font-mono text-[#0B6BCB]">{c.value}</span></span>
+                            <span className="flex-1 text-sm text-foreground">{c.parameter}: <span className="font-mono text-[#0B6BCB]">{c.value}</span></span>
                             <span className={cn("text-xs font-semibold", c.status === "pass" ? "text-[#15803D] dark:text-green-400" : "text-[#B91C1C] dark:text-red-400")}>{c.status.toUpperCase()}</span>
                           </div>
                         ))}
@@ -389,13 +402,13 @@ function TrustPanel({ data }: { data: AssistantData }) {
                   )}
                   {data.verification.sequenceChecks.length > 0 && (
                     <div>
-                      <p className="text-xs font-semibold uppercase text-[#64748B] mb-2">Sequence Checks</p>
+                      <p className="text-xs font-semibold uppercase text-muted-foreground mb-2">Sequence Checks</p>
                       <div className="space-y-2">
                         {data.verification.sequenceChecks.map((c, i) => (
                           <div key={i} className="flex items-center gap-2 p-2.5 rounded-lg bg-muted">
                             {c.correct ? <CheckCircle2 className="w-4 h-4 text-[#15803D] dark:text-green-400" /> : <XCircle className="w-4 h-4 text-[#B91C1C] dark:text-red-400" />}
-                            <span className="text-sm text-[#1A2332]">{c.procedure}</span>
-                            <span className="text-[#64748B] text-xs ml-auto">{c.correct ? "Correct order" : "Order issue"}</span>
+                            <span className="text-sm text-foreground">{c.procedure}</span>
+                            <span className="text-muted-foreground text-xs ml-auto">{c.correct ? "Correct order" : "Order issue"}</span>
                           </div>
                         ))}
                       </div>
@@ -403,13 +416,13 @@ function TrustPanel({ data }: { data: AssistantData }) {
                   )}
                   {data.verification.contraindicationChecks.length > 0 && (
                     <div>
-                      <p className="text-xs font-semibold uppercase text-[#64748B] mb-2">Contraindication Checks</p>
+                      <p className="text-xs font-semibold uppercase text-muted-foreground mb-2">Contraindication Checks</p>
                       <div className="space-y-2">
                         {data.verification.contraindicationChecks.map((c, i) => (
                           <div key={i} className="flex items-center gap-2 p-2.5 rounded-lg bg-muted">
                             {c.safe ? <CheckCircle2 className="w-4 h-4 text-[#15803D] dark:text-green-400" /> : <AlertTriangle className="w-4 h-4 text-[#B45309] dark:text-amber-400" />}
-                            <span className="flex-1 text-sm text-[#1A2332]">{c.item}</span>
-                            <span className="text-xs text-[#64748B]">{c.note}</span>
+                            <span className="flex-1 text-sm text-foreground">{c.item}</span>
+                            <span className="text-xs text-muted-foreground">{c.note}</span>
                           </div>
                         ))}
                       </div>
@@ -422,7 +435,7 @@ function TrustPanel({ data }: { data: AssistantData }) {
               {faithfulness?.sentences && faithfulness.sentences.length > 0 && (
                 <div>
                   <button onClick={() => setShowSentenceCheck(!showSentenceCheck)}
-                    className="text-xs text-[#64748B] hover:text-[#1A2332] transition-colors inline-flex items-center gap-1">
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1">
                     {showSentenceCheck ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
                     Sentence-level grounding check ({faithfulness.total_checked} sentences)
                   </button>
@@ -432,12 +445,12 @@ function TrustPanel({ data }: { data: AssistantData }) {
                         <div className="space-y-2 pt-2">
                           {faithfulness.sentences.map((s: any, i: number) => (
                             <div key={i} className={cn("p-2.5 rounded-lg text-[13px] leading-relaxed", s.grounded ? "bg-muted" : "bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30")}>
-                              <span className="text-[#1A2332]">{s.text}</span>
+                              <span className="text-foreground">{s.text}</span>
                               {!s.grounded && (
                                 <span className="ml-2 text-[#B45309] dark:text-amber-400 text-xs font-semibold">Not found in SOP</span>
                               )}
                               {s.source_chunk && s.source_chunk !== "Unknown" && s.source_chunk !== "General context" && (
-                                <span className="ml-2 text-[11px] text-[#64748B]">- {s.source_chunk}</span>
+                                <span className="ml-2 text-[11px] text-muted-foreground">- {s.source_chunk}</span>
                               )}
                             </div>
                           ))}
@@ -473,10 +486,11 @@ function CopyLinkButton({ data }: { data: AssistantData }) {
   }
   return (
     <button onClick={handleCopy}
-      className={cn("inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border transition-all",
-        copied ? "bg-[#DCFCE7] dark:bg-green-500/10 border-[#BBF7D0] dark:border-green-500/30 text-[#15803D] dark:text-green-400" : "border-[#E2E8F0] text-[#64748B] hover:text-[#1A2332] hover:border-[#CBD5E1]")}>
+      title={copied === "link" ? "Link copied" : copied === "answer" ? "Answer copied" : "Copy link"}
+      aria-label="Copy link"
+      className={cn("inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all",
+        copied ? "text-[#15803D] dark:text-green-400" : "text-muted-foreground hover:text-foreground hover:bg-muted")}>
       {copied ? <Check className="w-4 h-4" /> : <Link2 className="w-4 h-4" />}
-      {copied === "link" ? "Link copied" : copied === "answer" ? "Answer copied" : "Copy link"}
     </button>
   )
 }
@@ -495,16 +509,16 @@ function CollapsedAssistant({ data }: { data: AssistantData }) {
     )
   }
   return (
-    <div className="p-5 rounded-2xl bg-card border border-[#E2E8F0]">
+    <div className="p-5 rounded-2xl bg-card border border-border">
       {expanded ? (
         <AnswerRenderer text={data.answer} citations={data.inlineCitations} />
       ) : (
-        <p className="text-[15px] leading-relaxed text-[#1A2332]">
+        <p className="text-[15px] leading-relaxed text-foreground">
           {plainText.length > 260 ? plainText.slice(0, 257) + "..." : plainText}
         </p>
       )}
       <button onClick={() => setExpanded(!expanded)}
-        className="mt-3 inline-flex items-center gap-1.5 text-[13px] text-[#64748B] hover:text-[#0B6BCB] transition-colors">
+        className="mt-3 inline-flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-[#0B6BCB] transition-colors">
         {expanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
         <FileText className="w-3.5 h-3.5" />
         {sourceCount} {sourceCount === 1 ? "source" : "sources"}
@@ -515,10 +529,36 @@ function CollapsedAssistant({ data }: { data: AssistantData }) {
             ? data.inlineCitations.map((c) => `${c.sop_title}${c.section_title ? " - " + c.section_title : ""}`)
             : data.sources.map((s) => `${s.sop_title} - ${s.section}`)
           ).map((t, i) => (
-            <p key={i} className="text-[12px] text-[#64748B] pl-5">{t}</p>
+            <p key={i} className="text-[12px] text-muted-foreground pl-5">{t}</p>
           ))}
         </div>
       )}
+    </div>
+  )
+}
+
+// ─── Compact source strip ─────────────────────────────────────────────────
+// Perplexity/modern-AI-chat pattern: sources are shown as a scrollable row
+// of small pills directly under the answer by default, not hidden behind
+// a click - the deep-dive SourcePanel (relevance scores, full snippets,
+// version/review metadata) stays available via the action bar for anyone
+// who wants more than "what grounded this".
+function SourceStrip({ citations, onSelect }: { citations: InlineCitation[]; onSelect: (n: number) => void }) {
+  if (citations.length === 0) return null
+  return (
+    <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar -mx-1 px-1 pb-0.5">
+      {citations.map((c) => (
+        <button
+          key={c.number}
+          onClick={() => onSelect(c.number)}
+          className="inline-flex items-center gap-1.5 shrink-0 px-2.5 py-1 rounded-full border border-border bg-muted/60 hover:border-[#0B6BCB]/40 hover:bg-[#0B6BCB]/[0.06] transition-colors text-left"
+        >
+          <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#0B6BCB]/10 dark:bg-[#00E5FF]/10 text-[#0B6BCB] dark:text-[#00E5FF] text-[9px] font-bold shrink-0">
+            {c.number}
+          </span>
+          <span className="text-[11px] font-medium text-foreground truncate max-w-[160px]">{c.sop_title}</span>
+        </button>
+      ))}
     </div>
   )
 }
@@ -581,9 +621,9 @@ function AssistantAnswer({
             <AlertTriangle className="w-5 h-5 text-[#B91C1C] dark:text-red-400" />
           </div>
           <div>
-            <p className="font-semibold text-[#1A2332] mb-1">Backend unavailable</p>
-            <p className="text-[15px] text-[#64748B]">Could not reach the SOP-Guard backend. Make sure the Python server is running on port 8000, then try again.</p>
-            <p className="text-xs text-[#64748B] mt-3 font-mono bg-muted px-3 py-2 rounded-lg inline-block">
+            <p className="font-semibold text-foreground mb-1">Backend unavailable</p>
+            <p className="text-[15px] text-muted-foreground">Could not reach the Meridian backend. Make sure the Python server is running on port 8000, then try again.</p>
+            <p className="text-xs text-muted-foreground mt-3 font-mono bg-muted px-3 py-2 rounded-lg inline-block">
               cd backend &amp;&amp; uvicorn app.main:app --reload
             </p>
           </div>
@@ -603,7 +643,7 @@ function AssistantAnswer({
             <AlertTriangle className="w-5 h-5 text-[#B91C1C] dark:text-red-400 shrink-0 mt-0.5" />
             <div>
               <p className="font-semibold text-[#B91C1C] dark:text-red-400 text-sm">CONFLICT DETECTED</p>
-              <p className="text-[13px] text-[#64748B] mt-0.5">The retrieved SOP content contains potentially conflicting guidance.</p>
+              <p className="text-[13px] text-muted-foreground mt-0.5">The retrieved SOP content contains potentially conflicting guidance.</p>
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -629,7 +669,7 @@ function AssistantAnswer({
               {data.sopConflicts.map((c, i) => (
                 <div key={i} className="p-3 rounded-lg bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 text-sm">
                   <p className="font-semibold text-[#B91C1C] dark:text-red-400">{c.message}</p>
-                  <p className="text-[#64748B] text-xs mt-1">Values in {c.sop_a}: {c.values_a?.join(", ")} vs {c.sop_b}: {c.values_b?.join(", ")}</p>
+                  <p className="text-muted-foreground text-xs mt-1">Values in {c.sop_a}: {c.values_a?.join(", ")} vs {c.sop_b}: {c.values_b?.join(", ")}</p>
                 </div>
               ))}
             </div>
@@ -645,7 +685,7 @@ function AssistantAnswer({
           <div className="flex items-center justify-between gap-2 pb-1">
             <div className="flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-[#0B6BCB]" />
-              <h2 className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">Internal SOP Answer</h2>
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Internal SOP Answer</h2>
             </div>
             <ReadingLevelToggle value={readingLevel} onChange={onReadingLevelChange} />
           </div>
@@ -657,20 +697,20 @@ function AssistantAnswer({
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h2 className="text-lg font-semibold text-[#1A2332]">No grounded answer - by design</h2>
+                    <h2 className="text-lg font-semibold text-foreground">No grounded answer - by design</h2>
                     <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30">
                       Safe refusal
                     </span>
                   </div>
-                  <p className="text-[15px] leading-relaxed text-[#64748B] mt-2">{data.answer.replace(/\[\d+\]/g, "")}</p>
-                  <p className="text-[13px] leading-relaxed text-[#64748B] mt-2">
-                    This is a deliberate safety decision, not a system failure: SOP-Guard only answers when it can point to
+                  <p className="text-[15px] leading-relaxed text-muted-foreground mt-2">{data.answer.replace(/\[\d+\]/g, "")}</p>
+                  <p className="text-[13px] leading-relaxed text-muted-foreground mt-2">
+                    This is a deliberate safety decision, not a system failure: Meridian only answers when it can point to
                     grounded SOP evidence, and declines rather than guess when it can&apos;t.
                   </p>
                 </div>
               </div>
-              <div className="mt-6 pt-5 border-t border-[#E2E8F0]">
-                <p className="text-xs font-semibold uppercase tracking-wide text-[#64748B] mb-3">What you can do next:</p>
+              <div className="mt-6 pt-5 border-t border-border">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">What you can do next:</p>
                 <div className="space-y-2">
                   {[
                     { href: "/library", icon: BookOpen, label: "Browse the SOP Library" },
@@ -678,9 +718,9 @@ function AssistantAnswer({
                     { href: "/proposals?new=1", icon: PlusCircle, label: "Request a new SOP via Proposals" },
                   ].map((opt) => (
                     <a key={opt.href} href={opt.href}
-                      className="flex items-center gap-2.5 border border-[#E2E8F0] rounded-lg px-4 py-2.5 hover:border-[#0B6BCB]/40 hover:bg-[#0B6BCB]/[0.04] transition-colors duration-150">
+                      className="flex items-center gap-2.5 border border-border rounded-lg px-4 py-2.5 hover:border-[#0B6BCB]/40 hover:bg-[#0B6BCB]/[0.04] transition-colors duration-150">
                       <opt.icon className="w-4 h-4 text-[#0B6BCB] shrink-0" />
-                      <span className="text-sm text-[#1A2332]">{opt.label}</span>
+                      <span className="text-sm text-foreground">{opt.label}</span>
                     </a>
                   ))}
                 </div>
@@ -690,9 +730,9 @@ function AssistantAnswer({
             <>
               {/* Grounding bar */}
               {distinctSopTitles.length > 0 && (
-                <div className="p-3.5 rounded-2xl bg-card border border-[#E2E8F0]">
+                <div className="p-3.5 rounded-2xl bg-card border border-border">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="inline-flex items-center gap-1.5 text-sm font-medium text-[#1A2332]">
+                    <span className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground">
                       <Layers className="w-4 h-4 text-[#0B6BCB]" />
                       Grounded in {groundingCitations.length} SOP {groundingCitations.length === 1 ? "section" : "sections"}
                     </span>
@@ -703,12 +743,12 @@ function AssistantAnswer({
                     ))}
                     {data.generationMode && (
                       <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase border",
-                        data.generationMode === "llm" ? "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30" : "bg-card text-[#475569] border-[#CBD5E1]")}>
+                        data.generationMode === "llm" ? "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30" : "bg-card text-muted-foreground border-input")}>
                         {data.generationMode}
                       </span>
                     )}
                     {data.responseTimeMs !== null && (
-                      <span className="inline-flex items-center gap-1 text-[11px] text-[#64748B] font-mono">
+                      <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground font-mono">
                         <Clock className="w-3 h-3" />
                         {(data.responseTimeMs / 1000).toFixed(1)}s
                       </span>
@@ -723,18 +763,18 @@ function AssistantAnswer({
                 </div>
               )}
 
-              <div className="p-6 sm:p-8 rounded-2xl bg-card border border-[#E2E8F0] shadow-sm relative">
+              <div className="p-6 sm:p-8 rounded-2xl bg-card border border-border shadow-sm relative">
                 <div>
                   {plain?.summary && (
                     <div className="mb-4 p-3.5 rounded-xl bg-[#0B6BCB]/[0.06] border border-[#0B6BCB]/20">
-                      <p className="text-[15px] leading-relaxed text-[#1A2332]">
+                      <p className="text-[15px] leading-relaxed text-foreground">
                         <span className="font-semibold text-[#0B6BCB]">In short: </span>
                         {plain.summary}
                       </p>
                     </div>
                   )}
                   {data.faithfulness?.sentences && data.faithfulness.sentences.length > 0 && (
-                    <div className="flex flex-wrap items-center gap-3 mb-3 text-[11px] text-[#64748B]">
+                    <div className="flex flex-wrap items-center gap-3 mb-3 text-[11px] text-muted-foreground">
                       <span className="inline-flex items-center gap-1"><span className="w-2.5 h-0.5 rounded bg-[#15803D]/50" />Grounded</span>
                       <span className="inline-flex items-center gap-1"><span className="w-2.5 h-0.5 rounded bg-[#B45309]/60" />Partially grounded</span>
                       <span className="inline-flex items-center gap-1"><span className="w-2.5 h-0.5 rounded bg-[#B91C1C]/60" />Not grounded</span>
@@ -742,6 +782,11 @@ function AssistantAnswer({
                   )}
                   <AnswerRenderer text={displayAnswer} citations={data.inlineCitations} onCitationClick={handleCitationClick} groundingSentences={data.faithfulness?.sentences} animate />
                 </div>
+                {data.inlineCitations.length > 0 && (
+                  <div className="mt-5 pt-4 border-t border-border">
+                    <SourceStrip citations={data.inlineCitations} onSelect={handleCitationClick} />
+                  </div>
+                )}
               </div>
 
               <FeedbackRow queryText={data.query} />
@@ -757,35 +802,37 @@ function AssistantAnswer({
               signal instead of four separate always-visible blocks. */}
           {!isAbstained && <TrustPanel data={data} />}
 
-          {/* Create Update Proposal button */}
-          {hasPermission("create_proposal") && (
-            <div className="flex">
-              <button
-                onClick={() => router.push(`/proposals?new=1&sop=${encodeURIComponent(firstCitation)}&query=${encodeURIComponent(data.query)}`)}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border border-[#E2E8F0] text-[#64748B] hover:text-[#1A2332] hover:border-[#CBD5E1] transition-all">
-                <PlusCircle className="w-4 h-4" />
-                Create Update Proposal
-              </button>
-            </div>
-          )}
-
-          {/* Action Bar */}
-          <div className="flex flex-wrap gap-2">
+          {/* Action Bar - icon-first, tooltip-labeled row (ChatGPT/Perplexity
+              pattern) instead of a wall of text buttons. Sources keeps a
+              visible count since "how many sources" is worth a glance
+              without hovering. */}
+          <div className="flex flex-wrap items-center gap-1">
             {[
-              { key: "sources", icon: FileText, label: `View Sources (${data.inlineCitations.length > 0 ? data.inlineCitations.length : data.sources.length})` },
-              { key: "trace", icon: Brain, label: "Pipeline Trace" },
-              { key: "feedback", icon: ThumbsUp, label: "Give Feedback" },
+              { key: "sources", icon: FileText, label: "Sources", count: data.inlineCitations.length > 0 ? data.inlineCitations.length : data.sources.length },
+              { key: "trace", icon: Brain, label: "Pipeline trace" },
+              { key: "feedback", icon: ThumbsUp, label: "Give feedback" },
               { key: "export", icon: Download, label: "Export" },
             ].map((action) => (
               <button key={action.key}
                 onClick={() => setActivePanel(activePanel === action.key ? null : action.key)}
-                className={cn("inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border transition-all",
-                  activePanel === action.key ? "bg-[#0B6BCB]/10 border-[#0B6BCB]/30 text-[#0B6BCB]" : "border-[#E2E8F0] text-[#64748B] hover:text-[#1A2332] hover:border-[#CBD5E1]")}>
+                title={action.label}
+                aria-label={action.label}
+                className={cn("inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all",
+                  activePanel === action.key ? "bg-[#0B6BCB]/10 dark:bg-[#00E5FF]/10 text-[#0B6BCB] dark:text-[#00E5FF]" : "text-muted-foreground hover:text-foreground hover:bg-muted")}>
                 <action.icon className="w-4 h-4" />
-                {action.label}
+                {action.count !== undefined && action.count > 0 && <span>{action.count}</span>}
               </button>
             ))}
             <CopyLinkButton data={data} />
+            {hasPermission("create_proposal") && (
+              <button
+                onClick={() => router.push(`/proposals?new=1&sop=${encodeURIComponent(firstCitation)}&query=${encodeURIComponent(data.query)}`)}
+                title="Create Update Proposal"
+                aria-label="Create Update Proposal"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all">
+                <PlusCircle className="w-4 h-4" />
+              </button>
+            )}
           </div>
 
           {/* Expandable Panels */}
@@ -802,7 +849,7 @@ function AssistantAnswer({
                   />
                 )}
                 {activePanel === "sources" && data.inlineCitations.length === 0 && (
-                  <div className="p-5 rounded-2xl bg-card border border-[#E2E8F0]">
+                  <div className="p-5 rounded-2xl bg-card border border-border">
                     <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
                       <FileText className="w-4 h-4 text-[#0B6BCB]" />
                       Source Evidence
@@ -810,13 +857,13 @@ function AssistantAnswer({
                     <div className="space-y-3">
                       {data.sources.map((s) => (
                         <button key={s.id} onClick={() => setSelectedSource(s)}
-                          className="w-full text-left p-4 rounded-xl bg-card border border-[#E2E8F0] hover:border-[#0B6BCB]/30 transition-all group">
+                          className="w-full text-left p-4 rounded-xl bg-card border border-border hover:border-[#0B6BCB]/30 transition-all group">
                           <div className="flex items-center justify-between mb-1">
                             <span className="text-sm font-semibold group-hover:text-[#0B6BCB] transition-colors">{s.sop_title}</span>
                             <span className="text-xs font-mono text-[#0B6BCB]">{Math.round(s.score * 100)}% match</span>
                           </div>
-                          <p className="text-xs text-[#64748B] mb-2">{s.section}</p>
-                          <p className="text-[15px] leading-relaxed text-[#1A2332]">{s.content.substring(0, 150)}...</p>
+                          <p className="text-xs text-muted-foreground mb-2">{s.section}</p>
+                          <p className="text-[15px] leading-relaxed text-foreground">{s.content.substring(0, 150)}...</p>
                         </button>
                       ))}
                     </div>
@@ -825,7 +872,7 @@ function AssistantAnswer({
 
                 {/* Pipeline Trace Panel */}
                 {activePanel === "trace" && (
-                  <div className="p-5 rounded-2xl bg-card border border-[#E2E8F0]">
+                  <div className="p-5 rounded-2xl bg-card border border-border">
                     <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
                       <Brain className="w-4 h-4 text-[#0B6BCB]" />
                       How This Answer Was Built
@@ -836,7 +883,7 @@ function AssistantAnswer({
                       const total = totalLine ? totalLine.match(/(\d+)ms/)?.[1] : null
                       if (!lines.length) return null
                       return (
-                        <div className="flex flex-wrap items-center gap-3 mb-4 text-xs text-[#64748B]">
+                        <div className="flex flex-wrap items-center gap-3 mb-4 text-xs text-muted-foreground">
                           <Clock className="w-3.5 h-3.5" />
                           {lines.filter((l) => !l.includes("Total")).map((l, i) => {
                             const m = l.match(/Timing - (.+?): (\d+)ms/)
@@ -846,14 +893,14 @@ function AssistantAnswer({
                         </div>
                       )
                     })()}
-                    <div className="relative pl-6 border-l-2 border-[#E2E8F0] space-y-4">
+                    <div className="relative pl-6 border-l-2 border-border space-y-4">
                       {mapReasoningToTimeline(data.reasoning).map((stage, i) => (
                         <div key={i} className="relative">
                           <div className="absolute -left-[25px] w-4 h-4 rounded-full bg-[#0B6BCB]/15 border-2 border-[#0B6BCB] flex items-center justify-center">
                             <stage.icon className="w-2.5 h-2.5 text-[#0B6BCB]" />
                           </div>
                           <p className="text-sm font-medium">{stage.label}</p>
-                          <p className="text-xs text-[#64748B] mt-0.5">{stage.raw}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{stage.raw}</p>
                         </div>
                       ))}
                     </div>
@@ -862,7 +909,7 @@ function AssistantAnswer({
 
                 {/* Feedback Panel */}
                 {activePanel === "feedback" && (
-                  <div className="p-5 rounded-2xl bg-card border border-[#E2E8F0]">
+                  <div className="p-5 rounded-2xl bg-card border border-border">
                     <h3 className="text-sm font-semibold mb-4">Was this answer helpful?</h3>
                     <div className="flex flex-wrap gap-2 mb-4">
                       {[
@@ -873,7 +920,7 @@ function AssistantAnswer({
                       ].map((fb) => (
                         <button key={fb.key} onClick={() => handleFeedback(fb.key)}
                           className={cn("inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm border transition-colors",
-                            feedbackGiven === fb.key ? "bg-[#0B6BCB]/10 border-[#0B6BCB]/30 text-[#0B6BCB]" : "border-[#E2E8F0] text-[#64748B] hover:text-[#1A2332]")}>
+                            feedbackGiven === fb.key ? "bg-[#0B6BCB]/10 border-[#0B6BCB]/30 text-[#0B6BCB]" : "border-border text-muted-foreground hover:text-foreground")}>
                           <fb.icon className="w-4 h-4" />
                           {fb.label}
                         </button>
@@ -890,7 +937,7 @@ function AssistantAnswer({
 
                 {/* Export Panel */}
                 {activePanel === "export" && (
-                  <div className="p-5 rounded-2xl bg-card border border-[#E2E8F0]">
+                  <div className="p-5 rounded-2xl bg-card border border-border">
                     <h3 className="text-sm font-semibold mb-4">Export This Result</h3>
                     <div className="flex flex-wrap gap-3">
                       <button onClick={async () => {
@@ -899,11 +946,11 @@ function AssistantAnswer({
                           const blob = await res.blob()
                           const url = URL.createObjectURL(blob)
                           const a = document.createElement("a")
-                          a.href = url; a.download = `sop-guard-report-${Date.now()}.json`; a.click()
+                          a.href = url; a.download = `meridian-report-${Date.now()}.json`; a.click()
                           URL.revokeObjectURL(url)
                         } catch { /* silently fail */ }
                       }}
-                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border border-[#E2E8F0] text-[#64748B] hover:text-[#1A2332] transition-colors">
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border border-border text-muted-foreground hover:text-foreground transition-colors">
                         <Download className="w-4 h-4" />
                         Download JSON
                       </button>
@@ -913,13 +960,13 @@ function AssistantAnswer({
                           const report = await res.json()
                           const printWindow = window.open("", "_blank")
                           if (printWindow) {
-                            printWindow.document.write(`<!DOCTYPE html><html><head><title>SOP-Guard Report</title></head><body><h1>SOP-Guard Clinical Query Report</h1><p>${report.header?.disclaimer || ''}</p><h2>Query</h2><p>${report.header?.query || data.query}</p><h2>Answer</h2><pre>${(report.result?.answer || '').replace(/</g, '&lt;')}</pre><h2>Sources</h2>${(report.sources || []).map((s: any) => '<p>' + s.sop_title + ' - ' + s.section + '</p>').join('')}</body></html>`)
+                            printWindow.document.write(`<!DOCTYPE html><html><head><title>Meridian Report</title></head><body><h1>Meridian Clinical Query Report</h1><p>${report.header?.disclaimer || ''}</p><h2>Query</h2><p>${report.header?.query || data.query}</p><h2>Answer</h2><pre>${(report.result?.answer || '').replace(/</g, '&lt;')}</pre><h2>Sources</h2>${(report.sources || []).map((s: any) => '<p>' + s.sop_title + ' - ' + s.section + '</p>').join('')}</body></html>`)
                             printWindow.document.close()
                             setTimeout(() => printWindow.print(), 500)
                           }
                         } catch { /* silently fail */ }
                       }}
-                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border border-[#E2E8F0] text-[#64748B] hover:text-[#1A2332] transition-colors">
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border border-border text-muted-foreground hover:text-foreground transition-colors">
                         <Printer className="w-4 h-4" />
                         Print Report
                       </button>
@@ -936,7 +983,7 @@ function AssistantAnswer({
         <div className="flex-[2] min-w-0 space-y-4 lg:pl-6">
           <div className="flex items-center gap-2 pb-1">
             <BookOpen className="w-4 h-4 text-[#0B6BCB]" />
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">External Evidence</h2>
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">External Evidence</h2>
           </div>
           <EvidencePanel entities={data.entities} queryText={data.query} />
         </div>
@@ -949,26 +996,26 @@ function AssistantAnswer({
             className="fixed inset-0 z-50 flex justify-end bg-black/50 backdrop-blur-sm"
             onClick={() => setSelectedSource(null)}>
             <motion.div initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="w-full max-w-lg h-full bg-card border-l border-[#E2E8F0] shadow-2xl overflow-y-auto"
+              className="w-full max-w-lg h-full bg-card border-l border-border shadow-2xl overflow-y-auto"
               onClick={(e) => e.stopPropagation()}>
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-semibold">Source Detail</h3>
-                  <button onClick={() => setSelectedSource(null)} className="p-2 rounded-lg hover:bg-muted text-[#64748B] transition-colors">
+                  <button onClick={() => setSelectedSource(null)} className="p-2 rounded-lg hover:bg-muted text-muted-foreground transition-colors">
                     <X className="w-5 h-5" />
                   </button>
                 </div>
                 <div className="space-y-4">
                   <div>
-                    <label className="text-xs font-medium text-[#64748B] uppercase tracking-wider">SOP Title</label>
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">SOP Title</label>
                     <p className="text-sm font-semibold mt-1">{selectedSource.sop_title}</p>
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-[#64748B] uppercase tracking-wider">Section</label>
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Section</label>
                     <p className="text-sm mt-1">{selectedSource.section}</p>
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-[#64748B] uppercase tracking-wider">Relevance Score</label>
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Relevance Score</label>
                     <div className="flex items-center gap-2 mt-1">
                       <div className="w-24 h-2 rounded-full bg-muted overflow-hidden">
                         <div className="h-full rounded-full bg-[#0B6BCB]" style={{ width: `${selectedSource.score * 100}%` }} />
@@ -977,8 +1024,8 @@ function AssistantAnswer({
                     </div>
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-[#64748B] uppercase tracking-wider">Content</label>
-                    <p className="text-sm text-[#64748B] mt-2 leading-relaxed p-3 rounded-xl bg-muted border border-[#E2E8F0]">
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Content</label>
+                    <p className="text-sm text-muted-foreground mt-2 leading-relaxed p-3 rounded-xl bg-muted border border-border">
                       {selectedSource.content}
                     </p>
                   </div>
@@ -1022,6 +1069,8 @@ export default function QueryPage() {
   const chatDisabledRef = useRef(false)
   const stageTimerRef = useRef<NodeJS.Timeout | null>(null)
   const threadEndRef = useRef<HTMLDivElement | null>(null)
+  const wasNearBottomRef = useRef(true)
+  const prevMessageCountRef = useRef(0)
 
   const submitted = messages.length > 0
 
@@ -1033,7 +1082,7 @@ export default function QueryPage() {
   }, [messages.length])
 
   useEffect(() => {
-    setUserRole(localStorage.getItem("sop-guard-role") || "viewer")
+    setUserRole(localStorage.getItem("meridian-role") || "viewer")
     try {
       const saved = localStorage.getItem(READING_LEVEL_KEY)
       if (saved === "plain" || saved === "clinical") setReadingLevel(saved)
@@ -1106,11 +1155,41 @@ export default function QueryPage() {
     return () => { if (stageTimerRef.current) clearTimeout(stageTimerRef.current) }
   }, [loading])
 
+  // Track whether the reader is already near the bottom, so a new answer
+  // never yanks them away from something they scrolled up to read.
   useEffect(() => {
-    if (loading || messages.length > 0) {
-      threadEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" })
+    const NEAR_BOTTOM_PX = 120
+    const updateNearBottom = () => {
+      const scrollable = document.documentElement
+      wasNearBottomRef.current =
+        window.innerHeight + window.scrollY >= scrollable.scrollHeight - NEAR_BOTTOM_PX
     }
-  }, [loading, messages.length])
+    updateNearBottom()
+    window.addEventListener("scroll", updateNearBottom, { passive: true })
+    return () => window.removeEventListener("scroll", updateNearBottom)
+  }, [])
+
+  // Auto-scroll only when the user submits a genuinely new question (not
+  // on every loading-state flip, and not again when the assistant's reply
+  // is appended a moment later) and only if the reader hadn't scrolled
+  // away to review earlier history. Rather than snapping to the very
+  // bottom of the page - which can jump straight past a long answer and
+  // its sources to trailing whitespace - the new question bubble itself
+  // is brought to the top of the viewport, the same pattern ChatGPT/
+  // Claude use: the answer then streams in below without any further
+  // forced scrolling, so the reader is never yanked mid-read.
+  useEffect(() => {
+    const isNewMessage = messages.length > prevMessageCountRef.current
+    const isNewUserMessage = isNewMessage && messages[messages.length - 1]?.role === "user"
+    prevMessageCountRef.current = messages.length
+    if (isNewUserMessage && wasNearBottomRef.current) {
+      const lastUserMessage = messages[messages.length - 1]
+      requestAnimationFrame(() => {
+        document.getElementById(`msg-${lastUserMessage.id}`)?.scrollIntoView({ behavior: "smooth", block: "start" })
+      })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages.length])
 
   const allHistory = [
     ...queryHistory,
@@ -1205,6 +1284,7 @@ export default function QueryPage() {
         inlineCitations: [],
         followupQuestions: [],
         abstained: false,
+        route: "no_evidence",
         generationMode: null,
         responseTimeMs: null,
         answerId: null,
@@ -1230,7 +1310,7 @@ export default function QueryPage() {
   const patientContextToggle = (
     <div className="mb-3">
       <button onClick={() => setShowPatientContext(!showPatientContext)}
-        className="inline-flex items-center gap-1.5 text-sm text-[#64748B] hover:text-[#1A2332] transition-colors">
+        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
         {showPatientContext ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
         <Activity className="w-4 h-4" />
         Add Patient Context (NEWS2)
@@ -1239,7 +1319,7 @@ export default function QueryPage() {
         {showPatientContext && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden mt-2">
-            <div className="p-4 rounded-xl bg-card border border-[#E2E8F0] space-y-3">
+            <div className="p-4 rounded-xl bg-card border border-border space-y-3">
               <div className="flex items-center gap-4">
                 <label className="text-sm font-medium shrink-0">NEWS2 Score</label>
                 <input
@@ -1249,7 +1329,7 @@ export default function QueryPage() {
                   value={news2Score ?? ""}
                   onChange={e => setNews2Score(e.target.value === "" ? null : Number(e.target.value))}
                   placeholder="0-20"
-                  className="w-24 px-3 py-1.5 rounded-lg bg-muted border border-[#E2E8F0] text-sm text-[#1A2332] focus:outline-none focus:ring-2 focus:ring-[#0B6BCB]/40"
+                  className="w-24 px-3 py-1.5 rounded-lg bg-muted border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#0B6BCB]/40"
                 />
                 {news2Score !== null && (
                   <span className={cn("inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border", news2RiskConfig(news2Score).className)}>
@@ -1257,7 +1337,7 @@ export default function QueryPage() {
                   </span>
                 )}
               </div>
-              <p className="text-xs text-[#64748B]">
+              <p className="text-xs text-muted-foreground">
                 Applies to your next question. Higher scores indicate greater deterioration risk.
               </p>
             </div>
@@ -1275,7 +1355,7 @@ export default function QueryPage() {
         onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSubmit() } }}
         placeholder={submitted ? "Ask a follow-up..." : "Ask a clinical SOP question..."}
         rows={3}
-        className="w-full p-4 sm:pr-28 rounded-2xl bg-muted border border-[#E2E8F0] text-[#1A2332] placeholder:text-[#94A3B8] caret-[#0B6BCB] resize-none focus:outline-none focus:ring-2 focus:ring-[#0B6BCB]/40 text-base"
+        className="w-full p-4 sm:pr-28 rounded-2xl bg-muted border border-border text-foreground placeholder:text-subtle caret-[#0B6BCB] resize-none focus:outline-none focus:ring-2 focus:ring-[#0B6BCB]/40 text-base"
       />
       <div className="max-sm:relative max-sm:mt-2 max-sm:justify-end absolute bottom-3 right-3 flex items-center gap-2">
         <VoiceRecorder onTranscript={(t) => { setQuery(t) }} />
@@ -1296,20 +1376,20 @@ export default function QueryPage() {
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <button onClick={() => setShowHistory(!showHistory)}
-              className={cn("p-2 rounded-lg transition-colors", showHistory ? "bg-[#0B6BCB]/10 text-[#0B6BCB]" : "text-[#64748B] hover:text-[#1A2332]")}
+              className={cn("p-2 rounded-lg transition-colors", showHistory ? "bg-[#0B6BCB]/10 text-[#0B6BCB]" : "text-muted-foreground hover:text-foreground")}
               title="Query history">
               <History className="w-5 h-5" />
             </button>
             {submitted && (
               <button onClick={resetConversation}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border border-[#E2E8F0] text-[#64748B] hover:text-[#1A2332] hover:border-[#CBD5E1] transition-all"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border border-border text-muted-foreground hover:text-foreground hover:border-input transition-all"
                 title="Start a new conversation">
                 <RotateCcw className="w-4 h-4" />
                 New conversation
               </button>
             )}
           </div>
-          <div className="flex items-center gap-2 text-xs text-[#64748B]">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <User className="w-3.5 h-3.5" />
             <span className="capitalize">{userRole}</span>
             {userRole === "admin" && <span className="px-1.5 py-0.5 rounded bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 text-[10px] font-semibold">ADMIN</span>}
@@ -1327,7 +1407,7 @@ export default function QueryPage() {
               className="mt-4 flex gap-2 overflow-x-auto pb-2 scrollbar-thin sm:flex-wrap">
               {suggestedQueries.map((q) => (
                 <button key={q} onClick={() => setQuery(q)}
-                  className="px-3 py-1.5 rounded-lg bg-muted text-sm text-[#64748B] hover:text-[#1A2332] border border-[#E2E8F0] transition-colors whitespace-nowrap shrink-0 sm:whitespace-normal sm:shrink">
+                  className="px-3 py-1.5 rounded-lg bg-muted text-sm text-muted-foreground hover:text-foreground border border-border transition-colors whitespace-nowrap shrink-0 sm:whitespace-normal sm:shrink">
                   {q}
                 </button>
               ))}
@@ -1339,7 +1419,7 @@ export default function QueryPage() {
         <AnimatePresence>
           {showHistory && allHistory.length > 0 && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-              className="mb-4 p-4 rounded-2xl bg-card border border-[#E2E8F0]">
+              className="mb-4 p-4 rounded-2xl bg-card border border-border">
               <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
                 <History className="w-4 h-4 text-[#0B6BCB]" />
                 Recent Queries
@@ -1347,7 +1427,7 @@ export default function QueryPage() {
               <div className="space-y-2">
                 {allHistory.map((h) => (
                   <button key={h.timestamp} onClick={() => { setQuery(h.query); setShowHistory(false) }}
-                    className="w-full text-left p-2.5 rounded-xl hover:bg-muted border border-transparent hover:border-[#E2E8F0] transition-all group">
+                    className="w-full text-left p-2.5 rounded-xl hover:bg-muted border border-transparent hover:border-border transition-all group">
                     <div className="flex items-center justify-between">
                       <span className="text-sm truncate flex-1 mr-3">{h.query}</span>
                       <span className={cn("text-xs font-mono shrink-0", h.confidence >= 0.7 ? "text-[#15803D] dark:text-green-400" : h.confidence >= 0.5 ? "text-[#B45309] dark:text-amber-400" : "text-[#B91C1C] dark:text-red-400")}>
@@ -1369,7 +1449,7 @@ export default function QueryPage() {
               <Sparkles className="w-10 h-10 text-[#0B6BCB]" />
             </div>
             <h2 className="text-xl font-semibold mb-2">Ask a Clinical SOP Question</h2>
-            <p className="text-[#64748B] text-sm max-w-md">
+            <p className="text-muted-foreground text-sm max-w-md">
               Type or speak your question. Answers stay in one conversation so you can ask follow-ups.
             </p>
           </motion.div>
@@ -1380,8 +1460,8 @@ export default function QueryPage() {
           {messages.map((m) => {
             if (m.role === "user") {
               return (
-                <div key={m.id} className="flex justify-end">
-                  <div className="max-w-[85%] sm:max-w-[65%] px-4 py-2.5 rounded-2xl rounded-br-md bg-[#0B6BCB]/[0.08] border border-[#0B6BCB]/15 text-[15px] leading-relaxed text-[#1A2332]">
+                <div key={m.id} id={`msg-${m.id}`} className="flex justify-end scroll-mt-20">
+                  <div className="max-w-[85%] sm:max-w-[65%] px-4 py-2.5 rounded-2xl rounded-br-md bg-[#0B6BCB]/[0.08] border border-[#0B6BCB]/15 text-[15px] leading-relaxed text-foreground">
                     {m.content}
                   </div>
                 </div>
@@ -1409,7 +1489,7 @@ export default function QueryPage() {
             {loading && (
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
                 {streamingText ? (
-                  <div className="p-6 sm:p-8 rounded-2xl bg-card border border-[#E2E8F0] shadow-sm">
+                  <div className="p-6 sm:p-8 rounded-2xl bg-card border border-border shadow-sm">
                     <AnswerRenderer text={streamingText} citations={[]} />
                     <span className="inline-block w-1.5 h-4 ml-0.5 bg-[#0B6BCB] animate-pulse align-text-bottom" />
                   </div>
@@ -1426,7 +1506,7 @@ export default function QueryPage() {
             real chat input, instead of sitting above the messages it's
             about to add to. */}
         {submitted && (
-          <div className="mt-6 pt-4 border-t border-[#E2E8F0]">
+          <div className="mt-6 pt-4 border-t border-border">
             {patientContextToggle}
             {composer}
           </div>

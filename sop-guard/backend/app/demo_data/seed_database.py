@@ -2,7 +2,7 @@
 DISCLAIMER: SYNTHETIC / FICTIONAL DATA FOR RESEARCH ONLY
 =========================================================
 This script seeds the database with SYNTHETIC SOPs created for the
-SOP-Guard research prototype.  The data must NOT be used for real
+Meridian research prototype.  The data must NOT be used for real
 clinical decisions or patient care.
 =========================================================
 """

@@ -1,5 +1,5 @@
 """
-SOP-Guard Perturbation-Based Adversarial Benchmark
+Meridian Perturbation-Based Adversarial Benchmark
 ----------------------------------------------------
 The hand-written ADVERSARIAL_TESTS (17 cases) can't support a percentage
 claim on its own - one flipped case moves the rate by ~6 points. This

@@ -1,4 +1,4 @@
-# SOP-Guard: Thesis Summary
+# Meridian: Thesis Summary
 
 *A plain-language explanation of this research for a non-technical audience.*
 
@@ -19,11 +19,11 @@ Existing search tools (keyword search, document management systems) are not effe
 
 ## The Solution
 
-SOP-Guard is an AI system that lets hospital staff ask questions in plain language and receive accurate, verified answers drawn directly from their SOPs.
+Meridian is an AI system that lets hospital staff ask questions in plain language and receive accurate, verified answers drawn directly from their SOPs.
 
 For example, a nurse could ask: *"What PPE do I need before entering a COVID isolation room?"* and receive a direct answer like: *"According to SOP INF-003 Section 4.2: N95 respirator, face shield, isolation gown, and double gloves. Perform hand hygiene before donning and after doffing."*
 
-What makes SOP-Guard different from a simple chatbot is its multi-step verification process:
+What makes Meridian different from a simple chatbot is its multi-step verification process:
 
 1. **It understands the question** -- The system classifies what type of question is being asked and which department it relates to
 2. **It finds the right sources** -- Using a combination of meaning-based search and keyword matching, it retrieves the most relevant SOP sections
@@ -39,13 +39,13 @@ This thesis contributes to the field in several ways:
 
 **1. A new architecture for clinical SOP question-answering.** While RAG (Retrieval-Augmented Generation) systems exist, this work specifically addresses the unique requirements of clinical SOPs: high accuracy requirements, the need for source attribution, and the importance of detecting when the AI is uncertain or wrong.
 
-**2. A verification layer for hallucination detection.** Large language models sometimes generate plausible-sounding but incorrect information (called "hallucinations"). This is unacceptable in healthcare. SOP-Guard introduces a dedicated verification agent that cross-checks every claim in the generated answer against the source documents.
+**2. A verification layer for hallucination detection.** Large language models sometimes generate plausible-sounding but incorrect information (called "hallucinations"). This is unacceptable in healthcare. Meridian introduces a dedicated verification agent that cross-checks every claim in the generated answer against the source documents.
 
 **3. A hybrid retrieval approach optimized for medical documents.** The system combines two complementary search strategies -- semantic search (understanding meaning) and keyword matching (finding exact terms) -- to handle the varied terminology found in medical SOPs.
 
 **4. A feedback mechanism for continuous improvement.** Clinicians can rate the quality of answers, creating a dataset that can be used to measure and improve system performance over time.
 
-**5. A practical, deployable prototype.** Unlike many research systems that exist only as scripts and notebooks, SOP-Guard is a complete web application that could be deployed in a hospital setting (after proper clinical validation).
+**5. A practical, deployable prototype.** Unlike many research systems that exist only as scripts and notebooks, Meridian is a complete web application that could be deployed in a hospital setting (after proper clinical validation).
 
 ## Evaluation Plan
 
@@ -72,7 +72,7 @@ The system will be evaluated on multiple dimensions:
 - Planned as a small-scale user study (pending ethics approval)
 
 ### Baseline Comparisons
-- How does SOP-Guard compare to simpler approaches?
+- How does Meridian compare to simpler approaches?
 - Compared against: keyword search only, semantic search without RAG, RAG without verification, and direct LLM prompting without retrieval
 
 ## Who This Research Is For

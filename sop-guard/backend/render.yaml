@@ -1,4 +1,4 @@
-# Render deployment blueprint for the SOP-Guard backend.
+# Render deployment blueprint for the Meridian backend.
 # Research prototype  - NOT for clinical use.
 #
 # Deploy: push this repo to GitHub, then in Render choose
@@ -6,7 +6,7 @@
 
 services:
   - type: web
-    name: sop-guard-backend
+    name: meridian-backend
     runtime: python
     plan: free
     rootDir: sop-guard/backend
@@ -24,7 +24,7 @@ services:
       # attach a Render disk mounted at /app/data and point DATABASE_URL at it,
       # or use a managed Postgres URL (postgresql+asyncpg://...).
       - key: DATABASE_URL
-        value: sqlite+aiosqlite:///./sop_guard.db
+        value: sqlite+aiosqlite:///./meridian.db
       # In-house model only: no third-party LLM API is ever called. LLM_BASE_URL
       # must point at an Ollama instance the hospital controls (e.g. a private
       # network endpoint); if unset/unreachable, the pipeline runs in mock mode.

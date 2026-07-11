@@ -135,8 +135,8 @@ function SectionTitle({ icon: Icon, title, subtitle }: { icon: React.ElementType
         <Icon className="w-4.5 h-4.5 text-[#0B6BCB]" />
       </div>
       <div>
-        <h2 className="text-base font-semibold font-display text-[#1A2332]">{title}</h2>
-        {subtitle && <p className="text-xs text-[#64748B]">{subtitle}</p>}
+        <h2 className="text-base font-semibold font-display text-foreground">{title}</h2>
+        {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
       </div>
     </div>
   )
@@ -156,8 +156,8 @@ function StatTile({
         <Icon className="w-4 h-4 text-[#0B6BCB]" />
       </div>
       <p className="text-3xl font-bold mb-1 text-[#0B6BCB]">{value}</p>
-      <p className="text-sm font-medium text-[#1A2332] mb-1">{label}</p>
-      <p className="text-xs text-[#94A3B8]">{description}</p>
+      <p className="text-sm font-medium text-foreground mb-1">{label}</p>
+      <p className="text-xs text-subtle">{description}</p>
     </motion.div>
   )
 }
@@ -260,8 +260,8 @@ export default function EvaluationPage() {
               <FlaskConical className="w-5 h-5 text-[#0B6BCB]" />
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-2xl font-bold font-display text-[#1A2332]">Research Evaluation Dashboard</h1>
-              <p className="text-sm text-[#64748B] mt-0.5">Live metrics from the running RAG pipeline and current SOP corpus</p>
+              <h1 className="text-2xl font-bold font-display text-foreground">Research Evaluation Dashboard</h1>
+              <p className="text-sm text-muted-foreground mt-0.5">Live metrics from the running RAG pipeline and current SOP corpus</p>
             </div>
             <button
               onClick={handleRunFresh}
@@ -302,7 +302,7 @@ export default function EvaluationPage() {
 
         {/* AI Evaluation merges Standard Evals + Adversarial Testing - both
             are AI-QA views for System Admin, not daily-use pages. */}
-        <div className="flex gap-1 p-1 rounded-xl bg-muted border border-[#E2E8F0] w-fit">
+        <div className="flex gap-1 p-1 rounded-xl bg-muted border border-border w-fit">
           {[
             { key: "metrics" as const, label: "Standard Evals", icon: Activity },
             { key: "adversarial" as const, label: "Adversarial Testing", icon: ShieldAlert },
@@ -312,7 +312,7 @@ export default function EvaluationPage() {
               onClick={() => setTab(t.key)}
               className={cn(
                 "flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors",
-                tab === t.key ? "bg-card text-[#0B6BCB] shadow-sm" : "text-[#64748B] hover:text-[#1A2332]"
+                tab === t.key ? "bg-card text-[#0B6BCB] shadow-sm" : "text-muted-foreground hover:text-foreground"
               )}
             >
               <t.icon className="w-4 h-4" />
@@ -324,7 +324,7 @@ export default function EvaluationPage() {
         {tab === "adversarial" && <AdversarialContent />}
 
         {tab === "metrics" && loading && (
-          <div className="flex items-center justify-center py-24 text-[#64748B] gap-2">
+          <div className="flex items-center justify-center py-24 text-muted-foreground gap-2">
             <Loader2 className="w-5 h-5 animate-spin" /> Running live evaluation...
           </div>
         )}
@@ -407,13 +407,13 @@ export default function EvaluationPage() {
               </div>
 
               {!ragasReal && !ragasRealLoading && (
-                <p className="text-xs text-[#94A3B8]">
+                <p className="text-xs text-subtle">
                   Not run yet - judge-LLM calls take a while (several minutes for a sample), so this isn&apos;t fetched automatically on page load.
                 </p>
               )}
 
               {ragasReal && !ragasReal.available && (
-                <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-amber-500/5 border border-amber-500/20 text-xs text-[#334155]">
+                <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-amber-500/5 border border-amber-500/20 text-xs text-foreground">
                   <AlertTriangle className="w-4 h-4 shrink-0 text-amber-500 mt-0.5" />
                   <span>{ragasReal.reason ?? "Real RAGAS is unavailable."}</span>
                 </div>
@@ -442,7 +442,7 @@ export default function EvaluationPage() {
                     />
                   </div>
                   {ragasReal.disclaimer && (
-                    <p className="text-xs text-[#94A3B8] mt-3">{ragasReal.disclaimer}</p>
+                    <p className="text-xs text-subtle mt-3">{ragasReal.disclaimer}</p>
                   )}
                 </>
               )}
@@ -455,22 +455,22 @@ export default function EvaluationPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-[#E2E8F0]">
-                        <th className="text-left py-3.5 px-5 text-[#64748B] font-medium text-xs uppercase tracking-wide">Metric</th>
+                      <tr className="border-b border-border">
+                        <th className="text-left py-3.5 px-5 text-muted-foreground font-medium text-xs uppercase tracking-wide">Metric</th>
                         <th className="py-3.5 px-4 text-center text-[#0B6BCB] font-semibold text-xs uppercase tracking-wide border-l-2 border-[#0B6BCB]/30 bg-[#0B6BCB]/5">Reranker On</th>
-                        <th className="py-3.5 px-4 text-center text-[#64748B] font-medium text-xs uppercase tracking-wide">Reranker Off</th>
+                        <th className="py-3.5 px-4 text-center text-muted-foreground font-medium text-xs uppercase tracking-wide">Reranker Off</th>
                       </tr>
                     </thead>
                     <tbody>
-                      <tr className="border-b border-[#EDF1F5] last:border-0">
-                        <td className="py-3 px-5 text-[#334155] font-medium">Avg Top-1 Relevance</td>
+                      <tr className="border-b border-border last:border-0">
+                        <td className="py-3 px-5 text-foreground font-medium">Avg Top-1 Relevance</td>
                         <td className="py-3 px-4 text-center font-bold border-l-2 border-[#0B6BCB]/30 bg-[#0B6BCB]/5 text-[#0B6BCB]">
                           {ablation?.reranker_on.avg_top1_relevance.toFixed(3) ?? "-"}
                         </td>
-                        <td className="py-3 px-4 text-center text-[#64748B]">{ablation?.reranker_off.avg_top1_relevance.toFixed(3) ?? "-"}</td>
+                        <td className="py-3 px-4 text-center text-muted-foreground">{ablation?.reranker_off.avg_top1_relevance.toFixed(3) ?? "-"}</td>
                       </tr>
                       <tr>
-                        <td className="py-3 px-5 text-[#334155] font-medium">Top-3 Order Change Rate</td>
+                        <td className="py-3 px-5 text-foreground font-medium">Top-3 Order Change Rate</td>
                         <td className="py-3 px-4 text-center font-bold border-l-2 border-[#0B6BCB]/30 bg-[#0B6BCB]/5 text-[#0B6BCB]" colSpan={2}>
                           {ablation ? `${(ablation.order_change_rate * 100).toFixed(0)}% of queries (${ablation.top3_order_changed}/${ablation.queries_compared})` : "-"}
                         </td>
@@ -485,18 +485,18 @@ export default function EvaluationPage() {
             <motion.div {...fade(0.12)}>
               <SectionTitle icon={BarChart3} title="Query Category Breakdown" subtitle="Faithfulness and citation coverage averaged per category, from the last live eval run" />
               <div className="rounded-2xl bg-card border border-[#0B6BCB]/10 p-5 space-y-4">
-                <div className="flex gap-5 text-xs text-[#64748B] mb-2">
+                <div className="flex gap-5 text-xs text-muted-foreground mb-2">
                   <span className="flex items-center gap-1.5"><span className="w-3 h-2 rounded-sm bg-[#0B6BCB] inline-block" /> Faithfulness</span>
                   <span className="flex items-center gap-1.5"><span className="w-3 h-2 rounded-sm bg-[#0D9488] inline-block" /> Citation Coverage</span>
                 </div>
-                {byCategory.length === 0 && <p className="text-xs text-[#94A3B8]">No per-query data available yet.</p>}
+                {byCategory.length === 0 && <p className="text-xs text-subtle">No per-query data available yet.</p>}
                 {byCategory.map((row, i) => (
                   <motion.div key={row.type} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 + i * 0.05 }} className="space-y-1.5">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="font-mono text-[#334155] w-40 shrink-0">{row.type} <span className="text-[#94A3B8]">(n={row.n})</span></span>
-                      <div className="flex gap-4 text-[#64748B]">
+                      <span className="font-mono text-foreground w-40 shrink-0">{row.type} <span className="text-subtle">(n={row.n})</span></span>
+                      <div className="flex gap-4 text-muted-foreground">
                         <span className="text-[#0B6BCB] font-medium">{row.faithfulness.toFixed(2)}</span>
-                        <span className="text-[#64748B] font-medium">{row.coverage.toFixed(2)}</span>
+                        <span className="text-muted-foreground font-medium">{row.coverage.toFixed(2)}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -520,18 +520,18 @@ export default function EvaluationPage() {
               <div className="grid grid-cols-3 gap-4">
                 <div className="p-4 rounded-xl bg-card border border-[#0B6BCB]/10 text-center">
                   <p className="text-2xl font-bold text-[#0B6BCB]">{adversarial ? adversarial.sensitivity.toFixed(2) : "-"}</p>
-                  <p className="text-xs text-[#64748B] mt-1">Sensitivity</p>
+                  <p className="text-xs text-muted-foreground mt-1">Sensitivity</p>
                 </div>
                 <div className="p-4 rounded-xl bg-card border border-[#0B6BCB]/10 text-center">
                   <p className="text-2xl font-bold text-[#0B6BCB]">{adversarial ? adversarial.specificity.toFixed(2) : "-"}</p>
-                  <p className="text-xs text-[#64748B] mt-1">Specificity</p>
+                  <p className="text-xs text-muted-foreground mt-1">Specificity</p>
                 </div>
                 <div className="p-4 rounded-xl bg-card border border-[#0B6BCB]/10 text-center">
                   <p className="text-2xl font-bold text-[#0B6BCB]">{adversarial ? adversarial.pairwise_separation.toFixed(2) : "-"}</p>
-                  <p className="text-xs text-[#64748B] mt-1">Pairwise Separation</p>
+                  <p className="text-xs text-muted-foreground mt-1">Pairwise Separation</p>
                 </div>
               </div>
-              <div className="flex items-start gap-3 px-4 py-3 mt-4 rounded-xl bg-[#0B6BCB]/5 border border-[#0B6BCB]/15 text-[#334155] text-xs">
+              <div className="flex items-start gap-3 px-4 py-3 mt-4 rounded-xl bg-[#0B6BCB]/5 border border-[#0B6BCB]/15 text-foreground text-xs">
                 <Info className="w-4 h-4 shrink-0 text-[#0B6BCB] mt-0.5" />
                 <span>
                   Sensitivity alone is a misleading headline metric - a verifier that flags every answer scores 100%
@@ -549,15 +549,15 @@ export default function EvaluationPage() {
                 <div className="space-y-3">
                   {(chunkDist?.distribution ?? []).map((chunk, i) => (
                     <motion.div key={chunk.type} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.18 + i * 0.04 }} className="flex items-center gap-3">
-                      <span className="font-mono text-xs text-[#64748B] w-36 shrink-0">{chunk.type}</span>
+                      <span className="font-mono text-xs text-muted-foreground w-36 shrink-0">{chunk.type}</span>
                       <div className="flex-1 h-3 rounded-full bg-muted">
                         <div className={cn("h-full rounded-full transition-all duration-700", CHUNK_COLORS[chunk.type] ?? "bg-[#94A3B8]")} style={{ width: `${chunk.pct}%` }} />
                       </div>
-                      <span className="text-xs font-semibold text-[#334155] w-14 text-right">{chunk.pct}% ({chunk.count})</span>
+                      <span className="text-xs font-semibold text-foreground w-14 text-right">{chunk.pct}% ({chunk.count})</span>
                     </motion.div>
                   ))}
                   {(!chunkDist || chunkDist.distribution.length === 0) && (
-                    <p className="text-xs text-[#94A3B8]">No chunks in the corpus yet - upload an SOP to populate this.</p>
+                    <p className="text-xs text-subtle">No chunks in the corpus yet - upload an SOP to populate this.</p>
                   )}
                 </div>
               </div>
@@ -568,14 +568,14 @@ export default function EvaluationPage() {
               <div className="rounded-2xl bg-card border border-[#0B6BCB]/10 p-5">
                 <button
                   onClick={() => setShowMethodology((v) => !v)}
-                  className="flex items-center gap-2 text-sm font-semibold text-[#1A2332] mb-1 hover:text-[#0B6BCB] transition-colors w-full text-left"
+                  className="flex items-center gap-2 text-sm font-semibold text-foreground mb-1 hover:text-[#0B6BCB] transition-colors w-full text-left"
                 >
                   <Info className="w-4 h-4 text-[#0B6BCB]" />
                   Evaluation Methodology Note
-                  <span className="ml-auto text-xs text-[#94A3B8]">{showMethodology ? "hide" : "show"}</span>
+                  <span className="ml-auto text-xs text-subtle">{showMethodology ? "hide" : "show"}</span>
                 </button>
                 {showMethodology && (
-                  <motion.p initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="mt-3 text-xs text-[#64748B] leading-relaxed">
+                  <motion.p initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="mt-3 text-xs text-muted-foreground leading-relaxed">
                     Retrieval precision comes from POST /api/evaluate/rag (8 hand-written retrieval test cases run
                     against the live retriever). Faithfulness, citation coverage, and abstention accuracy come from
                     the RAGAS-lite reference-free suite (GET /api/evaluation/summary, 20 queries spanning medication,
@@ -592,7 +592,7 @@ export default function EvaluationPage() {
                   </motion.p>
                 )}
                 {!showMethodology && (
-                  <p className="text-xs text-[#94A3B8] mt-1">
+                  <p className="text-xs text-subtle mt-1">
                     8 retrieval test cases · 20-query RAGAS-lite suite · reranker ablation · adversarial verifier benchmark · live corpus chunk counts
                   </p>
                 )}
@@ -600,14 +600,14 @@ export default function EvaluationPage() {
             </motion.div>
 
             {ragasSummary?.aggregate.faithfulness_note && (
-              <motion.div {...fade(0.19)} className="flex items-start gap-2 px-4 py-3 rounded-xl bg-muted/30 border border-border text-xs text-[#64748B]">
+              <motion.div {...fade(0.19)} className="flex items-start gap-2 px-4 py-3 rounded-xl bg-muted/30 border border-border text-xs text-muted-foreground">
                 <Info className="w-4 h-4 shrink-0 mt-0.5" />
                 <span>{ragasSummary.aggregate.faithfulness_note}</span>
               </motion.div>
             )}
 
-            <motion.div {...fade(0.2)} className="text-center text-xs text-[#94A3B8] pb-4">
-              SOP-Guard · Research Prototype · All metrics computed live from the current pipeline and SOP corpus · Not from real clinical queries
+            <motion.div {...fade(0.2)} className="text-center text-xs text-subtle pb-4">
+              Meridian · Research Prototype · All metrics computed live from the current pipeline and SOP corpus · Not from real clinical queries
             </motion.div>
           </>
         )}

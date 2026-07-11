@@ -13,7 +13,7 @@ function hashQuery(text: string): string {
     hash = (hash << 5) - hash + text.charCodeAt(i)
     hash |= 0
   }
-  return `sop-guard-answer-feedback-${hash}`
+  return `meridian-answer-feedback-${hash}`
 }
 
 export function FeedbackRow({ queryText, answerId }: { queryText: string; answerId?: string | null }) {
@@ -50,9 +50,9 @@ export function FeedbackRow({ queryText, answerId }: { queryText: string; answer
   ]
 
   return (
-    <div className="p-4 rounded-2xl bg-card border border-[#E2E8F0] shadow-sm">
+    <div className="p-4 rounded-2xl bg-card border border-border shadow-sm">
       <div className="flex flex-wrap items-center gap-3">
-        <span className="text-sm text-[#64748B]">Does this match your practice?</span>
+        <span className="text-sm text-muted-foreground">Does this match your practice?</span>
         <div className="flex flex-wrap gap-2">
           {options.map((o) => (
             <button
@@ -62,7 +62,7 @@ export function FeedbackRow({ queryText, answerId }: { queryText: string; answer
                 "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm border transition-colors duration-150",
                 choice === o.key
                   ? o.active
-                  : "border-[#E2E8F0] bg-card text-[#64748B] hover:text-[#1A2332] hover:border-[#CBD5E1]"
+                  : "border-border bg-card text-muted-foreground hover:text-foreground hover:border-input"
               )}
             >
               <o.icon className="w-4 h-4" />
@@ -72,7 +72,7 @@ export function FeedbackRow({ queryText, answerId }: { queryText: string; answer
         </div>
       </div>
       {choice && (
-        <p className="text-xs text-[#64748B] mt-2.5">
+        <p className="text-xs text-muted-foreground mt-2.5">
           Feedback recorded. Repeated disagreement flags this answer for compliance review.
         </p>
       )}

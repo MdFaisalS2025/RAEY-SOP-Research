@@ -1,5 +1,5 @@
 """
-SOP-Guard Configuration
+Meridian Configuration
 -----------------------
 Research prototype  - NOT for clinical use.
 """
@@ -12,14 +12,14 @@ class Settings(BaseSettings):
     """Application settings loaded from environment variables or .env file."""
 
     # --- Application ---
-    APP_NAME: str = "SOP-Guard"
+    APP_NAME: str = "Meridian"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = False
     SECRET_KEY: str = "change-this-in-production"
     ENVIRONMENT: str = "development"  # development | staging | production
 
     # --- Database ---
-    DATABASE_URL: str = "sqlite+aiosqlite:///./sop_guard.db"
+    DATABASE_URL: str = "sqlite+aiosqlite:///./meridian.db"
     # For PostgreSQL: postgresql+asyncpg://user:pass@localhost:5432/sopguard
 
     # --- LLM ---

@@ -15,7 +15,7 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-const AUTH_STORAGE_KEY = "sop-guard-auth-user"
+const AUTH_STORAGE_KEY = "meridian-auth-user"
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<DemoUser | null>(null)

@@ -1,5 +1,5 @@
 """
-Tests for SOPGuardPipeline._confidence_gate's citation-coverage cap.
+Tests for MeridianPipeline._confidence_gate's citation-coverage cap.
 
 Regression coverage for a real gap: the confidence gate could boost
 confidence to 0.8+ purely from verification/evidence signals, even when
@@ -10,12 +10,12 @@ citation coverage is a genuine grounding-quality signal that should cap
 how high confidence can climb.
 """
 
-from app.agents.pipeline import SOPGuardPipeline
+from app.agents.pipeline import MeridianPipeline
 from app.schemas.schemas import VerificationResult, VerificationStatus
 
 
-def _pipeline() -> SOPGuardPipeline:
-    return SOPGuardPipeline(chunks=[], structured_sops={})
+def _pipeline() -> MeridianPipeline:
+    return MeridianPipeline(chunks=[], structured_sops={})
 
 
 def _passed_verification(score: float = 0.9) -> VerificationResult:

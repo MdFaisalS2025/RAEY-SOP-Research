@@ -1,5 +1,5 @@
 """
-SOP-Guard CDS Hooks Service
+Meridian CDS Hooks Service
 ---------------------------
 Standard-compliant CDS Hooks v2 discovery + order-select service.
 https://cds-hooks.org
@@ -19,7 +19,7 @@ from app.services.chunk_loader import load_chunks
 
 router = APIRouter(tags=["CDS Hooks"])
 
-SERVICE_ID = "sop-guard-protocol-check"
+SERVICE_ID = "meridian-protocol-check"
 
 
 @router.get("/cds-services")
@@ -29,7 +29,7 @@ async def cds_discovery():
         "services": [
             {
                 "hook": "order-select",
-                "title": "SOP-Guard Protocol Check",
+                "title": "Meridian Protocol Check",
                 "description": (
                     "Checks draft medication orders against hospital SOPs and "
                     "flags protocol guidance, thresholds, and cross-SOP conflicts. "
@@ -146,7 +146,7 @@ async def protocol_check(body: dict, db: AsyncSession = Depends(get_db)):
             "summary": f"{c.get('sop_title', 'SOP guidance')}: {c.get('section_title') or medication}"[:140],
             "indicator": indicator,
             "detail": detail,
-            "source": {"label": "SOP-Guard", "url": "http://localhost:3000/library"},
+            "source": {"label": "Meridian", "url": "http://localhost:3000/library"},
             "links": [
                 {
                     "label": "View full SOP",

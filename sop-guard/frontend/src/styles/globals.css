@@ -32,6 +32,9 @@
     --success-foreground: 0 0% 100%;
     --warning: 32 81% 36%;        /* #B45309 */
     --warning-foreground: 0 0% 100%;
+    --text-subtle: 215 20% 65%;   /* #94A3B8 - lighter tier than muted-foreground */
+    --brand-accent: 187 100% 42%; /* Meridian cyan, light-mode strength */
+    --brand-ink: 217 33% 15%;     /* Meridian graphite/ink, light-mode */
   }
 
   .dark {
@@ -58,6 +61,9 @@
     --success-foreground: 0 0% 100%;
     --warning: 54 100% 50%;      /* #FFD600 alert amber */
     --warning-foreground: 220 20% 4%;
+    --text-subtle: 190 8% 55%;   /* dimmer than muted-foreground, still legible on #0A0C10 */
+    --brand-accent: 187 100% 50%; /* Meridian cyan, dark-mode strength (matches primary) */
+    --brand-ink: 190 12% 90%;    /* Meridian graphite/ink, dark-mode (near-white on dark) */
   }
 }
 
@@ -225,6 +231,26 @@
   .text-foreground {
     color: hsl(var(--foreground));
   }
+
+  /* Hundreds of call sites hardcode the light-mode clinical-blue accent
+     (#0B6BCB) as text/border/bg with no dark: twin. Rather than hand-edit
+     every one, remap the literal hex utility (and its common opacity
+     fractions) to the theme's primary token in dark mode - which is
+     already the equivalent cyan accent (--primary: 187 100% 50%). */
+  .dark .text-\[\#0B6BCB\] { color: hsl(var(--primary)); }
+  .dark .border-\[\#0B6BCB\] { border-color: hsl(var(--primary)); }
+  .dark .bg-\[\#0B6BCB\] { background-color: hsl(var(--primary)); }
+  .dark .fill-\[\#0B6BCB\] { fill: hsl(var(--primary)); }
+  .dark .from-\[\#0B6BCB\] { --tw-gradient-from: hsl(var(--primary)) var(--tw-gradient-from-position); }
+  .dark .to-\[\#0B6BCB\] { --tw-gradient-to: hsl(var(--primary)) var(--tw-gradient-to-position); }
+  .dark .ring-\[\#0B6BCB\] { --tw-ring-color: hsl(var(--primary)); }
+  .dark .caret-\[\#0B6BCB\] { caret-color: hsl(var(--primary)); }
+  /* Opacity-suffixed variants (text-[#0B6BCB]/10, /20, ... /90) - attribute
+     substring match catches any fraction without enumerating each one. */
+  .dark [class*="text-\[\#0B6BCB\]\/"] { color: hsl(var(--primary) / var(--tw-text-opacity, 1)); }
+  .dark [class*="border-\[\#0B6BCB\]\/"] { border-color: hsl(var(--primary) / var(--tw-border-opacity, 1)); }
+  .dark [class*="bg-\[\#0B6BCB\]\/"] { background-color: hsl(var(--primary) / var(--tw-bg-opacity, 1)); }
+  .dark [class*="ring-\[\#0B6BCB\]\/"] { --tw-ring-color: hsl(var(--primary)); }
   .bg-muted-foreground\/20 {
     background-color: hsl(var(--muted-foreground) / 0.2);
   }

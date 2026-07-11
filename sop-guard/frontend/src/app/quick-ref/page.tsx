@@ -38,13 +38,13 @@ interface RealSOP {
 
 function QRPlaceholder({ sopId }: { sopId: string }) {
   return (
-    <div className="w-14 h-14 rounded-lg bg-muted border border-[#E2E8F0] flex flex-col items-center justify-center shrink-0">
+    <div className="w-14 h-14 rounded-lg bg-muted border border-border flex flex-col items-center justify-center shrink-0">
       <div className="grid grid-cols-3 gap-0.5">
         {Array.from({ length: 9 }).map((_, i) => (
           <div key={i} className={cn("w-2.5 h-2.5 rounded-[1px]", Math.random() > 0.4 ? "bg-[#94A3B8]" : "bg-transparent")} />
         ))}
       </div>
-      <p className="text-[8px] text-[#64748B] mt-1">QR</p>
+      <p className="text-[8px] text-muted-foreground mt-1">QR</p>
     </div>
   )
 }
@@ -67,20 +67,20 @@ function QuickRefCard({ sop, index }: { sop: RealSOP; index: number }) {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
-      className="rounded-2xl bg-card border border-[#E2E8F0] shadow-sm p-5 flex flex-col gap-3 print:break-inside-avoid print:shadow-none"
+      className="rounded-2xl bg-card border border-border shadow-sm p-5 flex flex-col gap-3 print:break-inside-avoid print:shadow-none"
     >
       <div className="flex items-start gap-3">
         <QRPlaceholder sopId={sop.sop_id} />
         <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-mono text-[#64748B]">{sop.sop_id} - v{sop.version}</p>
+          <p className="text-[10px] font-mono text-muted-foreground">{sop.sop_id} - v{sop.version}</p>
           <h3 className="text-sm font-semibold leading-tight mt-0.5">{sop.title}</h3>
-          <p className="text-[10px] text-[#64748B] mt-0.5">{sop.department} - Effective {sop.effective_date}</p>
+          <p className="text-[10px] text-muted-foreground mt-0.5">{sop.department} - Effective {sop.effective_date}</p>
         </div>
       </div>
 
       <ul className="space-y-1.5">
         {keyPoints.map((point, i) => (
-          <li key={i} className="flex items-start gap-2 text-xs text-[#1A2332]/80">
+          <li key={i} className="flex items-start gap-2 text-xs text-foreground/80">
             <span className="w-1.5 h-1.5 rounded-full bg-[#0B6BCB] shrink-0 mt-1.5" />
             {point}
           </li>
@@ -94,7 +94,7 @@ function QuickRefCard({ sop, index }: { sop: RealSOP; index: number }) {
         </div>
       )}
 
-      <div className="flex items-center gap-2 pt-1 border-t border-[#EDF1F5]">
+      <div className="flex items-center gap-2 pt-1 border-t border-border">
         <Link
           href={`/library`}
           className="flex items-center gap-1 text-[11px] text-[#0B6BCB] hover:text-[#0B6BCB] transition-colors"
@@ -102,10 +102,10 @@ function QuickRefCard({ sop, index }: { sop: RealSOP; index: number }) {
           <ExternalLink className="w-3 h-3" />
           View Full SOP
         </Link>
-        <span className="text-[#CBD5E1]">|</span>
+        <span className="text-subtle">|</span>
         <button
           onClick={() => window.print()}
-          className="flex items-center gap-1 text-[11px] text-[#64748B] hover:text-[#1A2332] transition-colors"
+          className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
         >
           <Printer className="w-3 h-3" />
           Print
@@ -172,7 +172,7 @@ export default function QuickRefPage() {
             </div>
             <div>
               <h1 className="text-2xl font-semibold">Quick Reference Cards</h1>
-              <p className="text-sm text-[#64748B] mt-0.5">
+              <p className="text-sm text-muted-foreground mt-0.5">
                 Generated live from each SOP&apos;s structured steps and thresholds - verify against the full SOP first
               </p>
             </div>
@@ -195,20 +195,20 @@ export default function QuickRefPage() {
 
         <div className="flex flex-col sm:flex-row gap-3 print:hidden">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B]" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search cards by keyword, SOP ID, department..."
-              className="w-full rounded-xl bg-muted border border-[#E2E8F0] pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/40 placeholder:text-[#64748B]"
+              className="w-full rounded-xl bg-muted border border-border pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/40 placeholder:text-muted-foreground"
             />
           </div>
           <div className="relative">
-            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B]" />
+            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <select
               value={dept}
               onChange={(e) => setDept(e.target.value)}
-              className="rounded-xl bg-muted border border-[#E2E8F0] pl-9 pr-8 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/40 appearance-none"
+              className="rounded-xl bg-muted border border-border pl-9 pr-8 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/40 appearance-none"
             >
               {departments.map((d) => (
                 <option key={d} value={d}>{d}</option>
@@ -217,16 +217,16 @@ export default function QuickRefPage() {
           </div>
         </div>
 
-        <p className="text-xs text-[#64748B] print:hidden">
+        <p className="text-xs text-muted-foreground print:hidden">
           Showing {filtered.length} of {cardableSops.length} quick reference cards
         </p>
 
         {loading ? (
-          <div className="flex items-center justify-center py-16 text-[#64748B] gap-2 print:hidden">
+          <div className="flex items-center justify-center py-16 text-muted-foreground gap-2 print:hidden">
             <Loader2 className="w-5 h-5 animate-spin" /> Loading SOPs...
           </div>
         ) : filtered.length === 0 ? (
-          <div className="rounded-2xl bg-card border border-[#E2E8F0] p-12 text-center text-[#64748B] text-sm">
+          <div className="rounded-2xl bg-card border border-border p-12 text-center text-muted-foreground text-sm">
             No cards match your search.
           </div>
         ) : (
@@ -237,7 +237,7 @@ export default function QuickRefPage() {
           </div>
         )}
 
-        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-muted border border-[#E2E8F0] text-xs text-[#64748B] print:hidden">
+        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-muted border border-border text-xs text-muted-foreground print:hidden">
           <Printer className="w-3.5 h-3.5 shrink-0" />
           <span>
             Print All exports index-card format. Production: QR codes link to the full SOP.

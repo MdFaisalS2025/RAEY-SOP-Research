@@ -1,5 +1,5 @@
 """
-SOP-Guard Voice Transcription Route
+Meridian Voice Transcription Route
 ------------------------------------
 Research prototype  - NOT for clinical use.
 """

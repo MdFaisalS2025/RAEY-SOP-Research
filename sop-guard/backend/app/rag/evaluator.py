@@ -1,5 +1,5 @@
 """
-SOP-Guard RAG Evaluation
+Meridian RAG Evaluation
 Tests retrieval quality, answer accuracy, and safety.
 Research prototype. Not for clinical use.
 """

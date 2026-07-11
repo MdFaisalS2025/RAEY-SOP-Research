@@ -1,6 +1,6 @@
 # Deployment Notes
 
-> SOP-Guard deployment options and considerations.
+> Meridian deployment options and considerations.
 
 ---
 
@@ -71,7 +71,7 @@ For actual hospital use, the system would need to run entirely within the hospit
   +------------------------------------------+
   |                                          |
   |   +-------------+    +---------------+   |
-  |   | SOP-Guard   |    | Local LLM     |   |
+  |   | Meridian   |    | Local LLM     |   |
   |   | Application +--->| (Ollama /     |   |
   |   | Server      |    |  vLLM)        |   |
   |   +------+------+    +---------------+   |
@@ -125,7 +125,7 @@ For actual hospital use, the system would need to run entirely within the hospit
 
 ### Key Principles
 
-1. **No patient data** -- SOP-Guard processes institutional procedures, not patient records. The system should never ingest, store, or transmit protected health information (PHI).
+1. **No patient data** -- Meridian processes institutional procedures, not patient records. The system should never ingest, store, or transmit protected health information (PHI).
 
 2. **Local LLM preferred** -- For production, use locally-hosted models (Ollama, vLLM) to avoid sending SOP content to third-party APIs. Cloud LLM APIs should only be used for development with synthetic data.
 

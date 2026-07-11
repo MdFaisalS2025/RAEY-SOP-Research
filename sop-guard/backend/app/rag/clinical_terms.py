@@ -1,5 +1,5 @@
 """
-SOP-Guard Clinical Terms
+Meridian Clinical Terms
 Synonym expansion, abbreviation mapping, and clinical NLP utilities.
 Research prototype. Not for clinical use.
 """

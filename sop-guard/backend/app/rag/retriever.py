@@ -1,5 +1,5 @@
 """
-SOP-Guard Mock Retriever
+Meridian Mock Retriever
 ------------------------
 TF-IDF / word-overlap retrieval for mock mode.
 Research prototype  - NOT for clinical use.

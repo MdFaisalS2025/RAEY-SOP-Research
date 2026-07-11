@@ -1,5 +1,5 @@
 """
-SOP-Guard Hybrid Retriever
+Meridian Hybrid Retriever
 Combines TF-IDF scoring with chunk-type boosting, metadata filtering,
 and clinical synonym expansion.
 Research prototype. Not for clinical use.

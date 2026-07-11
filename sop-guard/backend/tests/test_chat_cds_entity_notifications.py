@@ -145,7 +145,7 @@ async def test_cds_discovery(client):
 async def test_cds_protocol_check_returns_card(client_with_sop):
     client = client_with_sop
     resp = await client.post(
-        "/cds-services/sop-guard-protocol-check",
+        "/cds-services/meridian-protocol-check",
         json={"context": {"medication": "norepinephrine", "dose": "0.1 mcg/kg/min"}},
     )
     assert resp.status_code == 200, resp.text
@@ -157,7 +157,7 @@ async def test_cds_protocol_check_returns_card(client_with_sop):
 
 
 async def test_cds_protocol_check_no_medication(client):
-    resp = await client.post("/cds-services/sop-guard-protocol-check", json={})
+    resp = await client.post("/cds-services/meridian-protocol-check", json={})
     assert resp.status_code == 200
     assert resp.json()["cards"] == []
 

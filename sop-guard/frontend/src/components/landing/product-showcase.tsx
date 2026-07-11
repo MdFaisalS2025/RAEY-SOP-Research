@@ -19,7 +19,7 @@ type Phase = "idle" | "typing-question" | "thinking" | "streaming-answer" | "cit
  * product honestly, but it never hits the network - it's a fixed script
  * that loops for the "Watch 2-Minute Demo" CTA.
  */
-export function ProductShowcase() {
+export function ProductShowcase({ embedded = false }: { embedded?: boolean }) {
   const ref = useRef<HTMLDivElement>(null)
   const inView = useInView(ref, { once: false, margin: "-100px" })
   const [phase, setPhase] = useState<Phase>("idle")
@@ -71,34 +71,20 @@ export function ProductShowcase() {
 
   const showAnswer = phase === "streaming-answer" || phase === "cited" || phase === "hold"
 
-  return (
-    <section id="product-showcase" className="relative py-24 md:py-32 px-6 bg-[#07090c] border-y border-white/5">
-      <div className="max-w-4xl mx-auto">
-        <motion.div initial="hidden" whileInView="visible" viewport={viewportOnce} variants={stagger} className="text-center mb-14">
-          <div className="flex justify-center">
-            <SectionKicker>Product Preview</SectionKicker>
-          </div>
-          <motion.h2 variants={fadeUp} custom={1} className="font-display text-3xl md:text-4xl font-bold text-white text-balance mb-3">
-            Watch a question become a verified answer
-          </motion.h2>
-          <motion.p variants={fadeUp} custom={2} className="text-white/45 text-sm max-w-lg mx-auto">
-            A scripted preview of the interaction - try it for real in the live demo below.
-          </motion.p>
-        </motion.div>
-
-        <motion.div
-          ref={ref}
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={viewportOnce}
-          transition={{ duration: 0.9, ease: EASE_EXPO_OUT }}
-        >
-          <GlassCard className="p-0 overflow-hidden">
+  const card = (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={viewportOnce}
+      transition={{ duration: 0.9, ease: EASE_EXPO_OUT }}
+    >
+      <GlassCard className="p-0 overflow-hidden">
             <div className="flex items-center gap-2 px-5 py-3.5 border-b border-white/10 bg-white/[0.02]">
               <span className="w-2.5 h-2.5 rounded-full bg-[#FF5252]/60" />
               <span className="w-2.5 h-2.5 rounded-full bg-[#FFD600]/60" />
               <span className="w-2.5 h-2.5 rounded-full bg-[#00C853]/60" />
-              <span className="ml-3 text-xs text-white/35 font-medium">SOP-Guard · Preview Session</span>
+              <span className="ml-3 text-xs text-white/35 font-medium">Meridian · Preview Session</span>
             </div>
 
             <div className="p-6 md:p-8 min-h-[280px] flex flex-col justify-between">
@@ -154,7 +140,26 @@ export function ProductShowcase() {
               </AnimatePresence>
             </div>
           </GlassCard>
+    </motion.div>
+  )
+
+  if (embedded) return card
+
+  return (
+    <section id="product-showcase" className="relative py-24 md:py-32 px-6 bg-[#07090c] border-y border-white/5">
+      <div className="max-w-4xl mx-auto">
+        <motion.div initial="hidden" whileInView="visible" viewport={viewportOnce} variants={stagger} className="text-center mb-14">
+          <div className="flex justify-center">
+            <SectionKicker>Product Preview</SectionKicker>
+          </div>
+          <motion.h2 variants={fadeUp} custom={1} className="font-display text-3xl md:text-4xl font-bold text-white text-balance mb-3">
+            Watch a question become a verified answer
+          </motion.h2>
+          <motion.p variants={fadeUp} custom={2} className="text-white/45 text-sm max-w-lg mx-auto">
+            A scripted preview of the interaction - try it for real in the live demo below.
+          </motion.p>
         </motion.div>
+        {card}
       </div>
     </section>
   )

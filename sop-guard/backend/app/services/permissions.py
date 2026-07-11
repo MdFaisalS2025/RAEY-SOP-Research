@@ -1,5 +1,5 @@
 """
-SOP-Guard Role-Based Permissions
+Meridian Role-Based Permissions
 Research prototype. Not for clinical use.
 """
 

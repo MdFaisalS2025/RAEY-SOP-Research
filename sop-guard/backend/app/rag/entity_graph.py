@@ -1,5 +1,5 @@
 """
-SOP-Guard Entity Graph (GraphRAG-lite)
+Meridian Entity Graph (GraphRAG-lite)
 --------------------------------------
 Lexicon-based entity extraction over SOP chunks and cross-SOP conflict
 detection on the resulting graph. No ML dependencies.

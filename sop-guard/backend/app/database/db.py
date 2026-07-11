@@ -1,5 +1,5 @@
 """
-SOP-Guard Database Setup
+Meridian Database Setup
 Supports PostgreSQL (production) and SQLite (development).
 Research prototype. Not for clinical use.
 """
@@ -18,11 +18,11 @@ _BACKEND_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 def _resolve_database_url(url: str) -> str:
     """
     Anchor a relative sqlite path to the backend project root, independent of
-    the process's current working directory. Without this, "./sop_guard.db"
+    the process's current working directory. Without this, "./meridian.db"
     resolves to a different file depending on whether the process was
     started from the backend directory or the repo root (uvicorn via the
     launch config uses the repo root as cwd), which previously caused two
-    sop_guard.db files to silently diverge into different demo states.
+    meridian.db files to silently diverge into different demo states.
     """
     prefix = "sqlite+aiosqlite:///./"
     if url.startswith(prefix):

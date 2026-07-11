@@ -1,5 +1,5 @@
 """
-SOP-Guard Change Impact Assessment
+Meridian Change Impact Assessment
 ------------------------------------
 Proactive assessment of what a proposed SOP text change would actually
 affect, computed from real data (not fabricated): cross-SOP entity

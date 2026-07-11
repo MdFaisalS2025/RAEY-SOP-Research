@@ -70,7 +70,7 @@ export default function AlertStewardshipPage() {
             id="min-overrides"
             value={minOverrides}
             onChange={(e) => setMinOverrides(Number(e.target.value))}
-            className="px-2 py-1 rounded-lg border border-[#E2E8F0] bg-card text-sm"
+            className="px-2 py-1 rounded-lg border border-border bg-card text-sm"
             aria-label="Minimum override count filter"
           >
             {[1, 2, 3, 5, 10].map((n) => (
@@ -89,7 +89,7 @@ export default function AlertStewardshipPage() {
         )}
 
         {!loading && data && data.candidates.length === 0 && (
-          <div className="p-8 rounded-2xl bg-card border border-[#E2E8F0] text-center">
+          <div className="p-8 rounded-2xl bg-card border border-border text-center">
             <Info className="w-5 h-5 text-muted-foreground mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">
               No alerts have been overridden {minOverrides} or more times yet.
@@ -105,17 +105,17 @@ export default function AlertStewardshipPage() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.04 }}
-                className="p-4 rounded-2xl bg-card border border-[#E2E8F0] shadow-sm"
+                className="p-4 rounded-2xl bg-card border border-border shadow-sm"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs px-1.5 py-0.5 rounded bg-muted text-[#64748B]">
+                      <span className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
                         {CONTEXT_TYPE_LABEL[c.context_type] ?? c.context_type}
                       </span>
-                      <span className="text-xs text-[#94A3B8] font-mono">{c.context_id.slice(0, 24)}</span>
+                      <span className="text-xs text-subtle font-mono">{c.context_id.slice(0, 24)}</span>
                     </div>
-                    <p className="text-sm font-medium text-[#1A2332] truncate">
+                    <p className="text-sm font-medium text-foreground truncate">
                       {c.context_label || "(no label recorded)"}
                     </p>
                   </div>
@@ -128,7 +128,7 @@ export default function AlertStewardshipPage() {
                   {Object.entries(c.reasons).map(([reason, count]) => (
                     <span
                       key={reason}
-                      className="text-xs px-2 py-0.5 rounded-full border border-[#E2E8F0] text-[#64748B]"
+                      className="text-xs px-2 py-0.5 rounded-full border border-border text-muted-foreground"
                     >
                       {REASON_LABEL[reason] ?? reason}: {count}
                     </span>

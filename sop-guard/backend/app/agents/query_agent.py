@@ -1,5 +1,5 @@
 """
-SOP-Guard Query Understanding Agent
+Meridian Query Understanding Agent
 Classifies queries, extracts entities, and determines retrieval strategy.
 Research prototype. Not for clinical use.
 """

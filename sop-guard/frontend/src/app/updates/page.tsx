@@ -157,7 +157,7 @@ export default function UpdatesPage() {
                     <select
                       value={selectedSopId}
                       onChange={(e) => handleSopChange(e.target.value)}
-                      className="w-full p-2.5 rounded-xl bg-muted dark:bg-[#11191b] border border-border dark:border-white/10 text-sm text-foreground dark:text-[#dce4e5] caret-[#0B6BCB] dark:caret-[0B6BCB]"
+                      className="w-full p-2.5 rounded-xl bg-muted dark:bg-[#11191b] border border-border dark:border-white/10 text-sm text-foreground dark:text-subtle caret-[#0B6BCB] dark:caret-[0B6BCB]"
                     >
                       <option value="">Select SOP...</option>
                       {sops.map((s: any) => (
@@ -178,7 +178,7 @@ export default function UpdatesPage() {
                       value={section}
                       onChange={(e) => setSection(e.target.value)}
                       placeholder="e.g., Section 4.2 - Fluid Resuscitation"
-                      className="w-full p-2.5 rounded-xl bg-muted dark:bg-[#11191b] border border-border dark:border-white/10 text-sm text-foreground dark:text-[#dce4e5] placeholder:text-muted-foreground dark:placeholder:text-[#7f8f92] caret-[#0B6BCB] dark:caret-[0B6BCB]"
+                      className="w-full p-2.5 rounded-xl bg-muted dark:bg-[#11191b] border border-border dark:border-white/10 text-sm text-foreground dark:text-subtle placeholder:text-muted-foreground dark:placeholder:text-muted-foreground caret-[#0B6BCB] dark:caret-[0B6BCB]"
                     />
                   </div>
                 </div>
@@ -189,7 +189,7 @@ export default function UpdatesPage() {
                     value={currentText}
                     readOnly
                     rows={2}
-                    className="w-full p-2.5 rounded-xl bg-muted/50 dark:bg-[#11191b]/50 border border-border dark:border-white/10 text-sm text-foreground dark:text-[#dce4e5] placeholder:text-muted-foreground dark:placeholder:text-[#7f8f92] resize-none cursor-not-allowed"
+                    className="w-full p-2.5 rounded-xl bg-muted/50 dark:bg-[#11191b]/50 border border-border dark:border-white/10 text-sm text-foreground dark:text-subtle placeholder:text-muted-foreground dark:placeholder:text-muted-foreground resize-none cursor-not-allowed"
                     placeholder="Select an SOP above to populate current text"
                   />
                 </div>
@@ -201,7 +201,7 @@ export default function UpdatesPage() {
                     onChange={(e) => setProposedText(e.target.value)}
                     placeholder="Enter the proposed new text for this section..."
                     rows={3}
-                    className="w-full p-2.5 rounded-xl bg-muted dark:bg-[#11191b] border border-border dark:border-white/10 text-sm text-foreground dark:text-[#dce4e5] placeholder:text-muted-foreground dark:placeholder:text-[#7f8f92] caret-[#0B6BCB] dark:caret-[0B6BCB] resize-none"
+                    className="w-full p-2.5 rounded-xl bg-muted dark:bg-[#11191b] border border-border dark:border-white/10 text-sm text-foreground dark:text-subtle placeholder:text-muted-foreground dark:placeholder:text-muted-foreground caret-[#0B6BCB] dark:caret-[0B6BCB] resize-none"
                   />
                 </div>
 
@@ -212,7 +212,7 @@ export default function UpdatesPage() {
                     onChange={(e) => setReason(e.target.value)}
                     placeholder="Explain why this change is needed (e.g., updated guidelines, safety improvement)..."
                     rows={2}
-                    className="w-full p-2.5 rounded-xl bg-muted dark:bg-[#11191b] border border-border dark:border-white/10 text-sm text-foreground dark:text-[#dce4e5] placeholder:text-muted-foreground dark:placeholder:text-[#7f8f92] caret-[#0B6BCB] dark:caret-[0B6BCB] resize-none"
+                    className="w-full p-2.5 rounded-xl bg-muted dark:bg-[#11191b] border border-border dark:border-white/10 text-sm text-foreground dark:text-subtle placeholder:text-muted-foreground dark:placeholder:text-muted-foreground caret-[#0B6BCB] dark:caret-[0B6BCB] resize-none"
                   />
                 </div>
 
@@ -222,7 +222,7 @@ export default function UpdatesPage() {
                     value={proposerName}
                     onChange={(e) => setProposerName(e.target.value)}
                     placeholder="e.g., Dr. Smith"
-                    className="w-full p-2.5 rounded-xl bg-muted dark:bg-[#11191b] border border-border dark:border-white/10 text-sm text-foreground dark:text-[#dce4e5] placeholder:text-muted-foreground dark:placeholder:text-[#7f8f92] caret-[#0B6BCB] dark:caret-[0B6BCB]"
+                    className="w-full p-2.5 rounded-xl bg-muted dark:bg-[#11191b] border border-border dark:border-white/10 text-sm text-foreground dark:text-subtle placeholder:text-muted-foreground dark:placeholder:text-muted-foreground caret-[#0B6BCB] dark:caret-[0B6BCB]"
                   />
                 </div>
 

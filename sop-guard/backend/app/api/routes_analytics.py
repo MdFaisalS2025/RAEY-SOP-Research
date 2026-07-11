@@ -1,5 +1,5 @@
 """
-SOP-Guard Value / Adoption Analytics Routes
+Meridian Value / Adoption Analytics Routes
 ----------------------------------------------
 A CFO/CMIO-facing view of adoption and value signals. Computed from real
 data where possible; fields that would require production usage logs

@@ -19,7 +19,7 @@ type Command = {
 
 const PAGES: { name: string; href: string; keywords: string }[] = [
   { name: "Home", href: "/", keywords: "dashboard start overview" },
-  { name: "Ask SOP-Guard", href: "/query", keywords: "query chat question ask" },
+  { name: "Ask Meridian", href: "/query", keywords: "query chat question ask" },
   { name: "Bedside Lookup", href: "/bedside", keywords: "bedside quick lookup nurse" },
   { name: "SOP Library", href: "/library", keywords: "library documents sops browse" },
   { name: "Quick Reference", href: "/quick-ref", keywords: "quick ref cards checklist" },
@@ -214,7 +214,7 @@ export function CommandPalette() {
       <div className="relative w-full max-w-xl bg-card dark:bg-[#0d1516] rounded-xl shadow-md border border-[#E2E8F0] dark:border-white/[0.08] overflow-hidden">
         {/* Search input */}
         <div className="flex items-center gap-2.5 px-4 py-3 border-b border-[#EDF1F5] dark:border-white/[0.06]">
-          <Search className="w-4 h-4 text-[#94A3B8] shrink-0" />
+          <Search className="w-4 h-4 text-subtle shrink-0" />
           <input
             ref={inputRef}
             type="text"
@@ -225,9 +225,9 @@ export function CommandPalette() {
             aria-label="Search commands"
             autoComplete="off"
             spellCheck={false}
-            className="flex-1 bg-transparent outline-none text-sm text-[#1A2332] dark:text-[#dce4e5] placeholder:text-[#94A3B8]"
+            className="flex-1 bg-transparent outline-none text-sm text-[#1A2332] dark:text-subtle placeholder:text-subtle"
           />
-          <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded border border-[#E2E8F0] dark:border-white/10 text-[10px] font-medium text-[#94A3B8]">
+          <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded border border-[#E2E8F0] dark:border-white/10 text-[10px] font-medium text-subtle">
             Esc
           </kbd>
         </div>
@@ -235,13 +235,13 @@ export function CommandPalette() {
         {/* Results */}
         <div ref={listRef} className="max-h-[50vh] overflow-y-auto py-1">
           {flat.length === 0 && (
-            <p className="px-4 py-8 text-center text-sm text-[#64748B]">No results</p>
+            <p className="px-4 py-8 text-center text-sm text-muted-foreground">No results</p>
           )}
           {groups.map((group) => {
             const Icon = GROUP_ICON[group.label]
             return (
               <div key={group.label}>
-                <p className="px-4 pt-2.5 pb-1 text-[10px] font-semibold uppercase tracking-widest text-[#94A3B8]">
+                <p className="px-4 pt-2.5 pb-1 text-[10px] font-semibold uppercase tracking-widest text-subtle">
                   {group.label}
                 </p>
                 {group.items.map((cmd) => {
@@ -265,7 +265,7 @@ export function CommandPalette() {
                       <Icon
                         className={cn(
                           "w-3.5 h-3.5 shrink-0",
-                          isSelected ? "text-[#0B6BCB]" : "text-[#94A3B8]"
+                          isSelected ? "text-[#0B6BCB]" : "text-subtle"
                         )}
                       />
                       <span className="truncate">{cmd.name}</span>
@@ -278,7 +278,7 @@ export function CommandPalette() {
         </div>
 
         {/* Footer hint */}
-        <div className="px-4 py-2 border-t border-[#EDF1F5] dark:border-white/[0.06] text-[11px] text-[#94A3B8]">
+        <div className="px-4 py-2 border-t border-[#EDF1F5] dark:border-white/[0.06] text-[11px] text-subtle">
           Enter to open - Esc to close
         </div>
       </div>

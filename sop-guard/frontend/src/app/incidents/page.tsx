@@ -85,18 +85,18 @@ const SEVERITY_META: Record<string, { label: string; className: string }> = {
   },
   medium: {
     label: "Medium",
-    className: "bg-card text-[#64748B] border border-[#CBD5E1]",
+    className: "bg-card text-muted-foreground border border-input",
   },
   low: {
     label: "Low",
-    className: "bg-card text-[#94A3B8] border border-[#EDF1F5]",
+    className: "bg-card text-subtle border border-border",
   },
 }
 
 const REVIEW_STATUS_META: Record<string, { label: string; className: string }> = {
   pending: {
     label: "Pending",
-    className: "bg-card text-[#64748B] border border-[#CBD5E1]",
+    className: "bg-card text-muted-foreground border border-input",
   },
   in_review: {
     label: "In Review",
@@ -162,11 +162,11 @@ function ReportModal({ onClose, onCreated }: ReportModalProps) {
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="bg-card border border-[#E2E8F0] rounded-2xl p-8 w-full max-w-sm text-center"
+          className="bg-card border border-border rounded-2xl p-8 w-full max-w-sm text-center"
         >
           <CheckCircle className="w-12 h-12 text-[#15803D] dark:text-green-400 mx-auto mb-3" />
-          <h3 className="text-lg font-semibold text-[#1A2332] mb-2">Report Submitted</h3>
-          <p className="text-sm text-[#64748B] mb-4">
+          <h3 className="text-lg font-semibold text-foreground mb-2">Report Submitted</h3>
+          <p className="text-sm text-muted-foreground mb-4">
             Your incident report has been submitted. Relevant SOPs will be flagged for review.
           </p>
           <button
@@ -185,20 +185,20 @@ function ReportModal({ onClose, onCreated }: ReportModalProps) {
       <motion.div
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="bg-card border border-[#E2E8F0] rounded-2xl p-6 w-full max-w-lg space-y-4 max-h-[90vh] overflow-y-auto"
+        className="bg-card border border-border rounded-2xl p-6 w-full max-w-lg space-y-4 max-h-[90vh] overflow-y-auto"
       >
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-[#1A2332]">Report New Incident</h3>
-          <button onClick={onClose} aria-label="Close report new incident form" className="text-[#64748B] hover:text-[#334155] transition-colors">
+          <h3 className="text-lg font-semibold text-foreground">Report New Incident</h3>
+          <button onClick={onClose} aria-label="Close report new incident form" className="text-muted-foreground hover:text-foreground transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <div className="space-y-3">
           <div>
-            <label className="text-xs text-[#64748B] mb-1 block">Incident Type</label>
+            <label className="text-xs text-muted-foreground mb-1 block">Incident Type</label>
             <select value={incidentType} onChange={(e) => setIncidentType(e.target.value)}
-              className="w-full bg-card border border-[#E2E8F0] rounded-xl px-3 py-2 text-sm text-[#1A2332] focus:outline-none focus:border-[#0B6BCB]/50">
+              className="w-full bg-card border border-border rounded-xl px-3 py-2 text-sm text-foreground focus:outline-none focus:border-[#0B6BCB]/50">
               <option value="near_miss">Near Miss</option>
               <option value="adverse_event">Adverse Event</option>
               <option value="sentinel_event">Sentinel Event</option>
@@ -206,14 +206,14 @@ function ReportModal({ onClose, onCreated }: ReportModalProps) {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs text-[#64748B] mb-1 block">Reported By</label>
+              <label className="text-xs text-muted-foreground mb-1 block">Reported By</label>
               <input value={reporter} onChange={(e) => setReporter(e.target.value)} placeholder="Your name"
-                className="w-full bg-card border border-[#E2E8F0] rounded-xl px-3 py-2 text-sm text-[#1A2332] focus:outline-none focus:border-[#0B6BCB]/50" />
+                className="w-full bg-card border border-border rounded-xl px-3 py-2 text-sm text-foreground focus:outline-none focus:border-[#0B6BCB]/50" />
             </div>
             <div>
-              <label className="text-xs text-[#64748B] mb-1 block">Severity</label>
+              <label className="text-xs text-muted-foreground mb-1 block">Severity</label>
               <select value={severity} onChange={(e) => setSeverity(e.target.value)}
-                className="w-full bg-card border border-[#E2E8F0] rounded-xl px-3 py-2 text-sm text-[#1A2332] focus:outline-none focus:border-[#0B6BCB]/50">
+                className="w-full bg-card border border-border rounded-xl px-3 py-2 text-sm text-foreground focus:outline-none focus:border-[#0B6BCB]/50">
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
                 <option value="high">High</option>
@@ -222,9 +222,9 @@ function ReportModal({ onClose, onCreated }: ReportModalProps) {
             </div>
           </div>
           <div>
-            <label className="text-xs text-[#64748B] mb-1 block">Department</label>
+            <label className="text-xs text-muted-foreground mb-1 block">Department</label>
             <select value={department} onChange={(e) => setDepartment(e.target.value)}
-              className="w-full bg-card border border-[#E2E8F0] rounded-xl px-3 py-2 text-sm text-[#1A2332] focus:outline-none focus:border-[#0B6BCB]/50">
+              className="w-full bg-card border border-border rounded-xl px-3 py-2 text-sm text-foreground focus:outline-none focus:border-[#0B6BCB]/50">
               <option>ICU</option>
               <option>Emergency</option>
               <option>Oncology</option>
@@ -235,18 +235,18 @@ function ReportModal({ onClose, onCreated }: ReportModalProps) {
             </select>
           </div>
           <div>
-            <label className="text-xs text-[#64748B] mb-1 block">Brief Description</label>
+            <label className="text-xs text-muted-foreground mb-1 block">Brief Description</label>
             <textarea
               rows={3}
               value={description} onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe what happened..."
-              className="w-full bg-card border border-[#E2E8F0] rounded-xl px-3 py-2 text-sm text-[#1A2332] focus:outline-none focus:border-[#0B6BCB]/50 resize-none"
+              className="w-full bg-card border border-border rounded-xl px-3 py-2 text-sm text-foreground focus:outline-none focus:border-[#0B6BCB]/50 resize-none"
             />
           </div>
           <div>
-            <label className="text-xs text-[#64748B] mb-1 block">Related SOP</label>
+            <label className="text-xs text-muted-foreground mb-1 block">Related SOP</label>
             <select value={relatedSop} onChange={(e) => setRelatedSop(e.target.value)}
-              className="w-full bg-card border border-[#E2E8F0] rounded-xl px-3 py-2 text-sm text-[#1A2332] focus:outline-none focus:border-[#0B6BCB]/50">
+              className="w-full bg-card border border-border rounded-xl px-3 py-2 text-sm text-foreground focus:outline-none focus:border-[#0B6BCB]/50">
               <option value="">-- Select SOP (optional) --</option>
               {MOCK_SOPS.map((sop) => (
                 <option key={sop.sop_id} value={sop.sop_id}>
@@ -269,7 +269,7 @@ function ReportModal({ onClose, onCreated }: ReportModalProps) {
           </button>
           <button
             onClick={onClose}
-            className="px-4 py-2.5 rounded-xl bg-muted text-[#64748B] text-sm font-medium hover:bg-muted transition-colors"
+            className="px-4 py-2.5 rounded-xl bg-muted text-muted-foreground text-sm font-medium hover:bg-muted transition-colors"
           >
             Cancel
           </button>
@@ -280,7 +280,7 @@ function ReportModal({ onClose, onCreated }: ReportModalProps) {
 }
 
 const CAPA_STATUS_META: Record<string, { label: string; className: string }> = {
-  open: { label: "Open", className: "bg-card text-[#64748B] border border-[#CBD5E1]" },
+  open: { label: "Open", className: "bg-card text-muted-foreground border border-input" },
   investigating: { label: "Investigating", className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30" },
   action_planned: { label: "Action Planned", className: "bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30" },
   closed: { label: "Closed", className: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30" },
@@ -342,7 +342,7 @@ function CAPAEditor({ capa, onSaved }: { capa: CAPA; onSaved: () => void }) {
   }
 
   return (
-    <div className="rounded-xl bg-muted border border-[#E2E8F0] p-4 space-y-3">
+    <div className="rounded-xl bg-muted border border-border p-4 space-y-3">
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-2">
           <span className={cn("text-xs px-2 py-0.5 rounded-full font-medium", CAPA_STATUS_META[status]?.className)}>
@@ -355,7 +355,7 @@ function CAPAEditor({ capa, onSaved }: { capa: CAPA; onSaved: () => void }) {
           )}
         </div>
         <select value={status} onChange={(e) => { const v = e.target.value as CAPA["status"]; setStatus(v); save({ status: v }) }}
-          className="text-xs bg-card border border-[#E2E8F0] rounded-lg px-2 py-1">
+          className="text-xs bg-card border border-border rounded-lg px-2 py-1">
           <option value="open">Open</option>
           <option value="investigating">Investigating</option>
           <option value="action_planned">Action Planned</option>
@@ -364,38 +364,38 @@ function CAPAEditor({ capa, onSaved }: { capa: CAPA; onSaved: () => void }) {
       </div>
 
       <div>
-        <label className="text-[11px] text-[#94A3B8] mb-1 block">Root Cause</label>
+        <label className="text-[11px] text-subtle mb-1 block">Root Cause</label>
         <textarea rows={2} value={rootCause} onChange={(e) => setRootCause(e.target.value)} onBlur={() => save()}
           placeholder="Why did this happen?"
-          className="w-full bg-card border border-[#E2E8F0] rounded-lg px-3 py-2 text-xs text-[#1A2332] resize-none" />
+          className="w-full bg-card border border-border rounded-lg px-3 py-2 text-xs text-foreground resize-none" />
       </div>
       <div>
-        <label className="text-[11px] text-[#94A3B8] mb-1 block">Corrective Action</label>
+        <label className="text-[11px] text-subtle mb-1 block">Corrective Action</label>
         <textarea rows={2} value={correctiveAction} onChange={(e) => setCorrectiveAction(e.target.value)} onBlur={() => save()}
           placeholder="What was done to fix the immediate issue?"
-          className="w-full bg-card border border-[#E2E8F0] rounded-lg px-3 py-2 text-xs text-[#1A2332] resize-none" />
+          className="w-full bg-card border border-border rounded-lg px-3 py-2 text-xs text-foreground resize-none" />
       </div>
       <div>
-        <label className="text-[11px] text-[#94A3B8] mb-1 block">Preventive Action</label>
+        <label className="text-[11px] text-subtle mb-1 block">Preventive Action</label>
         <textarea rows={2} value={preventiveAction} onChange={(e) => setPreventiveAction(e.target.value)} onBlur={() => save()}
           placeholder="What will stop this from happening again? (e.g. an SOP change)"
-          className="w-full bg-card border border-[#E2E8F0] rounded-lg px-3 py-2 text-xs text-[#1A2332] resize-none" />
+          className="w-full bg-card border border-border rounded-lg px-3 py-2 text-xs text-foreground resize-none" />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="text-[11px] text-[#94A3B8] mb-1 block">Owner</label>
+          <label className="text-[11px] text-subtle mb-1 block">Owner</label>
           <input value={owner} onChange={(e) => setOwner(e.target.value)} onBlur={() => save()}
-            className="w-full bg-card border border-[#E2E8F0] rounded-lg px-3 py-2 text-xs text-[#1A2332]" />
+            className="w-full bg-card border border-border rounded-lg px-3 py-2 text-xs text-foreground" />
         </div>
         <div>
-          <label className="text-[11px] text-[#94A3B8] mb-1 block">Due Date</label>
+          <label className="text-[11px] text-subtle mb-1 block">Due Date</label>
           <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} onBlur={() => save()}
-            className="w-full bg-card border border-[#E2E8F0] rounded-lg px-3 py-2 text-xs text-[#1A2332]" />
+            className="w-full bg-card border border-border rounded-lg px-3 py-2 text-xs text-foreground" />
         </div>
       </div>
 
       <div className="flex items-center gap-2 pt-1">
-        {saving && <span className="text-[11px] text-[#94A3B8] flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" /> Saving...</span>}
+        {saving && <span className="text-[11px] text-subtle flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" /> Saving...</span>}
         {!capa.linked_proposal_id && preventiveAction.trim() && (
           <button onClick={createLinkedProposal} disabled={creatingProposal}
             className="ml-auto flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-[#0B6BCB]/10 text-[#0B6BCB] hover:bg-[#0B6BCB]/20 border border-[#0B6BCB]/30 transition-colors font-medium disabled:opacity-50">
@@ -445,13 +445,13 @@ function CAPAPanel({ incidentId, incidentTitle, onChange }: { incidentId: number
   }
 
   if (loading) {
-    return <div className="flex items-center gap-2 text-xs text-[#64748B] py-3"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading CAPA...</div>
+    return <div className="flex items-center gap-2 text-xs text-muted-foreground py-3"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading CAPA...</div>
   }
 
   return (
     <div className="space-y-3 pt-2">
       <div className="flex items-center justify-between">
-        <p className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">Corrective & Preventive Actions</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Corrective & Preventive Actions</p>
         <button onClick={openCapa} disabled={creating}
           className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-[#0B6BCB] hover:bg-[#0959AC] disabled:opacity-50 text-white font-medium transition-colors">
           {creating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
@@ -459,7 +459,7 @@ function CAPAPanel({ incidentId, incidentTitle, onChange }: { incidentId: number
         </button>
       </div>
       {capas.length === 0 && (
-        <p className="text-xs text-[#94A3B8]">No CAPA opened yet for this incident.</p>
+        <p className="text-xs text-subtle">No CAPA opened yet for this incident.</p>
       )}
       {capas.map((c) => (
         <CAPAEditor key={c.id} capa={c} onSaved={handleSaved} />
@@ -515,7 +515,7 @@ function IncidentsTab() {
       )}
 
       <div className="flex items-start justify-between gap-4">
-        <p className="text-sm text-[#64748B] max-w-2xl">
+        <p className="text-sm text-muted-foreground max-w-2xl">
           Linking patient safety incidents to SOP review and improvement. Incident reports trigger automatic SOP
           review suggestions, closing the patient safety learning loop.
         </p>
@@ -573,7 +573,7 @@ function IncidentsTab() {
             </div>
             <div>
               <p className={cn("text-sm font-semibold", item.color)}>{item.label}</p>
-              <p className="text-xs text-[#64748B] mt-0.5">{item.desc}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{item.desc}</p>
             </div>
           </div>
         ))}
@@ -587,26 +587,26 @@ function IncidentsTab() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.07 }}
-            className={cn("bg-card border border-[#E2E8F0] rounded-xl p-4", s.bg)}
+            className={cn("bg-card border border-border rounded-xl p-4", s.bg)}
           >
             <p className={cn("text-2xl font-bold", s.color)}>{s.value}</p>
-            <p className="text-xs text-[#64748B] mt-0.5">{s.label}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{s.label}</p>
           </motion.div>
         ))}
       </div>
 
       {/* Incidents list */}
       <section>
-        <h2 className="text-lg font-medium text-[#1A2332] mb-3">
+        <h2 className="text-lg font-medium text-foreground mb-3">
           Recent Incidents with SOP Links
         </h2>
         {loading && (
-          <div className="flex items-center gap-2 text-sm text-[#64748B] py-8 justify-center">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground py-8 justify-center">
             <Loader2 className="w-4 h-4 animate-spin" /> Loading incidents...
           </div>
         )}
         {!loading && incidents.length === 0 && (
-          <p className="text-sm text-[#64748B] py-8 text-center">No incidents reported yet.</p>
+          <p className="text-sm text-muted-foreground py-8 text-center">No incidents reported yet.</p>
         )}
         <div className="space-y-4">
           {incidents.map((inc, i) => {
@@ -619,7 +619,7 @@ function IncidentsTab() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.06 }}
-                className="bg-card border border-[#E2E8F0] rounded-xl p-5 space-y-3"
+                className="bg-card border border-border rounded-xl p-5 space-y-3"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 space-y-2">
@@ -640,15 +640,15 @@ function IncidentsTab() {
                       >
                         {SEVERITY_META[inc.severity]?.label} Severity
                       </span>
-                      <span className="text-xs text-[#94A3B8]">{inc.department}</span>
-                      <span className="text-xs text-[#94A3B8]">{inc.occurred_at ? new Date(inc.occurred_at).toLocaleDateString("en-US") : ""}</span>
-                      <span className="text-xs text-[#94A3B8]">- {inc.reporter}</span>
+                      <span className="text-xs text-subtle">{inc.department}</span>
+                      <span className="text-xs text-subtle">{inc.occurred_at ? new Date(inc.occurred_at).toLocaleDateString("en-US") : ""}</span>
+                      <span className="text-xs text-subtle">- {inc.reporter}</span>
                     </div>
-                    <h3 className="text-sm font-semibold text-[#1A2332]">{inc.title}</h3>
+                    <h3 className="text-sm font-semibold text-foreground">{inc.title}</h3>
                   </div>
                   <button
                     onClick={() => toggleExpand(inc.id)}
-                    className="text-[#64748B] hover:text-[#334155] transition-colors shrink-0"
+                    className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
                   >
                     {isExpanded ? (
                       <ChevronUp className="w-4 h-4" />
@@ -660,7 +660,7 @@ function IncidentsTab() {
 
                 <p
                   className={cn(
-                    "text-xs text-[#64748B] leading-relaxed",
+                    "text-xs text-muted-foreground leading-relaxed",
                     !isExpanded && "line-clamp-2"
                   )}
                 >
@@ -668,7 +668,7 @@ function IncidentsTab() {
                 </p>
 
                 <div>
-                  <p className="text-xs text-[#94A3B8] mb-1.5">Linked SOPs</p>
+                  <p className="text-xs text-subtle mb-1.5">Linked SOPs</p>
                   <div className="flex flex-wrap gap-1.5">
                     {inc.linked_sop_ids.map((sopId) => (
                       <span
@@ -697,7 +697,7 @@ function IncidentsTab() {
                       exit={{ opacity: 0, height: 0 }}
                       className="overflow-hidden"
                     >
-                      <div className="pt-2 border-t border-[#EDF1F5]">
+                      <div className="pt-2 border-t border-border">
                         <CAPAPanel incidentId={inc.id} incidentTitle={inc.title} onChange={loadIncidents} />
                       </div>
                     </motion.div>
@@ -719,7 +719,7 @@ function IncidentsTab() {
       </section>
 
       <section>
-        <h2 className="text-lg font-medium text-[#1A2332] mb-3">Pattern Detection</h2>
+        <h2 className="text-lg font-medium text-foreground mb-3">Pattern Detection</h2>
         <div className="space-y-3">
           {PATTERN_ALERTS.map((alert, i) => (
             <motion.div
@@ -816,7 +816,7 @@ const MOCK_EXCEPTIONS: ExceptionReport[] = [
 const EXC_SEVERITY_META: Record<string, { label: string; cls: string }> = {
   critical: { label: "Critical", cls: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30" },
   high: { label: "High", cls: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30" },
-  medium: { label: "Medium", cls: "bg-card text-[#475569] border border-[#CBD5E1]" },
+  medium: { label: "Medium", cls: "bg-card text-muted-foreground border border-input" },
   low: { label: "Low", cls: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30" },
 }
 
@@ -857,7 +857,7 @@ function ExceptionCard({ exc }: { exc: ExceptionReport }) {
   return (
     <motion.div
       layout
-      className="rounded-2xl bg-card border border-[#E2E8F0] overflow-hidden"
+      className="rounded-2xl bg-card border border-border overflow-hidden"
     >
       <div className="p-5">
         <div className="flex flex-wrap items-start gap-2 mb-2">
@@ -927,7 +927,7 @@ function ExceptionCard({ exc }: { exc: ExceptionReport }) {
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="px-5 pb-5 border-t border-[#E2E8F0] pt-4 space-y-3">
+            <div className="px-5 pb-5 border-t border-border pt-4 space-y-3">
               <div>
                 <p className="text-xs font-medium text-muted-foreground mb-1">Immediate Action Taken</p>
                 <p className="text-sm text-foreground/80">{exc.immediate_action_taken}</p>
@@ -1002,7 +1002,7 @@ function SubmitForm({ onClose }: { onClose: () => void }) {
           <input
             required
             placeholder="e.g. IC-PPE-001"
-            className="w-full rounded-lg bg-muted border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/60"
+            className="w-full rounded-lg bg-muted border border-border px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/60"
           />
         </div>
         <div>
@@ -1010,14 +1010,14 @@ function SubmitForm({ onClose }: { onClose: () => void }) {
           <input
             required
             type="datetime-local"
-            className="w-full rounded-lg bg-muted border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/60"
+            className="w-full rounded-lg bg-muted border border-border px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/60"
           />
         </div>
         <div>
           <label className="text-xs text-muted-foreground block mb-1">Deviation Type</label>
           <select
             required
-            className="w-full rounded-lg bg-card border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/60"
+            className="w-full rounded-lg bg-card border border-border px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/60"
           >
             <option value="">Select type...</option>
             <option value="equipment_unavailable">Equipment Unavailable</option>
@@ -1032,7 +1032,7 @@ function SubmitForm({ onClose }: { onClose: () => void }) {
           <label className="text-xs text-muted-foreground block mb-1">Patient Harm?</label>
           <select
             required
-            className="w-full rounded-lg bg-card border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/60"
+            className="w-full rounded-lg bg-card border border-border px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/60"
           >
             <option value="">Select...</option>
             <option value="no">No patient harm</option>
@@ -1046,7 +1046,7 @@ function SubmitForm({ onClose }: { onClose: () => void }) {
           required
           rows={3}
           placeholder="Describe what happened and why the SOP could not be followed..."
-          className="w-full rounded-lg bg-muted border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/60 resize-none"
+          className="w-full rounded-lg bg-muted border border-border px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/60 resize-none"
         />
       </div>
       <div>
@@ -1055,7 +1055,7 @@ function SubmitForm({ onClose }: { onClose: () => void }) {
           required
           rows={2}
           placeholder="Describe what was done to mitigate risk..."
-          className="w-full rounded-lg bg-muted border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/60 resize-none"
+          className="w-full rounded-lg bg-muted border border-border px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/60 resize-none"
         />
       </div>
       <div className="flex gap-3 pt-1">
@@ -1108,7 +1108,7 @@ function ExceptionsTab() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.07 }}
-            className="rounded-2xl bg-card border border-[#E2E8F0] p-4 flex items-center gap-3"
+            className="rounded-2xl bg-card border border-border p-4 flex items-center gap-3"
           >
             <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", s.bg)}>
               <s.icon className={cn("w-5 h-5", s.color)} />
@@ -1137,7 +1137,7 @@ function ExceptionsTab() {
         </div>
       </section>
 
-      <div className="rounded-2xl bg-card border border-[#E2E8F0] p-5">
+      <div className="rounded-2xl bg-card border border-border p-5">
         {!showForm ? (
           <div className="flex items-center justify-between">
             <div>
@@ -1193,8 +1193,8 @@ export default function IncidentsPage() {
             <AlertOctagon className="w-6 h-6 text-[#B91C1C] dark:text-red-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-semibold text-[#1A2332] font-display">Deviations &amp; Incidents</h1>
-            <p className="text-sm text-[#64748B] mt-0.5">
+            <h1 className="text-2xl font-semibold text-foreground font-display">Deviations &amp; Incidents</h1>
+            <p className="text-sm text-muted-foreground mt-0.5">
               Where practice diverged from SOP - after the fact (incidents) or in the moment, for a documented reason (exceptions)
             </p>
           </div>
@@ -1205,14 +1205,14 @@ export default function IncidentsPage() {
           <span><strong>Research Prototype - Not for Clinical Use.</strong> For demonstration only.</span>
         </div>
 
-        <div className="flex gap-1 p-1 rounded-xl bg-muted border border-[#E2E8F0] w-fit">
+        <div className="flex gap-1 p-1 rounded-xl bg-muted border border-border w-fit">
           {TABS.map((t) => (
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
               className={cn(
                 "flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors",
-                tab === t.key ? "bg-card text-[#0B6BCB] shadow-sm" : "text-[#64748B] hover:text-[#1A2332]"
+                tab === t.key ? "bg-card text-[#0B6BCB] shadow-sm" : "text-muted-foreground hover:text-foreground"
               )}
             >
               <t.icon className="w-4 h-4" />

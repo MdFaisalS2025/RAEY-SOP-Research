@@ -1,5 +1,5 @@
 """
-SOP-Guard Text Diff (Redline)
+Meridian Text Diff (Redline)
 ------------------------------
 Word-level diff between two blocks of text, for the governance proposal
 redline viewer (like Word's "Track Changes"). Uses only the stdlib

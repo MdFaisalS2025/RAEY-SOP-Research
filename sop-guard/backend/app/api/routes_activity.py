@@ -1,5 +1,5 @@
 """
-SOP-Guard Activity Routes
+Meridian Activity Routes
 -------------------------
 Research prototype - NOT for clinical use.
 """

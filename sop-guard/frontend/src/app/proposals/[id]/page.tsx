@@ -39,8 +39,8 @@ function priorityBadge(priority: string) {
   const map: Record<string, string> = {
     urgent: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30",
     high: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30",
-    normal: "bg-card text-[#475569] border border-[#CBD5E1]",
-    low: "bg-card text-[#475569] border border-[#CBD5E1]",
+    normal: "bg-card text-muted-foreground border border-input",
+    low: "bg-card text-muted-foreground border border-input",
   }
   return map[priority] ?? map.normal
 }
@@ -51,17 +51,17 @@ function statusBadge(status: Proposal["status"]) {
     approved: { cls: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30", label: "Approved" },
     rejected: { cls: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30", label: "Rejected" },
   }
-  return map[status] ?? { cls: "bg-muted text-[#64748B]", label: status }
+  return map[status] ?? { cls: "bg-muted text-muted-foreground", label: status }
 }
 
 function voteBadge(vote: string) {
   const map: Record<string, { cls: string; label: string; icon: React.ReactNode }> = {
     approve: { cls: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400", label: "Approved", icon: <CheckCircle2 className="w-3.5 h-3.5" /> },
     reject: { cls: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400", label: "Rejected", icon: <XCircle className="w-3.5 h-3.5" /> },
-    abstain: { cls: "bg-muted text-[#64748B]", label: "Abstained", icon: <MinusCircle className="w-3.5 h-3.5" /> },
+    abstain: { cls: "bg-muted text-muted-foreground", label: "Abstained", icon: <MinusCircle className="w-3.5 h-3.5" /> },
     request_changes: { cls: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400", label: "Requested Changes", icon: <AlertTriangle className="w-3.5 h-3.5" /> },
   }
-  return map[vote] ?? { cls: "bg-muted text-[#64748B]", label: vote, icon: null }
+  return map[vote] ?? { cls: "bg-muted text-muted-foreground", label: vote, icon: null }
 }
 
 /** `new Date("2099-06-01")` parses as UTC midnight, so toLocaleDateString()
@@ -103,11 +103,11 @@ function EffectiveDateCard({ proposal, onUpdated }: { proposal: Proposal; onUpda
   return (
     <div className={cn(
       "rounded-2xl border p-5 space-y-3",
-      isPending ? "bg-[#FEF3C7]/40 dark:bg-amber-500/[0.06] border-[#FDE68A] dark:border-amber-500/30" : "bg-muted border-[#E2E8F0]"
+      isPending ? "bg-[#FEF3C7]/40 dark:bg-amber-500/[0.06] border-[#FDE68A] dark:border-amber-500/30" : "bg-muted border-border"
     )}>
       <div className="flex items-center gap-2">
         <Calendar className={cn("w-4 h-4", isPending ? "text-[#B45309] dark:text-amber-400" : "text-[#0B6BCB]")} />
-        <h3 className="text-sm font-semibold text-[#1A2332]">Effective Date</h3>
+        <h3 className="text-sm font-semibold text-foreground">Effective Date</h3>
         {isEffective && (
           <span className="ml-auto px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30">
             In effect
@@ -119,7 +119,7 @@ function EffectiveDateCard({ proposal, onUpdated }: { proposal: Proposal; onUpda
           </span>
         )}
       </div>
-      <p className="text-xs text-[#64748B] leading-relaxed">
+      <p className="text-xs text-muted-foreground leading-relaxed">
         {isPending
           ? `Approved by committee, but scheduled to take effect on ${formatIsoDateLocal(proposal.scheduled_effective_date)} - not yet live. Committee vote and go-live date are tracked separately.`
           : isEffective && proposal.scheduled_effective_date
@@ -131,14 +131,14 @@ function EffectiveDateCard({ proposal, onUpdated }: { proposal: Proposal; onUpda
       {hasPermission("review_proposal") && proposal.status !== "rejected" && (
         <div className="flex items-center gap-2 pt-1">
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
-            className="px-3 py-1.5 rounded-lg border border-[#E2E8F0] bg-background text-sm" />
+            className="px-3 py-1.5 rounded-lg border border-border bg-background text-sm" />
           <button onClick={() => save(date)} disabled={saving || date === proposal.scheduled_effective_date}
             className="px-3 py-1.5 rounded-lg bg-[#0B6BCB] hover:bg-[#0959AC] disabled:opacity-40 text-white text-xs font-semibold">
             {saving ? "Saving..." : "Schedule"}
           </button>
           {proposal.scheduled_effective_date && (
             <button onClick={() => save("")} disabled={saving}
-              className="px-3 py-1.5 rounded-lg border border-[#E2E8F0] text-xs text-[#64748B] hover:text-[#1A2332] disabled:opacity-40">
+              className="px-3 py-1.5 rounded-lg border border-border text-xs text-muted-foreground hover:text-foreground disabled:opacity-40">
               Clear (effective immediately)
             </button>
           )}
@@ -181,35 +181,35 @@ function ImpactAssessmentCard({ proposalId }: { proposalId: number }) {
   }, [proposalId])
 
   if (loading) {
-    return <div className="flex items-center gap-2 text-xs text-[#64748B] py-3"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Assessing change impact...</div>
+    return <div className="flex items-center gap-2 text-xs text-muted-foreground py-3"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Assessing change impact...</div>
   }
   if (!impact?.available) return null
 
   const conflicts = impact.new_conflicts ?? []
 
   return (
-    <div className="rounded-2xl bg-card border border-[#E2E8F0] p-5 space-y-3">
+    <div className="rounded-2xl bg-card border border-border p-5 space-y-3">
       <div className="flex items-center gap-2">
         <AlertTriangle className="w-4 h-4 text-[#0B6BCB]" />
-        <h3 className="text-sm font-semibold text-[#334155]">Change Impact Assessment</h3>
+        <h3 className="text-sm font-semibold text-foreground">Change Impact Assessment</h3>
         <span className={cn("ml-auto px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase border", RISK_STYLE[impact.risk_level ?? "low"])}>
           {impact.risk_level} risk
         </span>
       </div>
-      <p className="text-sm text-[#64748B] leading-relaxed">{impact.summary}</p>
+      <p className="text-sm text-muted-foreground leading-relaxed">{impact.summary}</p>
 
       <div className="grid grid-cols-3 gap-3">
-        <div className="rounded-xl bg-muted border border-[#E2E8F0] p-3 text-center">
-          <p className="text-xl font-bold text-[#1A2332]">{conflicts.length}</p>
-          <p className="text-[11px] text-[#64748B]">New conflicts</p>
+        <div className="rounded-xl bg-muted border border-border p-3 text-center">
+          <p className="text-xl font-bold text-foreground">{conflicts.length}</p>
+          <p className="text-[11px] text-muted-foreground">New conflicts</p>
         </div>
-        <div className="rounded-xl bg-muted border border-[#E2E8F0] p-3 text-center">
-          <p className="text-xl font-bold text-[#1A2332]">{(impact.stale_acknowledgments ?? 0) + (impact.stale_attestations ?? 0)}</p>
-          <p className="text-[11px] text-[#64748B]">Staff to re-acknowledge</p>
+        <div className="rounded-xl bg-muted border border-border p-3 text-center">
+          <p className="text-xl font-bold text-foreground">{(impact.stale_acknowledgments ?? 0) + (impact.stale_attestations ?? 0)}</p>
+          <p className="text-[11px] text-muted-foreground">Staff to re-acknowledge</p>
         </div>
-        <div className="rounded-xl bg-muted border border-[#E2E8F0] p-3 text-center">
-          <p className="text-xl font-bold text-[#1A2332]">{impact.historical_citation_count ?? 0}</p>
-          <p className="text-[11px] text-[#64748B]">Recent query citations</p>
+        <div className="rounded-xl bg-muted border border-border p-3 text-center">
+          <p className="text-xl font-bold text-foreground">{impact.historical_citation_count ?? 0}</p>
+          <p className="text-[11px] text-muted-foreground">Recent query citations</p>
         </div>
       </div>
 
@@ -230,29 +230,29 @@ function OverviewTab({ proposal }: { proposal: Proposal }) {
   return (
     <div className="space-y-6">
       {proposal.ai_summary && (
-        <div className="rounded-2xl bg-muted border border-[#E2E8F0] p-5 space-y-2">
-          <h3 className="text-sm font-semibold text-[#334155]">Summary / Rationale</h3>
-          <p className="text-sm text-[#64748B] leading-relaxed">{proposal.ai_summary}</p>
+        <div className="rounded-2xl bg-muted border border-border p-5 space-y-2">
+          <h3 className="text-sm font-semibold text-foreground">Summary / Rationale</h3>
+          <p className="text-sm text-muted-foreground leading-relaxed">{proposal.ai_summary}</p>
         </div>
       )}
 
       <div className="grid sm:grid-cols-2 gap-4">
-        <div className="rounded-xl bg-muted border border-[#E2E8F0] p-4 space-y-2">
-          <p className="text-xs text-[#64748B]">Affected SOP</p>
+        <div className="rounded-xl bg-muted border border-border p-4 space-y-2">
+          <p className="text-xs text-muted-foreground">Affected SOP</p>
           <p className="text-sm font-medium text-[#0B6BCB]">{proposal.affected_sop_id || "Not specified"}</p>
         </div>
-        <div className="rounded-xl bg-muted border border-[#E2E8F0] p-4 space-y-2">
-          <p className="text-xs text-[#64748B]">Department</p>
-          <p className="text-sm font-medium text-[#1A2332]">{proposal.department || "Not specified"}</p>
+        <div className="rounded-xl bg-muted border border-border p-4 space-y-2">
+          <p className="text-xs text-muted-foreground">Department</p>
+          <p className="text-sm font-medium text-foreground">{proposal.department || "Not specified"}</p>
         </div>
       </div>
 
       <ImpactAssessmentCard proposalId={proposal.id} />
 
       {Object.keys(proposal.payload || {}).length > 0 && (
-        <div className="rounded-xl bg-muted border border-[#E2E8F0] p-4 space-y-2">
-          <p className="text-xs text-[#64748B] uppercase tracking-wide font-semibold">Additional Details</p>
-          <pre className="text-xs text-[#334155] whitespace-pre-wrap font-mono">{JSON.stringify(proposal.payload, null, 2)}</pre>
+        <div className="rounded-xl bg-muted border border-border p-4 space-y-2">
+          <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold">Additional Details</p>
+          <pre className="text-xs text-foreground whitespace-pre-wrap font-mono">{JSON.stringify(proposal.payload, null, 2)}</pre>
         </div>
       )}
     </div>
@@ -287,7 +287,7 @@ function RedlineTab({ proposalId }: { proposalId: string }) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center gap-2 text-sm text-[#64748B] py-12">
+      <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground py-12">
         <Loader2 className="w-4 h-4 animate-spin" /> Loading redline...
       </div>
     )
@@ -295,9 +295,9 @@ function RedlineTab({ proposalId }: { proposalId: string }) {
 
   if (!diff?.available) {
     return (
-      <div className="rounded-2xl bg-muted border border-[#E2E8F0] p-8 text-center">
-        <GitCompare className="w-8 h-8 text-[#94A3B8] mx-auto mb-3" />
-        <p className="text-sm text-[#64748B]">{diff?.reason ?? "No text change to compare for this proposal."}</p>
+      <div className="rounded-2xl bg-muted border border-border p-8 text-center">
+        <GitCompare className="w-8 h-8 text-subtle mx-auto mb-3" />
+        <p className="text-sm text-muted-foreground">{diff?.reason ?? "No text change to compare for this proposal."}</p>
       </div>
     )
   }
@@ -305,7 +305,7 @@ function RedlineTab({ proposalId }: { proposalId: string }) {
   return (
     <div className="space-y-4">
       {diff.sop_title && (
-        <p className="text-xs text-[#64748B]">Comparing against the current text of <span className="font-medium text-[#1A2332]">{diff.sop_title}</span></p>
+        <p className="text-xs text-muted-foreground">Comparing against the current text of <span className="font-medium text-foreground">{diff.sop_title}</span></p>
       )}
       {diff.stats && (
         <div className="flex flex-wrap gap-3 text-xs">
@@ -317,10 +317,10 @@ function RedlineTab({ proposalId }: { proposalId: string }) {
           </span>
         </div>
       )}
-      <div className="rounded-2xl bg-muted border border-[#E2E8F0] p-5">
+      <div className="rounded-2xl bg-muted border border-border p-5">
         <p className="text-[14px] leading-relaxed whitespace-pre-wrap font-mono">
           {diff.segments.map((seg, i) => {
-            if (seg.type === "equal") return <span key={i} className="text-[#334155]">{seg.text}</span>
+            if (seg.type === "equal") return <span key={i} className="text-foreground">{seg.text}</span>
             if (seg.type === "insert") return (
               <span key={i} className="underline decoration-2 decoration-[#15803D] bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400">
                 {seg.text}
@@ -334,7 +334,7 @@ function RedlineTab({ proposalId }: { proposalId: string }) {
           })}
         </p>
       </div>
-      <p className="text-[11px] text-[#94A3B8]">Word-level diff. Underlined = added, strikethrough = removed.</p>
+      <p className="text-[11px] text-subtle">Word-level diff. Underlined = added, strikethrough = removed.</p>
     </div>
   )
 }
@@ -370,43 +370,43 @@ function VotesTab({ proposal, onVoteCast }: { proposal: Proposal; onVoteCast: (p
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl bg-muted border border-[#E2E8F0] p-4 space-y-3">
+      <div className="rounded-xl bg-muted border border-border p-4 space-y-3">
         <div className="flex items-center justify-between text-sm">
-          <span className="text-[#64748B]">Quorum Progress</span>
-          <span className="font-bold text-[#1A2332]">{proposal.quorum.votes_cast} / {proposal.quorum.threshold} votes to reach quorum</span>
+          <span className="text-muted-foreground">Quorum Progress</span>
+          <span className="font-bold text-foreground">{proposal.quorum.votes_cast} / {proposal.quorum.threshold} votes to reach quorum</span>
         </div>
         <div className="w-full h-3 rounded-full bg-[#E2E8F0] overflow-hidden">
           <div className="h-full rounded-full bg-gradient-to-r from-[#0B6BCB] to-[#16A34A] transition-all" style={{ width: `${Math.min(pct, 100)}%` }} />
         </div>
         <div className="grid grid-cols-4 gap-2 text-center pt-1">
-          <div><p className="text-lg font-bold text-[#15803D] dark:text-green-400">{proposal.tally.approve}</p><p className="text-[10px] text-[#64748B] uppercase">Approve</p></div>
-          <div><p className="text-lg font-bold text-[#B91C1C] dark:text-red-400">{proposal.tally.reject}</p><p className="text-[10px] text-[#64748B] uppercase">Reject</p></div>
-          <div><p className="text-lg font-bold text-[#64748B]">{proposal.tally.abstain}</p><p className="text-[10px] text-[#64748B] uppercase">Abstain</p></div>
-          <div><p className="text-lg font-bold text-[#B45309] dark:text-amber-400">{proposal.tally.request_changes}</p><p className="text-[10px] text-[#64748B] uppercase">Changes</p></div>
+          <div><p className="text-lg font-bold text-[#15803D] dark:text-green-400">{proposal.tally.approve}</p><p className="text-[10px] text-muted-foreground uppercase">Approve</p></div>
+          <div><p className="text-lg font-bold text-[#B91C1C] dark:text-red-400">{proposal.tally.reject}</p><p className="text-[10px] text-muted-foreground uppercase">Reject</p></div>
+          <div><p className="text-lg font-bold text-muted-foreground">{proposal.tally.abstain}</p><p className="text-[10px] text-muted-foreground uppercase">Abstain</p></div>
+          <div><p className="text-lg font-bold text-[#B45309] dark:text-amber-400">{proposal.tally.request_changes}</p><p className="text-[10px] text-muted-foreground uppercase">Changes</p></div>
         </div>
       </div>
 
       <div className="space-y-3">
-        <h3 className="text-sm font-semibold text-[#1A2332] flex items-center gap-2">
+        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
           <Users className="w-4 h-4 text-[#0B6BCB]" /> Votes Cast ({proposal.votes.length})
         </h3>
-        {proposal.votes.length === 0 && <p className="text-sm text-[#64748B] text-center py-6">No votes yet.</p>}
+        {proposal.votes.length === 0 && <p className="text-sm text-muted-foreground text-center py-6">No votes yet.</p>}
         {proposal.votes.map((v) => {
           const info = voteBadge(v.vote)
           return (
-            <div key={v.id} className="flex items-start gap-3 p-3 rounded-xl bg-muted border border-[#E2E8F0]">
+            <div key={v.id} className="flex items-start gap-3 p-3 rounded-xl bg-muted border border-border">
               <div className="w-9 h-9 rounded-full bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 flex items-center justify-center text-[#0B6BCB] text-xs font-bold shrink-0">
                 {v.user_name.slice(0, 2).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0 space-y-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-sm font-medium text-[#1A2332]">{v.user_name}</span>
+                  <span className="text-sm font-medium text-foreground">{v.user_name}</span>
                   <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold ml-auto", info.cls)}>
                     {info.icon} {info.label}
                   </span>
                 </div>
-                <p className="text-xs text-[#64748B]">{new Date(v.created_at).toLocaleString("en-US")}</p>
-                {v.notes && <p className="text-xs text-[#64748B] italic">{v.notes}</p>}
+                <p className="text-xs text-muted-foreground">{new Date(v.created_at).toLocaleString("en-US")}</p>
+                {v.notes && <p className="text-xs text-muted-foreground italic">{v.notes}</p>}
               </div>
             </div>
           )
@@ -414,7 +414,7 @@ function VotesTab({ proposal, onVoteCast }: { proposal: Proposal; onVoteCast: (p
       </div>
 
       {canVote && (
-        <div className="space-y-2 pt-4 border-t border-[#E2E8F0]">
+        <div className="space-y-2 pt-4 border-t border-border">
           {error && <p className="text-xs text-red-400">{error}</p>}
           <div className="flex flex-wrap gap-2">
             <button disabled={submitting} onClick={() => castVote("approve")}
@@ -430,20 +430,20 @@ function VotesTab({ proposal, onVoteCast }: { proposal: Proposal; onVoteCast: (p
               <AlertTriangle className="w-4 h-4" /> Request Changes
             </button>
             <button disabled={submitting} onClick={() => castVote("abstain")}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-muted border border-[#CBD5E1] text-sm text-[#334155] hover:bg-[#E2E8F0] transition-colors disabled:opacity-50">
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-muted border border-input text-sm text-foreground hover:bg-[#E2E8F0] transition-colors disabled:opacity-50">
               <MinusCircle className="w-4 h-4" /> Abstain
             </button>
-            {submitting && <Loader2 className="w-4 h-4 animate-spin text-[#64748B] self-center" />}
+            {submitting && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground self-center" />}
           </div>
         </div>
       )}
       {!canVote && proposal.status !== "open" && (
-        <p className="text-xs text-[#64748B] pt-4 border-t border-[#E2E8F0]">
+        <p className="text-xs text-muted-foreground pt-4 border-t border-border">
           This proposal has already reached a final decision ({proposal.status}) and is no longer open for votes.
         </p>
       )}
       {!canVote && proposal.status === "open" && role !== "governance_compliance" && (
-        <p className="text-xs text-[#64748B] pt-4 border-t border-[#E2E8F0]">
+        <p className="text-xs text-muted-foreground pt-4 border-t border-border">
           Only committee members and legal/risk reviewers can vote on proposals.
         </p>
       )}
@@ -471,7 +471,7 @@ function TimelineTab({ proposal }: { proposal: Proposal }) {
 
   return (
     <div className="space-y-2">
-      <h3 className="text-sm font-semibold text-[#1A2332] flex items-center gap-2 mb-4">
+      <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-4">
         <History className="w-4 h-4 text-[#0B6BCB]" /> Timeline
       </h3>
       <div className="relative space-y-0">
@@ -486,15 +486,15 @@ function TimelineTab({ proposal }: { proposal: Proposal }) {
                 {!isLast && <div className="w-px flex-1 bg-[#E2E8F0] mt-1" />}
               </div>
               <div className={cn("pb-6 flex-1 min-w-0", isLast && "pb-0")}>
-                <div className="rounded-xl bg-muted border border-[#E2E8F0] p-4 space-y-1">
-                  <p className="text-xs text-[#334155]">{entry.label}</p>
-                  {entry.ts && <p className="text-xs text-[#64748B]">{new Date(entry.ts).toLocaleString("en-US")}</p>}
+                <div className="rounded-xl bg-muted border border-border p-4 space-y-1">
+                  <p className="text-xs text-foreground">{entry.label}</p>
+                  {entry.ts && <p className="text-xs text-muted-foreground">{new Date(entry.ts).toLocaleString("en-US")}</p>}
                 </div>
               </div>
             </div>
           )
         })}
-        {events.length === 0 && <p className="text-sm text-[#64748B] text-center py-8">No events yet.</p>}
+        {events.length === 0 && <p className="text-sm text-muted-foreground text-center py-8">No events yet.</p>}
       </div>
     </div>
   )
@@ -529,7 +529,7 @@ export default function ProposalDetailPage() {
   if (loading) {
     return (
       <AppShell>
-        <div className="flex items-center justify-center py-24 text-[#64748B] gap-2">
+        <div className="flex items-center justify-center py-24 text-muted-foreground gap-2">
           <Loader2 className="w-5 h-5 animate-spin" /> Loading proposal...
         </div>
       </AppShell>
@@ -540,12 +540,12 @@ export default function ProposalDetailPage() {
     return (
       <AppShell>
         <div className="p-6 max-w-5xl mx-auto space-y-4">
-          <Link href="/proposals" className="inline-flex items-center gap-1.5 text-xs text-[#64748B] hover:text-[#0B6BCB] transition-colors">
+          <Link href="/proposals" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-[#0B6BCB] transition-colors">
             <ChevronLeft className="w-3.5 h-3.5" /> Back to Proposals
           </Link>
-          <div className="rounded-2xl bg-card border border-[#E2E8F0] p-12 text-center">
-            <FileText className="w-8 h-8 text-[#64748B] mx-auto mb-3 opacity-40" />
-            <p className="text-[#64748B] text-sm">Proposal {id} was not found.</p>
+          <div className="rounded-2xl bg-card border border-border p-12 text-center">
+            <FileText className="w-8 h-8 text-muted-foreground mx-auto mb-3 opacity-40" />
+            <p className="text-muted-foreground text-sm">Proposal {id} was not found.</p>
           </div>
         </div>
       </AppShell>
@@ -562,11 +562,11 @@ export default function ProposalDetailPage() {
           { label: proposal.title.length > 60 ? proposal.title.slice(0, 60) + "…" : proposal.title },
         ]} />
 
-        <Link href="/proposals" className="inline-flex items-center gap-1.5 text-xs text-[#64748B] hover:text-[#0B6BCB] transition-colors">
+        <Link href="/proposals" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-[#0B6BCB] transition-colors">
           <ChevronLeft className="w-3.5 h-3.5" /> Back to Proposals
         </Link>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl bg-card border border-[#E2E8F0] p-6 space-y-4">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl bg-card border border-border p-6 space-y-4">
           <div className="flex flex-wrap items-center gap-2">
             <span className={cn("px-2.5 py-1 rounded text-xs font-bold uppercase tracking-wide", priorityBadge(proposal.priority))}>
               {proposal.priority} priority
@@ -579,9 +579,9 @@ export default function ProposalDetailPage() {
             )}
           </div>
 
-          <h1 className="font-display text-2xl font-bold text-[#1A2332] leading-snug">{proposal.title}</h1>
+          <h1 className="font-display text-2xl font-bold text-foreground leading-snug">{proposal.title}</h1>
 
-          <div className="flex flex-wrap gap-4 text-xs text-[#64748B]">
+          <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
             {proposal.department && (
               <span className="flex items-center gap-1.5"><Building2 className="w-3 h-3" /> {proposal.department}</span>
             )}
@@ -599,7 +599,7 @@ export default function ProposalDetailPage() {
           <span className="text-xs text-[#B45309] dark:text-amber-400">Research Prototype - Not for Clinical Use.</span>
         </div>
 
-        <div className="flex items-center gap-1 overflow-x-auto pb-1 border-b border-[#E2E8F0]">
+        <div className="flex items-center gap-1 overflow-x-auto pb-1 border-b border-border">
           {TABS.map((tab) => {
             const Icon = tab.icon
             return (
@@ -608,7 +608,7 @@ export default function ProposalDetailPage() {
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
                   "inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-colors rounded-t-lg border-b-2 -mb-px",
-                  activeTab === tab.id ? "text-[#0B6BCB] border-[#0B6BCB]" : "text-[#64748B] border-transparent hover:text-[#0B6BCB]"
+                  activeTab === tab.id ? "text-[#0B6BCB] border-[#0B6BCB]" : "text-muted-foreground border-transparent hover:text-[#0B6BCB]"
                 )}
               >
                 <Icon className="w-3.5 h-3.5" /> {tab.label}

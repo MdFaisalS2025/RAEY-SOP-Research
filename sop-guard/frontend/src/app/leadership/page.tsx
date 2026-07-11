@@ -67,9 +67,9 @@ const STATUS_TEXT: Record<KpiStatus, string> = {
 }
 
 function TrendIcon({ trend }: { trend: KpiTrend }) {
-  if (trend === "up") return <TrendingUp className="w-3.5 h-3.5 text-[#334155] shrink-0" />
-  if (trend === "down") return <TrendingDown className="w-3.5 h-3.5 text-[#334155] shrink-0" />
-  return <Minus className="w-3.5 h-3.5 text-[#94A3B8] shrink-0" />
+  if (trend === "up") return <TrendingUp className="w-3.5 h-3.5 text-foreground shrink-0" />
+  if (trend === "down") return <TrendingDown className="w-3.5 h-3.5 text-foreground shrink-0" />
+  return <Minus className="w-3.5 h-3.5 text-subtle shrink-0" />
 }
 
 const ATTENTION_ITEMS = [
@@ -118,8 +118,8 @@ const GOVERNANCE_TILES = [
 function SectionHeading({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <div>
-      <h2 className="text-[13px] font-semibold text-[#334155] uppercase tracking-widest">{title}</h2>
-      {subtitle && <p className="text-[11px] text-[#94A3B8] mt-0.5">{subtitle}</p>}
+      <h2 className="text-[13px] font-semibold text-foreground uppercase tracking-widest">{title}</h2>
+      {subtitle && <p className="text-[11px] text-subtle mt-0.5">{subtitle}</p>}
     </div>
   )
 }
@@ -143,15 +143,15 @@ export default function LeadershipPage() {
       <AppShell>
       <div className="px-4 md:px-6 lg:px-8 py-6">
         <div className="max-w-2xl mx-auto mt-16">
-          <div className="bg-card border border-[#E2E8F0] shadow-sm rounded-xl p-8 text-center space-y-3">
+          <div className="bg-card border border-border shadow-sm rounded-xl p-8 text-center space-y-3">
             <div className="w-12 h-12 rounded-xl bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 flex items-center justify-center mx-auto">
               <ShieldCheck className="w-6 h-6 text-[#0B6BCB]" />
             </div>
-            <h1 className="text-xl font-semibold font-display text-[#1A2332]">Leadership Overview</h1>
-            <p className="text-[13px] text-[#64748B] leading-relaxed">
+            <h1 className="text-xl font-semibold font-display text-foreground">Leadership Overview</h1>
+            <p className="text-[13px] text-muted-foreground leading-relaxed">
               This view is designed for hospital leadership. Switch to a leadership role to preview it.
             </p>
-            <p className="text-[11px] text-[#94A3B8]">
+            <p className="text-[11px] text-subtle">
               Available to System Admin, Compliance Officer, Department Admin, and Committee Member roles.
               You are currently viewing as {roleConfig.label}. Use the role switcher in the top bar.
             </p>
@@ -176,11 +176,11 @@ export default function LeadershipPage() {
         {/* Header */}
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="text-2xl font-semibold font-display text-[#1A2332] mb-1">Leadership Overview</h1>
-            <p className="text-[13px] text-[#94A3B8]">Governance and safety posture for executive review</p>
+            <h1 className="text-2xl font-semibold font-display text-foreground mb-1">Leadership Overview</h1>
+            <p className="text-[13px] text-subtle">Governance and safety posture for executive review</p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[11px] text-[#94A3B8]">{today}</span>
+            <span className="text-[11px] text-subtle">{today}</span>
             <span className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-full border bg-[#0B6BCB]/10 text-[#0B6BCB] border-[#0B6BCB]/30">
               <span className="w-1.5 h-1.5 rounded-full bg-[#0B6BCB]" />
               Data refreshed 07:00 today
@@ -191,17 +191,17 @@ export default function LeadershipPage() {
         {/* Section 1: Board Scorecard */}
         <section className="space-y-3">
           <SectionHeading title="Board Scorecard" subtitle="Seven key indicators tracked against target for the current quarter" />
-          <div className="bg-card border border-[#E2E8F0] shadow-sm rounded-xl overflow-hidden">
+          <div className="bg-card border border-border shadow-sm rounded-xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-[12px] min-w-[760px]">
                 <thead>
-                  <tr className="bg-muted border-b border-[#E2E8F0]">
-                    <th className="text-left px-4 py-2.5 text-[#64748B] font-semibold">Metric</th>
-                    <th className="text-right px-4 py-2.5 text-[#64748B] font-semibold">Current</th>
-                    <th className="text-right px-4 py-2.5 text-[#64748B] font-semibold">Target</th>
-                    <th className="text-left px-4 py-2.5 text-[#64748B] font-semibold">Status</th>
-                    <th className="text-left px-4 py-2.5 text-[#64748B] font-semibold">Trend</th>
-                    <th className="text-left px-4 py-2.5 text-[#64748B] font-semibold">Owner</th>
+                  <tr className="bg-muted border-b border-border">
+                    <th className="text-left px-4 py-2.5 text-muted-foreground font-semibold">Metric</th>
+                    <th className="text-right px-4 py-2.5 text-muted-foreground font-semibold">Current</th>
+                    <th className="text-right px-4 py-2.5 text-muted-foreground font-semibold">Target</th>
+                    <th className="text-left px-4 py-2.5 text-muted-foreground font-semibold">Status</th>
+                    <th className="text-left px-4 py-2.5 text-muted-foreground font-semibold">Trend</th>
+                    <th className="text-left px-4 py-2.5 text-muted-foreground font-semibold">Owner</th>
                     <th className="w-8" aria-hidden="true" />
                   </tr>
                 </thead>
@@ -210,30 +210,30 @@ export default function LeadershipPage() {
                     <tr
                       key={kpi.metric}
                       onClick={() => router.push(kpi.drill)}
-                      className="border-b border-[#EDF1F5] last:border-b-0 hover:bg-[#F8FAFC] cursor-pointer transition-colors group"
+                      className="border-b border-border last:border-b-0 hover:bg-[#F8FAFC] cursor-pointer transition-colors group"
                     >
-                      <td className="px-4 py-3 text-[#1A2332] font-medium group-hover:text-[#0B6BCB] transition-colors">
+                      <td className="px-4 py-3 text-foreground font-medium group-hover:text-[#0B6BCB] transition-colors">
                         {kpi.metric}
                       </td>
                       <td className={cn("px-4 py-3 text-right font-bold font-display", STATUS_TEXT[kpi.status])}>
                         {kpi.current}
                       </td>
-                      <td className="px-4 py-3 text-right text-[#64748B]">{kpi.target}</td>
+                      <td className="px-4 py-3 text-right text-muted-foreground">{kpi.target}</td>
                       <td className="px-4 py-3">
                         <span className="inline-flex items-center gap-1.5">
                           <span className={cn("w-2 h-2 rounded-full shrink-0", STATUS_DOT[kpi.status])} />
-                          <span className="text-[#64748B]">{STATUS_LABEL[kpi.status]}</span>
+                          <span className="text-muted-foreground">{STATUS_LABEL[kpi.status]}</span>
                         </span>
                       </td>
                       <td className="px-4 py-3">
                         <span className="inline-flex items-center gap-1.5">
                           <TrendIcon trend={kpi.trend} />
-                          <span className="text-[#94A3B8]">{kpi.trend_label}</span>
+                          <span className="text-subtle">{kpi.trend_label}</span>
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-[#64748B]">{kpi.owner}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{kpi.owner}</td>
                       <td className="px-2 py-3">
-                        <ChevronRight className="w-4 h-4 text-[#94A3B8] group-hover:text-[#0B6BCB] transition-colors" />
+                        <ChevronRight className="w-4 h-4 text-subtle group-hover:text-[#0B6BCB] transition-colors" />
                       </td>
                     </tr>
                   ))}
@@ -241,7 +241,7 @@ export default function LeadershipPage() {
               </table>
             </div>
           </div>
-          <p className="text-[11px] text-[#94A3B8]">
+          <p className="text-[11px] text-subtle">
             Trend arrows show direction relative to target. Simulated data for research demonstration.
           </p>
         </section>
@@ -255,7 +255,7 @@ export default function LeadershipPage() {
                 key={item.title}
                 href={item.href}
                 className={cn(
-                  "block bg-card border border-[#E2E8F0] shadow-sm rounded-xl p-4 border-l-4 hover:bg-[#F8FAFC] transition-colors group",
+                  "block bg-card border border-border shadow-sm rounded-xl p-4 border-l-4 hover:bg-[#F8FAFC] transition-colors group",
                   item.severity === "red" ? "border-l-[#B91C1C]" : "border-l-[#B45309]"
                 )}
               >
@@ -266,9 +266,9 @@ export default function LeadershipPage() {
                       item.severity === "red" ? "text-[#B91C1C] dark:text-red-400" : "text-[#B45309] dark:text-amber-400"
                     )}
                   />
-                  <p className="text-[13px] font-semibold text-[#1A2332] leading-snug">{item.title}</p>
+                  <p className="text-[13px] font-semibold text-foreground leading-snug">{item.title}</p>
                 </div>
-                <p className="text-[11px] text-[#64748B] mb-3 leading-relaxed">{item.detail}</p>
+                <p className="text-[11px] text-muted-foreground mb-3 leading-relaxed">{item.detail}</p>
                 <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#0B6BCB] group-hover:text-[#0959AC] transition-colors">
                   {item.linkLabel}
                   <ChevronRight className="w-3.5 h-3.5" />
@@ -282,14 +282,14 @@ export default function LeadershipPage() {
         <section className="space-y-3">
           <SectionHeading title="Evidence Freshness" subtitle="How current is the guidance underpinning active SOPs" />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            <div className="bg-card border border-[#E2E8F0] shadow-sm rounded-xl p-5 space-y-4">
+            <div className="bg-card border border-border shadow-sm rounded-xl p-5 space-y-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 flex items-center justify-center shrink-0">
                   <FlaskConical className="w-5 h-5 text-[#0B6BCB]" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold font-display text-[#0B6BCB]">88%</p>
-                  <p className="text-[11px] text-[#64748B]">of SOPs grounded in guidance from 2023 or newer</p>
+                  <p className="text-[11px] text-muted-foreground">of SOPs grounded in guidance from 2023 or newer</p>
                 </div>
               </div>
               <div className="space-y-2.5">
@@ -299,7 +299,7 @@ export default function LeadershipPage() {
                   return (
                     <div key={bar.label} className="space-y-1">
                       <div className="flex justify-between text-[11px]">
-                        <span className="text-[#64748B]">{bar.label}</span>
+                        <span className="text-muted-foreground">{bar.label}</span>
                         <span className={cn("font-semibold", bar.text)}>
                           {bar.count} SOP{bar.count !== 1 ? "s" : ""}
                         </span>
@@ -314,16 +314,16 @@ export default function LeadershipPage() {
             </div>
             <Link
               href="/evidence-watch"
-              className="block bg-card border border-[#E2E8F0] shadow-sm border-l-4 border-l-[#B91C1C] rounded-xl p-5 hover:bg-[#F8FAFC] transition-colors group"
+              className="block bg-card border border-border shadow-sm border-l-4 border-l-[#B91C1C] rounded-xl p-5 hover:bg-[#F8FAFC] transition-colors group"
             >
               <div className="flex items-start gap-2 mb-2">
                 <AlertTriangle className="w-4 h-4 text-[#B91C1C] dark:text-red-400 shrink-0 mt-0.5" />
-                <p className="text-[13px] font-semibold text-[#1A2332]">1 SOP based on superseded guidance</p>
+                <p className="text-[13px] font-semibold text-foreground">1 SOP based on superseded guidance</p>
               </div>
-              <p className="text-[12px] text-[#64748B] mb-1">
-                <span className="font-mono text-[#1A2332]">IC-PPE-001</span> references guidance the CDC updated in 2024.
+              <p className="text-[12px] text-muted-foreground mb-1">
+                <span className="font-mono text-foreground">IC-PPE-001</span> references guidance the CDC updated in 2024.
               </p>
-              <p className="text-[11px] text-[#94A3B8] mb-3">
+              <p className="text-[11px] text-subtle mb-3">
                 The linked source has a newer revision; the SOP has not yet been re-grounded against it.
               </p>
               <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#0B6BCB] group-hover:text-[#0959AC] transition-colors">
@@ -337,22 +337,22 @@ export default function LeadershipPage() {
         {/* Section 4: Deviation and Exception Summary */}
         <section className="space-y-3">
           <SectionHeading title="Deviation and Exception Summary" subtitle="5 exception reports filed this quarter, 2 pattern alerts active" />
-          <div className="bg-card border border-[#E2E8F0] shadow-sm rounded-xl overflow-hidden">
+          <div className="bg-card border border-border shadow-sm rounded-xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-[12px]">
               <thead>
-                <tr className="bg-muted border-b border-[#E2E8F0]">
-                  <th className="text-left px-4 py-2.5 text-[#64748B] font-semibold">Department</th>
-                  <th className="text-right px-4 py-2.5 text-[#64748B] font-semibold">Exceptions</th>
-                  <th className="text-left px-4 py-2.5 text-[#64748B] font-semibold">Pattern Detected</th>
-                  <th className="text-left px-4 py-2.5 text-[#64748B] font-semibold">Action</th>
+                <tr className="bg-muted border-b border-border">
+                  <th className="text-left px-4 py-2.5 text-muted-foreground font-semibold">Department</th>
+                  <th className="text-right px-4 py-2.5 text-muted-foreground font-semibold">Exceptions</th>
+                  <th className="text-left px-4 py-2.5 text-muted-foreground font-semibold">Pattern Detected</th>
+                  <th className="text-left px-4 py-2.5 text-muted-foreground font-semibold">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {EXCEPTION_ROWS.map((row) => (
-                  <tr key={row.department} className="border-b border-[#EDF1F5] last:border-b-0 hover:bg-[#F8FAFC] transition-colors">
-                    <td className="px-4 py-2.5 text-[#1A2332] font-medium">{row.department}</td>
-                    <td className="px-4 py-2.5 text-right text-[#334155] font-semibold">{row.exceptions}</td>
+                  <tr key={row.department} className="border-b border-border last:border-b-0 hover:bg-[#F8FAFC] transition-colors">
+                    <td className="px-4 py-2.5 text-foreground font-medium">{row.department}</td>
+                    <td className="px-4 py-2.5 text-right text-foreground font-semibold">{row.exceptions}</td>
                     <td className="px-4 py-2.5">
                       {row.pattern ? (
                         <span className="inline-flex items-center gap-1.5 text-[#B45309] dark:text-amber-400 font-semibold">
@@ -360,10 +360,10 @@ export default function LeadershipPage() {
                           Yes
                         </span>
                       ) : (
-                        <span className="text-[#94A3B8]">No</span>
+                        <span className="text-subtle">No</span>
                       )}
                     </td>
-                    <td className="px-4 py-2.5 text-[#64748B]">{row.action}</td>
+                    <td className="px-4 py-2.5 text-muted-foreground">{row.action}</td>
                   </tr>
                 ))}
               </tbody>
@@ -387,10 +387,10 @@ export default function LeadershipPage() {
           <SectionHeading title="Quarterly Governance Activity" subtitle="Formal governance actions recorded this quarter" />
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {GOVERNANCE_TILES.map(({ label, value, icon: Icon }) => (
-              <div key={label} className="bg-card border border-[#E2E8F0] shadow-sm rounded-xl p-4">
+              <div key={label} className="bg-card border border-border shadow-sm rounded-xl p-4">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <p className="text-[11px] text-[#94A3B8] uppercase tracking-widest font-semibold mb-1">{label}</p>
+                    <p className="text-[11px] text-subtle uppercase tracking-widest font-semibold mb-1">{label}</p>
                     <p className="text-2xl font-bold font-display text-[#0B6BCB]">{value}</p>
                   </div>
                   <Icon className="w-5 h-5 text-[#0B6BCB]/50 shrink-0" />
@@ -401,7 +401,7 @@ export default function LeadershipPage() {
         </section>
 
         {/* Footer */}
-        <div className="flex items-center justify-between gap-4 flex-wrap border-t border-[#E2E8F0] pt-5">
+        <div className="flex items-center justify-between gap-4 flex-wrap border-t border-border pt-5">
           <button
             onClick={handleExport}
             disabled={exportState === "loading"}
@@ -430,7 +430,7 @@ export default function LeadershipPage() {
               </>
             )}
           </button>
-          <p className="text-[11px] text-[#94A3B8]">Research Prototype - Not for Clinical Use</p>
+          <p className="text-[11px] text-subtle">Research Prototype - Not for Clinical Use</p>
         </div>
       </div>
     </div>

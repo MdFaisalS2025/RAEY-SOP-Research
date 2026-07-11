@@ -2,7 +2,7 @@
 DISCLAIMER: SYNTHETIC / FICTIONAL STANDARD OPERATING PROCEDURES
 ================================================================
 These SOPs are entirely SYNTHETIC and created solely for RESEARCH and
-DEMONSTRATION purposes as part of the SOP-Guard prototype.  They must
+DEMONSTRATION purposes as part of the Meridian prototype.  They must
 NOT be used for real clinical decisions, patient care, or medical practice.
 No guarantee of medical accuracy is made.  Always follow your institution's
 approved, peer-reviewed clinical protocols.
@@ -1000,6 +1000,683 @@ DEMO_SOPS = [
                 "Thyroid storm or untreated hyperthyroidism without endocrinology consult.",
                 "Renal insufficiency eGFR <30  - use caution, lowest volume, hydrate.",
                 "Gadolinium in eGFR <30 without nephrology consultation (NSF risk).",
+            ],
+        },
+    },
+    # ------------------------------------------------------------------ 11
+    {
+        "sop_id": "SOP-NEURO-011",
+        "title": "Code Stroke Response Protocol",
+        "department": "Neurology",
+        "version": "1.4",
+        "effective_date": "2025-03-01",
+        "review_date": "2026-08-01",
+        "raw_text": (
+            "CODE STROKE RESPONSE PROTOCOL - NEUROLOGY\n"
+            "Version 1.4 | Effective 2025-03-01\n"
+            "DISCLAIMER: This is a SYNTHETIC SOP for research demonstration only.\n\n"
+            "1. PURPOSE\n"
+            "This protocol standardizes the rapid identification, imaging, and treatment "
+            "of suspected acute ischemic stroke to minimize time-to-treatment.\n\n"
+            "2. SCOPE\n"
+            "Applies to any patient presenting with acute focal neurological deficit "
+            "within 24 hours of last-known-well time, in the Emergency Department or "
+            "as an inpatient.\n\n"
+            "3. DEFINITIONS\n"
+            "Last Known Well (LKW): the most recent time the patient was witnessed to be "
+            "at their neurological baseline.\n"
+            "Door-to-Needle: time from ED arrival to IV thrombolytic administration.\n\n"
+            "4. PROCEDURE\n"
+            "Step 1: Activate Code Stroke immediately on recognition of FAST-positive "
+            "deficit (Face drooping, Arm weakness, Speech difficulty, Time last known well).\n"
+            "Step 2: Obtain point-of-care glucose immediately - hypoglycemia is a stroke "
+            "mimic and must be excluded before proceeding.\n"
+            "Step 3: Perform NIH Stroke Scale (NIHSS) assessment within 10 minutes of arrival.\n"
+            "Step 4: Obtain non-contrast head CT within 20 minutes of arrival to rule out "
+            "hemorrhage.\n"
+            "Step 5: If no hemorrhage and within 4.5 hours of LKW, evaluate IV alteplase "
+            "eligibility against inclusion/exclusion criteria.\n"
+            "Step 6: Administer IV alteplase 0.9 mg/kg (max 90 mg), 10% as bolus over 1 "
+            "minute, remainder infused over 60 minutes. Target door-to-needle <=60 minutes.\n"
+            "Step 7: For large-vessel occlusion within 24 hours of LKW (per CT angiography), "
+            "evaluate for mechanical thrombectomy and activate interventional neuroradiology.\n"
+            "Step 8: After thrombolysis, admit to a stroke unit or ICU for neuro checks "
+            "every 15 minutes for 2 hours, then every 30 minutes for 6 hours.\n"
+            "Step 9: Hold antiplatelet and anticoagulant therapy for 24 hours after "
+            "alteplase administration; repeat head CT at 24 hours before resuming.\n"
+            "Step 10: Maintain blood pressure <=185/110 mmHg before thrombolysis and "
+            "<=180/105 mmHg for 24 hours after.\n\n"
+            "5. THRESHOLDS AND TARGETS\n"
+            "- Door-to-CT: <=20 minutes\n"
+            "- Door-to-needle: <=60 minutes\n"
+            "- Thrombolysis window: within 4.5 hours of last known well\n"
+            "- Thrombectomy window: within 24 hours of last known well (LVO on imaging)\n"
+            "- Pre-thrombolysis BP ceiling: 185/110 mmHg\n\n"
+            "6. CONTRAINDICATIONS\n"
+            "- Active internal bleeding or known bleeding diathesis.\n"
+            "- Recent (<3 months) intracranial or intraspinal surgery, serious head trauma, "
+            "or prior stroke.\n"
+            "- Systolic BP >185 mmHg or diastolic BP >110 mmHg despite treatment.\n"
+            "- Current anticoagulant use with INR >1.7 or elevated PT/PTT.\n"
+            "- Platelet count <100,000/mm3.\n"
+        ),
+        "structured_json": {
+            "steps": [
+                {"step": 1, "action": "Activate Code Stroke on FAST-positive deficit."},
+                {"step": 2, "action": "Point-of-care glucose immediately to exclude hypoglycemia."},
+                {"step": 3, "action": "NIHSS assessment within 10 minutes of arrival."},
+                {"step": 4, "action": "Non-contrast head CT within 20 minutes of arrival."},
+                {"step": 5, "action": "Evaluate IV alteplase eligibility if within 4.5 hours of LKW and no hemorrhage."},
+                {"step": 6, "action": "Administer alteplase 0.9 mg/kg (max 90 mg); target door-to-needle <=60 min."},
+                {"step": 7, "action": "Evaluate thrombectomy for LVO within 24 hours of LKW."},
+                {"step": 8, "action": "Post-thrombolysis: neuro checks q15min x2h, then q30min x6h."},
+                {"step": 9, "action": "Hold antiplatelets/anticoagulants 24h post-alteplase; repeat CT before resuming."},
+                {"step": 10, "action": "Maintain BP <=185/110 pre-thrombolysis, <=180/105 for 24h after."},
+            ],
+            "thresholds": [
+                {"parameter": "Door-to-CT", "value": "<=20 minutes", "action": "From ED arrival"},
+                {"parameter": "Door-to-needle", "value": "<=60 minutes", "action": "From ED arrival to alteplase"},
+                {"parameter": "Thrombolysis window", "value": "4.5 hours from LKW", "action": "IV alteplase eligibility"},
+                {"parameter": "Thrombectomy window", "value": "24 hours from LKW", "action": "For confirmed LVO"},
+                {"parameter": "Pre-thrombolysis BP ceiling", "value": "185/110 mmHg", "action": "Must treat before administering alteplase"},
+            ],
+            "contraindications": [
+                "Active internal bleeding or known bleeding diathesis.",
+                "Recent (<3 months) intracranial/intraspinal surgery, serious head trauma, or prior stroke.",
+                "Systolic BP >185 or diastolic BP >110 mmHg despite treatment.",
+                "Current anticoagulant use with INR >1.7.",
+                "Platelet count <100,000/mm3.",
+            ],
+        },
+    },
+    # ------------------------------------------------------------------ 12
+    {
+        "sop_id": "SOP-OPS-012",
+        "title": "Patient Flow and Bed Management Protocol",
+        "department": "Operations",
+        "version": "2.0",
+        "effective_date": "2025-02-10",
+        "review_date": "2026-07-15",
+        "raw_text": (
+            "PATIENT FLOW AND BED MANAGEMENT PROTOCOL - OPERATIONS\n"
+            "Version 2.0 | Effective 2025-02-10\n"
+            "DISCLAIMER: This is a SYNTHETIC SOP for research demonstration only.\n\n"
+            "1. PURPOSE\n"
+            "This protocol governs bed assignment, capacity escalation, and interdepartmental "
+            "transfer coordination to minimize ED boarding and elective-case delays.\n\n"
+            "2. SCOPE\n"
+            "Applies to the Bed Management Center, Admitting, ED, and all inpatient units.\n\n"
+            "3. DEFINITIONS\n"
+            "Boarding: time an admitted patient spends in the ED awaiting an inpatient bed.\n"
+            "Surge Level: hospital-wide capacity status (Green/Yellow/Red) based on occupancy.\n\n"
+            "4. PROCEDURE\n"
+            "Step 1: Bed Management Center reviews real-time occupancy dashboard every "
+            "30 minutes during business hours, hourly overnight.\n"
+            "Step 2: On admission order, assign a bed within 60 minutes based on acuity, "
+            "isolation needs, and unit specialty match.\n"
+            "Step 3: If no appropriate bed is available within 90 minutes, escalate to the "
+            "House Supervisor for surge-level review.\n"
+            "Step 4: At Yellow surge (>=90% occupancy), activate early-discharge rounds on "
+            "all units by 10:00 AM to identify dischargeable patients.\n"
+            "Step 5: At Red surge (>=98% occupancy), activate the Capacity Command Center, "
+            "pause elective admissions, and consider diversion per regional protocol.\n"
+            "Step 6: Prioritize ED-boarding patients over scheduled elective admissions when "
+            "boarding time exceeds 4 hours.\n"
+            "Step 7: For interdepartmental transfers, the receiving unit must confirm bed "
+            "readiness before the sending unit initiates patient transport.\n"
+            "Step 8: Document all bed-assignment delays exceeding 2 hours with reason code "
+            "for weekly flow-committee review.\n\n"
+            "5. THRESHOLDS AND TARGETS\n"
+            "- Bed assignment target: within 60 minutes of admission order\n"
+            "- Escalation trigger: no bed available within 90 minutes\n"
+            "- Yellow surge threshold: >=90% occupancy\n"
+            "- Red surge threshold: >=98% occupancy\n"
+            "- ED boarding escalation: >4 hours\n\n"
+            "6. CONTRAINDICATIONS\n"
+            "- Do NOT transfer a hemodynamically unstable patient without physician-to-"
+            "physician handoff.\n"
+            "- Do NOT place patients requiring airborne isolation in a non-negative-pressure "
+            "room, regardless of surge level.\n"
+        ),
+        "structured_json": {
+            "steps": [
+                {"step": 1, "action": "Review occupancy dashboard every 30 min business hours, hourly overnight."},
+                {"step": 2, "action": "Assign bed within 60 minutes of admission order."},
+                {"step": 3, "action": "Escalate to House Supervisor if no bed within 90 minutes."},
+                {"step": 4, "action": "Yellow surge (>=90%): early-discharge rounds by 10:00 AM."},
+                {"step": 5, "action": "Red surge (>=98%): activate Capacity Command Center, pause elective admissions."},
+                {"step": 6, "action": "Prioritize ED-boarding patients over elective admissions after 4h boarding."},
+                {"step": 7, "action": "Receiving unit confirms bed readiness before transport begins."},
+                {"step": 8, "action": "Document bed-assignment delays >2 hours with reason code."},
+            ],
+            "thresholds": [
+                {"parameter": "Bed assignment target", "value": "60 minutes", "action": "From admission order"},
+                {"parameter": "Escalation trigger", "value": "90 minutes", "action": "No bed available, escalate to House Supervisor"},
+                {"parameter": "Yellow surge", "value": ">=90% occupancy", "action": "Activate early-discharge rounds"},
+                {"parameter": "Red surge", "value": ">=98% occupancy", "action": "Activate Capacity Command Center"},
+                {"parameter": "ED boarding escalation", "value": ">4 hours", "action": "Prioritize over elective admissions"},
+            ],
+            "contraindications": [
+                "Transferring a hemodynamically unstable patient without physician-to-physician handoff.",
+                "Placing airborne-isolation patients in non-negative-pressure rooms regardless of surge level.",
+            ],
+        },
+    },
+    # ------------------------------------------------------------------ 13
+    {
+        "sop_id": "SOP-OPS-013",
+        "title": "Discharge Planning Protocol",
+        "department": "Operations",
+        "version": "2.3",
+        "effective_date": "2025-01-25",
+        "review_date": "2026-06-20",
+        "raw_text": (
+            "DISCHARGE PLANNING PROTOCOL - OPERATIONS\n"
+            "Version 2.3 | Effective 2025-01-25\n"
+            "DISCLAIMER: This is a SYNTHETIC SOP for research demonstration only.\n\n"
+            "1. PURPOSE\n"
+            "This protocol standardizes discharge planning to reduce length of stay and "
+            "30-day readmission risk while ensuring safe transitions of care.\n\n"
+            "2. SCOPE\n"
+            "Applies to all inpatient admissions across medical, surgical, and observation "
+            "units.\n\n"
+            "3. DEFINITIONS\n"
+            "Expected Date of Discharge (EDD): the anticipated discharge date set within "
+            "24 hours of admission and updated daily on multidisciplinary rounds.\n\n"
+            "4. PROCEDURE\n"
+            "Step 1: Set an Expected Date of Discharge (EDD) within 24 hours of admission "
+            "and post it visibly on the unit whiteboard and in the EHR.\n"
+            "Step 2: Complete a discharge-risk screen (LACE index or equivalent) within "
+            "24 hours of admission to flag high-readmission-risk patients.\n"
+            "Step 3: For high-risk patients, initiate case management and social work "
+            "consult within 24 hours of the risk flag.\n"
+            "Step 4: Conduct multidisciplinary rounds daily to update EDD and identify "
+            "discharge barriers (placement, equipment, transportation, caregiver readiness).\n"
+            "Step 5: Begin medication reconciliation and discharge education at least 24 "
+            "hours before anticipated discharge, not on the day of discharge.\n"
+            "Step 6: Confirm follow-up appointment scheduled within 7 days for high-risk "
+            "patients, 14 days for standard-risk, before discharge order is written.\n"
+            "Step 7: Provide written discharge instructions at a 6th-grade reading level, "
+            "including red-flag symptoms warranting return to care.\n"
+            "Step 8: Complete a warm handoff phone call to outpatient primary care or "
+            "skilled nursing facility within 24 hours of discharge for high-risk patients.\n"
+            "Step 9: Conduct a follow-up phone call within 48-72 hours post-discharge for "
+            "all high-risk patients to confirm medication adherence and identify concerns.\n\n"
+            "5. THRESHOLDS AND TARGETS\n"
+            "- EDD set: within 24 hours of admission\n"
+            "- Discharge-risk screen: within 24 hours of admission\n"
+            "- Follow-up appointment: within 7 days (high risk) / 14 days (standard risk)\n"
+            "- Post-discharge call: within 48-72 hours for high-risk patients\n\n"
+            "6. CONTRAINDICATIONS\n"
+            "- Do NOT discharge a patient flagged high-risk without a confirmed post-"
+            "discharge care plan and named caregiver or facility contact.\n"
+            "- Do NOT finalize discharge medication list without pharmacist reconciliation "
+            "for patients on 5 or more chronic medications.\n"
+        ),
+        "structured_json": {
+            "steps": [
+                {"step": 1, "action": "Set Expected Date of Discharge within 24 hours of admission."},
+                {"step": 2, "action": "Complete discharge-risk screen (LACE or equivalent) within 24 hours."},
+                {"step": 3, "action": "High-risk: initiate case management/social work within 24 hours of flag."},
+                {"step": 4, "action": "Daily multidisciplinary rounds to update EDD and resolve barriers."},
+                {"step": 5, "action": "Begin med reconciliation/education >=24h before anticipated discharge."},
+                {"step": 6, "action": "Confirm follow-up appointment (7d high-risk / 14d standard) before discharge order."},
+                {"step": 7, "action": "Provide written instructions at 6th-grade reading level with red-flag symptoms."},
+                {"step": 8, "action": "Warm handoff call to outpatient/SNF within 24 hours for high-risk patients."},
+                {"step": 9, "action": "Follow-up call within 48-72 hours post-discharge for high-risk patients."},
+            ],
+            "thresholds": [
+                {"parameter": "EDD set", "value": "24 hours", "action": "From admission"},
+                {"parameter": "Discharge-risk screen", "value": "24 hours", "action": "From admission"},
+                {"parameter": "Follow-up appointment (high risk)", "value": "7 days", "action": "Before discharge order"},
+                {"parameter": "Follow-up appointment (standard risk)", "value": "14 days", "action": "Before discharge order"},
+                {"parameter": "Post-discharge call", "value": "48-72 hours", "action": "High-risk patients"},
+            ],
+            "contraindications": [
+                "Discharging a high-risk patient without a confirmed post-discharge care plan and named contact.",
+                "Finalizing discharge medications without pharmacist reconciliation for 5+ chronic medications.",
+            ],
+        },
+    },
+    # ------------------------------------------------------------------ 14
+    {
+        "sop_id": "SOP-COMP-014",
+        "title": "Clinical Documentation Standards Policy",
+        "department": "Compliance",
+        "version": "1.6",
+        "effective_date": "2025-02-01",
+        "review_date": "2026-08-01",
+        "raw_text": (
+            "CLINICAL DOCUMENTATION STANDARDS POLICY - COMPLIANCE\n"
+            "Version 1.6 | Effective 2025-02-01\n"
+            "DISCLAIMER: This is a SYNTHETIC SOP for research demonstration only.\n\n"
+            "1. PURPOSE\n"
+            "This policy establishes minimum documentation standards for the medical "
+            "record to support continuity of care, billing integrity, and regulatory "
+            "compliance.\n\n"
+            "2. SCOPE\n"
+            "Applies to all clinical staff who create or amend entries in the electronic "
+            "health record.\n\n"
+            "3. DEFINITIONS\n"
+            "Late Entry: a documentation entry made after the encounter it describes, "
+            "clearly labeled with the actual date/time of entry and the event date/time.\n\n"
+            "4. PROCEDURE\n"
+            "Step 1: Complete an admission history and physical within 24 hours of "
+            "admission, or before any surgical procedure, whichever is sooner.\n"
+            "Step 2: Document all progress notes within the same shift as the encounter; "
+            "late entries must be labeled 'Late Entry' with both event and entry timestamps.\n"
+            "Step 3: Co-sign all trainee/resident notes within 24 hours per supervising "
+            "attending requirements.\n"
+            "Step 4: Never use copy-forward ('copy-paste') documentation without reviewing "
+            "and updating the content to reflect the current encounter.\n"
+            "Step 5: Document informed consent discussions verbatim-adjacent (key risks, "
+            "benefits, alternatives discussed) before any invasive procedure.\n"
+            "Step 6: Complete discharge summaries within 48 hours of discharge for standard "
+            "cases, within 24 hours if the patient has a follow-up appointment scheduled "
+            "sooner than 48 hours.\n"
+            "Step 7: Correct documentation errors using the EHR's formal amendment "
+            "function only - never delete or overwrite an existing entry.\n"
+            "Step 8: Flag any chart for compliance review if more than 10% of a note's "
+            "content matches a prior note verbatim (auto-detected copy-forward flag).\n\n"
+            "5. THRESHOLDS AND TARGETS\n"
+            "- History and physical: within 24 hours of admission\n"
+            "- Co-signature of trainee notes: within 24 hours\n"
+            "- Discharge summary: within 48 hours (24 hours if early follow-up scheduled)\n"
+            "- Copy-forward flag threshold: >10% verbatim match to prior note\n\n"
+            "6. CONTRAINDICATIONS\n"
+            "- Do NOT delete or overwrite an existing EHR entry; use the formal amendment "
+            "workflow only.\n"
+            "- Do NOT sign a note on behalf of another provider under any circumstance.\n"
+        ),
+        "structured_json": {
+            "steps": [
+                {"step": 1, "action": "Complete H&P within 24 hours of admission or before surgery."},
+                {"step": 2, "action": "Document progress notes same shift; label late entries with both timestamps."},
+                {"step": 3, "action": "Co-sign trainee/resident notes within 24 hours."},
+                {"step": 4, "action": "Never copy-forward without reviewing and updating content."},
+                {"step": 5, "action": "Document informed consent discussion before invasive procedures."},
+                {"step": 6, "action": "Complete discharge summary within 48 hours (24h if early follow-up)."},
+                {"step": 7, "action": "Correct errors via formal EHR amendment function only."},
+                {"step": 8, "action": "Flag charts with >10% verbatim copy-forward match for compliance review."},
+            ],
+            "thresholds": [
+                {"parameter": "History and physical", "value": "24 hours", "action": "From admission"},
+                {"parameter": "Trainee note co-signature", "value": "24 hours", "action": "From note creation"},
+                {"parameter": "Discharge summary", "value": "48 hours (24h if early follow-up)", "action": "From discharge"},
+                {"parameter": "Copy-forward flag threshold", "value": ">10% verbatim match", "action": "Auto-flag for compliance review"},
+            ],
+            "contraindications": [
+                "Deleting or overwriting an existing EHR entry instead of using formal amendment.",
+                "Signing a note on behalf of another provider under any circumstance.",
+            ],
+        },
+    },
+    # ------------------------------------------------------------------ 15
+    {
+        "sop_id": "SOP-COMP-015",
+        "title": "Internal Compliance Audit Procedure",
+        "department": "Compliance",
+        "version": "1.2",
+        "effective_date": "2025-03-10",
+        "review_date": "2026-09-10",
+        "raw_text": (
+            "INTERNAL COMPLIANCE AUDIT PROCEDURE - COMPLIANCE\n"
+            "Version 1.2 | Effective 2025-03-10\n"
+            "DISCLAIMER: This is a SYNTHETIC SOP for research demonstration only.\n\n"
+            "1. PURPOSE\n"
+            "This procedure defines how internal compliance audits are scoped, conducted, "
+            "and remediated across clinical and administrative departments.\n\n"
+            "2. SCOPE\n"
+            "Applies to the Compliance Office and any department selected for scheduled "
+            "or for-cause audit.\n\n"
+            "3. DEFINITIONS\n"
+            "For-Cause Audit: an unscheduled audit triggered by a complaint, incident, or "
+            "regulatory inquiry rather than the annual audit calendar.\n\n"
+            "4. PROCEDURE\n"
+            "Step 1: Publish an annual audit calendar by December 1st covering all "
+            "high-risk departments (those with prior findings or high regulatory exposure).\n"
+            "Step 2: Notify the audited department in writing at least 10 business days "
+            "before a scheduled audit; for-cause audits may proceed without advance notice.\n"
+            "Step 3: Pull a statistically representative sample of records - minimum 30 "
+            "charts or 10% of monthly volume, whichever is greater.\n"
+            "Step 4: Score each sampled record against the applicable standard checklist "
+            "(documentation, consent, billing, or safety, depending on audit scope).\n"
+            "Step 5: Classify findings as Critical (immediate patient safety or legal risk), "
+            "Major (systemic pattern), or Minor (isolated deviation).\n"
+            "Step 6: Issue a preliminary findings report to department leadership within "
+            "5 business days of audit completion.\n"
+            "Step 7: Department leadership must submit a corrective action plan (CAPA) "
+            "within 10 business days of receiving Critical or Major findings.\n"
+            "Step 8: Conduct a follow-up audit within 90 days of CAPA submission to verify "
+            "remediation effectiveness.\n"
+            "Step 9: Escalate unresolved Critical findings to the Compliance Committee and "
+            "Chief Medical Officer immediately, not on the standard reporting cycle.\n\n"
+            "5. THRESHOLDS AND TARGETS\n"
+            "- Advance notice for scheduled audits: 10 business days\n"
+            "- Sample size: minimum 30 charts or 10% of monthly volume\n"
+            "- Preliminary findings report: within 5 business days of audit completion\n"
+            "- CAPA submission: within 10 business days of Critical/Major findings\n"
+            "- Follow-up audit: within 90 days of CAPA submission\n\n"
+            "6. CONTRAINDICATIONS\n"
+            "- Do NOT allow the audited department to select its own record sample.\n"
+            "- Do NOT delay escalation of a Critical finding to await the standard "
+            "reporting cycle.\n"
+        ),
+        "structured_json": {
+            "steps": [
+                {"step": 1, "action": "Publish annual audit calendar by December 1st for high-risk departments."},
+                {"step": 2, "action": "Notify department 10 business days before scheduled audit (for-cause exempt)."},
+                {"step": 3, "action": "Sample minimum 30 charts or 10% of monthly volume."},
+                {"step": 4, "action": "Score records against applicable standard checklist."},
+                {"step": 5, "action": "Classify findings: Critical, Major, or Minor."},
+                {"step": 6, "action": "Issue preliminary findings report within 5 business days."},
+                {"step": 7, "action": "Department submits CAPA within 10 business days of Critical/Major findings."},
+                {"step": 8, "action": "Follow-up audit within 90 days of CAPA submission."},
+                {"step": 9, "action": "Escalate unresolved Critical findings to Compliance Committee/CMO immediately."},
+            ],
+            "thresholds": [
+                {"parameter": "Advance notice (scheduled audit)", "value": "10 business days", "action": "Before audit"},
+                {"parameter": "Sample size", "value": ">=30 charts or 10% of volume", "action": "Whichever is greater"},
+                {"parameter": "Preliminary findings report", "value": "5 business days", "action": "From audit completion"},
+                {"parameter": "CAPA submission", "value": "10 business days", "action": "From Critical/Major finding"},
+                {"parameter": "Follow-up audit", "value": "90 days", "action": "From CAPA submission"},
+            ],
+            "contraindications": [
+                "Allowing the audited department to select its own record sample.",
+                "Delaying escalation of a Critical finding to the standard reporting cycle.",
+            ],
+        },
+    },
+    # ------------------------------------------------------------------ 16
+    {
+        "sop_id": "SOP-HR-016",
+        "title": "Staff Onboarding and Credentialing Protocol",
+        "department": "Human Resources",
+        "version": "2.1",
+        "effective_date": "2025-01-05",
+        "review_date": "2026-07-01",
+        "raw_text": (
+            "STAFF ONBOARDING AND CREDENTIALING PROTOCOL - HUMAN RESOURCES\n"
+            "Version 2.1 | Effective 2025-01-05\n"
+            "DISCLAIMER: This is a SYNTHETIC SOP for research demonstration only.\n\n"
+            "1. PURPOSE\n"
+            "This protocol governs the onboarding and credentialing of new clinical staff "
+            "to ensure verified qualifications before granting patient-care privileges.\n\n"
+            "2. SCOPE\n"
+            "Applies to all new physicians, advanced practice providers, and nursing staff.\n\n"
+            "3. DEFINITIONS\n"
+            "Primary Source Verification (PSV): confirming credentials directly with the "
+            "issuing institution or licensing body, not from applicant-provided copies.\n\n"
+            "4. PROCEDURE\n"
+            "Step 1: Initiate primary source verification of license, board certification, "
+            "and education within 5 business days of offer acceptance.\n"
+            "Step 2: Complete a background check and OIG/SAM exclusion list screening "
+            "before the candidate's first clinical shift.\n"
+            "Step 3: Verify current BLS/ACLS certification (and PALS where applicable) "
+            "before granting any patient-care privileges.\n"
+            "Step 4: Complete facility orientation, including EHR training and safety "
+            "systems overview, within the first 3 business days of employment.\n"
+            "Step 5: Assign a preceptor for clinical staff for a minimum 4-week supervised "
+            "period before independent practice.\n"
+            "Step 6: Present new privileging requests to the Credentials Committee at its "
+            "next scheduled meeting; temporary privileges may be granted for urgent need "
+            "pending full review, not to exceed 120 days.\n"
+            "Step 7: Re-verify credentials at each 2-year reappointment cycle, including "
+            "malpractice history and any new disciplinary actions.\n"
+            "Step 8: Immediately suspend clinical privileges if a license lapse, exclusion "
+            "list match, or unresolved malpractice claim is identified at any point.\n\n"
+            "5. THRESHOLDS AND TARGETS\n"
+            "- PSV initiation: within 5 business days of offer acceptance\n"
+            "- Facility orientation: within 3 business days of employment start\n"
+            "- Preceptor period: minimum 4 weeks for clinical staff\n"
+            "- Temporary privileges cap: 120 days pending full Credentials Committee review\n"
+            "- Reappointment cycle: every 2 years\n\n"
+            "6. CONTRAINDICATIONS\n"
+            "- Do NOT grant any patient-care privileges before BLS/ACLS verification is "
+            "on file.\n"
+            "- Do NOT allow independent practice before the minimum preceptor period is "
+            "completed and signed off.\n"
+        ),
+        "structured_json": {
+            "steps": [
+                {"step": 1, "action": "Initiate primary source verification within 5 business days of offer acceptance."},
+                {"step": 2, "action": "Complete background check and OIG/SAM exclusion screening before first shift."},
+                {"step": 3, "action": "Verify BLS/ACLS/PALS before granting patient-care privileges."},
+                {"step": 4, "action": "Complete facility orientation within 3 business days of employment."},
+                {"step": 5, "action": "Assign preceptor for minimum 4-week supervised period."},
+                {"step": 6, "action": "Present privileging request to Credentials Committee; temp privileges capped at 120 days."},
+                {"step": 7, "action": "Re-verify credentials at each 2-year reappointment cycle."},
+                {"step": 8, "action": "Immediately suspend privileges on license lapse or exclusion list match."},
+            ],
+            "thresholds": [
+                {"parameter": "PSV initiation", "value": "5 business days", "action": "From offer acceptance"},
+                {"parameter": "Facility orientation", "value": "3 business days", "action": "From employment start"},
+                {"parameter": "Preceptor period", "value": "4 weeks minimum", "action": "Before independent practice"},
+                {"parameter": "Temporary privileges cap", "value": "120 days", "action": "Pending Credentials Committee review"},
+                {"parameter": "Reappointment cycle", "value": "2 years", "action": "Full credential re-verification"},
+            ],
+            "contraindications": [
+                "Granting patient-care privileges before BLS/ACLS verification is on file.",
+                "Allowing independent practice before the preceptor period is completed and signed off.",
+            ],
+        },
+    },
+    # ------------------------------------------------------------------ 17
+    {
+        "sop_id": "SOP-HR-017",
+        "title": "Mandatory Training Compliance Protocol",
+        "department": "Human Resources",
+        "version": "1.5",
+        "effective_date": "2025-01-10",
+        "review_date": "2026-07-10",
+        "raw_text": (
+            "MANDATORY TRAINING COMPLIANCE PROTOCOL - HUMAN RESOURCES\n"
+            "Version 1.5 | Effective 2025-01-10\n"
+            "DISCLAIMER: This is a SYNTHETIC SOP for research demonstration only.\n\n"
+            "1. PURPOSE\n"
+            "This protocol ensures all staff complete and maintain required competency "
+            "and compliance training on schedule.\n\n"
+            "2. SCOPE\n"
+            "Applies to all employees, contractors, and credentialed medical staff.\n\n"
+            "3. DEFINITIONS\n"
+            "Core Competencies: annual mandatory modules (HIPAA privacy, infection "
+            "control, fire/life safety, workplace violence prevention).\n\n"
+            "4. PROCEDURE\n"
+            "Step 1: Assign core competency modules on the employee's hire date, due for "
+            "completion within 30 days of hire.\n"
+            "Step 2: Assign annual refresher modules 60 days before each employee's "
+            "training-anniversary date.\n"
+            "Step 3: Send an automated reminder at 30 days, 14 days, and 3 days before "
+            "the due date for any incomplete module.\n"
+            "Step 4: Suspend EHR access for any employee whose core competency training "
+            "becomes more than 15 days overdue.\n"
+            "Step 5: Department managers review a monthly compliance report and follow "
+            "up directly with any staff member below 100% completion.\n"
+            "Step 6: Role-specific training (e.g., restraint use, moderate sedation) "
+            "must be completed before the employee performs that task independently.\n"
+            "Step 7: Maintain training records for a minimum of 6 years for regulatory "
+            "and accreditation survey purposes.\n"
+            "Step 8: Report house-wide training compliance rate to the Quality Committee "
+            "quarterly; flag any department below 90% for corrective action planning.\n\n"
+            "5. THRESHOLDS AND TARGETS\n"
+            "- New-hire core competency deadline: 30 days from hire\n"
+            "- EHR access suspension trigger: training >15 days overdue\n"
+            "- Training record retention: minimum 6 years\n"
+            "- Department compliance flag threshold: below 90%\n\n"
+            "6. CONTRAINDICATIONS\n"
+            "- Do NOT allow an employee to perform a role-specific task requiring "
+            "specialized training before that module is marked complete.\n"
+            "- Do NOT restore EHR access after a suspension without confirmed training "
+            "completion.\n"
+        ),
+        "structured_json": {
+            "steps": [
+                {"step": 1, "action": "Assign core competency modules on hire date, due within 30 days."},
+                {"step": 2, "action": "Assign annual refresher modules 60 days before training-anniversary date."},
+                {"step": 3, "action": "Automated reminders at 30, 14, and 3 days before due date."},
+                {"step": 4, "action": "Suspend EHR access if core training >15 days overdue."},
+                {"step": 5, "action": "Managers review monthly compliance report, follow up below 100%."},
+                {"step": 6, "action": "Role-specific training completed before independent performance of that task."},
+                {"step": 7, "action": "Maintain training records for minimum 6 years."},
+                {"step": 8, "action": "Report compliance rate to Quality Committee quarterly; flag departments <90%."},
+            ],
+            "thresholds": [
+                {"parameter": "New-hire core competency deadline", "value": "30 days", "action": "From hire date"},
+                {"parameter": "EHR access suspension trigger", "value": ">15 days overdue", "action": "Core competency training"},
+                {"parameter": "Training record retention", "value": "6 years minimum", "action": "Regulatory/accreditation"},
+                {"parameter": "Department compliance flag", "value": "<90%", "action": "Corrective action planning"},
+            ],
+            "contraindications": [
+                "Allowing a role-specific task before the required specialized training module is complete.",
+                "Restoring EHR access after suspension without confirmed training completion.",
+            ],
+        },
+    },
+    # ------------------------------------------------------------------ 18
+    {
+        "sop_id": "SOP-QI-018",
+        "title": "Patient Safety Incident Reporting Protocol",
+        "department": "Quality",
+        "version": "2.4",
+        "effective_date": "2025-02-15",
+        "review_date": "2026-08-15",
+        "raw_text": (
+            "PATIENT SAFETY INCIDENT REPORTING PROTOCOL - QUALITY\n"
+            "Version 2.4 | Effective 2025-02-15\n"
+            "DISCLAIMER: This is a SYNTHETIC SOP for research demonstration only.\n\n"
+            "1. PURPOSE\n"
+            "This protocol defines how patient safety events are reported, triaged, and "
+            "investigated to drive systemic improvement rather than individual blame.\n\n"
+            "2. SCOPE\n"
+            "Applies to all staff who witness, discover, or are involved in a patient "
+            "safety event, near-miss, or unsafe condition.\n\n"
+            "3. DEFINITIONS\n"
+            "Sentinel Event: a patient safety event resulting in death, permanent harm, "
+            "or severe temporary harm requiring intervention to sustain life.\n"
+            "Near Miss: an event that did not reach the patient or caused no harm.\n\n"
+            "4. PROCEDURE\n"
+            "Step 1: Report any safety event or near-miss in the electronic event-"
+            "reporting system within 24 hours of discovery, regardless of harm level.\n"
+            "Step 2: For a Sentinel Event, notify the House Supervisor and Risk Management "
+            "immediately (within 1 hour) by phone in addition to the electronic report.\n"
+            "Step 3: Preserve all physical evidence (equipment, medication vials, devices) "
+            "involved in the event; do not discard or return to service.\n"
+            "Step 4: Risk Management triages every report within 1 business day and "
+            "assigns a harm-severity score (None, Mild, Moderate, Severe, Sentinel).\n"
+            "Step 5: Convene a Root Cause Analysis (RCA) team within 5 business days for "
+            "any Severe or Sentinel event, with clinical and non-clinical representation.\n"
+            "Step 6: Complete the RCA and submit findings to the Patient Safety Committee "
+            "within 45 days of the event, per accreditation timelines.\n"
+            "Step 7: Maintain event-reporting confidentiality under the peer-review "
+            "privilege; reports must never be used for individual disciplinary action "
+            "based on reporting alone.\n"
+            "Step 8: Track corrective actions from every RCA to closure and verify "
+            "effectiveness at 90 days post-implementation.\n\n"
+            "5. THRESHOLDS AND TARGETS\n"
+            "- Standard event report: within 24 hours of discovery\n"
+            "- Sentinel event notification: within 1 hour (phone, in addition to report)\n"
+            "- Risk Management triage: within 1 business day\n"
+            "- RCA team convened: within 5 business days for Severe/Sentinel events\n"
+            "- RCA completion: within 45 days of the event\n\n"
+            "6. CONTRAINDICATIONS\n"
+            "- Do NOT discard or return to service any equipment/medication involved in "
+            "a reported event before Risk Management review.\n"
+            "- Do NOT use a good-faith safety report as the sole basis for disciplinary "
+            "action.\n"
+        ),
+        "structured_json": {
+            "steps": [
+                {"step": 1, "action": "Report event/near-miss in electronic system within 24 hours of discovery."},
+                {"step": 2, "action": "Sentinel event: notify House Supervisor and Risk Management within 1 hour by phone."},
+                {"step": 3, "action": "Preserve all physical evidence involved in the event."},
+                {"step": 4, "action": "Risk Management triages report within 1 business day, assigns severity score."},
+                {"step": 5, "action": "Convene RCA team within 5 business days for Severe/Sentinel events."},
+                {"step": 6, "action": "Complete RCA and submit to Patient Safety Committee within 45 days."},
+                {"step": 7, "action": "Maintain peer-review confidentiality; never sole basis for discipline."},
+                {"step": 8, "action": "Track corrective actions to closure; verify effectiveness at 90 days."},
+            ],
+            "thresholds": [
+                {"parameter": "Standard event report", "value": "24 hours", "action": "From discovery"},
+                {"parameter": "Sentinel event notification", "value": "1 hour", "action": "Phone, in addition to electronic report"},
+                {"parameter": "Risk Management triage", "value": "1 business day", "action": "Assign severity score"},
+                {"parameter": "RCA team convened", "value": "5 business days", "action": "Severe/Sentinel events"},
+                {"parameter": "RCA completion", "value": "45 days", "action": "From event date"},
+            ],
+            "contraindications": [
+                "Discarding or returning to service equipment/medication involved in a reported event before review.",
+                "Using a good-faith safety report as the sole basis for disciplinary action.",
+            ],
+        },
+    },
+    # ------------------------------------------------------------------ 19
+    {
+        "sop_id": "SOP-QI-019",
+        "title": "Quality Improvement Review Cycle Protocol",
+        "department": "Quality",
+        "version": "1.3",
+        "effective_date": "2025-03-05",
+        "review_date": "2026-09-05",
+        "raw_text": (
+            "QUALITY IMPROVEMENT REVIEW CYCLE PROTOCOL - QUALITY\n"
+            "Version 1.3 | Effective 2025-03-05\n"
+            "DISCLAIMER: This is a SYNTHETIC SOP for research demonstration only.\n\n"
+            "1. PURPOSE\n"
+            "This protocol defines the standard Plan-Do-Study-Act (PDSA) cycle used to "
+            "drive continuous quality improvement across clinical departments.\n\n"
+            "2. SCOPE\n"
+            "Applies to all department-level quality improvement initiatives sponsored "
+            "by the Quality Committee.\n\n"
+            "3. DEFINITIONS\n"
+            "PDSA Cycle: Plan-Do-Study-Act - a structured, iterative improvement "
+            "methodology run in short test cycles before house-wide rollout.\n\n"
+            "4. PROCEDURE\n"
+            "Step 1: Identify improvement opportunities from incident reports, quality "
+            "metrics dashboards, patient satisfaction data, or staff safety reports.\n"
+            "Step 2: Charter a QI project with a defined aim statement, measurable target, "
+            "and timeline; present to the Quality Committee for sponsorship approval.\n"
+            "Step 3: Establish baseline measurement for the target metric over a minimum "
+            "of 4 weeks before any intervention begins.\n"
+            "Step 4: Run a small-scale PDSA test cycle (single unit or shift) for 2-4 "
+            "weeks before considering broader rollout.\n"
+            "Step 5: Study results against the baseline; a successful cycle requires "
+            "statistically or clinically meaningful improvement, not anecdotal impression.\n"
+            "Step 6: Act - either adapt the intervention and re-test, adopt and expand "
+            "scope, or abandon if no improvement is demonstrated after two test cycles.\n"
+            "Step 7: Report active QI project status to the Quality Committee monthly, "
+            "including current PDSA cycle stage and metric trend.\n"
+            "Step 8: Upon successful house-wide adoption, transition the metric to "
+            "standard dashboard monitoring with a 6-month sustainment check.\n\n"
+            "5. THRESHOLDS AND TARGETS\n"
+            "- Baseline measurement period: minimum 4 weeks\n"
+            "- PDSA test cycle length: 2-4 weeks\n"
+            "- Project status reporting: monthly to Quality Committee\n"
+            "- Post-adoption sustainment check: 6 months\n\n"
+            "6. CONTRAINDICATIONS\n"
+            "- Do NOT roll out an intervention house-wide without at least one completed "
+            "small-scale PDSA test cycle.\n"
+            "- Do NOT close out a QI project as 'successful' without a documented "
+            "sustainment check.\n"
+        ),
+        "structured_json": {
+            "steps": [
+                {"step": 1, "action": "Identify improvement opportunities from incident reports/quality data."},
+                {"step": 2, "action": "Charter QI project with aim statement, target, timeline; get Committee sponsorship."},
+                {"step": 3, "action": "Establish baseline measurement over minimum 4 weeks before intervention."},
+                {"step": 4, "action": "Run small-scale PDSA test cycle for 2-4 weeks."},
+                {"step": 5, "action": "Study results against baseline for meaningful improvement."},
+                {"step": 6, "action": "Act: adapt and re-test, adopt and expand, or abandon after two cycles."},
+                {"step": 7, "action": "Report project status to Quality Committee monthly."},
+                {"step": 8, "action": "After adoption, transition to dashboard monitoring with 6-month sustainment check."},
+            ],
+            "thresholds": [
+                {"parameter": "Baseline measurement period", "value": "4 weeks minimum", "action": "Before intervention"},
+                {"parameter": "PDSA test cycle length", "value": "2-4 weeks", "action": "Small-scale test"},
+                {"parameter": "Project status reporting", "value": "Monthly", "action": "To Quality Committee"},
+                {"parameter": "Sustainment check", "value": "6 months", "action": "Post house-wide adoption"},
+            ],
+            "contraindications": [
+                "Rolling out an intervention house-wide without a completed small-scale PDSA test cycle.",
+                "Closing a QI project as successful without a documented sustainment check.",
             ],
         },
     },

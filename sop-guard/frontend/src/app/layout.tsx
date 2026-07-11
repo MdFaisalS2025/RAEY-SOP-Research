@@ -9,9 +9,9 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 const sora = Sora({ subsets: ["latin"], variable: "--font-display", weight: ["500", "600", "700", "800"] })
 
 export const metadata: Metadata = {
-  title: "SOP-Guard | AI-Powered Clinical SOP Assistant",
+  title: "Meridian | Hospital SOP & Clinical Knowledge Platform",
   description:
-    "Research prototype: AI-powered clinical Standard Operating Procedure assistant with built-in procedural faithfulness verification.",
+    "Research prototype: every decision, grounded in evidence. A governed hospital knowledge system unifying SOPs and clinical literature, with built-in procedural faithfulness verification.",
   icons: {
     icon: "/favicon.svg",
   },
@@ -26,7 +26,7 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${sora.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{
-          __html: `try{if(localStorage.getItem('sop-guard-theme')==='dark')document.documentElement.classList.add('dark')}catch(e){}`
+          __html: `try{if(localStorage.getItem('meridian-theme')==='dark')document.documentElement.classList.add('dark')}catch(e){}`
         }} />
       </head>
       <body className={`${inter.className} antialiased`}>

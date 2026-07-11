@@ -1,4 +1,4 @@
-// SOP-Guard — Comprehensive Mock Data
+// Meridian — Comprehensive Mock Data
 // All data is demo/research only. Replace with real database queries when deploying.
 // Connect to: hospital SharePoint/SOP repository, EHR system, LMS, PubMed API, CDC/FDA feeds
 
@@ -17,7 +17,7 @@ export const DEMO_USERS: DemoUser[] = [
   { id: "u1", name: "Dr. Sarah Mitchell", role: "clinical_staff", department: "ICU", title: "Intensivist / Physician Reviewer", initials: "SM" },
   { id: "u2", name: "Nurse Educator Marcus Chen", role: "educator", department: "Education & Training", title: "Lead Nurse Educator", initials: "MC" },
   { id: "u3", name: "Dr. Linda Yeo", role: "governance_compliance", department: "Compliance & Quality", title: "Chief Compliance Officer", initials: "LY" },
-  { id: "u4", name: "Tariq Farooq", role: "system_admin", department: "IT & Health Informatics", title: "SOP-Guard System Administrator", initials: "TF" },
+  { id: "u4", name: "Tariq Farooq", role: "system_admin", department: "IT & Health Informatics", title: "Meridian System Administrator", initials: "TF" },
 ]
 
 export const ROLE_CONFIG: Record<DemoUser["role"], { label: string; color: string; description: string }> = {
@@ -993,7 +993,7 @@ export const MOCK_PROPOSALS: UpdateProposal[] = [
     audit_trail: [
       { id: "ae-1", event_type: "proposal_created", user: "Dr. Sarah Mitchell", user_role: "clinical_staff", timestamp: "2024-09-12T09:15:00Z", affected_resource: "Proposal", affected_resource_id: "prop-001", action_summary: "Proposal created based on CDC 2024 HICPAC guidance detection." },
       { id: "ae-2", event_type: "proposal_submitted", user: "Dr. Sarah Mitchell", user_role: "clinical_staff", timestamp: "2024-09-12T09:45:00Z", affected_resource: "Proposal", affected_resource_id: "prop-001", action_summary: "Proposal submitted for evidence review." },
-      { id: "ae-3", event_type: "ai_recommendation_generated", user: "SOP-Guard AI", user_role: "system_admin", timestamp: "2024-09-12T09:16:00Z", affected_resource: "Proposal", affected_resource_id: "prop-001", action_summary: "AI generated evidence summary and proposed change text." },
+      { id: "ae-3", event_type: "ai_recommendation_generated", user: "Meridian AI", user_role: "system_admin", timestamp: "2024-09-12T09:16:00Z", affected_resource: "Proposal", affected_resource_id: "prop-001", action_summary: "AI generated evidence summary and proposed change text." },
       { id: "ae-4", event_type: "committee_vote", user: "Dr. Khalid Al-Hassan", user_role: "committee_member", timestamp: "2024-10-01T14:00:00Z", affected_resource: "Proposal", affected_resource_id: "prop-001", action_summary: "Committee Chair voted: Approved. Notes: 'Evidence is clear.'" },
       { id: "ae-5", event_type: "committee_vote", user: "Dr. Sarah Mitchell", user_role: "clinical_staff", timestamp: "2024-10-03T10:30:00Z", affected_resource: "Proposal", affected_resource_id: "prop-001", action_summary: "Physician Reviewer voted: Approved." },
     ],
@@ -1145,8 +1145,8 @@ export const MOCK_EVIDENCE_WATCH: EvidenceWatchItem[] = [
 
 export const MOCK_AUDIT: AuditEntry[] = [
   { id: "au-001", event_type: "proposal_created", user: "Dr. Sarah Mitchell", user_role: "clinical_staff", timestamp: "2024-09-12T09:15:00Z", affected_resource: "Proposal", affected_resource_id: "prop-001", action_summary: "Update proposal created for IC-PPE-001 based on CDC 2024 HICPAC guidance." },
-  { id: "au-002", event_type: "ai_recommendation_generated", user: "SOP-Guard AI", user_role: "system_admin", timestamp: "2024-09-12T09:16:00Z", affected_resource: "Proposal", affected_resource_id: "prop-001", action_summary: "AI generated evidence summary, alignment assessment, and proposed change language for prop-001.", compliance_impact: "Training impact identified: All AGP-performing staff." },
-  { id: "au-003", event_type: "evidence_linked", user: "SOP-Guard AI", user_role: "system_admin", timestamp: "2024-09-12T09:16:30Z", affected_resource: "SOP", affected_resource_id: "sop-001", action_summary: "External evidence ev-001 (CDC HICPAC 2024) linked to SOP IC-PPE-001.", evidence_references: ["ev-001"] },
+  { id: "au-002", event_type: "ai_recommendation_generated", user: "Meridian AI", user_role: "system_admin", timestamp: "2024-09-12T09:16:00Z", affected_resource: "Proposal", affected_resource_id: "prop-001", action_summary: "AI generated evidence summary, alignment assessment, and proposed change language for prop-001.", compliance_impact: "Training impact identified: All AGP-performing staff." },
+  { id: "au-003", event_type: "evidence_linked", user: "Meridian AI", user_role: "system_admin", timestamp: "2024-09-12T09:16:30Z", affected_resource: "SOP", affected_resource_id: "sop-001", action_summary: "External evidence ev-001 (CDC HICPAC 2024) linked to SOP IC-PPE-001.", evidence_references: ["ev-001"] },
   { id: "au-004", event_type: "committee_vote", user: "Dr. Khalid Al-Hassan", user_role: "committee_member", timestamp: "2024-10-01T14:00:00Z", affected_resource: "Proposal", affected_resource_id: "prop-001", action_summary: "Committee Chair voted APPROVED for prop-001. Notes: 'Evidence is clear. Recommend committee approval.'" },
   { id: "au-005", event_type: "committee_vote", user: "Dr. Sarah Mitchell", user_role: "clinical_staff", timestamp: "2024-10-03T10:30:00Z", affected_resource: "Proposal", affected_resource_id: "prop-001", action_summary: "Physician Reviewer voted APPROVED for prop-001." },
   { id: "au-006", event_type: "training_assigned", user: "Marcus Chen", user_role: "nurse_educator", timestamp: "2023-11-20T11:00:00Z", affected_resource: "Training Module", affected_resource_id: "tm-001", action_summary: "Training module 'PPE Donning & Doffing Competency (v3.1 Update)' assigned to 324 staff across ICU Nurses, ED Nurses, Respiratory Therapists.", compliance_impact: "Due date: 2025-08-31. 53 staff currently overdue." },
@@ -1276,7 +1276,7 @@ export const MOCK_CONFLICTS: SOPConflict[] = [
     affected_departments: ["ICU", "Emergency", "Medical Ward"],
     clinical_risk: "high",
     detected_date: "2026-06-01",
-    detected_by: "SOP-Guard AI Conflict Detector",
+    detected_by: "Meridian AI Conflict Detector",
     status: "under_review",
     assigned_to: "Dr. Ahmed Al-Rashid",
     resolution_notes: "Under review by Infection Control and ICU committee members. Awaiting CDC HICPAC clarification.",
@@ -1297,7 +1297,7 @@ export const MOCK_CONFLICTS: SOPConflict[] = [
     affected_departments: ["ICU", "Emergency"],
     clinical_risk: "critical",
     detected_date: "2026-05-20",
-    detected_by: "SOP-Guard AI Conflict Detector",
+    detected_by: "Meridian AI Conflict Detector",
     status: "open",
     assigned_to: null,
     resolution_notes: null,

@@ -1,5 +1,5 @@
 """
-SOP-Guard WHO Guidelines Integration
+Meridian WHO Guidelines Integration
 --------------------------------------
 Live WHO guideline/publication search via the WHO IRIS institutional
 repository's public DSpace REST API (free, no API key required).

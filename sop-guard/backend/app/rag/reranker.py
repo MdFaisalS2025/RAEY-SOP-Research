@@ -1,5 +1,5 @@
 """
-SOP-Guard Reranker
+Meridian Reranker
 Cross-encoder reranking with heuristic fallback.
 Research prototype. Not for clinical use.
 """

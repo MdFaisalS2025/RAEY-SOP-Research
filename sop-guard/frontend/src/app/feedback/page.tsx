@@ -70,7 +70,7 @@ function TypeBadge({ type }: { type: string }) {
     unsafe: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30",
     incorrect: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30",
     missing: "bg-[#0D9488]/10 text-[#0D9488] border-[#0D9488]/30",
-    "low confidence": "bg-card text-[#475569] border-[#CBD5E1]",
+    "low confidence": "bg-card text-muted-foreground border-input",
   }
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${styles[type] || styles.missing}`}>
@@ -234,7 +234,7 @@ export default function FeedbackPage() {
         )}
 
         {/* Research disclaimer */}
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-muted border border-[#E2E8F0] text-[#64748B] text-xs">
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-muted border border-border text-muted-foreground text-xs">
           <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
           <span>Research Prototype -- Activity data is collected for system evaluation. Not intended for clinical decision-making.</span>
         </div>

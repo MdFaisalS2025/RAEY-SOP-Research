@@ -1,6 +1,6 @@
 # Dataset Plan
 
-> SOP-Guard evaluation and training data strategy.
+> Meridian evaluation and training data strategy.
 
 ---
 
@@ -15,7 +15,7 @@
 ### MedQA (USMLE)
 - **Source**: https://github.com/jnez71/MedQA
 - **Size**: ~12K multiple-choice questions from US Medical Licensing Exams
-- **Use**: Benchmark medical knowledge accuracy; compare SOP-Guard's answer quality against established baselines
+- **Use**: Benchmark medical knowledge accuracy; compare Meridian's answer quality against established baselines
 - **Relevance**: Gold-standard medical knowledge questions with verified correct answers
 
 ### MedMCQA
@@ -41,7 +41,7 @@
 - **Source**: https://github.com/chkla/ExpertQA
 - **Size**: ~2K expert-written QA pairs across multiple domains including medicine
 - **Use**: High-quality evaluation set with expert-verified answers and attribution requirements
-- **Relevance**: Tests answer quality and source attribution, closely matches SOP-Guard's use case
+- **Relevance**: Tests answer quality and source attribution, closely matches Meridian's use case
 
 ## 2. Synthetic SOP Construction
 
@@ -141,4 +141,4 @@ Target: 500-1000 QA pairs with gold-standard answers and source citations.
 - Task-based evaluation: 10-20 clinical scenarios
 - Metrics: time to answer, correctness, confidence, satisfaction
 - Participants: medical students or junior clinicians (pending ethics approval)
-- Comparison: SOP-Guard vs. manual PDF search vs. keyword search
+- Comparison: Meridian vs. manual PDF search vs. keyword search

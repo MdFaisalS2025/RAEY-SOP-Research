@@ -10,8 +10,8 @@ import { Page } from "@playwright/test"
  */
 export async function loginAsDemoUser(page: Page, name: string) {
   await page.addInitScript(() => {
-    localStorage.setItem("sop-guard-onboarding-seen", "true")
-    localStorage.setItem("sop-guard-first-run-demo-seen", "true")
+    localStorage.setItem("meridian-onboarding-seen", "true")
+    localStorage.setItem("meridian-first-run-demo-seen", "true")
   })
   await page.goto("/login")
   await page.locator(`div:has-text("${name}")`).getByRole("button", { name: "Enter" }).last().click()

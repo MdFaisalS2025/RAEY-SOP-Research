@@ -2,7 +2,7 @@
 DISCLAIMER: SYNTHETIC / FICTIONAL DATA FOR RESEARCH ONLY
 =========================================================
 These adversarial test cases reference SYNTHETIC SOPs created for the
-SOP-Guard research prototype.  They must NOT be used for real clinical
+Meridian research prototype.  They must NOT be used for real clinical
 decisions or patient care.  Always follow your institution's approved
 clinical protocols.
 =========================================================

@@ -60,16 +60,16 @@ type NavGroup = {
 
 // Direct links always visible on desktop
 const DIRECT_LINKS: NavItem[] = [
-  { href: "/", label: "Home", icon: LayoutDashboard },
-  { href: "/query", label: "Ask SOP-Guard", icon: MessageSquare },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/query", label: "Ask Meridian", icon: MessageSquare },
 ]
 
 const NAV_GROUPS: NavGroup[] = [
   {
     label: "Clinical",
     items: [
-      { href: "/", label: "Home", icon: LayoutDashboard },
-      { href: "/query", label: "Ask SOP-Guard", icon: MessageSquare },
+      { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+      { href: "/query", label: "Ask Meridian", icon: MessageSquare },
       { href: "/library", label: "SOP Library", icon: BookOpen },
       { href: "/quick-ref", label: "Quick Reference", icon: BookMarked },
     ],
@@ -127,8 +127,8 @@ type TieredNotification = NotificationItem & {
 type LiveNotificationItem = NotificationItem & { tier?: AlertTier }
 
 const INTERRUPTIVE_BUDGET = 3
-const SESSION_INTERRUPTIVE_COUNT_KEY = "sop-guard-session-interruptive-count"
-const SESSION_SEEN_INTERRUPTIVE_KEY = "sop-guard-session-seen-interruptive-ids"
+const SESSION_INTERRUPTIVE_COUNT_KEY = "meridian-session-interruptive-count"
+const SESSION_SEEN_INTERRUPTIVE_KEY = "meridian-session-seen-interruptive-ids"
 
 function inferTier(n: { priority: string; type?: string }): AlertTier {
   if (n.priority === "urgent") return "interruptive"
@@ -382,11 +382,11 @@ export function TopNav() {
     if (html.classList.contains("dark")) {
       html.classList.remove("dark")
       setIsDark(false)
-      localStorage.setItem("sop-guard-theme", "light")
+      localStorage.setItem("meridian-theme", "light")
     } else {
       html.classList.add("dark")
       setIsDark(true)
-      localStorage.setItem("sop-guard-theme", "dark")
+      localStorage.setItem("meridian-theme", "dark")
     }
   }
 
@@ -436,12 +436,12 @@ export function TopNav() {
       <div className="glass-clinical border-b border-gray-200 dark:border-white/[0.08] shadow-sm dark:shadow-black/20">
         <div className="flex items-center gap-2 px-4 lg:px-6 h-14 lg:h-16">
           {/* Logo + brand */}
-          <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
+          <Link href="/dashboard" className="flex items-center gap-2.5 shrink-0 group">
             <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-[#0B6BCB]/10 dark:bg-[#00E5FF]/15 dark:glow-cyan transition-all duration-200 group-hover:scale-105">
               <Shield className="w-5 h-5 text-[#0B6BCB] dark:text-[#00E5FF]" />
             </div>
             <div className="hidden sm:flex flex-col leading-none">
-              <span className="text-base font-bold text-[#1A2332] dark:text-white tracking-tight">SOP-Guard</span>
+              <span className="text-base font-bold text-[#1A2332] dark:text-white tracking-tight">Meridian</span>
               <span className="text-[9px] text-[#0B6BCB]/70 dark:text-[#00E5FF]/70 font-medium tracking-widest uppercase">
                 Clinical Command
               </span>
@@ -464,7 +464,7 @@ export function TopNav() {
                       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0B6BCB]/50 dark:focus-visible:ring-[#00E5FF]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                       active
                         ? "bg-[#0B6BCB]/10 text-[#0B6BCB] dark:text-[#00E5FF] dark:glow-cyan"
-                        : "text-[#64748B] dark:text-slate-400 hover:text-[#1A2332] dark:hover:text-white hover:bg-muted dark:hover:bg-white/5"
+                        : "text-[#64748B] dark:text-slate-400 hover:text-foreground dark:hover:text-white hover:bg-muted dark:hover:bg-white/5"
                     )}
                   >
                     <item.icon className="w-4 h-4 shrink-0" />
@@ -492,7 +492,7 @@ export function TopNav() {
                         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0B6BCB]/50 dark:focus-visible:ring-[#00E5FF]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                         groupActive || isOpen
                           ? "text-[#0B6BCB] dark:text-[#00E5FF]"
-                          : "text-[#64748B] dark:text-slate-400 hover:text-[#1A2332] dark:hover:text-white hover:bg-muted dark:hover:bg-white/5"
+                          : "text-[#64748B] dark:text-slate-400 hover:text-foreground dark:hover:text-white hover:bg-muted dark:hover:bg-white/5"
                       )}
                     >
                       <span>{group.label}</span>
@@ -525,7 +525,7 @@ export function TopNav() {
                                 "flex items-center gap-2.5 px-3 py-2 text-[12px] font-medium transition-colors",
                                 active
                                   ? "text-[#0B6BCB] dark:text-teal-400 bg-[#0B6BCB]/5 dark:bg-transparent"
-                                  : "text-[#334155] dark:text-slate-300 hover:bg-muted dark:hover:bg-white/[0.05] hover:text-[#1A2332] dark:hover:text-white"
+                                  : "text-[#334155] dark:text-slate-300 hover:bg-muted dark:hover:bg-white/[0.05] hover:text-foreground dark:hover:text-white"
                               )}
                             >
                               <item.icon
@@ -571,11 +571,11 @@ export function TopNav() {
               onClick={openCommandPalette}
               aria-label="Open search (Ctrl+K)"
               title="Search (Ctrl+K)"
-              className="hidden md:flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-[#E2E8F0] dark:border-white/10 bg-card dark:bg-[#11191b] text-[#64748B] dark:text-slate-400 hover:text-[#1A2332] dark:hover:text-white hover:border-[#CBD5E1] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0B6BCB]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              className="hidden md:flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-[#E2E8F0] dark:border-white/10 bg-card dark:bg-[#11191b] text-[#64748B] dark:text-slate-400 hover:text-foreground dark:hover:text-white hover:border-input transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0B6BCB]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               <Search className="w-4 h-4" />
               <span className="text-[12px] font-medium">Search</span>
-              <kbd className="text-[10px] font-medium text-[#94A3B8] border border-[#E2E8F0] dark:border-white/10 rounded px-1 py-0.5 leading-none">
+              <kbd className="text-[10px] font-medium text-subtle border border-[#E2E8F0] dark:border-white/10 rounded px-1 py-0.5 leading-none">
                 Ctrl K
               </kbd>
             </button>
@@ -611,7 +611,7 @@ export function TopNav() {
                           onFocus={() => setShowLegend(true)}
                           onBlur={() => setShowLegend(false)}
                           aria-label="Alert color legend"
-                          className="text-[#94A3B8] hover:text-[#64748B] dark:hover:text-white/70 transition-colors"
+                          className="text-subtle hover:text-muted-foreground dark:hover:text-white/70 transition-colors"
                         >
                           <Info className="w-3.5 h-3.5" />
                         </button>
@@ -636,7 +636,7 @@ export function TopNav() {
                   </div>
                   <div className="max-h-[320px] overflow-y-auto">
                     {tieredNotifications.length === 0 && (
-                      <p className="px-3 py-6 text-center text-xs text-[#64748B]">No notifications yet.</p>
+                      <p className="px-3 py-6 text-center text-xs text-muted-foreground">No notifications yet.</p>
                     )}
                     {tieredNotifications.map((n) => (
                       <Link
@@ -683,7 +683,7 @@ export function TopNav() {
                   </div>
                   {budgetExceeded && (
                     <div className="px-3 py-2 border-t border-[#EDF1F5] dark:border-white/[0.06] bg-muted dark:bg-white/[0.03]">
-                      <p className="text-[10px] text-[#64748B] leading-snug">
+                      <p className="text-[10px] text-muted-foreground leading-snug">
                         Alert volume reduced for this session to reduce interruption fatigue.
                       </p>
                     </div>
@@ -775,7 +775,7 @@ export function TopNav() {
                       <div className="py-1">
                         <button
                           onClick={() => setProfileOpen(false)}
-                          className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-[12px] text-[#334155] dark:text-slate-300 hover:bg-muted dark:hover:bg-white/[0.05] hover:text-[#1A2332] dark:hover:text-white transition-colors"
+                          className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-[12px] text-[#334155] dark:text-slate-300 hover:bg-muted dark:hover:bg-white/[0.05] hover:text-foreground dark:hover:text-white transition-colors"
                         >
                           <RefreshCw className="w-3.5 h-3.5 text-[#94A3B8] dark:text-slate-500" />
                           Switch Profile
@@ -845,7 +845,7 @@ export function TopNav() {
                             "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0B6BCB]/50 dark:focus-visible:ring-[#00E5FF]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                             active
                               ? "bg-[#0B6BCB]/10 text-[#0B6BCB] dark:text-[#00E5FF] dark:glow-cyan"
-                              : "text-[#64748B] dark:text-slate-400 hover:text-[#1A2332] dark:hover:text-white hover:bg-muted dark:hover:bg-white/5"
+                              : "text-[#64748B] dark:text-slate-400 hover:text-foreground dark:hover:text-white hover:bg-muted dark:hover:bg-white/5"
                           )}
                         >
                           <item.icon className="w-5 h-5 shrink-0" />

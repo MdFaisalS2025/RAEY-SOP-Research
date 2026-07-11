@@ -115,7 +115,7 @@ function renderCitationTokens(text: string, keyPrefix: string, ctx?: CitationCtx
           if (ctx && ctx.byNumber.size > 0) {
             return <CitationChip key={`${keyPrefix}-${i}`} number={num} citation={ctx.byNumber.get(num)} onClick={ctx.onCite} />
           }
-          return <span key={`${keyPrefix}-${i}`} className="text-[#94A3B8] text-[13px]">{part}</span>
+          return <span key={`${keyPrefix}-${i}`} className="text-subtle text-[13px]">{part}</span>
         }
         return <span key={`${keyPrefix}-${i}`}>{part}</span>
       })}
@@ -130,7 +130,7 @@ export function renderInline(text: string, ctx?: CitationCtx): React.ReactNode {
     <>
       {parts.map((part, i) => {
         if (part.startsWith("**") && part.endsWith("**"))
-          return <strong key={i} className="font-semibold text-[#1A2332]">{renderCitationTokens(part.slice(2, -2), `s${i}`, ctx)}</strong>
+          return <strong key={i} className="font-semibold text-foreground">{renderCitationTokens(part.slice(2, -2), `s${i}`, ctx)}</strong>
         if (part.startsWith("*") && part.endsWith("*"))
           return <em key={i}>{renderCitationTokens(part.slice(1, -1), `e${i}`, ctx)}</em>
         return <span key={i}>{renderCitationTokens(part, `p${i}`, ctx)}</span>
@@ -236,12 +236,12 @@ function renderBlock(block: AnswerBlock, i: number, ctx: CitationCtx, groundingS
   {
         if (block.type === "heading") {
           const sizeClass = block.level === 1 ? "text-xl font-bold" : block.level === 2 ? "text-lg font-semibold" : "text-base font-semibold"
-          const marginClass = block.level === 1 ? "" : block.level === 2 ? "pt-2 border-t border-[#EDF1F5]" : ""
+          const marginClass = block.level === 1 ? "" : block.level === 2 ? "pt-2 border-t border-border" : ""
           return (
             <div key={i} className={cn("first:mt-0", i > 0 && marginClass)}>
               {block.level === 1 && <h1 className={cn("font-display text-[#0B6BCB]", sizeClass)}>{block.text}</h1>}
               {block.level === 2 && <h2 className={cn("font-display text-[#0B6BCB]", sizeClass)}>{block.text}</h2>}
-              {block.level === 3 && <h3 className={cn("font-display text-[#1A2332]", sizeClass)}>{block.text}</h3>}
+              {block.level === 3 && <h3 className={cn("font-display text-foreground", sizeClass)}>{block.text}</h3>}
             </div>
           )
         }
@@ -249,7 +249,7 @@ function renderBlock(block: AnswerBlock, i: number, ctx: CitationCtx, groundingS
           return (
             <div key={i} className="flex items-start gap-3 p-4 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30">
               <AlertTriangle className="w-4 h-4 text-[#B45309] dark:text-amber-400 shrink-0 mt-0.5" />
-              <p className="text-[15px] leading-relaxed text-[#1A2332]">{renderInline(block.text, ctx)}</p>
+              <p className="text-[15px] leading-relaxed text-foreground">{renderInline(block.text, ctx)}</p>
             </div>
           )
         }
@@ -259,7 +259,7 @@ function renderBlock(block: AnswerBlock, i: number, ctx: CitationCtx, groundingS
             <p
               key={i}
               title={g ? groundingTitle(g) : undefined}
-              className={cn("text-[16px] leading-[1.7] text-[#1A2332] pl-2 -ml-2", g && GROUNDING_STYLE[g.status].border, g && GROUNDING_STYLE[g.status].bg)}
+              className={cn("text-[16px] leading-[1.7] text-foreground pl-2 -ml-2", g && GROUNDING_STYLE[g.status].border, g && GROUNDING_STYLE[g.status].bg)}
             >
               {renderInline(block.text, ctx)}
             </p>
@@ -267,7 +267,7 @@ function renderBlock(block: AnswerBlock, i: number, ctx: CitationCtx, groundingS
         }
         if (block.type === "kv") {
           return (
-            <dl key={i} className="rounded-xl border border-[#E2E8F0] divide-y divide-[#EDF1F5] overflow-hidden">
+            <dl key={i} className="rounded-xl border border-border divide-y divide-[#EDF1F5] overflow-hidden">
               {block.pairs.map((p, j) => {
                 const g = lineGrounding(p.value, groundingSentences)
                 return (
@@ -276,8 +276,8 @@ function renderBlock(block: AnswerBlock, i: number, ctx: CitationCtx, groundingS
                     title={g ? groundingTitle(g) : undefined}
                     className={cn("flex flex-col sm:flex-row sm:items-baseline gap-0.5 sm:gap-4 px-4 py-3 odd:bg-muted even:bg-transparent", g && GROUNDING_STYLE[g.status].border, g && GROUNDING_STYLE[g.status].bg)}
                   >
-                    <dt className="text-[13px] font-semibold uppercase tracking-wide text-[#64748B] sm:w-36 shrink-0">{p.label}</dt>
-                    <dd className="text-[16px] leading-snug text-[#1A2332] font-medium">{renderInline(p.value, ctx)}</dd>
+                    <dt className="text-[13px] font-semibold uppercase tracking-wide text-muted-foreground sm:w-36 shrink-0">{p.label}</dt>
+                    <dd className="text-[16px] leading-snug text-foreground font-medium">{renderInline(p.value, ctx)}</dd>
                   </div>
                 )
               })}
@@ -296,7 +296,7 @@ function renderBlock(block: AnswerBlock, i: number, ctx: CitationCtx, groundingS
                     className={cn("flex gap-3 items-start pl-2 -ml-2", g && GROUNDING_STYLE[g.status].border, g && GROUNDING_STYLE[g.status].bg)}
                   >
                     <span className="shrink-0 mt-0.5 w-7 h-7 rounded-full bg-[#0B6BCB]/10 text-[#0B6BCB] text-[13px] font-bold flex items-center justify-center">{s.num}</span>
-                    <span className="text-[16px] leading-[1.6] text-[#1A2332] pt-0.5">{renderInline(s.text, ctx)}</span>
+                    <span className="text-[16px] leading-[1.6] text-foreground pt-0.5">{renderInline(s.text, ctx)}</span>
                   </li>
                 )
               })}
@@ -308,7 +308,7 @@ function renderBlock(block: AnswerBlock, i: number, ctx: CitationCtx, groundingS
           if (thresholdTable) {
             return (
               <div key={i} className="space-y-2">
-                <div className="overflow-x-auto rounded-xl border border-[#E2E8F0]">
+                <div className="overflow-x-auto rounded-xl border border-border">
                   <table className="w-full min-w-[360px] text-[15px] border-collapse">
                     <tbody>
                       {thresholdTable.rows.map((row, j) => {
@@ -317,12 +317,12 @@ function renderBlock(block: AnswerBlock, i: number, ctx: CitationCtx, groundingS
                           <tr
                             key={j}
                             title={g ? groundingTitle(g) : undefined}
-                            className={cn("border-b border-[#EDF1F5] last:border-b-0", g && GROUNDING_STYLE[g.status].bg)}
+                            className={cn("border-b border-border last:border-b-0", g && GROUNDING_STYLE[g.status].bg)}
                           >
-                            <td className={cn("py-2 px-3 font-semibold text-[#1A2332] w-2/5 align-top", g && GROUNDING_STYLE[g.status].border)}>
+                            <td className={cn("py-2 px-3 font-semibold text-foreground w-2/5 align-top", g && GROUNDING_STYLE[g.status].border)}>
                               {row.label}
                             </td>
-                            <td className="py-2 px-3 text-[#334155] align-top">{renderInline(row.value, ctx)}</td>
+                            <td className="py-2 px-3 text-foreground align-top">{renderInline(row.value, ctx)}</td>
                           </tr>
                         )
                       })}
@@ -340,7 +340,7 @@ function renderBlock(block: AnswerBlock, i: number, ctx: CitationCtx, groundingS
                           className={cn("flex gap-2.5 items-start pl-2 -ml-2", g && GROUNDING_STYLE[g.status].border, g && GROUNDING_STYLE[g.status].bg)}
                         >
                           <span className="shrink-0 mt-2.5 w-1.5 h-1.5 rounded-full bg-[#0B6BCB]" />
-                          <span className="text-[16px] leading-[1.6] text-[#1A2332]">{renderInline(b, ctx)}</span>
+                          <span className="text-[16px] leading-[1.6] text-foreground">{renderInline(b, ctx)}</span>
                         </li>
                       )
                     })}
@@ -360,7 +360,7 @@ function renderBlock(block: AnswerBlock, i: number, ctx: CitationCtx, groundingS
                     className={cn("flex gap-2.5 items-start pl-2 -ml-2", g && GROUNDING_STYLE[g.status].border, g && GROUNDING_STYLE[g.status].bg)}
                   >
                     <span className="shrink-0 mt-2.5 w-1.5 h-1.5 rounded-full bg-[#0B6BCB]" />
-                    <span className="text-[16px] leading-[1.6] text-[#1A2332]">{renderInline(b, ctx)}</span>
+                    <span className="text-[16px] leading-[1.6] text-foreground">{renderInline(b, ctx)}</span>
                   </li>
                 )
               })}
@@ -369,7 +369,7 @@ function renderBlock(block: AnswerBlock, i: number, ctx: CitationCtx, groundingS
         }
         if (block.type === "source") {
           return (
-            <div key={i} className="flex items-start gap-2 text-[13px] text-[#64748B] pt-2 border-t border-[#E2E8F0]">
+            <div key={i} className="flex items-start gap-2 text-[13px] text-muted-foreground pt-2 border-t border-border">
               <FileText className="w-3.5 h-3.5 shrink-0 mt-0.5" />
               <span><span className="font-semibold">Source:</span> {block.text}</span>
             </div>

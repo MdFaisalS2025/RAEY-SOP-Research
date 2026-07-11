@@ -139,19 +139,19 @@ const fallbackSOPs: SOP[] = [
 
 const deptColors: Record<string, string> = {
   ICU: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30",
-"Infection Control": "bg-muted text-[#64748B] border-[#CBD5E1]",
-  Endocrine: "bg-muted text-[#64748B] border-[#CBD5E1]",
+"Infection Control": "bg-muted text-muted-foreground border-input",
+  Endocrine: "bg-muted text-muted-foreground border-input",
   Emergency: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30",
   Pharmacy: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30",
-  Radiology: "bg-muted text-[#64748B] border-[#CBD5E1]",
+  Radiology: "bg-muted text-muted-foreground border-input",
   Nursing: "bg-[#0B6BCB]/10 text-[#0B6BCB] border-[#0B6BCB]/30",
-  General: "bg-muted text-[#64748B] border-[#CBD5E1]",
+  General: "bg-muted text-muted-foreground border-input",
 }
 
 const statusColors: Record<string, string> = {
   active: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400",
   draft: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400",
-  archived: "bg-muted text-[#64748B] border-[#CBD5E1]",
+  archived: "bg-muted text-muted-foreground border-input",
 }
 
 export default function LibraryPage() {
@@ -339,13 +339,13 @@ function LibraryPageInner() {
 
         {/* Search & Filters */}
         <div className="flex flex-col sm:flex-row gap-3 mb-4">
-          <div className="flex-1 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-card border border-[#E2E8F0]">
-            <Search className="w-4 h-4 text-[#64748B]" />
+          <div className="flex-1 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-card border border-border">
+            <Search className="w-4 h-4 text-muted-foreground" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search SOPs by title or department..."
-              className="bg-transparent outline-none w-full text-sm text-[#1A2332] placeholder:text-[#94A3B8] caret-[#0B6BCB]"
+              className="bg-transparent outline-none w-full text-sm text-foreground placeholder:text-subtle caret-[#0B6BCB]"
             />
           </div>
           <div className="flex gap-2 overflow-x-auto">
@@ -357,7 +357,7 @@ function LibraryPageInner() {
 "px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap border transition-colors",
                   deptFilter === d
                     ? "bg-[#0B6BCB]/10 text-[#0B6BCB] border-[#0B6BCB]/30"
-                    : "border-[#E2E8F0] text-[#64748B] hover:text-[#1A2332]"
+                    : "border-border text-muted-foreground hover:text-foreground"
                 )}
               >
                 {d === "all" ? "All Departments" : d}
@@ -366,13 +366,13 @@ function LibraryPageInner() {
             <div className="flex items-center gap-1 ml-auto">
               <button onClick={() => setViewMode("cards")} className={cn(
 "p-2 rounded-lg transition-colors",
-                viewMode === "cards" ? "bg-[#0B6BCB]/10 text-[#0B6BCB]" : "text-[#64748B] hover:text-[#1A2332]"
+                viewMode === "cards" ? "bg-[#0B6BCB]/10 text-[#0B6BCB]" : "text-muted-foreground hover:text-foreground"
               )}>
                 <LayoutGrid className="w-4 h-4" />
               </button>
               <button onClick={() => setViewMode("table")} className={cn(
 "p-2 rounded-lg transition-colors",
-                viewMode === "table" ? "bg-[#0B6BCB]/10 text-[#0B6BCB]" : "text-[#64748B] hover:text-[#1A2332]"
+                viewMode === "table" ? "bg-[#0B6BCB]/10 text-[#0B6BCB]" : "text-muted-foreground hover:text-foreground"
               )}>
                 <List className="w-4 h-4" />
               </button>
@@ -388,7 +388,7 @@ function LibraryPageInner() {
 "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
               myDeptOnly
                 ? "bg-[#0B6BCB]/10 text-[#0B6BCB] border-[#0B6BCB]/30"
-                : "border-[#E2E8F0] text-[#64748B] hover:text-[#1A2332]"
+                : "border-border text-muted-foreground hover:text-foreground"
             )}
           >
             <Filter className="w-3.5 h-3.5" />
@@ -410,37 +410,37 @@ function LibraryPageInner() {
 
         {/* Grid / Table */}
         {!loading && viewMode === "table" ? (
-          <div className="rounded-2xl border border-[#E2E8F0] overflow-hidden">
+          <div className="rounded-2xl border border-border overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-[#E2E8F0] bg-card">
-                  <th className="text-left p-3 font-medium text-[#64748B]">Title</th>
-                  <th className="text-left p-3 font-medium text-[#64748B]">Department</th>
-                  <th className="text-left p-3 font-medium text-[#64748B]">Version</th>
-                  <th className="text-left p-3 font-medium text-[#64748B]">Status</th>
-                  <th className="text-left p-3 font-medium text-[#64748B]">Date</th>
-                  <th className="text-left p-3 font-medium text-[#64748B]">Chunks</th>
+                <tr className="border-b border-border bg-card">
+                  <th className="text-left p-3 font-medium text-muted-foreground">Title</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground">Department</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground">Version</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground">Status</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground">Date</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground">Chunks</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((sop) => (
                   <tr key={sop.id} onClick={() => openSOP(sop)}
-                    className="border-b border-[#EDF1F5] hover:bg-muted cursor-pointer transition-colors">
+                    className="border-b border-border hover:bg-muted cursor-pointer transition-colors">
                     <td className="p-3 font-medium">{sop.title}</td>
                     <td className="p-3">
                       <span className={cn("px-2 py-0.5 rounded text-xs font-medium border", deptColors[sop.department] || "bg-muted")}>
                         {sop.department}
                       </span>
                     </td>
-                    <td className="p-3 text-[#64748B]">v{sop.version}</td>
+                    <td className="p-3 text-muted-foreground">v{sop.version}</td>
                     <td className="p-3">
                       <span className={cn("px-2 py-0.5 rounded-full text-xs", statusColors[sop.status] || "bg-muted")}>
                         {sop.status}
                       </span>
                     </td>
-                    <td className="p-3 text-[#64748B]">{sop.effective_date}</td>
-                    <td className="p-3 text-[#64748B]">{sop.chunk_count || '-'}</td>
+                    <td className="p-3 text-muted-foreground">{sop.effective_date}</td>
+                    <td className="p-3 text-muted-foreground">{sop.chunk_count || '-'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -461,17 +461,17 @@ function LibraryPageInner() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
-                  className="p-5 rounded-2xl bg-card border border-[#E2E8F0] hover:border-[#0B6BCB]/30 hover:shadow-md transition-all duration-300 group"
+                  className="p-5 rounded-2xl bg-card border border-border hover:border-[#0B6BCB]/30 hover:shadow-md transition-all duration-300 group"
                 >
                   <div
                     className="cursor-pointer"
                     onClick={() => openSOP(sop)}
                   >
                     <div className="flex items-start justify-between mb-3">
-                      <span className={cn("px-2 py-0.5 rounded text-xs font-medium border", deptColors[sop.department] || "bg-muted text-[#64748B]")}>
+                      <span className={cn("px-2 py-0.5 rounded text-xs font-medium border", deptColors[sop.department] || "bg-muted text-muted-foreground")}>
                         {sop.department}
                       </span>
-                      <span className={cn("px-2 py-0.5 rounded-full text-xs font-medium", statusColors[sop.status] || "bg-muted text-[#64748B]")}>
+                      <span className={cn("px-2 py-0.5 rounded-full text-xs font-medium", statusColors[sop.status] || "bg-muted text-muted-foreground")}>
                         {sop.status}
                       </span>
                     </div>
@@ -480,7 +480,7 @@ function LibraryPageInner() {
                       {sop.title}
                     </h3>
 
-                    <div className="flex items-center gap-4 text-xs text-[#64748B] mb-3">
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3">
                       <span className="flex items-center gap-1"><Hash className="w-3 h-3" />v{sop.version}</span>
                       <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{sop.effective_date}</span>
                       {sop.chunk_count > 0 && (
@@ -491,7 +491,7 @@ function LibraryPageInner() {
                     {/* Acknowledgment completion rate */}
                     {completionRate !== undefined && (
                       <div className="mb-3 space-y-1">
-                        <div className="flex justify-between text-[10px] text-[#64748B]">
+                        <div className="flex justify-between text-[10px] text-muted-foreground">
                           <span>Staff acknowledgment</span>
                           <span className="font-semibold">{completionRate}%</span>
                         </div>
@@ -535,7 +535,7 @@ function LibraryPageInner() {
         )}
 
         {!loading && filtered.length === 0 && (
-          <div className="text-center py-16 text-[#64748B]">
+          <div className="text-center py-16 text-muted-foreground">
             <BookOpen className="w-12 h-12 mx-auto mb-3 opacity-40" />
             <p className="text-sm">No SOPs found matching your search.</p>
           </div>
@@ -557,7 +557,7 @@ function LibraryPageInner() {
             <motion.div
               key="sop-modal-content"
               id="sop-print-content"
-              className="w-full max-w-4xl max-h-[90vh] flex flex-col rounded-2xl bg-card border border-[#E2E8F0] shadow-2xl"
+              className="w-full max-w-4xl max-h-[90vh] flex flex-col rounded-2xl bg-card border border-border shadow-2xl"
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -574,28 +574,28 @@ function LibraryPageInner() {
                 <div className="flex-1 min-w-0">
                   <h2 className="text-xl font-bold mb-2">{selectedSOP.title}</h2>
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className={cn("px-2.5 py-1 rounded text-xs font-medium border", deptColors[selectedSOP.department] || "bg-muted text-[#64748B]")}>
+                    <span className={cn("px-2.5 py-1 rounded text-xs font-medium border", deptColors[selectedSOP.department] || "bg-muted text-muted-foreground")}>
                       {selectedSOP.department}
                     </span>
-                    <span className={cn("px-2.5 py-1 rounded-full text-xs font-medium", statusColors[selectedSOP.status] || "bg-muted text-[#64748B]")}>
+                    <span className={cn("px-2.5 py-1 rounded-full text-xs font-medium", statusColors[selectedSOP.status] || "bg-muted text-muted-foreground")}>
                       {selectedSOP.status}
                     </span>
-                    <span className="text-xs text-[#64748B]">v{selectedSOP.version}</span>
-                    <span className="text-xs text-[#64748B]">{selectedSOP.effective_date}</span>
+                    <span className="text-xs text-muted-foreground">v{selectedSOP.version}</span>
+                    <span className="text-xs text-muted-foreground">{selectedSOP.effective_date}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 sop-no-print">
                   {/* Print SOP button */}
                   <button
                     onClick={() => window.print()}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[#E2E8F0] text-[#64748B] hover:text-[#1A2332] hover:border-[#CBD5E1] text-xs font-medium transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-input text-xs font-medium transition-colors"
                   >
                     <Printer className="w-3.5 h-3.5" />
                     Print
                   </button>
                   <button
                     onClick={() => setSelectedSOP(null)}
-                    className="p-2 rounded-lg hover:bg-muted text-[#64748B] transition-colors"
+                    className="p-2 rounded-lg hover:bg-muted text-muted-foreground transition-colors"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -608,14 +608,14 @@ function LibraryPageInner() {
                   <div className="flex items-center gap-2 mb-2">
                     <p className="text-xs font-semibold text-[#0B6BCB] uppercase tracking-wide">AI-Generated Summary</p>
                   </div>
-                  <p className="text-[11px] text-[#64748B] italic mb-3">
+                  <p className="text-[11px] text-muted-foreground italic mb-3">
                     Read the full SOP before clinical application.
                   </p>
                   <ul className="space-y-1.5">
                     {SOP_AI_SUMMARIES[selectedSOP.sop_id].map((point, idx) => (
                       <li key={idx} className="flex items-start gap-2">
                         <CheckCircle className="w-3.5 h-3.5 text-[#0B6BCB] shrink-0 mt-0.5" />
-                        <span className="text-xs text-[#64748B] leading-snug">{point}</span>
+                        <span className="text-xs text-muted-foreground leading-snug">{point}</span>
                       </li>
                     ))}
                   </ul>
@@ -623,7 +623,7 @@ function LibraryPageInner() {
               )}
 
               {/* Tab Bar */}
-              <div className="flex gap-1 px-6 mt-4 border-b border-[#E2E8F0] overflow-x-auto sop-no-print">
+              <div className="flex gap-1 px-6 mt-4 border-b border-border overflow-x-auto sop-no-print">
                 {tabs.map((tab) => {
                   const Icon = tab.icon
                   return (
@@ -634,7 +634,7 @@ function LibraryPageInner() {
 "flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium whitespace-nowrap transition-colors relative",
                         activeTab === tab.id
                           ? "text-[#0B6BCB]"
-                          : "text-[#64748B] hover:text-[#1A2332]"
+                          : "text-muted-foreground hover:text-foreground"
                       )}
                     >
                       <Icon className="w-3.5 h-3.5" />
@@ -656,25 +656,25 @@ function LibraryPageInner() {
                 {activeTab === "overview" && (
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="p-4 rounded-xl bg-muted border border-[#EDF1F5]">
-                        <p className="text-xs text-[#64748B] mb-1">Version</p>
+                      <div className="p-4 rounded-xl bg-muted border border-border">
+                        <p className="text-xs text-muted-foreground mb-1">Version</p>
                         <p className="text-sm font-semibold">v{selectedSOP.version}</p>
                       </div>
-                      <div className="p-4 rounded-xl bg-muted border border-[#EDF1F5]">
-                        <p className="text-xs text-[#64748B] mb-1">Effective Date</p>
+                      <div className="p-4 rounded-xl bg-muted border border-border">
+                        <p className="text-xs text-muted-foreground mb-1">Effective Date</p>
                         <p className="text-sm font-semibold">{selectedSOP.effective_date}</p>
                       </div>
-                      <div className="p-4 rounded-xl bg-muted border border-[#EDF1F5]">
-                        <p className="text-xs text-[#64748B] mb-1">Department</p>
+                      <div className="p-4 rounded-xl bg-muted border border-border">
+                        <p className="text-xs text-muted-foreground mb-1">Department</p>
                         <p className="text-sm font-semibold">{selectedSOP.department}</p>
                       </div>
-                      <div className="p-4 rounded-xl bg-muted border border-[#EDF1F5]">
-                        <p className="text-xs text-[#64748B] mb-1">Status</p>
+                      <div className="p-4 rounded-xl bg-muted border border-border">
+                        <p className="text-xs text-muted-foreground mb-1">Status</p>
                         <p className="text-sm font-semibold capitalize">{selectedSOP.status}</p>
                       </div>
                     </div>
-                    <div className="p-4 rounded-xl bg-muted border border-[#EDF1F5]">
-                      <p className="text-xs text-[#64748B] mb-1">Purpose</p>
+                    <div className="p-4 rounded-xl bg-muted border border-border">
+                      <p className="text-xs text-muted-foreground mb-1">Purpose</p>
                       <p className="text-sm leading-relaxed">
                         {(structuredJson as Record<string, unknown> | undefined)?.purpose
                           ? String((structuredJson as Record<string, unknown>).purpose)
@@ -683,8 +683,8 @@ function LibraryPageInner() {
                             : `Standard operating procedure for ${selectedSOP.title.toLowerCase()}.`}
                       </p>
                     </div>
-                    <div className="p-4 rounded-xl bg-muted border border-[#EDF1F5]">
-                      <p className="text-xs text-[#64748B] mb-1">Scope</p>
+                    <div className="p-4 rounded-xl bg-muted border border-border">
+                      <p className="text-xs text-muted-foreground mb-1">Scope</p>
                       <p className="text-sm leading-relaxed">
                         {(structuredJson as Record<string, unknown> | undefined)?.scope
                           ? String((structuredJson as Record<string, unknown>).scope)
@@ -693,14 +693,14 @@ function LibraryPageInner() {
                     </div>
                     {selectedSOP.chunk_count > 0 && (
                       <div className="p-4 rounded-xl bg-[#0B6BCB]/[0.04] border border-[#0B6BCB]/30">
-                        <p className="text-xs text-[#64748B] mb-1">Indexed Content</p>
+                        <p className="text-xs text-muted-foreground mb-1">Indexed Content</p>
                         <p className="text-sm font-semibold text-[#0B6BCB]">{selectedSOP.chunk_count} chunks available for AI queries</p>
                       </div>
                     )}
 
                     {/* Document Structure */}
                     <div className="mt-6">
-                      <h4 className="text-xs font-semibold uppercase text-[#64748B] mb-3">Document Structure</h4>
+                      <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-3">Document Structure</h4>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         {(() => {
                           const sj = structuredJson || {} as any
@@ -711,10 +711,10 @@ function LibraryPageInner() {
                             { label: "Chunks", count: selectedSOP?.chunk_count || 0, icon: FileText, color: "text-[#15803D] dark:text-green-400" },
                           ]
                           return stats.map(s => (
-                            <div key={s.label} className="p-3 rounded-xl bg-muted border border-[#E2E8F0] text-center">
+                            <div key={s.label} className="p-3 rounded-xl bg-muted border border-border text-center">
                               <s.icon className={cn("w-5 h-5 mx-auto mb-1", s.color)} />
                               <p className="text-xl font-bold">{s.count}</p>
-                              <p className="text-xs text-[#64748B]">{s.label}</p>
+                              <p className="text-xs text-muted-foreground">{s.label}</p>
                             </div>
                           ))
                         })()}
@@ -729,7 +729,7 @@ function LibraryPageInner() {
                     {structuredJson?.steps && structuredJson.steps.length > 0 ? (
                       <ol className="space-y-2">
                         {structuredJson.steps.map((step: any) => (
-                          <li key={step.step_number} className="flex gap-3 p-3 rounded-xl bg-muted border border-[#EDF1F5]">
+                          <li key={step.step_number} className="flex gap-3 p-3 rounded-xl bg-muted border border-border">
                             <span className="flex-shrink-0 w-7 h-7 rounded-full bg-[#0B6BCB]/10 text-[#0B6BCB] text-xs font-bold flex items-center justify-center">
                               {step.step_number}
                             </span>
@@ -738,9 +738,9 @@ function LibraryPageInner() {
                         ))}
                       </ol>
                     ) : (
-                      <div className="p-8 rounded-xl bg-muted border border-[#EDF1F5] text-center">
-                        <ListOrdered className="w-10 h-10 mx-auto mb-3 text-[#64748B] opacity-40" />
-                        <p className="text-sm text-[#64748B]">Structured steps not available for this SOP. See Full Text tab.</p>
+                      <div className="p-8 rounded-xl bg-muted border border-border text-center">
+                        <ListOrdered className="w-10 h-10 mx-auto mb-3 text-muted-foreground opacity-40" />
+                        <p className="text-sm text-muted-foreground">Structured steps not available for this SOP. See Full Text tab.</p>
                       </div>
                     )}
                   </div>
@@ -752,17 +752,17 @@ function LibraryPageInner() {
                     {structuredJson?.thresholds && structuredJson.thresholds.length > 0 ? (
                       <div className="space-y-2">
                         {structuredJson.thresholds.map((t: any, i: number) => (
-                          <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-2 p-4 rounded-xl bg-muted border border-[#CBD5E1]">
-                            <span className="text-xs font-medium text-[#64748B] uppercase tracking-wide min-w-[100px]">{t.type || "Threshold"}</span>
+                          <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-2 p-4 rounded-xl bg-muted border border-input">
+                            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide min-w-[100px]">{t.type || "Threshold"}</span>
                             <span className="text-sm font-mono font-semibold">{t.value}</span>
-                            {t.context && <span className="text-xs text-[#64748B] sm:ml-auto">{t.context}</span>}
+                            {t.context && <span className="text-xs text-muted-foreground sm:ml-auto">{t.context}</span>}
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <div className="p-8 rounded-xl bg-muted border border-[#EDF1F5] text-center">
-                        <Gauge className="w-10 h-10 mx-auto mb-3 text-[#64748B] opacity-40" />
-                        <p className="text-sm text-[#64748B]">No specific thresholds defined in this SOP.</p>
+                      <div className="p-8 rounded-xl bg-muted border border-border text-center">
+                        <Gauge className="w-10 h-10 mx-auto mb-3 text-muted-foreground opacity-40" />
+                        <p className="text-sm text-muted-foreground">No specific thresholds defined in this SOP.</p>
                       </div>
                     )}
                   </div>
@@ -778,15 +778,15 @@ function LibraryPageInner() {
                             <AlertTriangle className="w-4 h-4 text-[#B91C1C] dark:text-red-400 flex-shrink-0 mt-0.5" />
                             <div>
                               <p className="text-sm font-medium">{c.text}</p>
-                              {c.detail && <p className="text-xs text-[#64748B] mt-1">{c.detail}</p>}
+                              {c.detail && <p className="text-xs text-muted-foreground mt-1">{c.detail}</p>}
                             </div>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <div className="p-8 rounded-xl bg-muted border border-[#EDF1F5] text-center">
-                        <ShieldAlert className="w-10 h-10 mx-auto mb-3 text-[#64748B] opacity-40" />
-                        <p className="text-sm text-[#64748B]">No specific contraindications defined in this SOP.</p>
+                      <div className="p-8 rounded-xl bg-muted border border-border text-center">
+                        <ShieldAlert className="w-10 h-10 mx-auto mb-3 text-muted-foreground opacity-40" />
+                        <p className="text-sm text-muted-foreground">No specific contraindications defined in this SOP.</p>
                       </div>
                     )}
                   </div>
@@ -798,12 +798,12 @@ function LibraryPageInner() {
                     {loadingFullText ? (
                       <div className="flex items-center justify-center py-16">
                         <Loader2 className="w-6 h-6 text-[#0B6BCB] animate-spin mr-2" />
-                        <span className="text-sm text-[#64748B]">Loading full text...</span>
+                        <span className="text-sm text-muted-foreground">Loading full text...</span>
                       </div>
                     ) : fullText ? (
-                      <div className="p-4 rounded-xl bg-muted border border-[#EDF1F5] max-h-[55vh] overflow-y-auto">
+                      <div className="p-4 rounded-xl bg-muted border border-border max-h-[55vh] overflow-y-auto">
                         {fullText.split(/\n\s*\n/).filter((p) => p.trim()).map((para, i) => (
-                          <p key={i} className="text-[15px] leading-[1.7] text-[#1A2332] whitespace-pre-wrap mb-3 last:mb-0">
+                          <p key={i} className="text-[15px] leading-[1.7] text-foreground whitespace-pre-wrap mb-3 last:mb-0">
                             {para.trim()}
                           </p>
                         ))}
@@ -811,7 +811,7 @@ function LibraryPageInner() {
                     ) : (
                       <div className="flex items-center justify-center py-16">
                         <Loader2 className="w-6 h-6 text-[#0B6BCB] animate-spin mr-2" />
-                        <span className="text-sm text-[#64748B]">Loading...</span>
+                        <span className="text-sm text-muted-foreground">Loading...</span>
                       </div>
                     )}
                   </div>
@@ -840,7 +840,7 @@ function LibraryPageInner() {
                       </div>
                     ) : (
                       <>
-                        <p className="text-xs text-[#64748B] leading-relaxed">
+                        <p className="text-xs text-muted-foreground leading-relaxed">
                           By clicking acknowledge, you confirm you have read and understood this policy.
                         </p>
                         <button
@@ -857,7 +857,7 @@ function LibraryPageInner() {
               })()}
 
               {/* Action Buttons */}
-              <div className="flex gap-3 p-6 pt-4 border-t border-[#E2E8F0] sop-no-print">
+              <div className="flex gap-3 p-6 pt-4 border-t border-border sop-no-print">
                 <button
                   onClick={() => router.push(`/query?q=${encodeURIComponent(`Tell me about ${selectedSOP.title}`)}`)}
                   className="flex-1 py-3 rounded-xl bg-[#0B6BCB] hover:bg-[#0959AC] text-white font-medium transition-colors flex items-center justify-center gap-2"
@@ -867,7 +867,7 @@ function LibraryPageInner() {
                 </button>
                 <button
                   onClick={() => setSelectedSOP(null)}
-                  className="px-6 py-3 rounded-xl border border-[#E2E8F0] text-[#64748B] hover:text-[#1A2332] hover:border-[#CBD5E1] font-medium transition-colors"
+                  className="px-6 py-3 rounded-xl border border-border text-muted-foreground hover:text-foreground hover:border-input font-medium transition-colors"
                 >
                   Close
                 </button>

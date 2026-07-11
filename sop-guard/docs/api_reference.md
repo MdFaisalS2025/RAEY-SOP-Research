@@ -1,6 +1,6 @@
 # API Reference
 
-> SOP-Guard REST API documentation. Base URL: `http://localhost:8000`
+> Meridian REST API documentation. Base URL: `http://localhost:8000`
 
 ---
 

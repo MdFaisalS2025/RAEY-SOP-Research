@@ -1,5 +1,5 @@
 """
-SOP-Guard CDC Integration
+Meridian CDC Integration
 --------------------------
 Live CDC clinical/public-health guidance via the CDC Content Syndication
 API (free, no API key required). High relevance for infection-control,

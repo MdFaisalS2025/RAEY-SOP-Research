@@ -1,5 +1,5 @@
 """
-SOP-Guard SMART on FHIR Launch Simulation
+Meridian SMART on FHIR Launch Simulation
 --------------------------------------------
 Simulates the SMART App Launch handshake (https://hl7.org/fhir/smart-app-launch/)
 for demo purposes only, since there is no real EHR sandbox wired up here.
@@ -55,7 +55,7 @@ async def smart_authorize(state: str | None = QueryParam(None)):
     exchange against the EHR's FHIR authorization server.
     """
     return {
-        "access_token": "sop-guard-demo-token",
+        "access_token": "meridian-demo-token",
         "patient": SIM_PATIENT,
         "scope": "patient/*.read launch",
     }

@@ -1,5 +1,5 @@
 """
-SOP-Guard  - Agentic RAG for Clinical SOP Question-Answering
+Meridian  - Agentic RAG for Clinical SOP Question-Answering
 with Procedural Faithfulness Verification.
 
 RESEARCH PROTOTYPE  - NOT FOR CLINICAL USE.
@@ -15,7 +15,7 @@ from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.database.db import init_db, async_session
-from app.api import routes_query, routes_sops, routes_feedback, routes_voice, routes_evaluation, routes_activity, routes_evidence, routes_governance, routes_chat, routes_cds, routes_overrides, routes_credits, routes_analytics, routes_smart, routes_capa
+from app.api import routes_query, routes_sops, routes_feedback, routes_voice, routes_evaluation, routes_activity, routes_evidence, routes_governance, routes_chat, routes_cds, routes_overrides, routes_credits, routes_analytics, routes_smart, routes_capa, routes_settings
 
 
 async def _load_demo_data() -> None:
@@ -71,7 +71,7 @@ async def _load_demo_data() -> None:
                 idx_counter += 1
 
         await session.commit()
-        print(f"[SOP-Guard] Loaded {len(DEMO_SOPS)} demo SOPs.")
+        print(f"[Meridian] Loaded {len(DEMO_SOPS)} demo SOPs.")
 
     await _seed_demo_activity_if_empty()
 
@@ -233,7 +233,7 @@ async def _seed_demo_incidents_if_empty(session) -> None:
         session.add(capa)
 
     await session.commit()
-    print(f"[SOP-Guard] Seeded {len(demo_incidents)} demo incidents with CAPA records.")
+    print(f"[Meridian] Seeded {len(demo_incidents)} demo incidents with CAPA records.")
 
 
 @asynccontextmanager
@@ -245,15 +245,15 @@ async def lifespan(app: FastAPI):
         async with async_session() as session:
             await routes_governance.seed_notifications_if_empty(session)
     except Exception as e:
-        print(f"[SOP-Guard] Warning: notification seed skipped: {e}")
+        print(f"[Meridian] Warning: notification seed skipped: {e}")
     try:
         async with async_session() as session:
             await _seed_demo_incidents_if_empty(session)
     except Exception as e:
-        print(f"[SOP-Guard] Warning: incident seed skipped: {e}")
-    print("[SOP-Guard] Backend ready.")
+        print(f"[Meridian] Warning: incident seed skipped: {e}")
+    print("[Meridian] Backend ready.")
     yield
-    print("[SOP-Guard] Shutting down.")
+    print("[Meridian] Shutting down.")
 
 
 app = FastAPI(
@@ -282,7 +282,7 @@ app.add_middleware(
 async def add_research_disclaimer(request: Request, call_next):
     response = await call_next(request)
     response.headers["X-Research-Disclaimer"] = (
-        "SOP-Guard is a research prototype. Not for clinical use."
+        "Meridian is a research prototype. Not for clinical use."
     )
     return response
 
@@ -303,6 +303,7 @@ app.include_router(routes_credits.router)
 app.include_router(routes_analytics.router)
 app.include_router(routes_smart.router)
 app.include_router(routes_capa.router)
+app.include_router(routes_settings.router)
 
 
 @app.get("/")

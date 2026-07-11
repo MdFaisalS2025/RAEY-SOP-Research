@@ -11,8 +11,8 @@ import type { UserRole } from "@/lib/governance-types"
 const ROLE_TEXT_COLORS: Record<UserRole, string> = {
   clinical_staff: "text-[#0B6BCB]",
   governance_compliance: "text-[#15803D] dark:text-green-400",
-  educator: "text-[#475569]",
-  system_admin: "text-[#475569]",
+  educator: "text-muted-foreground",
+  system_admin: "text-muted-foreground",
 }
 
 const ROLE_DOT_COLORS: Record<UserRole, string> = {
@@ -68,7 +68,7 @@ export function RoleSwitcher() {
           "bg-card border shadow-sm hover:bg-muted",
           open
             ? "border-[#0B6BCB]/40"
-            : "border-[#E2E8F0] hover:border-[#0B6BCB]/30",
+            : "border-border hover:border-[#0B6BCB]/30",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0B6BCB]/50"
         )}
       >
@@ -83,7 +83,7 @@ export function RoleSwitcher() {
         </div>
         {/* Name + role */}
         <div className="hidden sm:flex flex-col items-start leading-none gap-0.5">
-          <span className="text-[12px] font-medium text-[#1A2332] whitespace-nowrap max-w-[100px] truncate">
+          <span className="text-[12px] font-medium text-foreground whitespace-nowrap max-w-[100px] truncate">
             {currentUser.name.split(" ").slice(-1)[0]}
           </span>
           <span className={cn("text-[10px] font-semibold uppercase tracking-wide", ROLE_TEXT_COLORS[role])}>
@@ -92,7 +92,7 @@ export function RoleSwitcher() {
         </div>
         <ChevronDown
           className={cn(
-            "w-3.5 h-3.5 text-[#94A3B8] transition-transform duration-200 shrink-0",
+            "w-3.5 h-3.5 text-subtle transition-transform duration-200 shrink-0",
             open && "rotate-180"
           )}
         />
@@ -103,12 +103,12 @@ export function RoleSwitcher() {
         <div
           className={cn(
             "absolute right-0 top-full mt-1.5 z-50 min-w-[240px]",
-            "bg-card border border-[#E2E8F0] rounded-xl shadow-md",
+            "bg-card border border-border rounded-xl shadow-md",
             "overflow-hidden py-1"
           )}
         >
-          <div className="px-3 py-2 border-b border-[#EDF1F5]">
-            <p className="text-[10px] text-[#94A3B8] uppercase tracking-widest font-semibold">
+          <div className="px-3 py-2 border-b border-border">
+            <p className="text-[10px] text-subtle uppercase tracking-widest font-semibold">
               Switch Profile - Sorted by Access Level
             </p>
           </div>
@@ -126,7 +126,7 @@ export function RoleSwitcher() {
                 )}
               >
                 {/* Level badge */}
-                <span className="text-[9px] font-mono text-[#94A3B8] w-4 shrink-0 text-right">
+                <span className="text-[9px] font-mono text-subtle w-4 shrink-0 text-right">
                   {level}
                 </span>
                 {/* Colored dot */}
@@ -142,12 +142,12 @@ export function RoleSwitcher() {
                   <span
                     className={cn(
                       "text-[12px] font-semibold",
-                      isActive ? "text-[#0B6BCB]" : "text-[#334155]"
+                      isActive ? "text-[#0B6BCB]" : "text-foreground"
                     )}
                   >
                     {ROLE_CONFIG[user.role].label}
                   </span>
-                  <span className="text-[10px] text-[#64748B] truncate">{user.name}</span>
+                  <span className="text-[10px] text-muted-foreground truncate">{user.name}</span>
                 </div>
                 {isActive && (
                   <Check className="w-3.5 h-3.5 text-[#0B6BCB] shrink-0 ml-auto" />

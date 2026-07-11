@@ -1,5 +1,5 @@
 """
-SOP-Guard Evidence Source Registry
+Meridian Evidence Source Registry
 ------------------------------------
 One place that knows about every EvidenceSource implementation. Adding a new
 source (another literature API, a regional health authority, ...) means
@@ -17,6 +17,9 @@ from app.integrations.europepmc import EuropePMCSource
 from app.integrations.cdc import CDCSource
 from app.integrations.who import WHOSource
 from app.integrations.clinicaltrials import ClinicalTrialsSource
+from app.integrations.fda import FDASource
+from app.integrations.medlineplus import MedlinePlusSource
+from app.integrations.cms import CMSSource
 
 _REGISTRY: dict[str, EvidenceSource] = {
     "pubmed": PubMedSource(),
@@ -24,6 +27,9 @@ _REGISTRY: dict[str, EvidenceSource] = {
     "cdc": CDCSource(),
     "who": WHOSource(),
     "clinicaltrials": ClinicalTrialsSource(),
+    "fda": FDASource(),
+    "medlineplus": MedlinePlusSource(),
+    "cms": CMSSource(),
 }
 
 
@@ -47,7 +53,11 @@ async def search_all(
     """Query the given sources (default: all registered) for `term` and
     return their combined records sorted most-recent-first. Unparseable
     dates sort last rather than raising or being dropped."""
-    names = sources if sources else source_names()
+    if sources:
+        names = sources
+    else:
+        from app.services.app_settings import get_enabled_evidence_sources
+        names = get_enabled_evidence_sources()
     combined: list[dict[str, Any]] = []
     for name in names:
         src = _REGISTRY.get(name)

@@ -1,5 +1,5 @@
 """
-SOP-Guard Semantic Faithfulness Checker
+Meridian Semantic Faithfulness Checker
 ---------------------------------------
 Grades each answer sentence by semantic similarity to the retrieved chunks
 using the EXISTING embedding provider (embedding_cache.py). When dense

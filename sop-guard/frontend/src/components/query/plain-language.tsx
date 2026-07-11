@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils"
 
 export type ReadingLevel = "clinical" | "plain"
 
-export const READING_LEVEL_KEY = "sop-guard-reading-level"
+export const READING_LEVEL_KEY = "meridian-reading-level"
 
 const ABBREVIATIONS: [RegExp, string][] = [
   [/\bMAP\b/g, "mean arterial pressure (MAP)"],
@@ -71,14 +71,14 @@ export function ReadingLevelToggle({ value, onChange }: { value: ReadingLevel; o
     { key: "plain", label: "Plain language" },
   ]
   return (
-    <div className="inline-flex items-center rounded-lg border border-[#E2E8F0] bg-muted p-0.5">
+    <div className="inline-flex items-center rounded-lg border border-border bg-muted p-0.5">
       {options.map((o) => (
         <button
           key={o.key}
           onClick={() => onChange(o.key)}
           className={cn(
             "px-2.5 py-1 rounded-md text-[12px] font-medium transition-colors",
-            value === o.key ? "bg-card text-[#0B6BCB] shadow-sm border border-[#E2E8F0]" : "text-[#64748B] hover:text-[#1A2332]"
+            value === o.key ? "bg-card text-[#0B6BCB] shadow-sm border border-border" : "text-muted-foreground hover:text-foreground"
           )}
         >
           {o.label}

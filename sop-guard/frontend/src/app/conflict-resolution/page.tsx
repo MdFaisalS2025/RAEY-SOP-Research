@@ -43,7 +43,7 @@ function severityBadge(severity: string) {
     critical: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30",
     high: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30",
   }
-  return map[severity] ?? "bg-muted text-[#64748B]"
+  return map[severity] ?? "bg-muted text-muted-foreground"
 }
 
 function typeBadge(type: string) {
@@ -60,7 +60,7 @@ function ConflictCard({ conflict, index }: { conflict: RealConflict; index: numb
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
-      className="rounded-2xl bg-card border border-[#E2E8F0] overflow-hidden"
+      className="rounded-2xl bg-card border border-border overflow-hidden"
     >
       <div className="p-5 space-y-4">
         <div className="flex flex-wrap items-center gap-2">
@@ -70,27 +70,27 @@ function ConflictCard({ conflict, index }: { conflict: RealConflict; index: numb
           <span className={cn("px-2 py-0.5 rounded text-xs font-semibold uppercase", typeBadge(conflict.type))}>
             {conflict.type}
           </span>
-          <span className="px-2 py-0.5 rounded text-xs font-mono text-[#64748B] bg-muted border border-[#E2E8F0]">
+          <span className="px-2 py-0.5 rounded text-xs font-mono text-muted-foreground bg-muted border border-border">
             {conflict.entity}
           </span>
         </div>
 
-        <p className="text-sm text-[#334155] leading-relaxed">{conflict.message}</p>
+        <p className="text-sm text-foreground leading-relaxed">{conflict.message}</p>
 
         <div className="grid sm:grid-cols-2 gap-3">
-          <div className="rounded-xl bg-muted border border-[#E2E8F0] p-3 space-y-1">
+          <div className="rounded-xl bg-muted border border-border p-3 space-y-1">
             <div className="flex items-center gap-1.5">
               <FileText className="w-3.5 h-3.5 text-[#0B6BCB]" />
-              <span className="text-xs font-semibold text-[#1A2332] truncate">{conflict.sop_a}</span>
+              <span className="text-xs font-semibold text-foreground truncate">{conflict.sop_a}</span>
             </div>
-            <p className="text-xs text-[#64748B]">States: <span className="font-mono text-[#0B6BCB]">{conflict.value_a}</span></p>
+            <p className="text-xs text-muted-foreground">States: <span className="font-mono text-[#0B6BCB]">{conflict.value_a}</span></p>
           </div>
-          <div className="rounded-xl bg-muted border border-[#E2E8F0] p-3 space-y-1">
+          <div className="rounded-xl bg-muted border border-border p-3 space-y-1">
             <div className="flex items-center gap-1.5">
               <FileText className="w-3.5 h-3.5 text-[#0B6BCB]" />
-              <span className="text-xs font-semibold text-[#1A2332] truncate">{conflict.sop_b}</span>
+              <span className="text-xs font-semibold text-foreground truncate">{conflict.sop_b}</span>
             </div>
-            <p className="text-xs text-[#64748B]">States: <span className="font-mono text-[#0B6BCB]">{conflict.value_b}</span></p>
+            <p className="text-xs text-muted-foreground">States: <span className="font-mono text-[#0B6BCB]">{conflict.value_b}</span></p>
           </div>
         </div>
 
@@ -98,7 +98,7 @@ function ConflictCard({ conflict, index }: { conflict: RealConflict; index: numb
           <div>
             <button
               onClick={() => setExpanded((v) => !v)}
-              className="flex items-center gap-1.5 text-xs text-[#64748B] hover:text-[#0B6BCB] transition-colors"
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-[#0B6BCB] transition-colors"
             >
               {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
               {expanded ? "Hide" : "Show"} source context
@@ -106,7 +106,7 @@ function ConflictCard({ conflict, index }: { conflict: RealConflict; index: numb
             {expanded && (
               <div className="mt-2 space-y-2">
                 {conflict.snippets.map((s, i) => (
-                  <blockquote key={i} className="border-l-2 border-[#0B6BCB]/30 pl-3 text-xs text-[#64748B] italic leading-relaxed">
+                  <blockquote key={i} className="border-l-2 border-[#0B6BCB]/30 pl-3 text-xs text-muted-foreground italic leading-relaxed">
                     &ldquo;{s}&rdquo;
                   </blockquote>
                 ))}
@@ -134,13 +134,13 @@ function AllConflictsTab({ data, loading, error, refreshing, onRefresh }: {
     { label: "Conflicts Detected", value: data?.conflict_count ?? 0, color: "text-[#0B6BCB]" },
     { label: "Critical", value: criticalCount, color: "text-[#B91C1C] dark:text-red-400" },
     { label: "High", value: highCount, color: "text-[#B45309] dark:text-amber-400" },
-    { label: "Entities Scanned", value: data?.entity_count ?? 0, color: "text-[#64748B]" },
+    { label: "Entities Scanned", value: data?.entity_count ?? 0, color: "text-muted-foreground" },
   ]
 
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
-        <p className="text-[#64748B] text-sm">
+        <p className="text-muted-foreground text-sm">
           Live entity-graph scan across the current SOP corpus for conflicting drug doses and clinical thresholds.
         </p>
         <button
@@ -154,7 +154,7 @@ function AllConflictsTab({ data, loading, error, refreshing, onRefresh }: {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-16 text-[#64748B] gap-2">
+        <div className="flex items-center justify-center py-16 text-muted-foreground gap-2">
           <Loader2 className="w-5 h-5 animate-spin" /> Scanning SOP corpus for conflicts...
         </div>
       ) : error ? (
@@ -165,14 +165,14 @@ function AllConflictsTab({ data, loading, error, refreshing, onRefresh }: {
         <>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {stats.map(({ label, value, color }) => (
-              <div key={label} className="rounded-xl bg-card border border-[#E2E8F0] p-4">
-                <p className="text-xs text-[#64748B] mb-1">{label}</p>
+              <div key={label} className="rounded-xl bg-card border border-border p-4">
+                <p className="text-xs text-muted-foreground mb-1">{label}</p>
                 <p className={cn("text-3xl font-bold font-display", color)}>{value}</p>
               </div>
             ))}
           </div>
 
-          <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-[#0B6BCB]/5 border border-[#0B6BCB]/15 text-[#334155] text-xs">
+          <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-[#0B6BCB]/5 border border-[#0B6BCB]/15 text-foreground text-xs">
             <Info className="w-4 h-4 shrink-0 text-[#0B6BCB] mt-0.5" />
             <span>
               Detection scans drug dosages and clinical thresholds (e.g. MAP, norepinephrine rate) mentioned across
@@ -184,13 +184,13 @@ function AllConflictsTab({ data, loading, error, refreshing, onRefresh }: {
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <ShieldAlert className="w-5 h-5 text-[#0B6BCB]" />
-              <h2 className="font-display text-lg font-bold text-[#1A2332]">Detected Conflicts</h2>
+              <h2 className="font-display text-lg font-bold text-foreground">Detected Conflicts</h2>
             </div>
 
             {conflicts.length === 0 ? (
-              <div className="rounded-2xl bg-card border border-[#E2E8F0] p-12 text-center">
-                <ShieldAlert className="w-8 h-8 text-[#64748B] mx-auto mb-3 opacity-40" />
-                <p className="text-[#64748B] text-sm">No conflicting drug doses or thresholds detected across the current SOP corpus.</p>
+              <div className="rounded-2xl bg-card border border-border p-12 text-center">
+                <ShieldAlert className="w-8 h-8 text-muted-foreground mx-auto mb-3 opacity-40" />
+                <p className="text-muted-foreground text-sm">No conflicting drug doses or thresholds detected across the current SOP corpus.</p>
               </div>
             ) : (
               conflicts.map((c, i) => (
@@ -251,24 +251,24 @@ function ImpactBySopTab({ conflicts, loading }: { conflicts: RealConflict[]; loa
 
   return (
     <div className="space-y-6">
-      <p className="text-sm text-[#64748B]">
+      <p className="text-sm text-muted-foreground">
         Live view of which SOPs share conflicting drug doses or thresholds with the selected SOP - the same
         entity-graph detector as the "All Conflicts" tab, filtered to one SOP. There is no persisted SOP-to-SOP
         citation graph in the backend, so this reflects detected conflicts only, not a full reference network.
       </p>
 
       {busy ? (
-        <div className="flex items-center justify-center py-16 text-[#64748B] gap-2">
+        <div className="flex items-center justify-center py-16 text-muted-foreground gap-2">
           <Loader2 className="w-5 h-5 animate-spin" /> Loading SOPs and conflict data...
         </div>
       ) : sops.length === 0 ? (
-        <div className="rounded-2xl bg-card border border-[#E2E8F0] p-12 text-center text-[#64748B] text-sm">
+        <div className="rounded-2xl bg-card border border-border p-12 text-center text-muted-foreground text-sm">
           No SOPs in the corpus yet.
         </div>
       ) : (
         <>
           <div>
-            <label className="text-xs text-[#64748B] mb-2 block">Select SOP to analyze</label>
+            <label className="text-xs text-muted-foreground mb-2 block">Select SOP to analyze</label>
             <div className="flex flex-wrap gap-2">
               {sops.map((sop) => (
                 <button
@@ -278,7 +278,7 @@ function ImpactBySopTab({ conflicts, loading }: { conflicts: RealConflict[]; loa
                     "text-xs px-3 py-1.5 rounded-lg border transition-colors font-medium",
                     selectedSopId === sop.sop_id
                       ? "bg-[#0B6BCB]/10 text-[#0B6BCB] border-[#0B6BCB]/30"
-                      : "bg-muted text-[#64748B] border-[#E2E8F0] hover:bg-muted"
+                      : "bg-muted text-muted-foreground border-border hover:bg-muted"
                   )}
                 >
                   {sop.sop_id}
@@ -289,7 +289,7 @@ function ImpactBySopTab({ conflicts, loading }: { conflicts: RealConflict[]; loa
 
           {selectedSop && (
             <div>
-              <h2 className="text-lg font-medium text-[#1A2332] mb-3">
+              <h2 className="text-lg font-medium text-foreground mb-3">
                 Impact Network - <span className="text-[#0B6BCB]">{selectedSop.title}</span>
               </h2>
 
@@ -301,8 +301,8 @@ function ImpactBySopTab({ conflicts, loading }: { conflicts: RealConflict[]; loa
                   </div>
                   <div className="bg-card border-2 border-[#0B6BCB]/50 rounded-xl p-4">
                     <p className="text-xs font-semibold text-[#0B6BCB] mb-1">{selectedSop.sop_id}</p>
-                    <p className="text-xs text-[#1A2332] font-medium leading-snug">{selectedSop.title}</p>
-                    <p className="text-[10px] text-[#94A3B8] mt-1">{selectedSop.department}</p>
+                    <p className="text-xs text-foreground font-medium leading-snug">{selectedSop.title}</p>
+                    <p className="text-[10px] text-subtle mt-1">{selectedSop.department}</p>
                     {affectedSopTitles.length > 0 && (
                       <div className="mt-3 p-2 rounded-lg bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30">
                         <p className="text-xs text-[#B91C1C] dark:text-red-400 font-medium">
@@ -321,7 +321,7 @@ function ImpactBySopTab({ conflicts, loading }: { conflicts: RealConflict[]; loa
                     </span>
                   </div>
                   {affectedSopTitles.length === 0 ? (
-                    <div className="bg-card border border-[#E2E8F0] rounded-xl p-4 text-xs text-[#94A3B8]">
+                    <div className="bg-card border border-border rounded-xl p-4 text-xs text-subtle">
                       No detected conflicts with other SOPs
                     </div>
                   ) : (
@@ -339,12 +339,12 @@ function ImpactBySopTab({ conflicts, loading }: { conflicts: RealConflict[]; loa
               {sharedEntities.length > 0 && (
                 <div className="mt-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <Tag className="w-4 h-4 text-[#64748B]" />
-                    <span className="text-sm font-medium text-[#334155]">Conflicting Entities</span>
+                    <Tag className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm font-medium text-foreground">Conflicting Entities</span>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {sharedEntities.map((entity) => (
-                      <span key={entity} className="text-xs text-[#64748B] border border-[#CBD5E1] rounded px-2 py-0.5 font-mono">
+                      <span key={entity} className="text-xs text-muted-foreground border border-input rounded px-2 py-0.5 font-mono">
                         {entity}
                       </span>
                     ))}
@@ -356,12 +356,12 @@ function ImpactBySopTab({ conflicts, loading }: { conflicts: RealConflict[]; loa
 
           {relatedConflicts.length > 0 && (
             <section>
-              <h2 className="text-lg font-medium text-[#1A2332] mb-3">Conflict Detail</h2>
+              <h2 className="text-lg font-medium text-foreground mb-3">Conflict Detail</h2>
               <div className="space-y-3">
                 {relatedConflicts.map((c, i) => (
-                  <div key={i} className="bg-card border border-[#E2E8F0] rounded-xl p-4">
+                  <div key={i} className="bg-card border border-border rounded-xl p-4">
                     <div className="flex items-center gap-2 flex-wrap mb-1.5">
-                      <span className="text-xs text-[#64748B] border border-[#CBD5E1] rounded px-2 py-0.5 font-mono">{c.entity}</span>
+                      <span className="text-xs text-muted-foreground border border-input rounded px-2 py-0.5 font-mono">{c.entity}</span>
                       <span
                         className={cn(
                           "text-xs px-2 py-0.5 rounded-full font-medium",
@@ -373,7 +373,7 @@ function ImpactBySopTab({ conflicts, loading }: { conflicts: RealConflict[]; loa
                         {c.severity === "critical" ? "Critical" : "High"}
                       </span>
                     </div>
-                    <p className="text-sm text-[#1A2332]">{c.message}</p>
+                    <p className="text-sm text-foreground">{c.message}</p>
                   </div>
                 ))}
               </div>
@@ -429,7 +429,7 @@ export default function ConflictResolutionPage() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-1">
           <div className="flex items-center gap-3">
             <GitCompare className="w-7 h-7 text-[#0B6BCB]" />
-            <h1 className="font-display text-3xl font-bold text-[#1A2332]">SOP Conflicts &amp; Impact</h1>
+            <h1 className="font-display text-3xl font-bold text-foreground">SOP Conflicts &amp; Impact</h1>
           </div>
         </motion.div>
 
@@ -445,14 +445,14 @@ export default function ConflictResolutionPage() {
           </span>
         </motion.div>
 
-        <div className="flex gap-1 p-1 rounded-xl bg-muted border border-[#E2E8F0] w-fit">
+        <div className="flex gap-1 p-1 rounded-xl bg-muted border border-border w-fit">
           {TABS.map((t) => (
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
               className={cn(
                 "flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors",
-                tab === t.key ? "bg-card text-[#0B6BCB] shadow-sm" : "text-[#64748B] hover:text-[#1A2332]"
+                tab === t.key ? "bg-card text-[#0B6BCB] shadow-sm" : "text-muted-foreground hover:text-foreground"
               )}
             >
               <t.icon className="w-4 h-4" />

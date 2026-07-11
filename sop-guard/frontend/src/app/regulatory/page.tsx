@@ -113,7 +113,7 @@ const FRAMEWORK_COLORS: Record<string, string> = {
 const STATUS_META: Record<string, { label: string; cls: string; icon: typeof CheckCircle }> = {
   compliant: { label: "Compliant", cls: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30", icon: CheckCircle },
   needs_review: { label: "Needs Review", cls: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30", icon: Clock },
-  not_assessed: { label: "Not Assessed", cls: "bg-card text-[#64748B] border border-[#CBD5E1]", icon: Clock },
+  not_assessed: { label: "Not Assessed", cls: "bg-card text-muted-foreground border border-input", icon: Clock },
 }
 
 type FilterTab = "all" | "ready" | "needs_attention" | "at_risk"
@@ -202,7 +202,7 @@ function StandardsMappingTab({ sops, loading }: { sops: RealSOP[]; loading: bool
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.07 }}
-            className="rounded-2xl bg-card border border-[#E2E8F0] p-4"
+            className="rounded-2xl bg-card border border-border p-4"
           >
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
@@ -264,7 +264,7 @@ function StandardsMappingTab({ sops, loading }: { sops: RealSOP[]; loading: bool
       ) : (
       <div className="space-y-4">
         {filtered.length === 0 && (
-          <div className="rounded-2xl bg-card border border-[#E2E8F0] p-8 text-center text-muted-foreground text-sm">
+          <div className="rounded-2xl bg-card border border-border p-8 text-center text-muted-foreground text-sm">
             No standards found for this framework.
           </div>
         )}
@@ -278,7 +278,7 @@ function StandardsMappingTab({ sops, loading }: { sops: RealSOP[]; loading: bool
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
               className={cn(
-                "rounded-2xl bg-card border border-[#E2E8F0] p-5",
+                "rounded-2xl bg-card border border-border p-5",
                 std.status === "needs_review" && "border-[#FDE68A] dark:border-amber-500/30"
               )}
             >
@@ -288,7 +288,7 @@ function StandardsMappingTab({ sops, loading }: { sops: RealSOP[]; loading: bool
                     <span className={cn("text-xs px-2 py-0.5 rounded-full font-semibold", FRAMEWORK_COLORS[std.framework])}>
                       {std.framework}
                     </span>
-                    <code className="text-xs font-mono text-[#334155] bg-muted px-2 py-0.5 rounded">
+                    <code className="text-xs font-mono text-foreground bg-muted px-2 py-0.5 rounded">
                       {std.standard_code}
                     </code>
                     <span className={cn("flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full font-semibold", stMeta.cls)}>
@@ -315,7 +315,7 @@ function StandardsMappingTab({ sops, loading }: { sops: RealSOP[]; loading: bool
                               "text-xs px-2.5 py-1 rounded-lg border transition-colors cursor-default",
                               std.overdue.some((o) => o.sop_id === sop.sop_id)
                                 ? "bg-[#FEE2E2] dark:bg-red-500/10 border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400"
-                                : "bg-muted border-[#E2E8F0] text-foreground/80"
+                                : "bg-muted border-border text-foreground/80"
                             )}
                           >
                             {sop.sop_id}
@@ -341,7 +341,7 @@ function StandardsMappingTab({ sops, loading }: { sops: RealSOP[]; loading: bool
       </div>
       )}
 
-      <div className="rounded-2xl bg-card border border-[#E2E8F0] p-4">
+      <div className="rounded-2xl bg-card border border-border p-4">
         <h3 className="text-sm font-medium mb-3">Regulatory Frameworks</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
           {[
@@ -436,7 +436,7 @@ function SurveyReadinessTab({ sops, loading }: { sops: RealSOP[]; loading: boole
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-12 text-[#64748B] gap-2">
+        <div className="flex items-center justify-center py-12 text-muted-foreground gap-2">
           <Loader2 className="w-5 h-5 animate-spin" /> Loading SOP corpus...
         </div>
       ) : (
@@ -448,10 +448,10 @@ function SurveyReadinessTab({ sops, loading }: { sops: RealSOP[]; loading: boole
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.07 }}
-            className={cn("bg-card border border-[#E2E8F0] rounded-xl p-4", s.bg)}
+            className={cn("bg-card border border-border rounded-xl p-4", s.bg)}
           >
             <p className={cn("text-2xl font-bold", s.color)}>{s.value}</p>
-            <p className="text-xs text-[#64748B] mt-0.5">{s.label}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{s.label}</p>
           </motion.div>
         ))}
       </div>
@@ -465,7 +465,7 @@ function SurveyReadinessTab({ sops, loading }: { sops: RealSOP[]; loading: boole
               "px-4 py-1.5 rounded-lg text-sm font-medium transition-colors",
               activeTab === t.key
                 ? "bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30"
-                : "bg-card text-[#64748B] border border-[#E2E8F0] hover:bg-muted"
+                : "bg-card text-muted-foreground border border-border hover:bg-muted"
             )}
           >
             {t.label}
@@ -481,15 +481,15 @@ function SurveyReadinessTab({ sops, loading }: { sops: RealSOP[]; loading: boole
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.05 }}
-            className="bg-card border border-[#E2E8F0] rounded-xl p-5 space-y-3"
+            className="bg-card border border-border rounded-xl p-5 space-y-3"
           >
             <div className="flex items-start justify-between gap-2">
               <div className="flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xs text-[#64748B] border border-[#CBD5E1] rounded px-2 py-0.5">
+                  <span className="text-xs text-muted-foreground border border-input rounded px-2 py-0.5">
                     {chapter.code}
                   </span>
-                  <span className="text-sm font-medium text-[#1A2332]">{chapter.title}</span>
+                  <span className="text-sm font-medium text-foreground">{chapter.title}</span>
                   <span
                     className={cn(
                       "text-xs px-2 py-0.5 rounded-full font-medium",
@@ -499,7 +499,7 @@ function SurveyReadinessTab({ sops, loading }: { sops: RealSOP[]; loading: boole
                     {READY_STATUS_META[chapter.status]?.label}
                   </span>
                 </div>
-                <p className="text-xs text-[#94A3B8] mt-1">{chapter.description}</p>
+                <p className="text-xs text-subtle mt-1">{chapter.description}</p>
               </div>
               <span className={cn("text-3xl font-bold shrink-0", readinessPctColor(chapter.readiness_pct))}>
                 {chapter.readiness_pct}%
@@ -515,7 +515,7 @@ function SurveyReadinessTab({ sops, loading }: { sops: RealSOP[]; loading: boole
 
             {chapter.mapped.length > 0 && (
               <div>
-                <p className="text-xs text-[#94A3B8] mb-1.5">Real SOPs in {chapter.department}</p>
+                <p className="text-xs text-subtle mb-1.5">Real SOPs in {chapter.department}</p>
                 <div className="flex flex-wrap gap-1.5">
                   {chapter.mapped.map((sop) => (
                     <span
@@ -532,7 +532,7 @@ function SurveyReadinessTab({ sops, loading }: { sops: RealSOP[]; loading: boole
 
             {chapter.gaps.length > 0 && (
               <div>
-                <p className="text-xs text-[#94A3B8] mb-1.5">Open Gaps</p>
+                <p className="text-xs text-subtle mb-1.5">Open Gaps</p>
                 <ul className="space-y-1">
                   {chapter.gaps.map((gap, gi) => (
                     <li key={gi} className="flex items-start gap-1.5 text-xs text-[#B91C1C] dark:text-red-400">
@@ -545,7 +545,7 @@ function SurveyReadinessTab({ sops, loading }: { sops: RealSOP[]; loading: boole
             )}
 
             <div className="flex items-center justify-between pt-1">
-              <div className="flex items-center gap-1 text-xs text-[#94A3B8]">
+              <div className="flex items-center gap-1 text-xs text-subtle">
                 <Clock className="w-3 h-3" />
                 {chapter.mapped.length} SOP{chapter.mapped.length !== 1 ? "s" : ""} in scope
               </div>
@@ -561,7 +561,7 @@ function SurveyReadinessTab({ sops, loading }: { sops: RealSOP[]; loading: boole
       </div>
 
       <section>
-        <h2 className="text-lg font-medium text-[#1A2332] mb-3">Tracer Simulation</h2>
+        <h2 className="text-lg font-medium text-foreground mb-3">Tracer Simulation</h2>
         <div className="grid md:grid-cols-3 gap-4">
           {TRACER_ITEMS.map((tracer, i) => {
             const relevantSop = sops.find((s) => s.department === tracer.department)
@@ -571,15 +571,15 @@ function SurveyReadinessTab({ sops, loading }: { sops: RealSOP[]; loading: boole
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.08 }}
-                className="bg-card border border-[#E2E8F0] rounded-xl p-5 space-y-3"
+                className="bg-card border border-border rounded-xl p-5 space-y-3"
               >
                 <div>
-                  <span className="text-xs text-[#64748B] border border-[#CBD5E1] rounded px-2 py-0.5">
+                  <span className="text-xs text-muted-foreground border border-input rounded px-2 py-0.5">
                     {tracer.type}
                   </span>
-                  <p className="text-sm font-medium text-[#1A2332] mt-2">{tracer.area}</p>
+                  <p className="text-sm font-medium text-foreground mt-2">{tracer.area}</p>
                 </div>
-                <p className="text-xs text-[#64748B] leading-relaxed">{tracer.description}</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">{tracer.description}</p>
                 <div className="flex items-center justify-between pt-1">
                   <span className="text-xs text-[#0B6BCB] border border-[#0B6BCB]/30 bg-[#0B6BCB]/10 rounded px-2 py-0.5">
                     {relevantSop ? relevantSop.sop_id : "No SOP mapped"}
@@ -669,14 +669,14 @@ export default function RegulatoryPage() {
           <span><strong>Research Prototype - Not for Clinical Use.</strong> For demonstration only. Verify against official regulatory sources.</span>
         </div>
 
-        <div className="flex gap-1 p-1 rounded-xl bg-muted border border-[#E2E8F0] w-fit">
+        <div className="flex gap-1 p-1 rounded-xl bg-muted border border-border w-fit">
           {TABS.map((t) => (
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
               className={cn(
                 "flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors",
-                tab === t.key ? "bg-card text-[#0B6BCB] shadow-sm" : "text-[#64748B] hover:text-[#1A2332]"
+                tab === t.key ? "bg-card text-[#0B6BCB] shadow-sm" : "text-muted-foreground hover:text-foreground"
               )}
             >
               <t.icon className="w-4 h-4" />

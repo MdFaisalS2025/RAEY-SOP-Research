@@ -1,4 +1,4 @@
-# SOP-Guard Backend
+# Meridian Backend
 
 Agentic RAG for clinical SOP question-answering with procedural faithfulness
 verification. FastAPI + SQLAlchemy (async) + SQLite.
@@ -25,7 +25,7 @@ Demo SOPs load automatically on first startup if the database is empty.
 
 | Var | Purpose | Example |
 | --- | --- | --- |
-| `DATABASE_URL` | Async DB URL | `sqlite+aiosqlite:///./sop_guard.db` |
+| `DATABASE_URL` | Async DB URL | `sqlite+aiosqlite:///./meridian.db` |
 | `LLM_PROVIDER` | `mock` \| `ollama` | `ollama` |
 | `LLM_MODEL` | Ollama model tag | `llama3.2` |
 | `LLM_BASE_URL` | Ollama server URL | `http://localhost:11434` |

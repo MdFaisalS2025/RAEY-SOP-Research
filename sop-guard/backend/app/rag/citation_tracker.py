@@ -1,5 +1,5 @@
 """
-SOP-Guard Citation Tracker
+Meridian Citation Tracker
 Numbered inline citation pipeline: builds numbered context blocks for the
 LLM prompt, validates [N] markers in the generated answer, and returns
 citation metadata records.

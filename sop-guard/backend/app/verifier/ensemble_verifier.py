@@ -1,5 +1,5 @@
 """
-SOP-Guard Ensemble Verifier
+Meridian Ensemble Verifier
 ---------------------------
 Combines the two independently-implemented verifiers (rule-based
 ProceduralFaithfulnessVerifier and NLIVerifier) into a single verdict.

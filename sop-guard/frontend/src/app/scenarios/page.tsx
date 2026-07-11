@@ -344,8 +344,8 @@ const gradeConfig: Record<Grade, { label: string; box: string; text: string; ico
   wrong: { label: "Not per protocol", box: "bg-[#FEE2E2] dark:bg-red-500/10 border-[#FECACA] dark:border-red-500/30", text: "text-[#B91C1C] dark:text-red-400", icon: XCircle },
 }
 
-const STORAGE_KEY = "sop-guard-scenario-scores"
-const MODE_STORAGE_KEY = "sop-guard-practice-mode"
+const STORAGE_KEY = "meridian-scenario-scores"
+const MODE_STORAGE_KEY = "meridian-practice-mode"
 
 type BestScores = Record<string, number>
 type PracticeMode = "guided" | "blind"
@@ -501,7 +501,7 @@ export default function ScenariosPage() {
           </div>
           <div>
             <h1 className="text-2xl font-bold font-display">Scenario Training</h1>
-            <p className="text-sm text-[#64748B]">Practice decisions against this hospital&apos;s own protocols.</p>
+            <p className="text-sm text-muted-foreground">Practice decisions against this hospital&apos;s own protocols.</p>
           </div>
         </div>
 
@@ -513,9 +513,9 @@ export default function ScenariosPage() {
 
         {/* Practice mode toggle */}
         {!active && (
-          <div className="rounded-2xl bg-card border border-[#E2E8F0] shadow-sm p-4 space-y-2">
-            <p className="text-sm font-bold text-[#1A2332]">Practice mode</p>
-            <p className="text-xs text-[#64748B]">
+          <div className="rounded-2xl bg-card border border-border shadow-sm p-4 space-y-2">
+            <p className="text-sm font-bold text-foreground">Practice mode</p>
+            <p className="text-xs text-muted-foreground">
               Blind recall asks you to commit to your own judgment before seeing any options. Clinicians who state their answer first are less prone to automation bias.
             </p>
             <div className="flex gap-2 pt-1">
@@ -525,7 +525,7 @@ export default function ScenariosPage() {
                   "flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border text-sm font-medium transition-colors",
                   practiceMode === "guided"
                     ? "bg-[#0B6BCB] border-[#0B6BCB] text-white"
-                    : "bg-card border-[#E2E8F0] text-[#64748B] hover:border-[#0B6BCB]"
+                    : "bg-card border-border text-muted-foreground hover:border-[#0B6BCB]"
                 )}
               >
                 <Eye className="w-4 h-4" /> Guided
@@ -536,7 +536,7 @@ export default function ScenariosPage() {
                   "flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border text-sm font-medium transition-colors",
                   practiceMode === "blind"
                     ? "bg-[#0B6BCB] border-[#0B6BCB] text-white"
-                    : "bg-card border-[#E2E8F0] text-[#64748B] hover:border-[#0B6BCB]"
+                    : "bg-card border-border text-muted-foreground hover:border-[#0B6BCB]"
                 )}
               >
                 <PenLine className="w-4 h-4" /> Blind recall
@@ -555,10 +555,10 @@ export default function ScenariosPage() {
                 <button
                   key={s.id}
                   onClick={() => startScenario(s)}
-                  className="text-left rounded-2xl bg-card border border-[#E2E8F0] shadow-sm p-5 space-y-3 hover:border-[#0B6BCB] transition-colors"
+                  className="text-left rounded-2xl bg-card border border-border shadow-sm p-5 space-y-3 hover:border-[#0B6BCB] transition-colors"
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <h3 className="text-sm font-bold text-[#1A2332]">{s.title}</h3>
+                    <h3 className="text-sm font-bold text-foreground">{s.title}</h3>
                     {completed && (
                       <span className="flex items-center gap-1 text-xs text-[#15803D] dark:text-green-400 font-medium shrink-0">
                         <CheckCircle2 className="w-3.5 h-3.5" /> Completed
@@ -575,13 +575,13 @@ export default function ScenariosPage() {
                       {s.difficulty}
                     </span>
                     {s.sops.map(id => (
-                      <span key={id} className="px-2 py-0.5 rounded-full text-xs bg-muted text-[#64748B] border border-[#E2E8F0]">
+                      <span key={id} className="px-2 py-0.5 rounded-full text-xs bg-muted text-muted-foreground border border-border">
                         {id}
                       </span>
                     ))}
                   </div>
-                  <p className="text-xs text-[#64748B] line-clamp-3">{s.intro}</p>
-                  <div className="flex items-center justify-between text-xs text-[#64748B]">
+                  <p className="text-xs text-muted-foreground line-clamp-3">{s.intro}</p>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> ~{s.minutes} min</span>
                     {completed && <span>Best: {best}/{s.steps.length}</span>}
                   </div>
@@ -606,26 +606,26 @@ export default function ScenariosPage() {
                     )}
                   />
                 ))}
-                <span className="text-xs text-[#64748B] ml-2">Step {stepIdx + 1} of {active.steps.length}</span>
+                <span className="text-xs text-muted-foreground ml-2">Step {stepIdx + 1} of {active.steps.length}</span>
               </div>
-              <button onClick={exitScenario} className="text-xs text-[#64748B] hover:text-[#1A2332] flex items-center gap-1">
+              <button onClick={exitScenario} className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1">
                 <ArrowLeft className="w-3.5 h-3.5" /> Exit
               </button>
             </div>
 
             {/* Situation panel */}
-            <div className="rounded-2xl bg-card border border-[#E2E8F0] shadow-sm p-5 space-y-4">
+            <div className="rounded-2xl bg-card border border-border shadow-sm p-5 space-y-4">
               <div>
                 <h2 className="text-base font-bold">{active.title}</h2>
-                <p className="text-sm text-[#64748B] mt-1">
+                <p className="text-sm text-muted-foreground mt-1">
                   {active.steps[stepIdx].situation ?? active.intro}
                 </p>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {active.vitals.map(v => (
-                  <div key={v.label} className="rounded-lg border border-[#E2E8F0] bg-background px-3 py-2">
-                    <p className="text-xs text-[#64748B]">{v.label}</p>
-                    <p className={cn("text-sm font-bold", v.abnormal ? "text-[#B91C1C] dark:text-red-400" : "text-[#1A2332]")}>
+                  <div key={v.label} className="rounded-lg border border-border bg-background px-3 py-2">
+                    <p className="text-xs text-muted-foreground">{v.label}</p>
+                    <p className={cn("text-sm font-bold", v.abnormal ? "text-[#B91C1C] dark:text-red-400" : "text-foreground")}>
                       {v.value}
                     </p>
                   </div>
@@ -634,7 +634,7 @@ export default function ScenariosPage() {
             </div>
 
             {/* Question */}
-            <div className="rounded-2xl bg-card border border-[#E2E8F0] shadow-sm p-5 space-y-3">
+            <div className="rounded-2xl bg-card border border-border shadow-sm p-5 space-y-3">
               <h3 className="text-sm font-bold">{active.steps[stepIdx].question}</h3>
               <div className="space-y-2">
                 {active.steps[stepIdx].options.map((opt, i) => {
@@ -648,10 +648,10 @@ export default function ScenariosPage() {
                       className={cn(
                         "w-full text-left px-4 py-3 rounded-xl border text-sm transition-colors",
                         selected === null
-                          ? "bg-card border-[#E2E8F0] hover:border-[#0B6BCB] hover:bg-[#0B6BCB]/5"
+                          ? "bg-card border-border hover:border-[#0B6BCB] hover:bg-[#0B6BCB]/5"
                           : isPicked
                             ? cn(cfg.box, cfg.text, "font-medium")
-                            : "bg-card border-[#E2E8F0] text-[#64748B] opacity-60"
+                            : "bg-card border-border text-muted-foreground opacity-60"
                       )}
                     >
                       {opt.label}
@@ -670,7 +670,7 @@ export default function ScenariosPage() {
                     <p className={cn("text-sm font-bold flex items-center gap-1.5", cfg.text)}>
                       <Icon className="w-4 h-4" /> {cfg.label}
                     </p>
-                    <p className="text-sm text-[#1A2332]">{opt.explanation}</p>
+                    <p className="text-sm text-foreground">{opt.explanation}</p>
                     <div className="flex items-center justify-between">
                       <Link href="/library" className="text-xs text-[#0B6BCB] hover:text-[#0959AC] font-medium flex items-center gap-1">
                         <BookOpen className="w-3.5 h-3.5" /> View SOP
@@ -698,30 +698,30 @@ export default function ScenariosPage() {
             .filter(d => d.opt.grade === "wrong")
           return (
             <div className="space-y-4">
-              <div className="rounded-2xl bg-card border border-[#E2E8F0] shadow-sm p-6 text-center space-y-2">
-                <p className="text-sm text-[#64748B]">{active.title}</p>
+              <div className="rounded-2xl bg-card border border-border shadow-sm p-6 text-center space-y-2">
+                <p className="text-sm text-muted-foreground">{active.title}</p>
                 <p className={cn(
                   "text-4xl font-bold",
                   score === active.steps.length ? "text-[#15803D] dark:text-green-400" : score > 0 ? "text-[#B45309] dark:text-amber-400" : "text-[#B91C1C] dark:text-red-400"
                 )}>
                   {score} / {active.steps.length}
                 </p>
-                <p className="text-sm text-[#64748B]">correct decisions</p>
+                <p className="text-sm text-muted-foreground">correct decisions</p>
               </div>
 
               {/* Per-step recap */}
-              <div className="rounded-2xl bg-card border border-[#E2E8F0] shadow-sm p-5 space-y-3">
+              <div className="rounded-2xl bg-card border border-border shadow-sm p-5 space-y-3">
                 <h3 className="text-sm font-bold">Step recap</h3>
                 {active.steps.map((step, i) => {
                   const opt = step.options[picks[i]]
                   const cfg = gradeConfig[opt.grade]
                   const Icon = cfg.icon
                   return (
-                    <div key={i} className="flex items-start gap-3 pb-3 border-b border-[#EDF1F5] last:border-0 last:pb-0">
+                    <div key={i} className="flex items-start gap-3 pb-3 border-b border-border last:border-0 last:pb-0">
                       <Icon className={cn("w-4 h-4 mt-0.5 shrink-0", cfg.text)} />
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-[#1A2332]">{step.question}</p>
-                        <p className="text-xs text-[#64748B] mt-0.5">Your pick: {opt.label}</p>
+                        <p className="text-sm font-medium text-foreground">{step.question}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Your pick: {opt.label}</p>
                         <p className="text-xs text-[#0B6BCB] mt-0.5">{step.citation}</p>
                       </div>
                     </div>
@@ -736,7 +736,7 @@ export default function ScenariosPage() {
                     <AlertTriangle className="w-4 h-4" /> Deviations from protocol
                   </h3>
                   {deviations.map(d => (
-                    <p key={d.idx} className="text-sm text-[#1A2332]">
+                    <p key={d.idx} className="text-sm text-foreground">
                       Step {d.idx + 1}: {d.opt.explanation}
                     </p>
                   ))}
@@ -753,13 +753,13 @@ export default function ScenariosPage() {
                 </button>
                 <button
                   onClick={nextScenario}
-                  className="px-4 py-2 rounded-lg text-sm font-medium bg-card border border-[#E2E8F0] text-[#1A2332] hover:bg-muted transition-colors flex items-center gap-1.5"
+                  className="px-4 py-2 rounded-lg text-sm font-medium bg-card border border-border text-foreground hover:bg-muted transition-colors flex items-center gap-1.5"
                 >
                   Next scenario <ArrowRight className="w-4 h-4" />
                 </button>
                 <button
                   onClick={exitScenario}
-                  className="px-4 py-2 rounded-lg text-sm font-medium bg-card border border-[#E2E8F0] text-[#64748B] hover:bg-muted transition-colors flex items-center gap-1.5"
+                  className="px-4 py-2 rounded-lg text-sm font-medium bg-card border border-border text-muted-foreground hover:bg-muted transition-colors flex items-center gap-1.5"
                 >
                   <ArrowLeft className="w-4 h-4" /> Back
                 </button>

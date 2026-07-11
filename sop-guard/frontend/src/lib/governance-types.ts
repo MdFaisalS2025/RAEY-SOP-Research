@@ -1,4 +1,4 @@
-// SOP-Guard Governance Platform — Core Type Definitions
+// Meridian Governance Platform — Core Type Definitions
 // Replace stub IDs/names with real database entities when integrating
 
 // Reduced from 8 roles to 4: hospitals realistically need far fewer

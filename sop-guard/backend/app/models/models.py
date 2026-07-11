@@ -1,5 +1,5 @@
 """
-SOP-Guard SQLAlchemy Models
+Meridian SQLAlchemy Models
 ---------------------------
 Research prototype  - NOT for clinical use.
 """

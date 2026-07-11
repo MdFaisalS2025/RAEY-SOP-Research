@@ -1,5 +1,5 @@
 """
-SOP-Guard Europe PMC Integration
+Meridian Europe PMC Integration
 --------------------------------
 Broader biomedical literature coverage than PubMed alone (preprints, grants,
 patents, PMC-only articles), same "never raise, cache, timeout" pattern as
@@ -26,7 +26,8 @@ _cache = TTLCache(ttl_seconds=3600)
 def _parse_result(doc: dict[str, Any]) -> dict[str, Any]:
     pub_date = (doc.get("firstPublicationDate") or doc.get("pubYear") or "").strip()
     pmid = doc.get("pmid") or doc.get("id") or ""
-    url = f"https://europepmc.org/article/{doc.get('source', 'MED')}/{doc.get('id', '')}"
+    doc_id = doc.get("id") or ""
+    url = f"https://europepmc.org/article/{doc.get('source', 'MED')}/{doc_id}" if doc_id else "https://europepmc.org"
     pub_types = [doc.get("pubTypeList", {}).get("pubType", [])] if isinstance(doc.get("pubTypeList"), dict) else []
     pub_types_flat = pub_types[0] if pub_types else []
     return {

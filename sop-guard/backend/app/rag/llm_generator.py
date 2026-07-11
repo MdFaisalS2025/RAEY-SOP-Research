@@ -1,5 +1,5 @@
 """
-SOP-Guard LLM Generator
+Meridian LLM Generator
 Generates grounded answers using a self-hosted Ollama model only - no patient
 or query data is ever sent to a third-party LLM API. Falls back to
 MockGenerator (deterministic templates, no model) when Ollama is unavailable.
@@ -43,7 +43,7 @@ def _merge_graph_conflicts(sop_conflicts: list[dict], retrieved_chunks: list[dic
 
 logger = logging.getLogger(__name__)
 
-SYSTEM_PROMPT = """You are SOP-Guard, a clinical SOP assistant for hospital staff. Answer questions based ONLY on the provided SOP content.
+SYSTEM_PROMPT = """You are Meridian, a clinical SOP assistant for hospital staff. Answer questions based ONLY on the provided SOP content.
 
 Rules:
 - Answer ONLY from the provided content. Never add information not in the SOPs.
@@ -223,6 +223,12 @@ Answer:"""
         abstention detection, faithfulness/conflict checks. Shared by the
         single-shot and streaming generation paths."""
         answer_text, followup_questions = _parse_followups(raw_answer_text)
+        if not followup_questions:
+            # Local models frequently ignore the "write FOLLOWUPS:" prompt
+            # instruction even when everything else about the answer is
+            # fine - fall back to the same per-query-type templates the
+            # mock generator uses rather than showing no follow-ups at all.
+            followup_questions = self._mock._template_followups(query_type)
         answer_text, citation_records = extract_citations(answer_text, citation_records)
         abstained = "not covered in the available sops" in answer_text.lower()
 

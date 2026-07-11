@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { X, MessageSquare, BookOpen, Clock, ArrowRight } from "lucide-react"
 import { useRole } from "@/lib/role-context"
 
-const SEEN_KEY = "sop-guard-first-run-demo-seen"
+const SEEN_KEY = "meridian-first-run-demo-seen"
 
 const LIBRARY_FIRST_ROLES = new Set(["educator"])
 
@@ -47,11 +47,11 @@ export function FirstRunDemo() {
         <motion.div
           initial={{ scale: 0.95, y: 16 }}
           animate={{ scale: 1, y: 0 }}
-          className="relative w-full max-w-md rounded-2xl bg-card border border-[#E2E8F0] shadow-md p-6"
+          className="relative w-full max-w-md rounded-2xl bg-card border border-border shadow-md p-6"
         >
           <button
             onClick={dismiss}
-            className="absolute top-4 right-4 p-1.5 text-[#94A3B8] hover:text-[#1A2332] transition-colors"
+            className="absolute top-4 right-4 p-1.5 text-subtle hover:text-foreground transition-colors"
             aria-label="Close"
           >
             <X className="w-4 h-4" />
@@ -67,35 +67,35 @@ export function FirstRunDemo() {
 
           {isLibraryFirstRole ? (
             <>
-              <h3 className="text-lg font-bold text-[#1A2332] mb-2">See your protocols in one tap</h3>
-              <p className="text-sm text-[#64748B] leading-relaxed mb-4">
+              <h3 className="text-lg font-bold text-foreground mb-2">See your protocols in one tap</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-4">
                 Open the SOP Library to find the exact protocol you need at the bedside, with the current
                 approved version highlighted.
               </p>
             </>
           ) : (
             <>
-              <h3 className="text-lg font-bold text-[#1A2332] mb-2">Try one real question</h3>
-              <p className="text-sm text-[#64748B] leading-relaxed mb-3">
-                See how SOP-Guard answers a real clinical question with sources you can trace.
+              <h3 className="text-lg font-bold text-foreground mb-2">Try one real question</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                See how Meridian answers a real clinical question with sources you can trace.
               </p>
-              <div className="bg-muted border border-[#E2E8F0] rounded-lg px-3 py-2.5 mb-4">
-                <p className="text-[13px] text-[#1A2332] italic">&quot;{EXAMPLE_QUERY}&quot;</p>
+              <div className="bg-muted border border-border rounded-lg px-3 py-2.5 mb-4">
+                <p className="text-[13px] text-foreground italic">&quot;{EXAMPLE_QUERY}&quot;</p>
               </div>
             </>
           )}
 
-          <div className="flex items-start gap-2 px-3 py-2.5 bg-muted border border-[#E2E8F0] rounded-lg mb-5">
-            <Clock className="w-4 h-4 text-[#64748B] shrink-0 mt-0.5" />
-            <p className="text-[11px] text-[#64748B] leading-relaxed">
-              This usually takes 8 to 12 minutes to look up manually. SOP-Guard answers in seconds.
+          <div className="flex items-start gap-2 px-3 py-2.5 bg-muted border border-border rounded-lg mb-5">
+            <Clock className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              This usually takes 8 to 12 minutes to look up manually. Meridian answers in seconds.
             </p>
           </div>
 
           <div className="flex justify-end gap-3">
             <button
               onClick={dismiss}
-              className="px-4 py-2 rounded-lg text-sm text-[#64748B] hover:text-[#1A2332] transition-colors"
+              className="px-4 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               Skip
             </button>

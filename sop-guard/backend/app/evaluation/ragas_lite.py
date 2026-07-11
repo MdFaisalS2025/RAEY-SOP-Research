@@ -1,5 +1,5 @@
 """
-SOP-Guard RAGAS-Lite Evaluation
+Meridian RAGAS-Lite Evaluation
 Lightweight reference-free evaluation inspired by RAGAS. No external deps.
 Metrics per query:
   - faithfulness: overall_faithfulness from the pipeline's hallucination
@@ -29,7 +29,7 @@ from collections import Counter
 from datetime import datetime, timezone
 from typing import Any, Optional
 
-from app.agents.pipeline import SOPGuardPipeline
+from app.agents.pipeline import MeridianPipeline
 from app.rag.citation_tracker import citation_coverage as _citation_coverage
 
 _CACHE_PATH = os.path.join(os.path.dirname(__file__), "last_eval.json")
@@ -59,7 +59,7 @@ EVAL_QUERIES: list[dict[str, Any]] = [
     {"query": "If a septic patient also needs a transfusion, which monitoring rules from both protocols apply?", "category": "cross_sop", "out_of_scope": False},
 ]
 
-def _build_demo_pipeline() -> SOPGuardPipeline:
+def _build_demo_pipeline() -> MeridianPipeline:
     """Build a pipeline from bundled demo SOPs (used when no pipeline is given)."""
     from app.demo_data.demo_sops import DEMO_SOPS
     from app.services.sop_structurer import structure_sop
@@ -77,10 +77,10 @@ def _build_demo_pipeline() -> SOPGuardPipeline:
             sop_title=sop["title"],
             department=sop.get("department", ""),
         ))
-    return SOPGuardPipeline(chunks, structured_sops)
+    return MeridianPipeline(chunks, structured_sops)
 
 
-async def run_eval(pipeline: Optional[SOPGuardPipeline] = None) -> dict:
+async def run_eval(pipeline: Optional[MeridianPipeline] = None) -> dict:
     """
     Run the RAGAS-lite evaluation suite against the pipeline.
     Returns aggregate metrics plus per-query results.
@@ -194,7 +194,7 @@ def _load_cache() -> Optional[dict]:
 
 
 async def get_eval_summary(
-    pipeline: Optional[SOPGuardPipeline] = None, force: bool = False
+    pipeline: Optional[MeridianPipeline] = None, force: bool = False
 ) -> dict:
     """
     Return the last cached eval run, or run a fresh one and cache it.
@@ -219,7 +219,7 @@ async def get_eval_summary(
     return result
 
 
-async def run_ablation(pipeline: Optional[SOPGuardPipeline] = None) -> dict:
+async def run_ablation(pipeline: Optional[MeridianPipeline] = None) -> dict:
     """
     Compare retrieval quality with the reranker ON vs OFF.
 

@@ -1,5 +1,5 @@
 """
-SOP-Guard CME/CPD Credit Tracking Routes
+Meridian CME/CPD Credit Tracking Routes
 ------------------------------------------
 Lightweight "habit loop" tracking: scenario completions, SOP reviews, and
 committee participation earn credits. Supports a leaderboard for a

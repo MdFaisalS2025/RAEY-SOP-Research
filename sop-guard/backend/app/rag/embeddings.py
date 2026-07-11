@@ -1,5 +1,5 @@
 """
-SOP-Guard Embedding Provider
+Meridian Embedding Provider
 Supports sentence-transformers with TF-IDF fallback.
 Research prototype. Not for clinical use.
 """

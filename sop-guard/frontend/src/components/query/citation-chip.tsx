@@ -46,7 +46,7 @@ export function CitationChip({
 
   // Graceful fallback: no citation data, render dimmed plain text
   if (!citation) {
-    return <span className="text-[#94A3B8] text-[13px]">[{number}]</span>
+    return <span className="text-subtle text-[13px]">[{number}]</span>
   }
 
   return (
@@ -64,17 +64,17 @@ export function CitationChip({
         {number}
       </button>
       {hovered && (
-        <span className="absolute z-40 left-1/2 -translate-x-1/2 bottom-full mb-1.5 w-72 p-3 rounded-xl bg-card border border-[#E2E8F0] shadow-md text-left block">
-          <span className="block text-[12px] font-semibold text-[#1A2332] leading-snug">{citation.sop_title}</span>
+        <span className="absolute z-40 left-1/2 -translate-x-1/2 bottom-full mb-1.5 w-72 p-3 rounded-xl bg-card border border-border shadow-md text-left block">
+          <span className="block text-[12px] font-semibold text-foreground leading-snug">{citation.sop_title}</span>
           <span className="block text-[11px] text-[#0B6BCB] mt-0.5">{citation.section_title}</span>
           <span className="flex flex-wrap gap-1 mt-1">
             {citation.chunk_type && (
-              <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium bg-card text-[#475569] border border-[#CBD5E1] capitalize">
+              <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium bg-card text-muted-foreground border border-input capitalize">
                 {citation.chunk_type.replace(/_/g, " ")}
               </span>
             )}
             {citation.version && (
-              <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium bg-card text-[#475569] border border-[#CBD5E1]">
+              <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium bg-card text-muted-foreground border border-input">
                 v{citation.version}
               </span>
             )}
@@ -84,9 +84,9 @@ export function CitationChip({
               </span>
             )}
           </span>
-          <span className="block text-[11px] text-[#64748B] leading-relaxed mt-1.5 line-clamp-3">{citation.snippet}</span>
+          <span className="block text-[11px] text-muted-foreground leading-relaxed mt-1.5 line-clamp-3">{citation.snippet}</span>
           <span className="flex items-center gap-2 mt-2">
-            <span className="text-[10px] text-[#94A3B8]">Relevance</span>
+            <span className="text-[10px] text-subtle">Relevance</span>
             <span className="flex-1 h-1 rounded-full bg-[#EDF1F5] overflow-hidden block">
               <span
                 className="block h-full rounded-full bg-[#0B6BCB]"

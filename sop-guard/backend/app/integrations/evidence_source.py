@@ -1,5 +1,5 @@
 """
-SOP-Guard Evidence Source Interface
+Meridian Evidence Source Interface
 ------------------------------------
 Common contract every external evidence integration (PubMed, Europe PMC,
 CDC, WHO, ClinicalTrials.gov, ...) implements, so the query pipeline and
@@ -22,8 +22,15 @@ from abc import ABC, abstractmethod
 from typing import Any, Optional
 
 #: Some public APIs (e.g. clinicaltrials.gov) return 403 Forbidden for
-#: requests with no User-Agent header at all, which is httpx's default.
-DEFAULT_HEADERS = {"User-Agent": "SOP-Guard-Research-Prototype/1.0 (+https://github.com)"}
+#: requests with no User-Agent header at all, which is httpx's default. A
+#: browser-shaped UA/Accept pair avoids simple header-based bot filters,
+#: though at least one of these APIs (clinicaltrials.gov) also fingerprints
+#: the TLS handshake itself - no header combination fixes that; see
+#: clinicaltrials.py's module docstring.
+DEFAULT_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36 Meridian-Research-Prototype/1.0",
+    "Accept": "application/json, text/xml, */*",
+}
 
 _MONTHS = {
     name: i

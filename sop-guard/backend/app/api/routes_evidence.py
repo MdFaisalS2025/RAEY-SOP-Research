@@ -1,5 +1,5 @@
 """
-SOP-Guard Evidence Routes (Evidence Watch)
+Meridian Evidence Routes (Evidence Watch)
 ------------------------------------------
 Live external evidence lookup across multiple sources (PubMed, Europe PMC,
 CDC, WHO, ClinicalTrials.gov) via the EvidenceSource registry.

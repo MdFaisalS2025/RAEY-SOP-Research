@@ -1,5 +1,5 @@
 """
-SOP-Guard Evaluation Runner
+Meridian Evaluation Runner
 ----------------------------
 Run test cases against the pipeline and compute metrics.
 Research prototype  - NOT for clinical use.
@@ -8,7 +8,7 @@ Research prototype  - NOT for clinical use.
 from datetime import datetime, timezone
 from typing import Any
 
-from app.agents.pipeline import SOPGuardPipeline
+from app.agents.pipeline import MeridianPipeline
 from app.schemas.schemas import EvaluationResult
 
 
@@ -62,7 +62,7 @@ TEST_CASES = [
 class Evaluator:
     """Run evaluation test cases against the pipeline."""
 
-    def __init__(self, pipeline: SOPGuardPipeline):
+    def __init__(self, pipeline: MeridianPipeline):
         self.pipeline = pipeline
 
     async def run_evaluation(self) -> EvaluationResult:

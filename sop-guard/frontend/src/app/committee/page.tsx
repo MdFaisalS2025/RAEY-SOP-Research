@@ -35,8 +35,8 @@ function priorityBadge(priority: string) {
   const map: Record<string, string> = {
     urgent: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30",
     high: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30",
-    normal: "bg-card text-[#475569] border border-[#CBD5E1]",
-    low: "bg-card text-[#475569] border border-[#CBD5E1]",
+    normal: "bg-card text-muted-foreground border border-input",
+    low: "bg-card text-muted-foreground border border-input",
   }
   return map[priority] ?? map.normal
 }
@@ -47,7 +47,7 @@ function statusBadge(status: Proposal["status"]) {
     approved: { cls: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30", label: "Approved" },
     rejected: { cls: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30", label: "Rejected" },
   }
-  return map[status] ?? { cls: "bg-muted text-[#64748B]", label: status }
+  return map[status] ?? { cls: "bg-muted text-muted-foreground", label: status }
 }
 
 function QuorumIndicator({ proposal }: { proposal: Proposal }) {
@@ -55,7 +55,7 @@ function QuorumIndicator({ proposal }: { proposal: Proposal }) {
   const pct = committee_size > 0 ? (votes_cast / threshold) * 100 : 0
 
   return (
-    <div className="space-y-3 p-4 rounded-xl bg-muted border border-[#E2E8F0]">
+    <div className="space-y-3 p-4 rounded-xl bg-muted border border-border">
       <div className="flex gap-4 text-xs flex-wrap">
         <span className="flex items-center gap-1 text-[#15803D] dark:text-green-400 font-semibold">
           <Check className="w-3 h-3" /> Approve: {proposal.tally.approve}
@@ -63,7 +63,7 @@ function QuorumIndicator({ proposal }: { proposal: Proposal }) {
         <span className="flex items-center gap-1 text-[#B91C1C] dark:text-red-400 font-semibold">
           <X className="w-3 h-3" /> Reject: {proposal.tally.reject}
         </span>
-        <span className="flex items-center gap-1 text-[#64748B] font-semibold">
+        <span className="flex items-center gap-1 text-muted-foreground font-semibold">
           <MinusCircle className="w-3 h-3" /> Abstain: {proposal.tally.abstain}
         </span>
         <span className="flex items-center gap-1 text-[#B45309] dark:text-amber-400 font-semibold">
@@ -72,7 +72,7 @@ function QuorumIndicator({ proposal }: { proposal: Proposal }) {
       </div>
 
       <div className="space-y-1">
-        <div className="flex justify-between text-xs text-[#64748B]">
+        <div className="flex justify-between text-xs text-muted-foreground">
           <span>Quorum: {votes_cast}/{threshold} votes cast</span>
           <span>{committee_size}-member committee</span>
         </div>
@@ -135,7 +135,7 @@ function CommitteeProposalCard({ proposal, index, onVoteCast }: {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.07 }}
-      className="rounded-2xl bg-card border border-[#E2E8F0] overflow-hidden"
+      className="rounded-2xl bg-card border border-border overflow-hidden"
     >
       {proposal.legal_review_required && (
         <div className="flex items-center gap-2 px-4 py-2 bg-[#FEE2E2] dark:bg-red-500/10 border-b border-[#FECACA] dark:border-red-500/30">
@@ -152,7 +152,7 @@ function CommitteeProposalCard({ proposal, index, onVoteCast }: {
           <span className={cn("px-2 py-0.5 rounded text-xs font-semibold", statusInfo.cls)}>{statusInfo.label}</span>
         </div>
 
-        <h3 className="font-display text-sm font-bold text-[#1A2332] leading-snug">{proposal.title}</h3>
+        <h3 className="font-display text-sm font-bold text-foreground leading-snug">{proposal.title}</h3>
 
         {proposal.affected_sop_id && (
           <div className="flex items-start gap-2">
@@ -161,7 +161,7 @@ function CommitteeProposalCard({ proposal, index, onVoteCast }: {
           </div>
         )}
 
-        <div className="flex flex-wrap gap-3 text-xs text-[#64748B]">
+        <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
           {proposal.department && (
             <span className="flex items-center gap-1.5"><Building2 className="w-3 h-3" /> {proposal.department}</span>
           )}
@@ -175,14 +175,14 @@ function CommitteeProposalCard({ proposal, index, onVoteCast }: {
         <div className="flex flex-wrap gap-2">
           <Link
             href={`/proposals/${proposal.id}`}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#E2E8F0] text-xs text-[#64748B] hover:bg-muted transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs text-muted-foreground hover:bg-muted transition-colors"
           >
             <FileText className="w-3 h-3" /> View Detail
           </Link>
         </div>
 
         {canVote && (
-          <div className="flex flex-wrap gap-2 pt-2 border-t border-[#E2E8F0]">
+          <div className="flex flex-wrap gap-2 pt-2 border-t border-border">
             <button disabled={submitting} onClick={() => castVote("approve")}
               className={cn("inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[11px] transition-colors disabled:opacity-50",
                 myVote === "approve" ? "bg-[#16A34A] border-[#16A34A] text-white font-bold" : "bg-[#DCFCE7] dark:bg-green-500/10 border-[#BBF7D0] dark:border-green-500/30 text-[#15803D] dark:text-green-400 hover:bg-[#16A34A]/25")}>
@@ -198,7 +198,7 @@ function CommitteeProposalCard({ proposal, index, onVoteCast }: {
                 myVote === "abstain" ? "bg-[#F59E0B] border-[#F59E0B] text-white font-bold" : "bg-[#FEF3C7] dark:bg-amber-500/10 border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 hover:bg-[#F59E0B]/25")}>
               <MinusCircle className="w-3 h-3" /> Abstain{myVote === "abstain" ? " ✓" : ""}
             </button>
-            {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin text-[#64748B] self-center" />}
+            {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground self-center" />}
           </div>
         )}
       </div>
@@ -234,7 +234,7 @@ export default function CommitteePage() {
   const committeeSize = proposals[0]?.quorum.committee_size ?? 5
 
   const stats = [
-    { label: "Awaiting Vote", value: activeProposals.length, color: "text-[#64748B]", icon: Vote },
+    { label: "Awaiting Vote", value: activeProposals.length, color: "text-muted-foreground", icon: Vote },
     { label: "Distinct Voters Active", value: votedThisSession, color: "text-[#15803D] dark:text-green-400", icon: CheckCircle2 },
     { label: "Decided Proposals", value: decidedProposals.length, color: "text-[#0B6BCB]", icon: Calendar },
     { label: "Quorum Threshold", value: `${quorumThreshold}/${committeeSize}`, color: "text-[#B45309] dark:text-amber-400", isText: true, icon: Users },
@@ -248,9 +248,9 @@ export default function CommitteePage() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-1">
           <div className="flex items-center gap-3">
             <Gavel className="w-7 h-7 text-[#0B6BCB]" />
-            <h1 className="font-display text-3xl font-bold text-[#1A2332]">Committee Workspace</h1>
+            <h1 className="font-display text-3xl font-bold text-foreground">Committee Workspace</h1>
           </div>
-          <p className="text-[#64748B] text-sm pl-10">Live proposals and quorum status from the governance API.</p>
+          <p className="text-muted-foreground text-sm pl-10">Live proposals and quorum status from the governance API.</p>
         </motion.div>
 
         <motion.div
@@ -263,9 +263,9 @@ export default function CommitteePage() {
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {stats.map(({ label, value, color, isText, icon: Icon }) => (
-            <div key={label} className="rounded-2xl bg-card border border-[#E2E8F0] p-4 space-y-2">
+            <div key={label} className="rounded-2xl bg-card border border-border p-4 space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-[#64748B] font-medium">{label}</span>
+                <span className="text-xs text-muted-foreground font-medium">{label}</span>
                 <Icon className={cn("w-4 h-4", color)} />
               </div>
               <p className={cn("font-bold font-display", color, isText ? "text-lg" : "text-3xl")}>{value}</p>
@@ -274,7 +274,7 @@ export default function CommitteePage() {
         </motion.div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-16 text-[#64748B] gap-2">
+          <div className="flex items-center justify-center py-16 text-muted-foreground gap-2">
             <Loader2 className="w-5 h-5 animate-spin" /> Loading committee data...
           </div>
         ) : (
@@ -282,18 +282,18 @@ export default function CommitteePage() {
             <div className="space-y-8">
               <section className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="font-display text-lg font-bold text-[#1A2332] flex items-center gap-2">
+                  <h2 className="font-display text-lg font-bold text-foreground flex items-center gap-2">
                     <Vote className="w-5 h-5 text-[#0B6BCB]" /> Proposals Awaiting Review
                   </h2>
-                  <span className="px-2.5 py-1 rounded-full bg-muted border border-[#CBD5E1] text-xs text-[#334155] font-semibold">
+                  <span className="px-2.5 py-1 rounded-full bg-muted border border-input text-xs text-foreground font-semibold">
                     {activeProposals.length} active
                   </span>
                 </div>
 
                 {activeProposals.length === 0 ? (
-                  <div className="rounded-2xl bg-card border border-[#E2E8F0] p-10 text-center">
-                    <Vote className="w-8 h-8 mx-auto mb-3 text-[#64748B] opacity-40" />
-                    <p className="text-sm text-[#64748B]">No proposals currently awaiting review.</p>
+                  <div className="rounded-2xl bg-card border border-border p-10 text-center">
+                    <Vote className="w-8 h-8 mx-auto mb-3 text-muted-foreground opacity-40" />
+                    <p className="text-sm text-muted-foreground">No proposals currently awaiting review.</p>
                   </div>
                 ) : (
                   activeProposals.map((p, i) => (
@@ -303,12 +303,12 @@ export default function CommitteePage() {
               </section>
 
               <section className="space-y-4">
-                <h2 className="font-display text-lg font-bold text-[#1A2332] flex items-center gap-2">
+                <h2 className="font-display text-lg font-bold text-foreground flex items-center gap-2">
                   <CheckCircle2 className="w-5 h-5 text-[#15803D] dark:text-green-400" /> Recent Decisions
                 </h2>
 
                 {decidedProposals.length === 0 ? (
-                  <p className="text-sm text-[#64748B]">No decided proposals yet.</p>
+                  <p className="text-sm text-muted-foreground">No decided proposals yet.</p>
                 ) : (
                   <div className="space-y-3">
                     {decidedProposals.map((p, i) => {
@@ -316,16 +316,16 @@ export default function CommitteePage() {
                       return (
                         <motion.div
                           key={p.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
-                          className="flex items-start gap-4 p-4 rounded-xl bg-card border border-[#E2E8F0]"
+                          className="flex items-start gap-4 p-4 rounded-xl bg-card border border-border"
                         >
                           <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0", p.status === "approved" ? "bg-[#16A34A]/20" : "bg-[#DC2626]/20")}>
                             {p.status === "approved" ? <CheckCircle2 className="w-4 h-4 text-[#15803D] dark:text-green-400" /> : <X className="w-4 h-4 text-[#B91C1C] dark:text-red-400" />}
                           </div>
                           <div className="flex-1 min-w-0 space-y-1">
-                            <Link href={`/proposals/${p.id}`} className="text-sm font-medium text-[#1A2332] hover:text-[#0B6BCB] transition-colors line-clamp-1">
+                            <Link href={`/proposals/${p.id}`} className="text-sm font-medium text-foreground hover:text-[#0B6BCB] transition-colors line-clamp-1">
                               {p.title}
                             </Link>
-                            <div className="flex flex-wrap gap-3 text-xs text-[#64748B]">
+                            <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
                               <span>{p.department || "No department"}</span>
                               <span>·</span>
                               <span>Initiated by {p.initiated_by || "unknown"}</span>
@@ -340,7 +340,7 @@ export default function CommitteePage() {
               </section>
 
               <section className="space-y-4">
-                <h2 className="font-display text-lg font-bold text-[#1A2332] flex items-center gap-2">
+                <h2 className="font-display text-lg font-bold text-foreground flex items-center gap-2">
                   <Users className="w-5 h-5 text-[#0B6BCB]" /> Committee Members
                 </h2>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -349,17 +349,17 @@ export default function CommitteePage() {
                     return (
                       <motion.div
                         key={user.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
-                        className="rounded-xl bg-card border border-[#E2E8F0] p-4 flex items-start gap-3"
+                        className="rounded-xl bg-card border border-border p-4 flex items-start gap-3"
                       >
                         <div className="w-10 h-10 rounded-full bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 flex items-center justify-center text-[#0B6BCB] text-sm font-bold shrink-0">
                           {user.initials}
                         </div>
                         <div className="flex-1 min-w-0 space-y-1">
-                          <p className="text-sm font-semibold text-[#1A2332] truncate">{user.name}</p>
-                          <p className="text-xs text-[#64748B] truncate">{user.title}</p>
-                          <p className="text-xs text-[#64748B]">{user.department}</p>
+                          <p className="text-sm font-semibold text-foreground truncate">{user.name}</p>
+                          <p className="text-xs text-muted-foreground truncate">{user.title}</p>
+                          <p className="text-xs text-muted-foreground">{user.department}</p>
                           <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold mt-1",
-                            hasVoted ? "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400" : "bg-muted text-[#64748B]")}>
+                            hasVoted ? "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400" : "bg-muted text-muted-foreground")}>
                             {hasVoted ? <CheckCircle2 className="w-2.5 h-2.5" /> : <Vote className="w-2.5 h-2.5" />}
                             {hasVoted ? "Has voted" : "No votes yet"}
                           </span>
@@ -372,13 +372,13 @@ export default function CommitteePage() {
             </div>
 
             <div className="space-y-4">
-              <div className="rounded-2xl bg-card border border-[#E2E8F0] p-5 space-y-3">
+              <div className="rounded-2xl bg-card border border-border p-5 space-y-3">
                 <div className="flex items-center gap-2">
                   <ShieldAlert className="w-4 h-4 text-[#B45309] dark:text-amber-400" />
-                  <h3 className="font-display text-sm font-bold text-[#1A2332]">Quorum Rules</h3>
+                  <h3 className="font-display text-sm font-bold text-foreground">Quorum Rules</h3>
                 </div>
-                <div className="space-y-2 text-xs text-[#64748B]">
-                  <p>Threshold: <span className="font-semibold text-[#1A2332]">{quorumThreshold} votes</span> out of a <span className="font-semibold text-[#1A2332]">{committeeSize}-member</span> committee.</p>
+                <div className="space-y-2 text-xs text-muted-foreground">
+                  <p>Threshold: <span className="font-semibold text-foreground">{quorumThreshold} votes</span> out of a <span className="font-semibold text-foreground">{committeeSize}-member</span> committee.</p>
                   <p>A proposal auto-resolves to Approved or Rejected once quorum is reached, based on whether approve votes outnumber reject + request-changes votes.</p>
                 </div>
               </div>

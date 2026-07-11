@@ -1,14 +1,14 @@
-# SOP-Guard Architecture
+# Meridian Architecture
 
 > Research prototype -- NOT for clinical use.
 
 ## System Overview
 
-SOP-Guard is built as a multi-agent Retrieval-Augmented Generation (RAG) system orchestrated by LangGraph. The system ingests hospital SOP documents, chunks and embeds them, then answers natural-language queries by retrieving relevant passages, generating answers, and verifying them against source text.
+Meridian is built as a multi-agent Retrieval-Augmented Generation (RAG) system orchestrated by LangGraph. The system ingests hospital SOP documents, chunks and embeds them, then answers natural-language queries by retrieving relevant passages, generating answers, and verifying them against source text.
 
 ## LangGraph Pipeline
 
-The core of SOP-Guard is a LangGraph `StateGraph` that routes a user query through four specialized agents:
+The core of Meridian is a LangGraph `StateGraph` that routes a user query through four specialized agents:
 
 ```
                     +------------------+

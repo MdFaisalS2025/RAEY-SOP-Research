@@ -1,5 +1,5 @@
 """
-SOP-Guard NLI-Lite Verifier
+Meridian NLI-Lite Verifier
 ---------------------------
 A second, independently-implemented procedural faithfulness checker, built
 to compare against the type-specific rule-based ProceduralFaithfulnessVerifier

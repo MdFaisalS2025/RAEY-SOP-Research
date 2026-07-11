@@ -1,5 +1,5 @@
 """
-SOP-Guard Multi-Hop Retrieval
+Meridian Multi-Hop Retrieval
 Detects cross-SOP references and retrieves linked content.
 Research prototype. Not for clinical use.
 """

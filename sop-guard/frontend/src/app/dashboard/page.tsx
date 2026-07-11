@@ -68,11 +68,11 @@ const TILE_VALUE: Record<string, string> = {
   teal: "text-[#0B6BCB]",
   amber: "text-[#B45309] dark:text-amber-400",
   red: "text-[#B91C1C] dark:text-red-400",
-  violet: "text-[#64748B]",
+  violet: "text-muted-foreground",
   emerald: "text-[#15803D] dark:text-green-400",
   blue: "text-[#0B6BCB]",
-  pink: "text-[#64748B]",
-  gray: "text-[#64748B]",
+  pink: "text-muted-foreground",
+  gray: "text-muted-foreground",
   green: "text-[#15803D] dark:text-green-400",
 }
 
@@ -80,13 +80,13 @@ function StatTile({ label, value, trend, color = "teal", icon: Icon }: StatTileP
   return (
     <div
       className={cn(
-"bg-card border border-[#E2E8F0] shadow-sm rounded-xl p-4 border-l-4",
+"bg-card border border-border shadow-sm rounded-xl p-4 border-l-4",
         TILE_BORDER[color]
       )}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-[11px] text-[#64748B] uppercase tracking-widest font-semibold mb-1">{label}</p>
+          <p className="text-[11px] text-muted-foreground uppercase tracking-widest font-semibold mb-1">{label}</p>
           <p className={cn("text-2xl font-bold font-display", TILE_VALUE[color])}>{value}</p>
         </div>
         <div className="flex flex-col items-end gap-1 shrink-0">
@@ -102,47 +102,47 @@ function StatTile({ label, value, trend, color = "teal", icon: Icon }: StatTileP
 const STATUS_BADGE: Record<SOPStatus, string> = {
   approved: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30",
   needs_update: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30",
-  draft: "bg-card text-[#475569] border-[#CBD5E1]",
-  under_review: "bg-card text-[#475569] border-[#CBD5E1]",
-  archived: "bg-card text-[#475569] border-[#CBD5E1]",
+  draft: "bg-card text-muted-foreground border-input",
+  under_review: "bg-card text-muted-foreground border-input",
+  archived: "bg-card text-muted-foreground border-input",
   on_hold: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30",
 }
 
 const PROPOSAL_STATUS_BADGE: Record<ProposalStatus, string> = {
-  draft: "bg-card text-[#475569] border-[#CBD5E1]",
-  submitted: "bg-card text-[#475569] border-[#CBD5E1]",
-  evidence_review: "bg-card text-[#475569] border-[#CBD5E1]",
-  department_review: "bg-card text-[#475569] border-[#CBD5E1]",
+  draft: "bg-card text-muted-foreground border-input",
+  submitted: "bg-card text-muted-foreground border-input",
+  evidence_review: "bg-card text-muted-foreground border-input",
+  department_review: "bg-card text-muted-foreground border-input",
   committee_review: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30",
   legal_review: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30",
-  training_review: "bg-card text-[#475569] border-[#CBD5E1]",
+  training_review: "bg-card text-muted-foreground border-input",
   approved: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30",
   rejected: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30",
   published: "bg-[#0B6BCB]/10 text-[#0B6BCB] border-[#0B6BCB]/30",
-  archived: "bg-card text-[#475569] border-[#CBD5E1]",
+  archived: "bg-card text-muted-foreground border-input",
 }
 
 const RISK_BADGE: Record<RiskLevel, string> = {
   critical: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30",
   high: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30",
   medium: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30",
-  low: "bg-card text-[#475569] border-[#CBD5E1]",
+  low: "bg-card text-muted-foreground border-input",
 }
 
 function SopCard({ sop }: { sop: typeof MOCK_SOPS[0] }) {
   return (
     <Link
       href={`/library/${sop.id}`}
-      className="block bg-muted border border-[#E2E8F0] rounded-lg p-4 hover:border-[#0B6BCB]/30 transition-colors group"
+      className="block bg-muted border border-border rounded-lg p-4 hover:border-[#0B6BCB]/30 transition-colors group"
     >
       <div className="flex items-start justify-between gap-2 mb-2">
         <div className="min-w-0">
-          <p className="text-[11px] text-[#64748B] font-mono mb-1">{sop.sop_id}</p>
-          <p className="text-[13px] font-semibold text-[#1A2332] group-hover:text-[#0B6BCB] transition-colors line-clamp-2">
+          <p className="text-[11px] text-muted-foreground font-mono mb-1">{sop.sop_id}</p>
+          <p className="text-[13px] font-semibold text-foreground group-hover:text-[#0B6BCB] transition-colors line-clamp-2">
             {sop.title}
           </p>
         </div>
-        <ChevronRight className="w-4 h-4 text-[#94A3B8] group-hover:text-[#0B6BCB] shrink-0 mt-1 transition-colors" />
+        <ChevronRight className="w-4 h-4 text-subtle group-hover:text-[#0B6BCB] shrink-0 mt-1 transition-colors" />
       </div>
       <div className="flex items-center gap-2 flex-wrap">
         <span
@@ -153,8 +153,8 @@ function SopCard({ sop }: { sop: typeof MOCK_SOPS[0] }) {
         >
           {sop.status.replace("_", " ")}
         </span>
-        <span className="text-[10px] text-[#64748B]">{sop.department}</span>
-        <span className="text-[10px] text-[#94A3B8]">v{sop.version}</span>
+        <span className="text-[10px] text-muted-foreground">{sop.department}</span>
+        <span className="text-[10px] text-subtle">v{sop.version}</span>
       </div>
     </Link>
   )
@@ -168,10 +168,10 @@ function QuickLookup() {
     if (query.trim()) router.push(`/query?q=${encodeURIComponent(query.trim())}`)
   }
   return (
-    <div className="bg-card border border-[#E2E8F0] shadow-sm rounded-xl p-4">
+    <div className="bg-card border border-border shadow-sm rounded-xl p-4">
       <div className="flex items-center gap-2 mb-3">
         <Search className="w-4 h-4 text-[#0B6BCB]" />
-        <h3 className="text-[13px] font-semibold text-[#1A2332]">Quick Lookup</h3>
+        <h3 className="text-[13px] font-semibold text-foreground">Quick Lookup</h3>
       </div>
       <form onSubmit={handleSearch} className="flex gap-2">
         <input
@@ -179,7 +179,7 @@ function QuickLookup() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Ask about a protocol or procedure..."
-          className="flex-1 bg-muted border border-[#E2E8F0] rounded-lg px-3 py-2 text-[13px] text-[#1A2332] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#0B6BCB]/50 focus:ring-1 focus:ring-[#0B6BCB]/20"
+          className="flex-1 bg-muted border border-border rounded-lg px-3 py-2 text-[13px] text-foreground placeholder:text-subtle focus:outline-none focus:border-[#0B6BCB]/50 focus:ring-1 focus:ring-[#0B6BCB]/20"
         />
         <button
           type="submit"
@@ -254,13 +254,13 @@ function WinsStat() {
         <TrendingUp className="w-4 h-4 text-[#0B6BCB]" />
       </div>
       <div className="min-w-0">
-        <p className="text-[13px] text-[#1A2332]">
+        <p className="text-[13px] text-foreground">
           <span className="font-semibold">This week: </span>
-          SOP-Guard answered <span className="font-semibold text-[#0B6BCB]">{stats.queries_this_week}</span> questions,
+          Meridian answered <span className="font-semibold text-[#0B6BCB]">{stats.queries_this_week}</span> questions,
           saving an estimated <span className="font-semibold text-[#0B6BCB]">{hours}</span> hours
         </p>
         {stats.illustrative && (
-          <p className="text-[11px] text-[#94A3B8] mt-0.5">Illustrative example</p>
+          <p className="text-[11px] text-subtle mt-0.5">Illustrative example</p>
         )}
       </div>
     </div>
@@ -286,7 +286,7 @@ function PhysicianDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Recently Updated SOPs */}
         <div className="space-y-3">
-          <h3 className="text-[13px] font-semibold text-[#64748B] uppercase tracking-widest">
+          <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
             Recently Updated SOPs
           </h3>
           {MOCK_SOPS.slice(0, 2).map((sop) => (
@@ -297,7 +297,7 @@ function PhysicianDashboard() {
         <div className="space-y-4">
           {/* Evidence Watch Alert */}
           <div className="space-y-3">
-            <h3 className="text-[13px] font-semibold text-[#64748B] uppercase tracking-widest">
+            <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
               Evidence Watch
             </h3>
             {evidenceAlert && (
@@ -308,13 +308,13 @@ function PhysicianDashboard() {
                 <div className="flex items-start gap-2">
                   <AlertTriangle className="w-4 h-4 text-[#B45309] dark:text-amber-400 shrink-0 mt-0.5" />
                   <div className="min-w-0">
-                    <p className="text-[12px] font-semibold text-[#1A2332] mb-1">{evidenceAlert.title}</p>
-                    <p className="text-[11px] text-[#64748B] line-clamp-2">{evidenceAlert.summary}</p>
+                    <p className="text-[12px] font-semibold text-foreground mb-1">{evidenceAlert.title}</p>
+                    <p className="text-[11px] text-muted-foreground line-clamp-2">{evidenceAlert.summary}</p>
                     <div className="flex items-center gap-2 mt-2">
                       <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30 uppercase">
                         {evidenceAlert.impact_level}
                       </span>
-                      <span className="text-[10px] text-[#64748B]">{evidenceAlert.source_name}</span>
+                      <span className="text-[10px] text-muted-foreground">{evidenceAlert.source_name}</span>
                     </div>
                   </div>
                 </div>
@@ -330,19 +330,19 @@ function PhysicianDashboard() {
       {/* My Open Proposals */}
       {proposal && (
         <div className="space-y-3">
-          <h3 className="text-[13px] font-semibold text-[#64748B] uppercase tracking-widest">
+          <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
             My Open Proposals
           </h3>
           <Link
             href={`/proposals/${proposal.id}`}
-            className="block bg-card border border-[#E2E8F0] rounded-xl p-4 hover:border-[#0B6BCB]/30 transition-colors group"
+            className="block bg-card border border-border rounded-xl p-4 hover:border-[#0B6BCB]/30 transition-colors group"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-[13px] font-semibold text-[#1A2332] group-hover:text-[#0B6BCB] transition-colors mb-1">
+                <p className="text-[13px] font-semibold text-foreground group-hover:text-[#0B6BCB] transition-colors mb-1">
                   {proposal.title}
                 </p>
-                <p className="text-[11px] text-[#64748B] line-clamp-2 mb-2">{proposal.ai_summary}</p>
+                <p className="text-[11px] text-muted-foreground line-clamp-2 mb-2">{proposal.ai_summary}</p>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span
                     className={cn(
@@ -357,7 +357,7 @@ function PhysicianDashboard() {
                   </span>
                 </div>
               </div>
-              <ChevronRight className="w-4 h-4 text-[#94A3B8] group-hover:text-[#0B6BCB] shrink-0 mt-1 transition-colors" />
+              <ChevronRight className="w-4 h-4 text-subtle group-hover:text-[#0B6BCB] shrink-0 mt-1 transition-colors" />
             </div>
           </Link>
         </div>
@@ -429,7 +429,7 @@ function NurseDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="space-y-3">
-          <h3 className="text-[13px] font-semibold text-[#64748B] uppercase tracking-widest">
+          <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
             Protocols Requiring Acknowledgment
             {pendingCount > 0 && (
               <span className="ml-2 px-1.5 py-0.5 rounded-full bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 text-[10px] font-bold">
@@ -442,14 +442,14 @@ function NurseDashboard() {
             return (
               <div
                 key={sop.id}
-                className="bg-muted border border-[#E2E8F0] rounded-lg p-4 space-y-3"
+                className="bg-muted border border-border rounded-lg p-4 space-y-3"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="text-[11px] text-[#64748B] font-mono mb-1">{sop.sop_id}</p>
-                    <p className="text-[13px] font-semibold text-[#1A2332] line-clamp-2">{sop.title}</p>
+                    <p className="text-[11px] text-muted-foreground font-mono mb-1">{sop.sop_id}</p>
+                    <p className="text-[13px] font-semibold text-foreground line-clamp-2">{sop.title}</p>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-[#94A3B8] shrink-0 mt-1" />
+                  <ChevronRight className="w-4 h-4 text-subtle shrink-0 mt-1" />
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span
@@ -460,8 +460,8 @@ function NurseDashboard() {
                   >
                     {sop.status.replace("_", " ")}
                   </span>
-                  <span className="text-[10px] text-[#64748B]">{sop.department}</span>
-                  <span className="text-[10px] text-[#94A3B8]">v{sop.version}</span>
+                  <span className="text-[10px] text-muted-foreground">{sop.department}</span>
+                  <span className="text-[10px] text-subtle">v{sop.version}</span>
                 </div>
 
                 {/* Acknowledgment button / badge */}
@@ -483,18 +483,18 @@ function NurseDashboard() {
         </div>
 
         <div className="space-y-3">
-          <h3 className="text-[13px] font-semibold text-[#64748B] uppercase tracking-widest">
+          <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
             My Training
           </h3>
           {MOCK_TRAINING.slice(0, 2).map((tm) => (
             <div
               key={tm.id}
-              className="bg-muted border border-[#E2E8F0] rounded-lg p-4"
+              className="bg-muted border border-border rounded-lg p-4"
             >
               <div className="flex items-start justify-between gap-2 mb-2">
                 <div className="min-w-0">
-                  <p className="text-[12px] font-semibold text-[#1A2332] line-clamp-2">{tm.title}</p>
-                  <p className="text-[10px] text-[#64748B] mt-0.5">{tm.department} · {tm.estimated_duration_minutes} min</p>
+                  <p className="text-[12px] font-semibold text-foreground line-clamp-2">{tm.title}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{tm.department} · {tm.estimated_duration_minutes} min</p>
                 </div>
                 <span
                   className={cn(
@@ -510,7 +510,7 @@ function NurseDashboard() {
                 </span>
               </div>
               <div className="space-y-1">
-                <div className="flex justify-between text-[10px] text-[#64748B]">
+                <div className="flex justify-between text-[10px] text-muted-foreground">
                   <span>Completion</span>
                   <span>{tm.completion_rate}%</span>
                 </div>
@@ -549,23 +549,23 @@ function DeptAdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Department Compliance */}
         <div className="space-y-3">
-          <h3 className="text-[13px] font-semibold text-[#64748B] uppercase tracking-widest">
+          <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
             Department Compliance
           </h3>
-          <div className="bg-card border border-[#E2E8F0] shadow-sm rounded-xl overflow-hidden">
+          <div className="bg-card border border-border shadow-sm rounded-xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-[12px]">
               <thead>
-                <tr className="border-b border-[#EDF1F5]">
-                  <th className="text-left px-3 py-2 text-[#64748B] font-semibold">Department</th>
-                  <th className="text-right px-3 py-2 text-[#64748B] font-semibold">Score</th>
-                  <th className="text-right px-3 py-2 text-[#64748B] font-semibold">Overdue</th>
+                <tr className="border-b border-border">
+                  <th className="text-left px-3 py-2 text-muted-foreground font-semibold">Department</th>
+                  <th className="text-right px-3 py-2 text-muted-foreground font-semibold">Score</th>
+                  <th className="text-right px-3 py-2 text-muted-foreground font-semibold">Overdue</th>
                 </tr>
               </thead>
               <tbody>
                 {MOCK_COMPLIANCE.slice(0, 5).map((c) => (
-                  <tr key={c.department} className="border-b border-[#EDF1F5] hover:bg-muted">
-                    <td className="px-3 py-2 text-[#334155]">{c.department}</td>
+                  <tr key={c.department} className="border-b border-border hover:bg-muted">
+                    <td className="px-3 py-2 text-foreground">{c.department}</td>
                     <td className="px-3 py-2 text-right">
                       <span
                         className={cn(
@@ -593,7 +593,7 @@ function DeptAdminDashboard() {
 
         {/* Overdue Reviews */}
         <div className="space-y-3">
-          <h3 className="text-[13px] font-semibold text-[#64748B] uppercase tracking-widest">
+          <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
             Overdue Reviews
           </h3>
           {overdueSops.map((sop) => (
@@ -617,7 +617,7 @@ function ComplianceOfficerDashboard() {
 
       {/* Compliance Heatmap */}
       <div className="space-y-3">
-        <h3 className="text-[13px] font-semibold text-[#64748B] uppercase tracking-widest">
+        <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
           Compliance Heatmap
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -633,7 +633,7 @@ function ComplianceOfficerDashboard() {
                   : "border-[#FECACA] dark:border-red-500/30"
               )}
             >
-              <p className="text-[11px] text-[#64748B] font-semibold mb-1">{c.department}</p>
+              <p className="text-[11px] text-muted-foreground font-semibold mb-1">{c.department}</p>
               <p
                 className={cn(
 "text-xl font-bold font-display",
@@ -646,7 +646,7 @@ function ComplianceOfficerDashboard() {
               >
                 {c.compliance_score}%
               </p>
-              <div className="mt-2 space-y-0.5 text-[10px] text-[#64748B]">
+              <div className="mt-2 space-y-0.5 text-[10px] text-muted-foreground">
                 <p>{c.overdue_acknowledgments} overdue acks</p>
                 <p>{c.risk_flags} risk flag{c.risk_flags !== 1 ? "s" : ""}</p>
               </div>
@@ -681,18 +681,18 @@ function CommitteeDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="space-y-3">
-          <h3 className="text-[13px] font-semibold text-[#64748B] uppercase tracking-widest">
+          <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
             Awaiting Your Review
           </h3>
           {MOCK_PROPOSALS.map((proposal) => (
             <Link
               key={proposal.id}
               href={`/proposals/${proposal.id}`}
-              className="block bg-muted border border-[#E2E8F0] rounded-lg p-4 hover:border-[#0B6BCB]/30 transition-colors group"
+              className="block bg-muted border border-border rounded-lg p-4 hover:border-[#0B6BCB]/30 transition-colors group"
             >
               <div className="flex items-start gap-2 mb-2">
                 <div className="min-w-0 flex-1">
-                  <p className="text-[12px] font-semibold text-[#1A2332] group-hover:text-[#0B6BCB] transition-colors line-clamp-2 mb-1">
+                  <p className="text-[12px] font-semibold text-foreground group-hover:text-[#0B6BCB] transition-colors line-clamp-2 mb-1">
                     {proposal.title}
                   </p>
                   <div className="flex items-center gap-2 flex-wrap">
@@ -735,15 +735,15 @@ function CommitteeDashboard() {
         </div>
 
         <div className="space-y-3">
-          <h3 className="text-[13px] font-semibold text-[#64748B] uppercase tracking-widest">
+          <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
             Evidence Packets
           </h3>
           {MOCK_EVIDENCE_WATCH.slice(0, 3).map((ew) => (
             <div
               key={ew.id}
-              className="bg-muted border border-[#E2E8F0] rounded-lg p-4"
+              className="bg-muted border border-border rounded-lg p-4"
             >
-              <p className="text-[12px] font-semibold text-[#1A2332] mb-1 line-clamp-2">{ew.title}</p>
+              <p className="text-[12px] font-semibold text-foreground mb-1 line-clamp-2">{ew.title}</p>
               <div className="flex items-center gap-2 flex-wrap">
                 <span
                   className={cn(
@@ -753,7 +753,7 @@ function CommitteeDashboard() {
                 >
                   {ew.impact_level}
                 </span>
-                <span className="text-[10px] text-[#64748B]">{ew.source_name}</span>
+                <span className="text-[10px] text-muted-foreground">{ew.source_name}</span>
               </div>
             </div>
           ))}
@@ -775,7 +775,7 @@ function LegalRiskDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="space-y-3">
-          <h3 className="text-[13px] font-semibold text-[#64748B] uppercase tracking-widest">
+          <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
             Legal Issues Requiring Action
           </h3>
           {MOCK_LEGAL.map((item) => (
@@ -787,19 +787,19 @@ function LegalRiskDashboard() {
                   ? "border-[#FECACA] dark:border-red-500/30"
                   : item.risk_classification === "high"
                   ? "border-[#FDE68A] dark:border-amber-500/30"
-                  : "border-[#E2E8F0]"
+                  : "border-border"
               )}
             >
               <div className="flex items-start justify-between gap-2 mb-2">
-                <p className="text-[12px] font-semibold text-[#1A2332] line-clamp-2">{item.sop_title}</p>
+                <p className="text-[12px] font-semibold text-foreground line-clamp-2">{item.sop_title}</p>
                 <span className={cn("text-[10px] font-semibold px-2 py-0.5 rounded-full border capitalize shrink-0", RISK_BADGE[item.risk_classification])}>
                   {item.risk_classification}
                 </span>
               </div>
-              <p className="text-[11px] text-[#64748B] line-clamp-2 mb-2">{item.description}</p>
+              <p className="text-[11px] text-muted-foreground line-clamp-2 mb-2">{item.description}</p>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] text-[#94A3B8] capitalize">{item.issue_type.replace("_", " ")}</span>
-                <span className="text-[10px] text-[#CBD5E1]">·</span>
+                <span className="text-[10px] text-subtle capitalize">{item.issue_type.replace("_", " ")}</span>
+                <span className="text-[10px] text-subtle">·</span>
                 <span
                   className={cn(
 "text-[10px] font-semibold capitalize",
@@ -814,19 +814,19 @@ function LegalRiskDashboard() {
         </div>
 
         <div className="space-y-3">
-          <h3 className="text-[13px] font-semibold text-[#64748B] uppercase tracking-widest">
+          <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
             Proposals for Legal Review
           </h3>
           {MOCK_PROPOSALS.filter((p) => p.legal_review_required).map((proposal) => (
             <Link
               key={proposal.id}
               href={`/proposals/${proposal.id}`}
-              className="block bg-muted border border-[#E2E8F0] rounded-lg p-4 hover:border-[#0B6BCB]/30 transition-colors group"
+              className="block bg-muted border border-border rounded-lg p-4 hover:border-[#0B6BCB]/30 transition-colors group"
             >
-              <p className="text-[12px] font-semibold text-[#1A2332] group-hover:text-[#0B6BCB] transition-colors line-clamp-2 mb-2">
+              <p className="text-[12px] font-semibold text-foreground group-hover:text-[#0B6BCB] transition-colors line-clamp-2 mb-2">
                 {proposal.title}
               </p>
-              <p className="text-[11px] text-[#64748B] line-clamp-2 mb-2">{proposal.legal_impact}</p>
+              <p className="text-[11px] text-muted-foreground line-clamp-2 mb-2">{proposal.legal_impact}</p>
               <span
                 className={cn(
 "text-[10px] font-semibold px-2 py-0.5 rounded-full border capitalize",
@@ -862,18 +862,18 @@ function NurseEducatorDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 space-y-3">
-          <h3 className="text-[13px] font-semibold text-[#64748B] uppercase tracking-widest">
+          <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
             Training Modules
           </h3>
           {MOCK_TRAINING.map((tm) => (
             <div
               key={tm.id}
-              className="bg-card border border-[#E2E8F0] shadow-sm rounded-xl p-4"
+              className="bg-card border border-border shadow-sm rounded-xl p-4"
             >
               <div className="flex items-start justify-between gap-2 mb-3">
                 <div className="min-w-0">
-                  <p className="text-[13px] font-semibold text-[#1A2332] line-clamp-1 mb-1">{tm.title}</p>
-                  <p className="text-[11px] text-[#64748B]">{tm.department} · {tm.format} · {tm.estimated_duration_minutes} min</p>
+                  <p className="text-[13px] font-semibold text-foreground line-clamp-1 mb-1">{tm.title}</p>
+                  <p className="text-[11px] text-muted-foreground">{tm.department} · {tm.format} · {tm.estimated_duration_minutes} min</p>
                 </div>
                 <span
                   className={cn(
@@ -890,7 +890,7 @@ function NurseEducatorDashboard() {
               </div>
               <div className="space-y-1.5 mb-3">
                 <div className="flex justify-between text-[11px]">
-                  <span className="text-[#64748B]">Completion</span>
+                  <span className="text-muted-foreground">Completion</span>
                   <span
                     className={cn(
 "font-semibold",
@@ -920,14 +920,14 @@ function NurseEducatorDashboard() {
               </div>
               <div className="grid grid-cols-4 gap-2 text-center">
                 {[
-                  { label: "Total", value: tm.total_assigned, color: "text-[#94A3B8]" },
+                  { label: "Total", value: tm.total_assigned, color: "text-subtle" },
                   { label: "Done", value: tm.completed, color: "text-[#15803D] dark:text-green-400" },
                   { label: "Active", value: tm.in_progress, color: "text-[#0B6BCB]" },
                   { label: "Overdue", value: tm.overdue, color: "text-[#B91C1C] dark:text-red-400" },
                 ].map(({ label, value, color }) => (
                   <div key={label} className="bg-muted rounded-lg py-1.5">
                     <p className={cn("text-[14px] font-bold font-display", color)}>{value}</p>
-                    <p className="text-[9px] text-[#94A3B8] uppercase tracking-wide">{label}</p>
+                    <p className="text-[9px] text-subtle uppercase tracking-wide">{label}</p>
                   </div>
                 ))}
               </div>
@@ -936,22 +936,22 @@ function NurseEducatorDashboard() {
         </div>
 
         <div className="space-y-3">
-          <h3 className="text-[13px] font-semibold text-[#64748B] uppercase tracking-widest">
+          <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
             Department Summary
           </h3>
-          <div className="bg-card border border-[#E2E8F0] shadow-sm rounded-xl overflow-hidden">
+          <div className="bg-card border border-border shadow-sm rounded-xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-[12px]">
               <thead>
-                <tr className="border-b border-[#EDF1F5]">
-                  <th className="text-left px-3 py-2 text-[#64748B] font-semibold">Dept</th>
-                  <th className="text-right px-3 py-2 text-[#64748B] font-semibold">Rate</th>
+                <tr className="border-b border-border">
+                  <th className="text-left px-3 py-2 text-muted-foreground font-semibold">Dept</th>
+                  <th className="text-right px-3 py-2 text-muted-foreground font-semibold">Rate</th>
                 </tr>
               </thead>
               <tbody>
                 {MOCK_COMPLIANCE.map((c) => (
-                  <tr key={c.department} className="border-b border-[#EDF1F5] hover:bg-muted">
-                    <td className="px-3 py-2 text-[#334155]">{c.department}</td>
+                  <tr key={c.department} className="border-b border-border hover:bg-muted">
+                    <td className="px-3 py-2 text-foreground">{c.department}</td>
                     <td className="px-3 py-2 text-right">
                       <span
                         className={cn(
@@ -1094,7 +1094,7 @@ function SystemAdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* System Health */}
         <div className="space-y-3">
-          <h3 className="text-[13px] font-semibold text-[#64748B] uppercase tracking-widest">
+          <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
             System Health
           </h3>
           <div className="space-y-2">
@@ -1106,9 +1106,9 @@ function SystemAdminDashboard() {
             ].map(({ label, status, color }) => (
               <div
                 key={label}
-                className="flex items-center justify-between bg-card border border-[#E2E8F0] rounded-lg px-3 py-2.5"
+                className="flex items-center justify-between bg-card border border-border rounded-lg px-3 py-2.5"
               >
-                <span className="text-[12px] text-[#64748B]">{label}</span>
+                <span className="text-[12px] text-muted-foreground">{label}</span>
                 <div className="flex items-center gap-1.5">
                   <div className={cn("w-1.5 h-1.5 rounded-full", `bg-${color}-400`)} />
                   <span className={cn("text-[11px] font-semibold", `text-${color}-400`)}>{status}</span>
@@ -1118,7 +1118,7 @@ function SystemAdminDashboard() {
           </div>
 
           {/* Quick Actions */}
-          <h3 className="text-[13px] font-semibold text-[#64748B] uppercase tracking-widest mt-4">
+          <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest mt-4">
             Quick Actions
           </h3>
           <div className="space-y-2">
@@ -1130,11 +1130,11 @@ function SystemAdminDashboard() {
               <Link
                 key={href}
                 href={href}
-                className="flex items-center gap-2 px-3 py-2.5 bg-card border border-[#E2E8F0] rounded-lg hover:border-[#0B6BCB]/30 transition-colors group"
+                className="flex items-center gap-2 px-3 py-2.5 bg-card border border-border rounded-lg hover:border-[#0B6BCB]/30 transition-colors group"
               >
                 <Icon className="w-4 h-4 text-[#0B6BCB]" />
-                <span className="text-[12px] text-[#334155] group-hover:text-[#1A2332] transition-colors">{label}</span>
-                <ChevronRight className="w-3.5 h-3.5 text-[#94A3B8] group-hover:text-[#0B6BCB] ml-auto transition-colors" />
+                <span className="text-[12px] text-foreground group-hover:text-foreground transition-colors">{label}</span>
+                <ChevronRight className="w-3.5 h-3.5 text-subtle group-hover:text-[#0B6BCB] ml-auto transition-colors" />
               </Link>
             ))}
           </div>
@@ -1142,29 +1142,29 @@ function SystemAdminDashboard() {
 
         {/* Recent Activity */}
         <div className="lg:col-span-2 space-y-3">
-          <h3 className="text-[13px] font-semibold text-[#64748B] uppercase tracking-widest">
+          <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
             Recent Activity
           </h3>
           <div className="space-y-2">
             {recentActivity.length === 0 && (
-              <p className="text-[12px] text-[#94A3B8] px-1">No activity logged yet this session.</p>
+              <p className="text-[12px] text-subtle px-1">No activity logged yet this session.</p>
             )}
             {recentActivity.map((entry) => {
               const Icon = ACTIVITY_ICON[entry.action] ?? Activity
               return (
                 <div
                   key={entry.id}
-                  className="flex items-start gap-3 bg-card border border-[#E2E8F0] rounded-lg px-3 py-3"
+                  className="flex items-start gap-3 bg-card border border-border rounded-lg px-3 py-3"
                 >
                   <div className="w-7 h-7 rounded-lg bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 flex items-center justify-center shrink-0">
                     <Icon className="w-3.5 h-3.5 text-[#0B6BCB]" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[12px] text-[#334155] line-clamp-2">{summarizeActivity(entry)}</p>
+                    <p className="text-[12px] text-foreground line-clamp-2">{summarizeActivity(entry)}</p>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-[10px] text-[#94A3B8]">{entry.user_name}</span>
-                      <span className="text-[10px] text-[#CBD5E1]">·</span>
-                      <span className="text-[10px] text-[#94A3B8]">
+                      <span className="text-[10px] text-subtle">{entry.user_name}</span>
+                      <span className="text-[10px] text-subtle">·</span>
+                      <span className="text-[10px] text-subtle">
                         {new Date(entry.timestamp).toLocaleDateString("en-US")}
                       </span>
                     </div>
@@ -1194,8 +1194,8 @@ export default function DashboardPage() {
   const ROLE_BADGE_COLORS: Record<typeof role, string> = {
     clinical_staff: "bg-[#0B6BCB]/10 text-[#0B6BCB] border-[#0B6BCB]/30",
     governance_compliance: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30",
-    educator: "bg-card text-[#475569] border-[#CBD5E1]",
-    system_admin: "bg-card text-[#475569] border-[#CBD5E1]",
+    educator: "bg-card text-muted-foreground border-input",
+    system_admin: "bg-card text-muted-foreground border-input",
   }
 
   return (
@@ -1207,20 +1207,20 @@ export default function DashboardPage() {
         <div className="space-y-3">
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
-              <h1 className="text-2xl font-bold font-display text-[#1A2332] mb-1">
+              <h1 className="text-2xl font-bold font-display text-foreground mb-1">
                 {greeting}, {currentUser.name.split(" ")[0]}
                 {currentUser.name.includes("Dr.") || currentUser.name.includes("Nurse") ? "" : ""}
               </h1>
-              <p className="text-[13px] text-[#64748B]">{currentUser.title}</p>
+              <p className="text-[13px] text-muted-foreground">{currentUser.title}</p>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <span className={cn("text-[11px] font-semibold px-2.5 py-1 rounded-full border", ROLE_BADGE_COLORS[role])}>
                 {roleConfig.label}
               </span>
-              <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full border bg-muted text-[#64748B] border-[#E2E8F0]">
+              <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full border bg-muted text-muted-foreground border-border">
                 {currentUser.department}
               </span>
-              <span className="text-[11px] text-[#94A3B8]">
+              <span className="text-[11px] text-subtle">
                 {new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
               </span>
             </div>
@@ -1239,14 +1239,14 @@ export default function DashboardPage() {
               <BarChart3 className="w-4 h-4 text-[#0B6BCB]" />
             </div>
             <div className="min-w-0">
-              <p className="text-[13px] font-semibold text-[#1A2332] group-hover:text-[#0B6BCB] transition-colors">
+              <p className="text-[13px] font-semibold text-foreground group-hover:text-[#0B6BCB] transition-colors">
                 Leadership Overview
               </p>
-              <p className="text-[11px] text-[#64748B]">
+              <p className="text-[11px] text-muted-foreground">
                 Board scorecard, evidence freshness, quarterly activity
               </p>
             </div>
-            <ChevronRight className="w-4 h-4 text-[#94A3B8] group-hover:text-[#0B6BCB] ml-auto shrink-0 transition-colors" />
+            <ChevronRight className="w-4 h-4 text-subtle group-hover:text-[#0B6BCB] ml-auto shrink-0 transition-colors" />
           </Link>
         )}
 

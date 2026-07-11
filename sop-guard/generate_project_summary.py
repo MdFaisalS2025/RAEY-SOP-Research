@@ -6,7 +6,7 @@ from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, HRFlowable, Table, TableStyle
 
 doc = SimpleDocTemplate(
-    "SOP-Guard_Project_Summary.pdf",
+    "Meridian_Project_Summary.pdf",
     pagesize=letter,
     topMargin=0.55*inch, bottomMargin=0.5*inch,
     leftMargin=0.7*inch, rightMargin=0.7*inch,
@@ -27,16 +27,16 @@ styles.add(ParagraphStyle('QA', fontSize=9.5, leading=13, leftIndent=10, spaceAf
 
 s = []
 
-s.append(Paragraph("SOP-Guard: Project Summary", styles['Title2']))
+s.append(Paragraph("Meridian: Project Summary", styles['Title2']))
 s.append(Paragraph("AI-Powered Clinical SOP Assistant with Procedural Faithfulness Verification", styles['Sub']))
 s.append(HRFlowable(width="100%", thickness=1.5, color=HexColor('#1a365d'), spaceAfter=8))
 
 # ---- WHAT IT IS ----
 s.append(Paragraph("What Is This Project?", styles['SH']))
 s.append(Paragraph(
-    "SOP-Guard is an AI system that helps hospital staff find answers from Standard Operating Procedures. "
+    "Meridian is an AI system that helps hospital staff find answers from Standard Operating Procedures. "
     "Instead of searching through long PDF documents, a doctor or nurse types a question in plain language "
-    "and gets a direct answer with the exact source highlighted. What makes SOP-Guard different from a "
+    "and gets a direct answer with the exact source highlighted. What makes Meridian different from a "
     "regular chatbot is that it <b>checks its own answer</b> before showing it. A component called the "
     "Procedural Faithfulness Verifier automatically detects if the answer has a wrong dosage, a missing "
     "step, or an omitted contraindication.",
@@ -86,7 +86,7 @@ s.append(rt)
 s.append(Paragraph("What Makes This Research Novel?", styles['SH']))
 s.append(Paragraph(
     "Existing RAG systems retrieve documents and generate answers, but they have no mechanism to verify "
-    "that the answer is <b>procedurally correct</b>. SOP-Guard introduces the Procedural Faithfulness "
+    "that the answer is <b>procedurally correct</b>. Meridian introduces the Procedural Faithfulness "
     "Verifier, which checks three things: (1) Are numerical thresholds correct? (2) Are procedure steps "
     "in the right order with none missing? (3) Are contraindications properly included? The system also "
     "uses SOP-aware chunking (typed chunks for steps, thresholds, contraindications) instead of generic "
@@ -111,7 +111,7 @@ s.append(Paragraph("Questions You May Be Asked (and How to Answer)", styles['SH'
 qa = [
     ("How is this different from just using ChatGPT?",
      "ChatGPT has no access to your hospital's SOPs and cannot verify if its answer matches the official protocol. "
-     "SOP-Guard retrieves from actual SOP documents and verifies every answer against the source before showing it. "
+     "Meridian retrieves from actual SOP documents and verifies every answer against the source before showing it. "
      "If the answer has a wrong dosage or a missing step, the verifier catches it."),
 
     ("What if the AI gives a wrong answer?",
@@ -151,11 +151,11 @@ for q, a in qa:
 s.append(Spacer(1, 6))
 s.append(HRFlowable(width="100%", thickness=0.5, color=HexColor('#cbd5e0'), spaceAfter=6))
 s.append(Paragraph(
-    "<b>One-line pitch:</b> SOP-Guard is a verifiable clinical RAG system that converts hospital SOP documents "
+    "<b>One-line pitch:</b> Meridian is a verifiable clinical RAG system that converts hospital SOP documents "
     "into searchable knowledge, answers staff questions with source citations, and automatically catches "
     "procedural errors before they reach the clinician.",
     styles['B']))
 s.append(Paragraph("Research prototype. Not for clinical use. All demo SOPs are synthetic.", styles['Sub']))
 
 doc.build(s)
-print("Generated: SOP-Guard_Project_Summary.pdf")
+print("Generated: Meridian_Project_Summary.pdf")

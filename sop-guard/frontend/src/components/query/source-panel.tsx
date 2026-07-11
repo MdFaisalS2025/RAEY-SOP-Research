@@ -30,7 +30,7 @@ function SourceRow({
         onSelect && "cursor-pointer hover:border-[#0B6BCB]/40",
         highlighted
           ? "bg-[#0B6BCB]/[0.06] border-[#0B6BCB]/40"
-          : "bg-card border-[#E2E8F0]",
+          : "bg-card border-border",
         dimmed && "opacity-70"
       )}
     >
@@ -40,22 +40,22 @@ function SourceRow({
         </span>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2 flex-wrap">
-            <span className="text-sm font-semibold text-[#1A2332]">{citation.sop_title}</span>
+            <span className="text-sm font-semibold text-foreground">{citation.sop_title}</span>
             {citation.chunk_type && (
-              <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-card text-[#475569] border border-[#CBD5E1] capitalize">
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-card text-muted-foreground border border-input capitalize">
                 {citation.chunk_type.replace(/_/g, " ")}
               </span>
             )}
           </div>
-          <p className="text-xs text-[#64748B] mt-0.5">{citation.section_title}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{citation.section_title}</p>
           <div className="flex flex-wrap gap-1.5 mt-1.5">
             {citation.version && (
-              <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-card text-[#475569] border border-[#CBD5E1]">
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-card text-muted-foreground border border-input">
                 v{citation.version}
               </span>
             )}
             {citation.effective_date && (
-              <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-card text-[#475569] border border-[#CBD5E1]">
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-card text-muted-foreground border border-input">
                 Effective {citation.effective_date}
               </span>
             )}
@@ -70,10 +70,10 @@ function SourceRow({
               </span>
             )}
           </div>
-          <p className="text-[13px] leading-relaxed text-[#334155] mt-1.5 line-clamp-3">{citation.snippet}</p>
+          <p className="text-[13px] leading-relaxed text-foreground mt-1.5 line-clamp-3">{citation.snippet}</p>
           <div className="flex items-center justify-between gap-3 mt-2.5">
             <div className="flex items-center gap-2 flex-1 max-w-[220px]">
-              <span className="text-[11px] text-[#94A3B8] shrink-0">Relevance</span>
+              <span className="text-[11px] text-subtle shrink-0">Relevance</span>
               <div className="flex-1 h-1.5 rounded-full bg-[#EDF1F5] overflow-hidden">
                 <div
                   className="h-full rounded-full bg-[#0B6BCB] transition-all duration-200"
@@ -113,8 +113,8 @@ export function SourcePanel({
   const uncited = citations.filter((c) => !c.cited_in_answer)
 
   return (
-    <div className="p-5 rounded-2xl bg-card border border-[#E2E8F0] shadow-sm">
-      <h3 className="text-sm font-semibold mb-4 flex items-center gap-2 text-[#1A2332]">
+    <div className="p-5 rounded-2xl bg-card border border-border shadow-sm">
+      <h3 className="text-sm font-semibold mb-4 flex items-center gap-2 text-foreground">
         <FileText className="w-4 h-4 text-[#0B6BCB]" />
         Sources
       </h3>
@@ -127,7 +127,7 @@ export function SourcePanel({
         <div className="mt-4">
           <button
             onClick={() => setShowUncited(!showUncited)}
-            className="inline-flex items-center gap-1.5 text-xs text-[#64748B] hover:text-[#1A2332] transition-colors duration-150"
+            className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors duration-150"
           >
             {showUncited ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
             Also retrieved (not cited) ({uncited.length})

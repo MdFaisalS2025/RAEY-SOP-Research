@@ -39,8 +39,8 @@ function priorityBadge(priority: string) {
   const map: Record<string, string> = {
     urgent: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30",
     high: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30",
-    normal: "bg-card text-[#475569] border border-[#CBD5E1]",
-    low: "bg-card text-[#475569] border border-[#CBD5E1]",
+    normal: "bg-card text-muted-foreground border border-input",
+    low: "bg-card text-muted-foreground border border-input",
   }
   return map[priority] ?? map.normal
 }
@@ -51,7 +51,7 @@ function statusBadgeInfo(status: Proposal["status"]) {
     approved: { cls: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30", label: "Approved" },
     rejected: { cls: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30", label: "Rejected" },
   }
-  return map[status] ?? { cls: "bg-muted text-[#64748B]", label: status }
+  return map[status] ?? { cls: "bg-muted text-muted-foreground", label: status }
 }
 
 const FILTER_TABS: { value: ProposalFilter; label: string }[] = [
@@ -72,7 +72,7 @@ function ProposalCard({ proposal, index }: { proposal: Proposal; index: number }
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.06 }}
-      className="rounded-2xl bg-card border border-[#E2E8F0] overflow-hidden"
+      className="rounded-2xl bg-card border border-border overflow-hidden"
     >
       {proposal.legal_review_required && (
         <div className="flex items-center gap-2 px-4 py-2 bg-[#FEE2E2] dark:bg-red-500/10 border-b border-[#FECACA] dark:border-red-500/30">
@@ -91,7 +91,7 @@ function ProposalCard({ proposal, index }: { proposal: Proposal; index: number }
           </span>
         </div>
 
-        <h3 className="font-display text-base font-bold text-[#1A2332] leading-snug">
+        <h3 className="font-display text-base font-bold text-foreground leading-snug">
           {proposal.title}
         </h3>
 
@@ -99,13 +99,13 @@ function ProposalCard({ proposal, index }: { proposal: Proposal; index: number }
           <div className="flex items-start gap-2">
             <FileText className="w-3.5 h-3.5 text-[#0B6BCB] shrink-0 mt-0.5" />
             <span className="text-xs">
-              <span className="text-[#64748B]">Affected SOP: </span>
+              <span className="text-muted-foreground">Affected SOP: </span>
               <span className="text-[#0B6BCB] font-medium">{proposal.affected_sop_id}</span>
             </span>
           </div>
         )}
 
-        <div className="flex flex-wrap gap-4 text-xs text-[#64748B]">
+        <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
           {proposal.department && (
             <span className="flex items-center gap-1.5">
               <Building2 className="w-3 h-3" />
@@ -120,11 +120,11 @@ function ProposalCard({ proposal, index }: { proposal: Proposal; index: number }
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted border border-[#E2E8F0] text-xs text-[#64748B]">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted border border-border text-xs text-muted-foreground">
             <Users className="w-3 h-3" />
             {proposal.tally.approve} approve · {proposal.tally.reject} reject · {proposal.tally.abstain} abstain
           </span>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted border border-[#E2E8F0] text-xs text-[#64748B]">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted border border-border text-xs text-muted-foreground">
             {proposal.quorum.votes_cast} / {proposal.quorum.threshold} votes for quorum
           </span>
         </div>
@@ -139,12 +139,12 @@ function ProposalCard({ proposal, index }: { proposal: Proposal; index: number }
         </div>
 
         {proposal.ai_summary && (
-          <p className="text-sm text-[#64748B] line-clamp-2 leading-relaxed">
+          <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
             {proposal.ai_summary}
           </p>
         )}
 
-        <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-[#EDF1F5]">
+        <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-border">
           <Link
             href={`/proposals/${proposal.id}`}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 text-xs text-[#0B6BCB] hover:bg-[#0B6BCB]/20 transition-colors"
@@ -209,35 +209,35 @@ function NewProposalModal({ onClose, onCreated }: { onClose: () => void; onCreat
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={onClose}>
       <motion.div
         initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-lg bg-card border border-[#E2E8F0] rounded-2xl p-6 space-y-4"
+        className="w-full max-w-lg bg-card border border-border rounded-2xl p-6 space-y-4"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-[#1A2332]">New Proposal</h2>
+          <h2 className="text-lg font-bold text-foreground">New Proposal</h2>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted"><X className="w-4 h-4" /></button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label className="text-xs font-medium text-[#64748B]">Title *</label>
+            <label className="text-xs font-medium text-muted-foreground">Title *</label>
             <input value={title} onChange={(e) => setTitle(e.target.value)} required
-              className="w-full mt-1 px-3 py-2 rounded-lg border border-[#E2E8F0] bg-background text-sm" />
+              className="w-full mt-1 px-3 py-2 rounded-lg border border-border bg-background text-sm" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-medium text-[#64748B]">Department</label>
+              <label className="text-xs font-medium text-muted-foreground">Department</label>
               <input value={department} onChange={(e) => setDepartment(e.target.value)}
-                className="w-full mt-1 px-3 py-2 rounded-lg border border-[#E2E8F0] bg-background text-sm" />
+                className="w-full mt-1 px-3 py-2 rounded-lg border border-border bg-background text-sm" />
             </div>
             <div>
-              <label className="text-xs font-medium text-[#64748B]">Affected SOP ID</label>
+              <label className="text-xs font-medium text-muted-foreground">Affected SOP ID</label>
               <input value={affectedSopId} onChange={(e) => setAffectedSopId(e.target.value)} placeholder="e.g. SOP-ICU-001"
-                className="w-full mt-1 px-3 py-2 rounded-lg border border-[#E2E8F0] bg-background text-sm" />
+                className="w-full mt-1 px-3 py-2 rounded-lg border border-border bg-background text-sm" />
             </div>
           </div>
           <div>
-            <label className="text-xs font-medium text-[#64748B]">Priority</label>
+            <label className="text-xs font-medium text-muted-foreground">Priority</label>
             <select value={priority} onChange={(e) => setPriority(e.target.value)}
-              className="w-full mt-1 px-3 py-2 rounded-lg border border-[#E2E8F0] bg-background text-sm">
+              className="w-full mt-1 px-3 py-2 rounded-lg border border-border bg-background text-sm">
               <option value="low">Low</option>
               <option value="normal">Normal</option>
               <option value="high">High</option>
@@ -245,15 +245,15 @@ function NewProposalModal({ onClose, onCreated }: { onClose: () => void; onCreat
             </select>
           </div>
           <div>
-            <label className="text-xs font-medium text-[#64748B]">Summary / Rationale</label>
+            <label className="text-xs font-medium text-muted-foreground">Summary / Rationale</label>
             <textarea value={aiSummary} onChange={(e) => setAiSummary(e.target.value)} rows={3}
-              className="w-full mt-1 px-3 py-2 rounded-lg border border-[#E2E8F0] bg-background text-sm" />
+              className="w-full mt-1 px-3 py-2 rounded-lg border border-border bg-background text-sm" />
           </div>
-          <label className="flex items-center gap-2 text-xs text-[#64748B]">
+          <label className="flex items-center gap-2 text-xs text-muted-foreground">
             <input type="checkbox" checked={legalReview} onChange={(e) => setLegalReview(e.target.checked)} />
             Requires legal review
           </label>
-          <div className="pt-1 border-t border-[#EDF1F5]">
+          <div className="pt-1 border-t border-border">
             <button type="button" onClick={() => setShowTextChange((v) => !v)}
               className="text-xs font-medium text-[#0B6BCB] hover:underline">
               {showTextChange ? "Hide" : "+ Add"} specific text change (for redline review)
@@ -261,14 +261,14 @@ function NewProposalModal({ onClose, onCreated }: { onClose: () => void; onCreat
             {showTextChange && (
               <div className="mt-2 space-y-2">
                 <div>
-                  <label className="text-xs font-medium text-[#64748B]">Current text (optional - defaults to the affected SOP&apos;s current text)</label>
+                  <label className="text-xs font-medium text-muted-foreground">Current text (optional - defaults to the affected SOP&apos;s current text)</label>
                   <textarea value={oldText} onChange={(e) => setOldText(e.target.value)} rows={3}
-                    className="w-full mt-1 px-3 py-2 rounded-lg border border-[#E2E8F0] bg-background text-sm font-mono" />
+                    className="w-full mt-1 px-3 py-2 rounded-lg border border-border bg-background text-sm font-mono" />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-[#64748B]">Proposed new text</label>
+                  <label className="text-xs font-medium text-muted-foreground">Proposed new text</label>
                   <textarea value={newText} onChange={(e) => setNewText(e.target.value)} rows={3}
-                    className="w-full mt-1 px-3 py-2 rounded-lg border border-[#E2E8F0] bg-background text-sm font-mono" />
+                    className="w-full mt-1 px-3 py-2 rounded-lg border border-border bg-background text-sm font-mono" />
                 </div>
               </div>
             )}
@@ -318,9 +318,9 @@ export default function ProposalsPage() {
           <div className="space-y-1">
             <div className="flex items-center gap-3">
               <ClipboardList className="w-7 h-7 text-[#0B6BCB]" />
-              <h1 className="font-display text-3xl font-bold text-[#1A2332]">Update Proposals</h1>
+              <h1 className="font-display text-3xl font-bold text-foreground">Update Proposals</h1>
             </div>
-            <p className="text-[#64748B] text-sm pl-10">Live proposals and committee votes from the governance API.</p>
+            <p className="text-muted-foreground text-sm pl-10">Live proposals and committee votes from the governance API.</p>
           </div>
 
           {hasPermission("create_proposal") && (
@@ -345,8 +345,8 @@ export default function ProposalsPage() {
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {stats.map(({ label, value, color }) => (
-            <div key={label} className="rounded-xl bg-card border border-[#E2E8F0] p-4">
-              <p className="text-xs text-[#64748B] mb-1">{label}</p>
+            <div key={label} className="rounded-xl bg-card border border-border p-4">
+              <p className="text-xs text-muted-foreground mb-1">{label}</p>
               <p className={cn("text-3xl font-bold font-display", color)}>{value}</p>
             </div>
           ))}
@@ -359,7 +359,7 @@ export default function ProposalsPage() {
               onClick={() => setActiveFilter(tab.value)}
               className={cn(
                 "px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors",
-                activeFilter === tab.value ? "bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30" : "text-[#64748B] hover:bg-muted"
+                activeFilter === tab.value ? "bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30" : "text-muted-foreground hover:bg-muted"
               )}
             >
               {tab.label}
@@ -369,13 +369,13 @@ export default function ProposalsPage() {
 
         <div className="space-y-4">
           {loading ? (
-            <div className="flex items-center justify-center py-16 text-[#64748B] gap-2">
+            <div className="flex items-center justify-center py-16 text-muted-foreground gap-2">
               <Loader2 className="w-5 h-5 animate-spin" /> Loading proposals...
             </div>
           ) : filtered.length === 0 ? (
-            <div className="rounded-2xl bg-card border border-[#E2E8F0] p-12 text-center">
-              <ClipboardList className="w-8 h-8 text-[#64748B] mx-auto mb-3 opacity-40" />
-              <p className="text-[#64748B] text-sm">No proposals match this filter.</p>
+            <div className="rounded-2xl bg-card border border-border p-12 text-center">
+              <ClipboardList className="w-8 h-8 text-muted-foreground mx-auto mb-3 opacity-40" />
+              <p className="text-muted-foreground text-sm">No proposals match this filter.</p>
             </div>
           ) : (
             filtered.map((p, i) => <ProposalCard key={p.id} proposal={p} index={i} />)

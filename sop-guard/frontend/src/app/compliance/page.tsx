@@ -53,7 +53,7 @@ const statusLabel: Record<string, { label: string; className: string }> = {
   needs_update: { label: "Needs Update", className: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30" },
   under_review: { label: "Under Review", className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30" },
   approved: { label: "Approved", className: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30" },
-  draft: { label: "Draft", className: "bg-card text-[#475569] border border-[#CBD5E1]" },
+  draft: { label: "Draft", className: "bg-card text-muted-foreground border border-input" },
 }
 
 const roleLabel: Record<string, string> = {
@@ -118,15 +118,15 @@ function CertificateModal({
         initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.96 }}
-        className="relative w-full max-w-lg rounded-2xl bg-muted border border-[#E2E8F0] shadow-md overflow-hidden"
+        className="relative w-full max-w-lg rounded-2xl bg-muted border border-border shadow-md overflow-hidden"
       >
         {/* Certificate header */}
-        <div className="bg-card border-b border-[#E2E8F0] px-6 py-4 flex items-center justify-between">
+        <div className="bg-card border-b border-border px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Shield className="w-5 h-5 text-[#0B6BCB]" />
-            <span className="font-mono text-xs text-[#0B6BCB] uppercase tracking-widest">SOP-Guard Attestation Certificate</span>
+            <span className="font-mono text-xs text-[#0B6BCB] uppercase tracking-widest">Meridian Attestation Certificate</span>
           </div>
-          <button onClick={onClose} aria-label="Close certificate" className="text-[#64748B] hover:text-[#0B6BCB] transition-colors">
+          <button onClick={onClose} aria-label="Close certificate" className="text-muted-foreground hover:text-[#0B6BCB] transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -134,40 +134,40 @@ function CertificateModal({
         {/* Certificate body */}
         <div className="px-6 py-5 space-y-4 font-mono text-sm">
           <div>
-            <p className="text-xs text-[#94A3B8] uppercase tracking-widest mb-0.5">Certificate ID</p>
-            <p className="text-[#334155]">{record.id}</p>
+            <p className="text-xs text-subtle uppercase tracking-widest mb-0.5">Certificate ID</p>
+            <p className="text-foreground">{record.id}</p>
           </div>
 
-          <div className="border-t border-[#E2E8F0] pt-4">
-            <p className="text-xs text-[#94A3B8] uppercase tracking-widest mb-1">This certifies that:</p>
-            <p className="text-[#1A2332] font-semibold text-base">{record.user_name}</p>
-            <p className="text-[#64748B] text-xs">{record.department} - {roleLabel[record.user_role] ?? record.user_role}</p>
+          <div className="border-t border-border pt-4">
+            <p className="text-xs text-subtle uppercase tracking-widest mb-1">This certifies that:</p>
+            <p className="text-foreground font-semibold text-base">{record.user_name}</p>
+            <p className="text-muted-foreground text-xs">{record.department} - {roleLabel[record.user_role] ?? record.user_role}</p>
           </div>
 
-          <div className="border-t border-[#E2E8F0] pt-4">
-            <p className="text-xs text-[#94A3B8] uppercase tracking-widest mb-1">Has read, acknowledged, and agreed to comply with:</p>
-            <p className="text-[#1A2332] font-medium">{sopTitle}</p>
+          <div className="border-t border-border pt-4">
+            <p className="text-xs text-subtle uppercase tracking-widest mb-1">Has read, acknowledged, and agreed to comply with:</p>
+            <p className="text-foreground font-medium">{sopTitle}</p>
             <span className="inline-block mt-1 px-2 py-0.5 rounded bg-[#0B6BCB]/10 text-[#0B6BCB] text-xs border border-[#0B6BCB]/30">
               Version {record.sop_version || "?"}
             </span>
           </div>
 
-          <div className="border-t border-[#E2E8F0] pt-4">
-            <p className="text-xs text-[#94A3B8] uppercase tracking-widest mb-1">Legal Statement:</p>
-            <p className="text-[#334155] italic leading-relaxed">&ldquo;{record.legal_text}&rdquo;</p>
+          <div className="border-t border-border pt-4">
+            <p className="text-xs text-subtle uppercase tracking-widest mb-1">Legal Statement:</p>
+            <p className="text-foreground italic leading-relaxed">&ldquo;{record.legal_text}&rdquo;</p>
           </div>
 
-          <div className="border-t border-[#E2E8F0] pt-4 space-y-1.5">
+          <div className="border-t border-border pt-4 space-y-1.5">
             <div className="flex justify-between text-xs">
-              <span className="text-[#94A3B8]">Timestamp</span>
-              <span className="text-[#334155]">{record.attested_at ? formatAttestedAtLong(record.attested_at) : "unknown"}</span>
+              <span className="text-subtle">Timestamp</span>
+              <span className="text-foreground">{record.attested_at ? formatAttestedAtLong(record.attested_at) : "unknown"}</span>
             </div>
             <div className="flex justify-between text-xs">
-              <span className="text-[#94A3B8]">IP Address</span>
-              <span className="text-[#334155] font-mono">{record.ip_address || "unknown"}</span>
+              <span className="text-subtle">IP Address</span>
+              <span className="text-foreground font-mono">{record.ip_address || "unknown"}</span>
             </div>
             <div className="flex justify-between text-xs">
-              <span className="text-[#94A3B8]">Status</span>
+              <span className="text-subtle">Status</span>
               <span className="text-[#15803D] dark:text-green-400 flex items-center gap-1">
                 <Check className="w-3 h-3" /> Legally Valid
               </span>
@@ -176,10 +176,10 @@ function CertificateModal({
         </div>
 
         {/* Actions */}
-        <div className="px-6 py-4 border-t border-[#E2E8F0] flex items-center justify-between bg-card">
+        <div className="px-6 py-4 border-t border-border flex items-center justify-between bg-card">
           <button
             onClick={() => window.print()}
-            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-muted text-[#334155] hover:bg-[#E2E8F0] transition-colors border border-[#E2E8F0]"
+            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-muted text-foreground hover:bg-[#E2E8F0] transition-colors border border-border"
           >
             <Printer className="w-3.5 h-3.5" /> Print Certificate
           </button>
@@ -258,26 +258,26 @@ function TestAttestationModal({
         initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.96 }}
-        className="relative w-full max-w-md rounded-2xl bg-muted border border-[#E2E8F0] shadow-md overflow-hidden"
+        className="relative w-full max-w-md rounded-2xl bg-muted border border-border shadow-md overflow-hidden"
       >
-        <div className="bg-card border-b border-[#E2E8F0] px-6 py-4 flex items-center justify-between">
+        <div className="bg-card border-b border-border px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Shield className="w-5 h-5 text-[#0B6BCB]" />
             <span className="font-semibold text-sm">Attest to a SOP</span>
           </div>
-          <button onClick={onClose} aria-label="Close attestation flow" className="text-[#64748B] hover:text-[#0B6BCB] transition-colors">
+          <button onClick={onClose} aria-label="Close attestation flow" className="text-muted-foreground hover:text-[#0B6BCB] transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
 
         <div className="px-6 py-5 space-y-4">
           {!sop ? (
-            <p className="text-sm text-[#64748B]">No SOPs available to attest to yet - upload one first.</p>
+            <p className="text-sm text-muted-foreground">No SOPs available to attest to yet - upload one first.</p>
           ) : !attested ? (
             <>
-              <p className="text-sm text-[#334155]">
+              <p className="text-sm text-foreground">
                 You are about to attest to{" "}
-                <span className="font-semibold text-[#1A2332]">{sop.title}</span>{" "}
+                <span className="font-semibold text-foreground">{sop.title}</span>{" "}
                 version <span className="text-[#0B6BCB] font-mono">{sop.version || "1"}</span>.
               </p>
 
@@ -298,16 +298,16 @@ function TestAttestationModal({
               </div>
 
               <div>
-                <label className="text-xs font-medium text-[#64748B] mb-1 block">
-                  Type your full name to confirm your identity: <span className="font-semibold text-[#1A2332]">{currentUser.name}</span>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                  Type your full name to confirm your identity: <span className="font-semibold text-foreground">{currentUser.name}</span>
                 </label>
                 <input
                   value={nameConfirmation}
                   onChange={(e) => setNameConfirmation(e.target.value)}
                   placeholder="Type your full name exactly"
-                  className="w-full px-3 py-2 rounded-xl border border-[#E2E8F0] bg-background text-sm focus:outline-none focus:border-[#0B6BCB]/50"
+                  className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm focus:outline-none focus:border-[#0B6BCB]/50"
                 />
-                <p className="text-[11px] text-[#94A3B8] mt-1">
+                <p className="text-[11px] text-subtle mt-1">
                   A second identification step at the moment of signing, separate from being logged in.
                 </p>
               </div>
@@ -323,7 +323,7 @@ function TestAttestationModal({
                 </button>
                 <button
                   onClick={onClose}
-                  className="flex-1 py-2.5 rounded-xl bg-muted text-[#334155] hover:bg-[#E2E8F0] text-sm font-medium transition-colors border border-[#E2E8F0]"
+                  className="flex-1 py-2.5 rounded-xl bg-muted text-foreground hover:bg-[#E2E8F0] text-sm font-medium transition-colors border border-border"
                 >
                   Cancel
                 </button>
@@ -335,26 +335,26 @@ function TestAttestationModal({
                 <Check className="w-7 h-7 text-[#15803D] dark:text-green-400" />
               </div>
               <div>
-                <p className="font-semibold text-[#1A2332] text-base">Attestation Recorded</p>
-                <p className="text-xs text-[#64748B] mt-1">Your acknowledgment has been logged with a legal timestamp.</p>
+                <p className="font-semibold text-foreground text-base">Attestation Recorded</p>
+                <p className="text-xs text-muted-foreground mt-1">Your acknowledgment has been logged with a legal timestamp.</p>
               </div>
-              <div className="rounded-xl bg-card border border-[#E2E8F0] p-3 text-xs text-left space-y-1.5">
+              <div className="rounded-xl bg-card border border-border p-3 text-xs text-left space-y-1.5">
                 <div className="flex justify-between">
-                  <span className="text-[#94A3B8]">Timestamp</span>
-                  <span className="text-[#334155] font-mono">{result?.attested_at ? formatAttestedAtLong(result.attested_at) : "unknown"}</span>
+                  <span className="text-subtle">Timestamp</span>
+                  <span className="text-foreground font-mono">{result?.attested_at ? formatAttestedAtLong(result.attested_at) : "unknown"}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[#94A3B8]">SOP</span>
-                  <span className="text-[#334155]">{sop.title}</span>
+                  <span className="text-subtle">SOP</span>
+                  <span className="text-foreground">{sop.title}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[#94A3B8]">Version</span>
+                  <span className="text-subtle">Version</span>
                   <span className="text-[#0B6BCB] font-mono">{sop.version || "1"}</span>
                 </div>
                 {result?.content_hash && (
-                  <div className="pt-1.5 mt-1.5 border-t border-[#EDF1F5]">
-                    <span className="text-[#94A3B8] block mb-0.5">Tamper-evidence hash (chained to prior signature)</span>
-                    <span className="text-[#334155] font-mono text-[10px] break-all">{result.content_hash}</span>
+                  <div className="pt-1.5 mt-1.5 border-t border-border">
+                    <span className="text-subtle block mb-0.5">Tamper-evidence hash (chained to prior signature)</span>
+                    <span className="text-foreground font-mono text-[10px] break-all">{result.content_hash}</span>
                   </div>
                 )}
               </div>
@@ -400,7 +400,7 @@ function ChainIntegrityBadge() {
           "flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors",
           state === "intact" && "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30",
           state === "broken" && "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30",
-          (state === "idle" || state === "checking" || state === "error") && "bg-muted text-[#64748B] border-[#E2E8F0]",
+          (state === "idle" || state === "checking" || state === "error") && "bg-muted text-muted-foreground border-border",
         )}
       >
         {state === "checking" && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
@@ -505,14 +505,14 @@ function AcknowledgmentsTab() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.07 }}
-            className="rounded-2xl bg-card border border-[#E2E8F0] p-4 flex items-center gap-3"
+            className="rounded-2xl bg-card border border-border p-4 flex items-center gap-3"
           >
             <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", s.bg)}>
               <s.icon className={cn("w-5 h-5", s.color)} />
             </div>
             <div>
               <p className={cn("text-2xl font-bold", s.color)}>{s.value}</p>
-              <p className="text-xs text-[#64748B]">{s.label}</p>
+              <p className="text-xs text-muted-foreground">{s.label}</p>
             </div>
           </motion.div>
         ))}
@@ -528,7 +528,7 @@ function AcknowledgmentsTab() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
-              className="rounded-2xl bg-card border border-[#E2E8F0] p-4 space-y-3"
+              className="rounded-2xl bg-card border border-border p-4 space-y-3"
             >
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold text-sm">{dept.department}</h3>
@@ -544,32 +544,32 @@ function AcknowledgmentsTab() {
               </div>
               <div className="grid grid-cols-3 gap-1.5 text-xs">
                 <div className="rounded-lg bg-muted p-1.5 text-center">
-                  <p className="font-semibold text-[#1A2332]">{dept.total_sops}</p>
-                  <p className="text-[#64748B]">Total SOPs</p>
+                  <p className="font-semibold text-foreground">{dept.total_sops}</p>
+                  <p className="text-muted-foreground">Total SOPs</p>
                 </div>
                 <div className="rounded-lg bg-muted p-1.5 text-center">
                   <p className="font-semibold text-[#15803D] dark:text-green-400">{dept.acknowledged}</p>
-                  <p className="text-[#64748B]">Ack&apos;d</p>
+                  <p className="text-muted-foreground">Ack&apos;d</p>
                 </div>
                 <div className="rounded-lg bg-muted p-1.5 text-center">
                   <p className="font-semibold text-[#B91C1C] dark:text-red-400">{dept.overdue_acknowledgments}</p>
-                  <p className="text-[#64748B]">Overdue</p>
+                  <p className="text-muted-foreground">Overdue</p>
                 </div>
                 <div className="rounded-lg bg-muted p-1.5 text-center">
                   <p className="font-semibold text-[#0B6BCB]">{dept.training_completion_rate}%</p>
-                  <p className="text-[#64748B]">Training</p>
+                  <p className="text-muted-foreground">Training</p>
                 </div>
                 <div className="rounded-lg bg-muted p-1.5 text-center">
                   <p className="font-semibold text-[#B45309] dark:text-amber-400">{dept.risk_flags}</p>
-                  <p className="text-[#64748B]">Risk Flags</p>
+                  <p className="text-muted-foreground">Risk Flags</p>
                 </div>
                 <div className="rounded-lg bg-muted p-1.5 text-center">
-                  <p className="font-semibold text-[#64748B]">{dept.open_proposals}</p>
-                  <p className="text-[#64748B]">Proposals</p>
+                  <p className="font-semibold text-muted-foreground">{dept.open_proposals}</p>
+                  <p className="text-muted-foreground">Proposals</p>
                 </div>
               </div>
               <div className="flex items-center justify-between pt-1">
-                <p className="text-xs text-[#64748B]">Last audit: {dept.last_audit_date}</p>
+                <p className="text-xs text-muted-foreground">Last audit: {dept.last_audit_date}</p>
                 <button className="text-xs text-[#0B6BCB] hover:text-[#0B6BCB] transition-colors font-medium">
                   View Details &rarr;
                 </button>
@@ -582,11 +582,11 @@ function AcknowledgmentsTab() {
       {/* SOPs Requiring Review */}
       <section>
         <h2 className="text-lg font-semibold font-display mb-3">SOPs Requiring Review</h2>
-        <div className="rounded-2xl bg-card border border-[#E2E8F0] overflow-hidden">
+        <div className="rounded-2xl bg-card border border-border overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-[#E2E8F0] text-xs text-[#64748B] uppercase tracking-wider">
+              <tr className="border-b border-border text-xs text-muted-foreground uppercase tracking-wider">
                 <th className="p-4 text-left">SOP Title</th>
                 <th className="p-4 text-left">Department</th>
                 <th className="p-4 text-left">Status</th>
@@ -597,25 +597,25 @@ function AcknowledgmentsTab() {
             </thead>
             <tbody>
               {sopsNeedingReview.map((sop) => (
-                <tr key={sop.id} className="border-b border-[#EDF1F5] hover:bg-[#F8FAFC] transition-colors">
+                <tr key={sop.id} className="border-b border-border hover:bg-[#F8FAFC] transition-colors">
                   <td className="p-4">
-                    <p className="font-medium text-[#1A2332] truncate max-w-[240px]">{sop.title}</p>
-                    <p className="text-xs text-[#64748B]">{sop.sop_id}</p>
+                    <p className="font-medium text-foreground truncate max-w-[240px]">{sop.title}</p>
+                    <p className="text-xs text-muted-foreground">{sop.sop_id}</p>
                   </td>
-                  <td className="p-4 text-[#64748B]">{sop.department}</td>
+                  <td className="p-4 text-muted-foreground">{sop.department}</td>
                   <td className="p-4">
                     <span className={cn("px-2 py-0.5 rounded-full text-xs font-medium", statusLabel[sop.status]?.className)}>
                       {statusLabel[sop.status]?.label ?? sop.status}
                     </span>
                   </td>
                   <td className="p-4 text-[#B45309] dark:text-amber-400 text-xs">{sop.review_due_date}</td>
-                  <td className="p-4 text-[#64748B] text-xs">{sop.owner}</td>
+                  <td className="p-4 text-muted-foreground text-xs">{sop.owner}</td>
                   <td className="p-4">
                     <div className="flex items-center gap-2">
                       <button className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-[#0B6BCB]/10 text-[#0B6BCB] hover:bg-[#0B6BCB]/20 transition-colors">
                         <Eye className="w-3 h-3" /> View SOP
                       </button>
-                      <button className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-muted text-[#64748B] hover:bg-[#E2E8F0] transition-colors">
+                      <button className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-muted text-muted-foreground hover:bg-[#E2E8F0] transition-colors">
                         <GitBranch className="w-3 h-3" /> Create Proposal
                       </button>
                     </div>
@@ -648,23 +648,23 @@ function AcknowledgmentsTab() {
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {attestationStats.map((s) => (
-            <div key={s.label} className="rounded-xl bg-card border border-[#E2E8F0] p-3">
+            <div key={s.label} className="rounded-xl bg-card border border-border p-3">
               <p className={cn("text-xl font-bold", s.color)}>{s.value}</p>
-              <p className="text-xs text-[#64748B] mt-0.5">{s.label}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{s.label}</p>
             </div>
           ))}
         </div>
 
-        <div className="rounded-xl bg-card border border-[#E2E8F0] overflow-hidden">
+        <div className="rounded-xl bg-card border border-border overflow-hidden">
           <button
             onClick={() => setInfoExpanded((v) => !v)}
-            className="w-full flex items-center justify-between px-4 py-3 text-sm text-[#334155] hover:bg-[#F8FAFC] transition-colors"
+            className="w-full flex items-center justify-between px-4 py-3 text-sm text-foreground hover:bg-[#F8FAFC] transition-colors"
           >
             <div className="flex items-center gap-2">
-              <FileText className="w-4 h-4 text-[#64748B]" />
+              <FileText className="w-4 h-4 text-muted-foreground" />
               <span className="font-medium">What is Legal Attestation?</span>
             </div>
-            {infoExpanded ? <ChevronUp className="w-4 h-4 text-[#94A3B8]" /> : <ChevronDown className="w-4 h-4 text-[#94A3B8]" />}
+            {infoExpanded ? <ChevronUp className="w-4 h-4 text-subtle" /> : <ChevronDown className="w-4 h-4 text-subtle" />}
           </button>
           <AnimatePresence>
             {infoExpanded && (
@@ -675,7 +675,7 @@ function AcknowledgmentsTab() {
                 transition={{ duration: 0.2 }}
                 className="overflow-hidden"
               >
-                <div className="px-4 pb-4 text-sm text-[#64748B] leading-relaxed border-t border-[#E2E8F0]">
+                <div className="px-4 pb-4 text-sm text-muted-foreground leading-relaxed border-t border-border">
                   <p className="mt-3">
                     Electronic attestation records provide legally defensible proof that staff have read
                     and acknowledged specific SOP versions. Each record includes: staff identity, timestamp,
@@ -688,11 +688,11 @@ function AcknowledgmentsTab() {
           </AnimatePresence>
         </div>
 
-        <div className="rounded-2xl bg-card border border-[#E2E8F0] overflow-hidden">
+        <div className="rounded-2xl bg-card border border-border overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm min-w-[860px]">
               <thead>
-                <tr className="border-b border-[#E2E8F0] text-xs text-[#64748B] uppercase tracking-wider">
+                <tr className="border-b border-border text-xs text-muted-foreground uppercase tracking-wider">
                   <th className="p-4 text-left">Staff Member</th>
                   <th className="p-4 text-left">Department</th>
                   <th className="p-4 text-left">SOP</th>
@@ -706,22 +706,22 @@ function AcknowledgmentsTab() {
               <tbody>
                 {attestations.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="p-6 text-center text-xs text-[#64748B]">No attestations recorded yet.</td>
+                    <td colSpan={8} className="p-6 text-center text-xs text-muted-foreground">No attestations recorded yet.</td>
                   </tr>
                 )}
                 {attestations.map((rec) => {
                   const title = sopTitleById[rec.sop_id] ?? rec.sop_id
                   return (
-                  <tr key={rec.id} className="border-b border-[#EDF1F5] hover:bg-[#F8FAFC] transition-colors">
+                  <tr key={rec.id} className="border-b border-border hover:bg-[#F8FAFC] transition-colors">
                     <td className="p-4">
-                      <p className="font-medium text-[#1A2332]">{rec.user_name}</p>
-                      <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded bg-muted text-[#64748B] text-[10px] border border-[#E2E8F0]">
+                      <p className="font-medium text-foreground">{rec.user_name}</p>
+                      <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded bg-muted text-muted-foreground text-[10px] border border-border">
                         {roleLabel[rec.user_role] ?? rec.user_role}
                       </span>
                     </td>
-                    <td className="p-4 text-[#64748B] text-xs">{rec.department}</td>
+                    <td className="p-4 text-muted-foreground text-xs">{rec.department}</td>
                     <td className="p-4">
-                      <p className="text-[#1A2332] text-xs truncate max-w-[200px]" title={title}>
+                      <p className="text-foreground text-xs truncate max-w-[200px]" title={title}>
                         {title.length > 30 ? title.slice(0, 30) + "..." : title}
                       </p>
                     </td>
@@ -730,11 +730,11 @@ function AcknowledgmentsTab() {
                         v{rec.sop_version || "?"}
                       </span>
                     </td>
-                    <td className="p-4 text-xs text-[#64748B] whitespace-nowrap">
+                    <td className="p-4 text-xs text-muted-foreground whitespace-nowrap">
                       {rec.attested_at ? formatAttestedAt(rec.attested_at) : "unknown"}
                     </td>
                     <td className="p-4">
-                      <span className="font-mono text-xs text-[#64748B]">{rec.ip_address || "unknown"}</span>
+                      <span className="font-mono text-xs text-muted-foreground">{rec.ip_address || "unknown"}</span>
                     </td>
                     <td className="p-4">
                       <span className="flex items-center gap-1 text-[#15803D] dark:text-green-400 text-xs">
@@ -744,7 +744,7 @@ function AcknowledgmentsTab() {
                     <td className="p-4">
                       <button
                         onClick={() => setCertRecord(rec)}
-                        className="text-xs px-2.5 py-1 rounded-lg bg-muted text-[#334155] hover:bg-[#E2E8F0] transition-colors border border-[#E2E8F0]"
+                        className="text-xs px-2.5 py-1 rounded-lg bg-muted text-foreground hover:bg-[#E2E8F0] transition-colors border border-border"
                       >
                         View Certificate
                       </button>
@@ -859,7 +859,7 @@ function getAlertTier(days: number): AlertTier {
 }
 
 const ALERT_TIER_META: Record<AlertTier, { label: string; badgeClass: string }> = {
-  current: { label: "Current", badgeClass: "bg-card text-[#64748B] border border-[#CBD5E1]" },
+  current: { label: "Current", badgeClass: "bg-card text-muted-foreground border border-input" },
   owner_notified: { label: "Owner Notified", badgeClass: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30" },
   dept_notified: { label: "Dept Head Notified", badgeClass: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30" },
   compliance_notified: { label: "Compliance Notified", badgeClass: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30" },
@@ -868,7 +868,7 @@ const ALERT_TIER_META: Record<AlertTier, { label: string; badgeClass: string }> 
 }
 
 const ESCALATION_STEPS = [
-  { label: "90 days out", action: "Notify Owner", tier: "owner_notified" as AlertTier, color: "bg-[#64748B]", textColor: "text-[#64748B]", borderColor: "border-[#64748B]" },
+  { label: "90 days out", action: "Notify Owner", tier: "owner_notified" as AlertTier, color: "bg-[#64748B]", textColor: "text-muted-foreground", borderColor: "border-[#64748B]" },
   { label: "60 days out", action: "Notify Dept Head", tier: "dept_notified" as AlertTier, color: "bg-[#B45309]", textColor: "text-[#B45309] dark:text-amber-400", borderColor: "border-[#B45309]" },
   { label: "30 days out", action: "Notify Compliance", tier: "compliance_notified" as AlertTier, color: "bg-[#B45309]", textColor: "text-[#B45309] dark:text-amber-400", borderColor: "border-[#B45309]" },
   { label: "7 days out", action: "CMO Escalation", tier: "cmo_escalation" as AlertTier, color: "bg-[#B91C1C]", textColor: "text-[#B91C1C] dark:text-red-400", borderColor: "border-[#B91C1C]" },
@@ -934,7 +934,7 @@ function ReviewsTab() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.07 }}
-            className="rounded-2xl bg-card border border-[#E2E8F0] p-4 flex items-center gap-3"
+            className="rounded-2xl bg-card border border-border p-4 flex items-center gap-3"
           >
             <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", s.bg)}>
               <s.icon className={cn("w-5 h-5", s.color)} />
@@ -947,7 +947,7 @@ function ReviewsTab() {
         ))}
       </div>
 
-      <section className="rounded-2xl bg-card border border-[#E2E8F0] p-5">
+      <section className="rounded-2xl bg-card border border-border p-5">
         <div className="mb-4">
           <h2 className="text-base font-semibold">Staged Escalation Protocol</h2>
           <p className="text-xs text-muted-foreground mt-0.5">TJC LD.04.03.07 - Automated notification escalation based on days until review due date</p>
@@ -970,9 +970,9 @@ function ReviewsTab() {
                   "w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all",
                   isActive
                     ? `${step.color} ${step.borderColor} shadow-lg`
-                    : "bg-muted border-[#CBD5E1]"
+                    : "bg-muted border-input"
                 )}>
-                  <span className={cn("text-xs font-bold", isActive ? "text-white" : "text-[#94A3B8]")}>{i + 1}</span>
+                  <span className={cn("text-xs font-bold", isActive ? "text-white" : "text-subtle")}>{i + 1}</span>
                 </div>
                 <p className={cn(
                   "text-[10px] text-center leading-tight",
@@ -986,7 +986,7 @@ function ReviewsTab() {
         </div>
 
         {mostCriticalTier !== "current" && (
-          <div className="mt-3 px-3 py-2 rounded-lg bg-[#F8FAFC] border border-[#EDF1F5]">
+          <div className="mt-3 px-3 py-2 rounded-lg bg-[#F8FAFC] border border-border">
             <p className="text-xs text-muted-foreground">
               Most critical SOP is at tier:{" "}
               <span className={cn("font-semibold", ALERT_TIER_META[mostCriticalTier].badgeClass.includes("red") ? "text-[#B91C1C] dark:text-red-400" : "text-[#B45309] dark:text-amber-400")}>
@@ -1008,13 +1008,13 @@ function ReviewsTab() {
         )}
 
         {!loading && items.length === 0 && (
-          <div className="p-8 rounded-2xl bg-card border border-[#E2E8F0] text-center text-sm text-muted-foreground">
+          <div className="p-8 rounded-2xl bg-card border border-border text-center text-sm text-muted-foreground">
             No SOPs with a scheduled review date yet.
           </div>
         )}
 
         {!loading && unscheduledCount > 0 && (
-          <div className="mb-3 px-3 py-2 rounded-lg bg-[#F8FAFC] border border-[#EDF1F5] text-xs text-muted-foreground">
+          <div className="mb-3 px-3 py-2 rounded-lg bg-[#F8FAFC] border border-border text-xs text-muted-foreground">
             {unscheduledCount} SOP{unscheduledCount === 1 ? "" : "s"} without a scheduled review date {unscheduledCount === 1 ? "is" : "are"} not shown below.
           </div>
         )}
@@ -1030,7 +1030,7 @@ function ReviewsTab() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.04 }}
                 className={cn(
-                  "rounded-2xl bg-card border border-[#E2E8F0] p-5",
+                  "rounded-2xl bg-card border border-border p-5",
                   meta.rowClass
                 )}
               >
@@ -1092,7 +1092,7 @@ function ReviewsTab() {
         </div>
       </section>
 
-      <div className="rounded-2xl bg-card border border-[#E2E8F0] p-4">
+      <div className="rounded-2xl bg-card border border-border p-4">
         <h3 className="text-sm font-medium mb-3 text-muted-foreground">Alert Tier Reference</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
           {(["expired", "due_soon", "upcoming", "current"] as ExpiryStatus[]).map((s) => (
@@ -1108,23 +1108,23 @@ function ReviewsTab() {
         </div>
       </div>
 
-      <div className="rounded-2xl bg-card border border-[#E2E8F0] p-5 space-y-4">
+      <div className="rounded-2xl bg-card border border-border p-5 space-y-4">
         <div className="flex items-center gap-2">
           <Bell className="w-4 h-4 text-muted-foreground" />
           <h3 className="text-sm font-semibold">Notification Settings</h3>
         </div>
 
         <div className="space-y-2 text-xs text-muted-foreground">
-          <div className="flex items-center gap-2 py-2 border-b border-[#EDF1F5]">
+          <div className="flex items-center gap-2 py-2 border-b border-border">
             <span className="w-40 shrink-0 text-foreground font-medium">Alert recipients:</span>
             <span>Configured in</span>
             <Link href="/admin" className="text-[#0B6BCB] hover:text-[#0959AC] underline">/admin</Link>
           </div>
-          <div className="flex items-center gap-2 py-2 border-b border-[#EDF1F5]">
+          <div className="flex items-center gap-2 py-2 border-b border-border">
             <span className="w-40 shrink-0 text-foreground font-medium">Email notifications:</span>
             <span>Not configured (connect to hospital email system)</span>
           </div>
-          <div className="flex items-center gap-2 py-2 border-b border-[#EDF1F5]">
+          <div className="flex items-center gap-2 py-2 border-b border-border">
             <span className="w-40 shrink-0 text-foreground font-medium">Push notifications:</span>
             <span>Not configured</span>
           </div>
@@ -1165,7 +1165,7 @@ export default function CompliancePage() {
             </div>
             <div>
               <h1 className="text-2xl font-bold font-display">Compliance</h1>
-              <p className="text-sm text-[#64748B]">Policy acknowledgment status and SOP review currency</p>
+              <p className="text-sm text-muted-foreground">Policy acknowledgment status and SOP review currency</p>
             </div>
           </div>
         </div>
@@ -1175,14 +1175,14 @@ export default function CompliancePage() {
           <span><strong>Research Prototype. Not for Clinical Use.</strong> For demonstration only. All clinical decisions must follow institutional protocols.</span>
         </div>
 
-        <div className="flex gap-1 p-1 rounded-xl bg-muted border border-[#E2E8F0] w-fit">
+        <div className="flex gap-1 p-1 rounded-xl bg-muted border border-border w-fit">
           {TABS.map((t) => (
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
               className={cn(
                 "flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors",
-                tab === t.key ? "bg-card text-[#0B6BCB] shadow-sm" : "text-[#64748B] hover:text-[#1A2332]"
+                tab === t.key ? "bg-card text-[#0B6BCB] shadow-sm" : "text-muted-foreground hover:text-foreground"
               )}
             >
               <t.icon className="w-4 h-4" />

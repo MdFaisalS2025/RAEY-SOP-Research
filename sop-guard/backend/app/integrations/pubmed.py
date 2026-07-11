@@ -1,5 +1,5 @@
 """
-SOP-Guard PubMed Integration (Evidence Watch)
+Meridian PubMed Integration (Evidence Watch)
 ---------------------------------------------
 Live literature lookup via NCBI E-utilities (free, no API key required).
 Flow: esearch.fcgi (find PMIDs) then esummary.fcgi (fetch metadata, JSON).
@@ -88,15 +88,58 @@ def _classify_study_type(pub_types: list[str]) -> str:
     return "Journal Article"
 
 
+# Journal-tier trust scoring: since most of the "big name" journals the
+# product needs to reference (NEJM, JAMA, BMJ, Lancet, Nature Medicine,
+# Annals of Internal Medicine) don't expose their own free public search
+# APIs, they're surfaced by tagging PubMed results whose journal name
+# matches a known high-authority publication - PubMed/MEDLINE already
+# indexes all of them. Tier 1 = top-tier general/flagship journals and
+# major specialty-society journals; Tier 2 = other MEDLINE-indexed,
+# peer-reviewed journals; Tier 3 = everything else (unindexed / unclear).
+_JOURNAL_TIER_1 = [
+    "new england journal of medicine", "n engl j med",
+    "jama", "journal of the american medical association",
+    "lancet", "bmj", "british medical journal",
+    "nature medicine",
+    "annals of internal medicine",
+    "circulation",  # American Heart Association flagship journal
+    "clinical infectious diseases",  # IDSA flagship journal
+    "journal of the american college of cardiology",  # ACC flagship journal
+]
+_JOURNAL_TIER_2_HINTS = [
+    "journal", "annals", "archives", "critical care", "medicine",
+]
+
+
+def _classify_journal_tier(journal: str) -> tuple[int, str]:
+    """Return (trust_tier, display_name) for a journal name. Tier 1 is an
+    exact/substring match against a curated flagship-journal list; Tier 2
+    is any other MEDLINE-indexed-looking journal name; Tier 3 is unknown."""
+    name = (journal or "").strip()
+    lower = name.lower()
+    if not name:
+        return 3, "Unknown Source"
+    for known in _JOURNAL_TIER_1:
+        if known in lower:
+            return 1, name
+    if any(hint in lower for hint in _JOURNAL_TIER_2_HINTS):
+        return 2, name
+    return 2, name if name else "Unknown Source"
+
+
 def _parse_summary(uid: str, doc: dict[str, Any]) -> dict[str, Any]:
     """Map a single esummary document to a normalized record."""
     pmid = str(doc.get("uid", uid))
     pub_types = [p for p in (doc.get("pubtype") or []) if isinstance(p, str)]
     pub_date = (doc.get("pubdate") or "").strip()
+    journal = (doc.get("fulljournalname") or doc.get("source") or "").strip()
+    trust_tier, journal_display_name = _classify_journal_tier(journal)
     return {
         "title": (doc.get("title") or "").strip(),
         "authors": _format_authors(doc.get("authors")),
-        "journal": (doc.get("fulljournalname") or doc.get("source") or "").strip(),
+        "journal": journal,
+        "journal_display_name": journal_display_name,
+        "trust_tier": trust_tier,
         "pub_date": pub_date,
         "pub_date_parsed": parse_pub_date(pub_date),
         "pmid": pmid,

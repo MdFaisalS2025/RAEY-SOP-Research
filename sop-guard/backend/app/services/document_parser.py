@@ -1,5 +1,5 @@
 """
-SOP-Guard Document Parser
+Meridian Document Parser
 -------------------------
 Parse PDF, DOCX, and TXT files into text and chunks.
 Research prototype  - NOT for clinical use.

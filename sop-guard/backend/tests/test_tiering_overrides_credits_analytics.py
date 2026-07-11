@@ -279,6 +279,6 @@ async def test_smart_authorize_returns_expected_keys(client):
     resp = await client.get("/smart/authorize", params={"state": "xyz"})
     assert resp.status_code == 200
     data = resp.json()
-    assert data["access_token"] == "sop-guard-demo-token"
+    assert data["access_token"] == "meridian-demo-token"
     assert data["patient"] == "sim-patient-12"
     assert "scope" in data

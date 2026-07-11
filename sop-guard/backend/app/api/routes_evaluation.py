@@ -1,5 +1,5 @@
 """
-SOP-Guard Evaluation Routes
+Meridian Evaluation Routes
 ----------------------------
 Research prototype  - NOT for clinical use.
 """
@@ -13,7 +13,7 @@ from sqlalchemy import select
 from app.database.db import get_db
 from app.models.models import SOP, SOPChunk
 from app.schemas.schemas import EvaluationResult
-from app.agents.pipeline import SOPGuardPipeline
+from app.agents.pipeline import MeridianPipeline
 from app.evaluation.evaluator import Evaluator
 from app.rag.hybrid_retriever import HybridRetriever
 from app.rag.evaluator import evaluate_retrieval
@@ -50,7 +50,7 @@ async def run_evaluation(db: AsyncSession = Depends(get_db)):
         if row.sop_sop_id not in structured_sops and row.structured_json:
             structured_sops[row.sop_sop_id] = row.structured_json
 
-    pipeline = SOPGuardPipeline(chunks, structured_sops)
+    pipeline = MeridianPipeline(chunks, structured_sops)
     evaluator = Evaluator(pipeline)
     _latest_result = await evaluator.run_evaluation()
     return _latest_result
@@ -90,7 +90,7 @@ async def run_rag_evaluation(db: AsyncSession = Depends(get_db)):
             structured_sops[row.sop_sop_id] = row.structured_json
 
     retriever = HybridRetriever(chunks)
-    pipeline = SOPGuardPipeline(chunks, structured_sops)
+    pipeline = MeridianPipeline(chunks, structured_sops)
     _latest_rag_result = evaluate_retrieval(retriever, pipeline)
     return _latest_rag_result
 
@@ -131,12 +131,12 @@ async def run_ragas_lite_evaluation(db: AsyncSession = Depends(get_db)):
             })
             if row.sop_sop_id not in structured_sops and row.structured_json:
                 structured_sops[row.sop_sop_id] = row.structured_json
-        pipeline = SOPGuardPipeline(chunks, structured_sops)
+        pipeline = MeridianPipeline(chunks, structured_sops)
 
     return await run_eval(pipeline)
 
 
-def _pipeline_from_rows(rows) -> SOPGuardPipeline | None:
+def _pipeline_from_rows(rows) -> MeridianPipeline | None:
     if not rows:
         return None
     chunks = []
@@ -154,7 +154,7 @@ def _pipeline_from_rows(rows) -> SOPGuardPipeline | None:
         })
         if row.sop_sop_id not in structured_sops and row.structured_json:
             structured_sops[row.sop_sop_id] = row.structured_json
-    return SOPGuardPipeline(chunks, structured_sops)
+    return MeridianPipeline(chunks, structured_sops)
 
 
 @router.get("/api/evaluation/summary")
@@ -455,7 +455,7 @@ async def project_summary():
     from app.demo_data.adversarial_tests import ADVERSARIAL_TESTS
 
     return {
-        "project": "SOP-Guard",
+        "project": "Meridian",
         "version": "0.1.0-research",
         "disclaimer": "Research prototype. Not for clinical use.",
         "dataset": {

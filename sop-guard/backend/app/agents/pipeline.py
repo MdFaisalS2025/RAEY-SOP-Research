@@ -1,5 +1,5 @@
 """
-SOP-Guard Agentic Pipeline
+Meridian Agentic Pipeline
 ---------------------------
 Sequential pipeline: intake -> retrieve -> generate -> verify -> gate.
 Research prototype  - NOT for clinical use.
@@ -18,9 +18,11 @@ from app.rag.hyde import generate_hypothetical_doc
 from app.verifier.verifier import ProceduralFaithfulnessVerifier
 from app.agents.query_agent import QueryUnderstandingAgent
 from app.rag.citation_tracker import citation_coverage
+from app.agents.routing import classify_intent, build_external_evidence_answer, build_no_evidence_answer
+from app.integrations.evidence_registry import search_all as search_external_evidence
 
 
-class SOPGuardPipeline:
+class MeridianPipeline:
     """
     Agentic RAG pipeline for clinical SOP question-answering
     with procedural faithfulness verification.
@@ -107,6 +109,9 @@ class SOPGuardPipeline:
         # Evidence sufficiency check
         evidence = self.evidence_checker.check(query, retrieved, query_type)
         reasoning.append(f"Evidence: {'sufficient' if evidence['sufficient'] else 'insufficient'} (score: {evidence['score']})")
+        intent = classify_intent(query)
+        reasoning.append(f"Routing intent: {intent}")
+
         if not evidence["sufficient"]:
             reasoning.append(f"Missing: {', '.join(evidence['missing'])}")
             response_chunks = [
@@ -119,10 +124,41 @@ class SOPGuardPipeline:
                 )
                 for c in retrieved
             ]
+
+            # Route B/D: no sufficient internal SOP evidence. Before
+            # abstaining, check external literature - this is the seam
+            # that used to not exist (see routing.py docstring).
+            external_results: list[dict] = []
+            try:
+                external_results = await search_external_evidence(query, max_results=5)
+            except Exception:
+                external_results = []
+
+            if external_results:
+                # Route B
+                ext_answer = build_external_evidence_answer(query, external_results)
+                reasoning.extend(ext_answer["reasoning_trace"])
+                return {
+                    "abstain": QueryResponse(
+                        answer=ext_answer["answer"],
+                        citations=ext_answer["citations"],
+                        confidence=ext_answer["confidence"],
+                        verification_result=None,
+                        retrieved_chunks=response_chunks,
+                        reasoning_trace=reasoning,
+                        query_type=query_type,
+                        abstained=False,
+                        entities=analysis.get("entities", {}),
+                        route="external_evidence",
+                        external_evidence=external_results,
+                    )
+                }
+
+            # Route D: neither internal nor external evidence available.
+            reasoning.append("Route D: no internal or external evidence found")
             return {
                 "abstain": QueryResponse(
-                    answer="I could not find enough support in the SOP library to answer safely. "
-                           + ". ".join(evidence["recommendations"]),
+                    answer=build_no_evidence_answer(evidence["recommendations"]),
                     citations=[],
                     confidence=0.1,
                     verification_result=None,
@@ -131,8 +167,24 @@ class SOPGuardPipeline:
                     query_type=query_type,
                     abstained=True,
                     entities=analysis.get("entities", {}),
+                    route="no_evidence",
                 )
             }
+
+        # Route A/C: sufficient internal SOP evidence. If the query
+        # explicitly asks for a comparison against literature, also pull
+        # external evidence and mark this a hybrid answer (Route C) -
+        # the internal generation path below is unchanged either way.
+        route = "sop_library"
+        external_evidence: list[dict] = []
+        if intent == "hybrid":
+            try:
+                external_evidence = await search_external_evidence(query, max_results=5)
+            except Exception:
+                external_evidence = []
+            if external_evidence:
+                route = "hybrid"
+                reasoning.append(f"Route C: hybrid - {len(external_evidence)} external records alongside internal SOP evidence")
 
         return {
             "retrieved": retrieved,
@@ -141,6 +193,8 @@ class SOPGuardPipeline:
             "evidence": evidence,
             "analysis": analysis,
             "t_start": t_start,
+            "route": route,
+            "external_evidence": external_evidence,
         }
 
     def _finalize(
@@ -153,6 +207,8 @@ class SOPGuardPipeline:
         analysis: dict,
         t_start: float,
         t_generate: float,
+        route: str = "sop_library",
+        external_evidence: list[dict] | None = None,
     ) -> QueryResponse:
         """Steps 4-5 shared by both pipelines: verify against the structured
         SOP, gate confidence, and build the final QueryResponse."""
@@ -208,6 +264,8 @@ class SOPGuardPipeline:
             followup_questions=gen_result.get("followup_questions", []),
             abstained=gen_result.get("abstained", False),
             entities=analysis.get("entities", {}),
+            route=route,
+            external_evidence=external_evidence or [],
         )
 
     async def run_streaming(
@@ -236,6 +294,7 @@ class SOPGuardPipeline:
         retrieved, query_type, reasoning, evidence, analysis, t_start = (
             prep["retrieved"], prep["query_type"], prep["reasoning"], prep["evidence"], prep["analysis"], prep["t_start"]
         )
+        route, external_evidence = prep.get("route", "sop_library"), prep.get("external_evidence", [])
 
         t0 = time.perf_counter()
         gen_result: dict[str, Any] | None = None
@@ -258,7 +317,7 @@ class SOPGuardPipeline:
                 "reasoning_trace": [], "generation_mode": "error",
             }
 
-        response = self._finalize(gen_result, retrieved, query_type, reasoning, evidence, analysis, t_start, t_generate)
+        response = self._finalize(gen_result, retrieved, query_type, reasoning, evidence, analysis, t_start, t_generate, route=route, external_evidence=external_evidence)
         yield {"type": "final", "response": response}
 
     async def run(
@@ -280,6 +339,7 @@ class SOPGuardPipeline:
         retrieved, query_type, reasoning, evidence, analysis, t_start = (
             prep["retrieved"], prep["query_type"], prep["reasoning"], prep["evidence"], prep["analysis"], prep["t_start"]
         )
+        route, external_evidence = prep.get("route", "sop_library"), prep.get("external_evidence", [])
 
         # 3. Generate
         t0 = time.perf_counter()
@@ -291,7 +351,7 @@ class SOPGuardPipeline:
         t_generate = round((time.perf_counter() - t0) * 1000)
 
         # 4-5. Verify, confidence-gate, and build the response
-        return self._finalize(gen_result, retrieved, query_type, reasoning, evidence, analysis, t_start, t_generate)
+        return self._finalize(gen_result, retrieved, query_type, reasoning, evidence, analysis, t_start, t_generate, route=route, external_evidence=external_evidence)
 
     def _classify_query(self, query: str) -> str:
         """Classify query type using keyword matching."""

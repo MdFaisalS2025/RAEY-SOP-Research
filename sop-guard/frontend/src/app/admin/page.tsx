@@ -70,7 +70,7 @@ export default function AdminPage() {
       <AppShell>
         <div className="p-6 max-w-2xl mx-auto">
           <Breadcrumb items={[{ label: "Admin" }]} />
-          <div className="mt-16 flex flex-col items-center justify-center text-center space-y-4 rounded-2xl bg-card border border-[#E2E8F0] p-12">
+          <div className="mt-16 flex flex-col items-center justify-center text-center space-y-4 rounded-2xl bg-card border border-border p-12">
             <div className="w-16 h-16 rounded-2xl bg-[#FEE2E2] dark:bg-red-500/10 flex items-center justify-center">
               <Lock className="w-8 h-8 text-[#B91C1C] dark:text-red-400" />
             </div>
@@ -91,7 +91,7 @@ export default function AdminPage() {
     )
   }
 
-  const inputCls = "w-full px-3 py-2 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] text-sm text-muted-foreground placeholder:text-muted-foreground/50 opacity-50 cursor-not-allowed"
+  const inputCls = "w-full px-3 py-2 rounded-lg bg-[#F8FAFC] border border-border text-sm text-muted-foreground placeholder:text-muted-foreground/50 opacity-50 cursor-not-allowed"
 
   return (
     <AppShell>
@@ -102,7 +102,7 @@ export default function AdminPage() {
         {/* Header */}
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-card flex items-center justify-center">
-            <Settings className="w-6 h-6 text-[#64748B]" />
+            <Settings className="w-6 h-6 text-muted-foreground" />
           </div>
           <div>
             <h1 className="text-2xl font-bold font-display">System Administration</h1>
@@ -123,20 +123,20 @@ export default function AdminPage() {
             <div className="relative group">
               <button
                 disabled
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-muted text-muted-foreground border border-[#E2E8F0] cursor-not-allowed opacity-60"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-muted text-muted-foreground border border-border cursor-not-allowed opacity-60"
               >
                 <Plus className="w-3.5 h-3.5" /> Add Source
               </button>
-              <div className="absolute right-0 top-full mt-1.5 px-2.5 py-1.5 rounded-lg bg-muted border border-[#E2E8F0] text-xs text-muted-foreground whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+              <div className="absolute right-0 top-full mt-1.5 px-2.5 py-1.5 rounded-lg bg-muted border border-border text-xs text-muted-foreground whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
                 Coming in v2
               </div>
             </div>
           </div>
-          <div className="rounded-2xl bg-card border border-[#E2E8F0] overflow-hidden">
+          <div className="rounded-2xl bg-card border border-border overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-[#E2E8F0] text-xs text-muted-foreground uppercase tracking-wider">
+                <tr className="border-b border-border text-xs text-muted-foreground uppercase tracking-wider">
                   <th className="p-4 text-left">Name</th>
                   <th className="p-4 text-left">Type</th>
                   <th className="p-4 text-left">Trust Score</th>
@@ -152,7 +152,7 @@ export default function AdminPage() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: i * 0.04 }}
-                    className="border-b border-[#EDF1F5] hover:bg-[#F8FAFC] transition-colors"
+                    className="border-b border-border hover:bg-[#F8FAFC] transition-colors"
                   >
                     <td className="p-4 font-medium">{source.name}</td>
                     <td className="p-4 text-muted-foreground text-xs">{source.type}</td>
@@ -164,7 +164,7 @@ export default function AdminPage() {
                         "px-2 py-0.5 rounded-full text-xs font-medium",
                         source.status === "active"
                           ? "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30"
-                          : "bg-card text-[#64748B] border border-[#CBD5E1]"
+                          : "bg-card text-muted-foreground border border-input"
                       )}>
                         {source.status === "active" ? "Active" : "Paused"}
                       </span>
@@ -177,7 +177,7 @@ export default function AdminPage() {
                       >
                         {source.status === "active"
                           ? <ToggleRight className="w-6 h-6 text-[#0B6BCB]" />
-                          : <ToggleLeft className="w-6 h-6 text-[#94A3B8]" />}
+                          : <ToggleLeft className="w-6 h-6 text-subtle" />}
                       </button>
                     </td>
                   </motion.tr>
@@ -191,11 +191,11 @@ export default function AdminPage() {
         {/* SSO / Active Directory Configuration */}
         <section className="space-y-4">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-[#64748B]" />
+            <ShieldCheck className="w-5 h-5 text-muted-foreground" />
             <h2 className="text-lg font-semibold font-display">SSO / Active Directory Configuration</h2>
           </div>
 
-          <div className="rounded-2xl bg-card border border-[#E2E8F0] p-5 space-y-5">
+          <div className="rounded-2xl bg-card border border-border p-5 space-y-5">
             {/* Protocol selector */}
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2 font-medium">Protocol</p>
@@ -208,7 +208,7 @@ export default function AdminPage() {
                       "px-4 py-1.5 rounded-lg text-xs font-semibold border transition-colors cursor-not-allowed opacity-50",
                       ssoProtocol === p
                         ? "bg-[#0B6BCB]/10 text-[#0B6BCB] border-[#0B6BCB]/30"
-                        : "border-[#E2E8F0] text-muted-foreground bg-[#F8FAFC]"
+                        : "border-border text-muted-foreground bg-[#F8FAFC]"
                     )}
                     onClick={() => setSSOProtocol(p)}
                   >
@@ -234,7 +234,7 @@ export default function AdminPage() {
                   <label className="text-xs text-muted-foreground">Entity ID</label>
                   <input
                     disabled
-                    placeholder="sop-guard-production"
+                    placeholder="meridian-production"
                     className={inputCls}
                   />
                 </div>
@@ -307,7 +307,7 @@ export default function AdminPage() {
             </div>
 
             {/* Status + buttons */}
-            <div className="flex items-center justify-between gap-4 pt-2 border-t border-[#E2E8F0]">
+            <div className="flex items-center justify-between gap-4 pt-2 border-t border-border">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-[#94A3B8]" />
                 <span className="text-xs text-muted-foreground font-medium">Status: Not Configured</span>
@@ -315,13 +315,13 @@ export default function AdminPage() {
               <div className="flex gap-2">
                 <button
                   disabled
-                  className="px-3 py-1.5 rounded-lg text-xs bg-muted text-muted-foreground border border-[#E2E8F0] cursor-not-allowed opacity-60"
+                  className="px-3 py-1.5 rounded-lg text-xs bg-muted text-muted-foreground border border-border cursor-not-allowed opacity-60"
                 >
                   Test Connection
                 </button>
                 <button
                   disabled
-                  className="px-3 py-1.5 rounded-lg text-xs bg-muted text-muted-foreground border border-[#E2E8F0] cursor-not-allowed opacity-60"
+                  className="px-3 py-1.5 rounded-lg text-xs bg-muted text-muted-foreground border border-border cursor-not-allowed opacity-60"
                 >
                   Save Configuration
                 </button>
@@ -329,7 +329,7 @@ export default function AdminPage() {
             </div>
 
             {/* Note */}
-            <p className="text-xs text-muted-foreground/70 italic border-t border-[#EDF1F5] pt-3">
+            <p className="text-xs text-muted-foreground/70 italic border-t border-border pt-3">
               SSO configuration requires IT department coordination. Contact your CMIO or IT Director to provision service account credentials. Supports: Microsoft Azure AD, Okta, Ping Identity, and on-premise Active Directory.
             </p>
           </div>
@@ -345,7 +345,7 @@ export default function AdminPage() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.06 }}
-                className="rounded-2xl bg-card border border-[#E2E8F0] p-4 space-y-3"
+                className="rounded-2xl bg-card border border-border p-4 space-y-3"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
@@ -357,14 +357,14 @@ export default function AdminPage() {
                       <p className="text-xs text-muted-foreground">{integration.subtitle}</p>
                     </div>
                   </div>
-                  <span className="px-2.5 py-0.5 rounded-full text-xs bg-card text-[#64748B] border border-[#CBD5E1] shrink-0">
+                  <span className="px-2.5 py-0.5 rounded-full text-xs bg-card text-muted-foreground border border-input shrink-0">
                     Not Configured
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground/80">{integration.description}</p>
                 <button
                   disabled
-                  className="px-3 py-1.5 rounded-lg text-xs bg-muted text-muted-foreground border border-[#E2E8F0] cursor-not-allowed opacity-60"
+                  className="px-3 py-1.5 rounded-lg text-xs bg-muted text-muted-foreground border border-border cursor-not-allowed opacity-60"
                 >
                   Connect
                 </button>
@@ -376,19 +376,19 @@ export default function AdminPage() {
         {/* Notification & Alert Configuration */}
         <section className="space-y-4">
           <div className="flex items-center gap-2">
-            <Bell className="w-5 h-5 text-[#64748B]" />
+            <Bell className="w-5 h-5 text-muted-foreground" />
             <h2 className="text-lg font-semibold font-display">Notification &amp; Alert Configuration</h2>
           </div>
 
-          <div className="rounded-2xl bg-card border border-[#E2E8F0] p-5 space-y-4">
+          <div className="rounded-2xl bg-card border border-border p-5 space-y-4">
             <p className="text-sm font-medium text-muted-foreground">Alert Recipients Configuration</p>
 
             {/* Escalation recipient table */}
-            <div className="rounded-xl border border-[#E2E8F0] overflow-hidden">
+            <div className="rounded-xl border border-border overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-[#E2E8F0] text-xs text-muted-foreground uppercase tracking-wider">
+                  <tr className="border-b border-border text-xs text-muted-foreground uppercase tracking-wider">
                     <th className="p-3 text-left">Trigger</th>
                     <th className="p-3 text-left">Recipients</th>
                     <th className="p-3 text-left">Action</th>
@@ -401,7 +401,7 @@ export default function AdminPage() {
                     { trigger: "30-day SOP expiry", recipients: "Compliance Officer", note: null },
                     { trigger: "7-day SOP expiry", recipients: "CMO / System Admin", note: null },
                   ].map((row) => (
-                    <tr key={row.trigger} className="border-b border-[#EDF1F5]">
+                    <tr key={row.trigger} className="border-b border-border">
                       <td className="p-3 text-xs font-medium">{row.trigger}</td>
                       <td className="p-3 text-xs text-muted-foreground">{row.recipients}</td>
                       <td className="p-3">
@@ -410,7 +410,7 @@ export default function AdminPage() {
                         ) : (
                           <button
                             disabled
-                            className="text-xs px-2.5 py-1 rounded-lg bg-muted text-muted-foreground border border-[#E2E8F0] cursor-not-allowed opacity-50"
+                            className="text-xs px-2.5 py-1 rounded-lg bg-muted text-muted-foreground border border-border cursor-not-allowed opacity-50"
                           >
                             Add recipient
                           </button>
@@ -430,7 +430,7 @@ export default function AdminPage() {
                 { icon: Bell, label: "Push Notifications", status: "Not connected (connect via FCM or hospital notification system)" },
                 { icon: Smartphone, label: "SMS Alerts", status: "Not connected" },
               ].map((ch) => (
-                <div key={ch.label} className="flex items-center gap-3 py-2 border-b border-[#EDF1F5] last:border-0">
+                <div key={ch.label} className="flex items-center gap-3 py-2 border-b border-border last:border-0">
                   <ch.icon className="w-4 h-4 text-muted-foreground shrink-0" />
                   <span className="text-xs font-medium text-foreground w-40 shrink-0">{ch.label}:</span>
                   <span className="text-xs text-muted-foreground">{ch.status}</span>
@@ -439,15 +439,15 @@ export default function AdminPage() {
             </div>
 
             {/* Button + note */}
-            <div className="flex items-center gap-3 pt-2 border-t border-[#EDF1F5]">
+            <div className="flex items-center gap-3 pt-2 border-t border-border">
               <div className="relative group">
                 <button
                   disabled
-                  className="px-3 py-1.5 rounded-lg text-xs bg-muted text-muted-foreground border border-[#E2E8F0] cursor-not-allowed opacity-60"
+                  className="px-3 py-1.5 rounded-lg text-xs bg-muted text-muted-foreground border border-border cursor-not-allowed opacity-60"
                 >
                   Configure Notifications
                 </button>
-                <div className="absolute left-0 top-full mt-1.5 px-2.5 py-1.5 rounded-lg bg-muted border border-[#E2E8F0] text-xs text-muted-foreground whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                <div className="absolute left-0 top-full mt-1.5 px-2.5 py-1.5 rounded-lg bg-muted border border-border text-xs text-muted-foreground whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
                   Coming in v2
                 </div>
               </div>
@@ -466,20 +466,20 @@ export default function AdminPage() {
             <div className="relative group">
               <button
                 disabled
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-muted text-muted-foreground border border-[#E2E8F0] cursor-not-allowed opacity-60"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-muted text-muted-foreground border border-border cursor-not-allowed opacity-60"
               >
                 <Plus className="w-3.5 h-3.5" /> Add User
               </button>
-              <div className="absolute right-0 top-full mt-1.5 px-2.5 py-1.5 rounded-lg bg-muted border border-[#E2E8F0] text-xs text-muted-foreground whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+              <div className="absolute right-0 top-full mt-1.5 px-2.5 py-1.5 rounded-lg bg-muted border border-border text-xs text-muted-foreground whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
                 Connect to hospital AD
               </div>
             </div>
           </div>
-          <div className="rounded-2xl bg-card border border-[#E2E8F0] overflow-hidden">
+          <div className="rounded-2xl bg-card border border-border overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-[#E2E8F0] text-xs text-muted-foreground uppercase tracking-wider">
+                <tr className="border-b border-border text-xs text-muted-foreground uppercase tracking-wider">
                   <th className="p-4 text-left">Name</th>
                   <th className="p-4 text-left">Role</th>
                   <th className="p-4 text-left">Department</th>
@@ -494,7 +494,7 @@ export default function AdminPage() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: i * 0.04 }}
-                    className="border-b border-[#EDF1F5] hover:bg-[#F8FAFC] transition-colors"
+                    className="border-b border-border hover:bg-[#F8FAFC] transition-colors"
                   >
                     <td className="p-4">
                       <div className="flex items-center gap-2">
@@ -505,7 +505,7 @@ export default function AdminPage() {
                       </div>
                     </td>
                     <td className="p-4 text-xs">
-                      <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-[#E2E8F0]">
+                      <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">
                         {ROLE_LABELS[user.role] ?? user.role}
                       </span>
                     </td>
@@ -537,7 +537,7 @@ export default function AdminPage() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.06 }}
-                className="rounded-2xl bg-card border border-[#E2E8F0] p-4 flex items-center gap-3"
+                className="rounded-2xl bg-card border border-border p-4 flex items-center gap-3"
               >
                 <div className={cn(
                   "w-9 h-9 rounded-xl flex items-center justify-center",

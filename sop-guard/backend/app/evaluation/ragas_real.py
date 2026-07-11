@@ -1,5 +1,5 @@
 """
-SOP-Guard Real RAGAS Evaluation
+Meridian Real RAGAS Evaluation
 --------------------------------
 Runs the actual RAGAS library (github.com/explodinggradients/ragas) against
 the pipeline, using our own self-hosted Ollama model as the judge LLM and a
@@ -31,7 +31,7 @@ from datetime import datetime, timezone
 from typing import Any, Optional
 
 from app.config import settings
-from app.agents.pipeline import SOPGuardPipeline
+from app.agents.pipeline import MeridianPipeline
 from app.evaluation.ragas_lite import EVAL_QUERIES, _build_demo_pipeline
 
 _CACHE_PATH = os.path.join(os.path.dirname(__file__), "last_ragas_eval.json")
@@ -112,7 +112,7 @@ async def _run_worker(rows: list[dict], timeout_s: float = 150) -> dict:
     return await asyncio.to_thread(_run_worker_blocking, rows, timeout_s)
 
 
-async def run_real_ragas_eval(pipeline: Optional[SOPGuardPipeline] = None) -> dict[str, Any]:
+async def run_real_ragas_eval(pipeline: Optional[MeridianPipeline] = None) -> dict[str, Any]:
     """
     Run the real RAGAS library against a sample of the eval queries.
     Returns a structured error payload (never raises) if Ollama or RAGAS
@@ -251,7 +251,7 @@ def _load_cache() -> Optional[dict]:
     return None
 
 
-async def get_ragas_summary(pipeline: Optional[SOPGuardPipeline] = None, force: bool = False) -> dict:
+async def get_ragas_summary(pipeline: Optional[MeridianPipeline] = None, force: bool = False) -> dict:
     """
     Return the last cached real-RAGAS run, or run + cache a fresh one.
     Real RAGAS calls the judge LLM many times (metrics x sampled queries),

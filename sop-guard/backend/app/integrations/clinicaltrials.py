@@ -1,5 +1,5 @@
 """
-SOP-Guard ClinicalTrials.gov Integration
+Meridian ClinicalTrials.gov Integration
 ------------------------------------------
 Surfaces what is actively being studied for a condition/drug - complements
 retrospective literature (PubMed/Europe PMC) with in-progress and recently

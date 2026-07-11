@@ -68,12 +68,12 @@ function formatTimestamp(ts: string) {
 
 function eventBadgeClass(eventType: AuditEventType) {
   if (eventType.startsWith("sop_")) return "bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30"
-  if (eventType.startsWith("proposal_") || eventType.startsWith("committee_")) return "bg-card text-[#475569] border border-[#CBD5E1]"
+  if (eventType.startsWith("proposal_") || eventType.startsWith("committee_")) return "bg-card text-muted-foreground border border-input"
   if (eventType.startsWith("training_") || eventType.startsWith("acknowledgment_")) return "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30"
   if (eventType.startsWith("legal_")) return "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30"
-  if (eventType.startsWith("ai_")) return "bg-card text-[#475569] border border-[#CBD5E1]"
+  if (eventType.startsWith("ai_")) return "bg-card text-muted-foreground border border-input"
   // admin, user_login, export_generated, cross_reference
-  return "bg-card text-[#475569] border border-[#CBD5E1]"
+  return "bg-card text-muted-foreground border border-input"
 }
 
 function eventLabel(eventType: AuditEventType) {
@@ -160,8 +160,8 @@ export default function AuditPage() {
 
   const stats = [
     { label: "Events Today", value: String(eventsToday), color: "text-[#0B6BCB]" },
-    { label: "Total Events", value: String(auditEntries.length), color: "text-[#1A2332]" },
-    { label: "Event Types", value: String(uniqueEventTypes.length), color: "text-[#64748B]" },
+    { label: "Total Events", value: String(auditEntries.length), color: "text-foreground" },
+    { label: "Event Types", value: String(uniqueEventTypes.length), color: "text-muted-foreground" },
     { label: "Last Export", value: exportState === "success" ? "Just now" : "Not yet exported", color: "text-[#15803D] dark:text-green-400" },
   ]
 
@@ -178,7 +178,7 @@ export default function AuditPage() {
           </div>
           <div>
             <h1 className="text-2xl font-bold font-display">Audit Trail</h1>
-            <p className="text-sm text-[#64748B]">Immutable governance and compliance event record</p>
+            <p className="text-sm text-muted-foreground">Immutable governance and compliance event record</p>
           </div>
         </div>
 
@@ -202,10 +202,10 @@ export default function AuditPage() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.07 }}
-              className="rounded-2xl bg-card border border-[#E2E8F0] p-4 text-center"
+              className="rounded-2xl bg-card border border-border p-4 text-center"
             >
               <p className={cn("text-2xl font-bold", s.color)}>{s.value}</p>
-              <p className="text-xs text-[#64748B] mt-0.5">{s.label}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{s.label}</p>
             </motion.div>
           ))}
         </div>
@@ -213,18 +213,18 @@ export default function AuditPage() {
         {/* Filters */}
         <div className="flex flex-wrap gap-3">
           <div className="relative flex-1 min-w-[200px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B]" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search events, users, resources..."
-              className="w-full pl-9 pr-3 py-2 rounded-xl bg-card border border-[#E2E8F0] text-sm text-[#1A2332] placeholder:text-[#64748B] focus:outline-none focus:border-[#0B6BCB]/30"
+              className="w-full pl-9 pr-3 py-2 rounded-xl bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-[#0B6BCB]/30"
             />
           </div>
           <select
             value={eventTypeFilter}
             onChange={(e) => setEventTypeFilter(e.target.value)}
-            className="px-3 py-2 rounded-xl bg-card border border-[#E2E8F0] text-sm text-[#1A2332] focus:outline-none focus:border-[#0B6BCB]/30"
+            className="px-3 py-2 rounded-xl bg-card border border-border text-sm text-foreground focus:outline-none focus:border-[#0B6BCB]/30"
           >
             <option value="all">All Event Types</option>
             {uniqueEventTypes.map((t) => (
@@ -234,14 +234,14 @@ export default function AuditPage() {
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
-            className="px-3 py-2 rounded-xl bg-card border border-[#E2E8F0] text-sm text-[#1A2332] focus:outline-none focus:border-[#0B6BCB]/30"
+            className="px-3 py-2 rounded-xl bg-card border border-border text-sm text-foreground focus:outline-none focus:border-[#0B6BCB]/30"
           >
             <option value="all">All Roles</option>
             {uniqueRoles.map((r) => (
               <option key={r} value={r}>{roleLabel[r] ?? r}</option>
             ))}
           </select>
-          <div className="flex items-center rounded-xl border border-[#E2E8F0] bg-card overflow-hidden">
+          <div className="flex items-center rounded-xl border border-border bg-card overflow-hidden">
             {(["7d", "30d", "all"] as const).map((range) => (
               <button
                 key={range}
@@ -250,7 +250,7 @@ export default function AuditPage() {
                   "px-3 py-2 text-xs font-medium transition-colors",
                   dateRange === range
                     ? "bg-[#0B6BCB]/10 text-[#0B6BCB]"
-                    : "text-[#64748B] hover:text-[#1A2332]"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 <Calendar className="w-3 h-3 inline mr-1" />
@@ -261,11 +261,11 @@ export default function AuditPage() {
         </div>
 
         {/* Audit table */}
-        <div className="rounded-2xl bg-card border border-[#E2E8F0] overflow-hidden">
+        <div className="rounded-2xl bg-card border border-border overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-[#E2E8F0] text-xs text-[#64748B] uppercase tracking-wider">
+              <tr className="border-b border-border text-xs text-muted-foreground uppercase tracking-wider">
                 <th className="p-3 text-left">Event</th>
                 <th className="p-3 text-left">Timestamp</th>
                 <th className="p-3 text-left">User</th>
@@ -280,7 +280,7 @@ export default function AuditPage() {
                 <Fragment key={event.id}>
                   <tr
                     key={event.id}
-                    className="border-b border-[#EDF1F5] hover:bg-[#F8FAFC] transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#2563EB]"
+                    className="border-b border-border hover:bg-[#F8FAFC] transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#2563EB]"
                     onClick={() => setExpandedId(expandedId === event.id ? null : event.id)}
                     role="button"
                     tabIndex={0}
@@ -297,24 +297,24 @@ export default function AuditPage() {
                         {eventLabel(event.event_type)}
                       </span>
                     </td>
-                    <td className="p-3 text-xs text-[#64748B] whitespace-nowrap">
+                    <td className="p-3 text-xs text-muted-foreground whitespace-nowrap">
                       {formatTimestamp(event.timestamp)}
                     </td>
                     <td className="p-3">
-                      <p className="text-xs font-medium text-[#1A2332]">{event.user}</p>
-                      <span className="text-xs px-1.5 py-0.5 rounded bg-muted text-[#64748B]">
+                      <p className="text-xs font-medium text-foreground">{event.user}</p>
+                      <span className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
                         {roleLabel[event.user_role] ?? event.user_role}
                       </span>
                     </td>
-                    <td className="p-3 text-xs text-[#64748B] max-w-[120px] truncate">
+                    <td className="p-3 text-xs text-muted-foreground max-w-[120px] truncate">
                       {event.affected_resource}
                     </td>
-                    <td className="p-3 text-xs text-[#1A2332]/80 max-w-[200px]">
+                    <td className="p-3 text-xs text-foreground/80 max-w-[200px]">
                       {event.action_summary.length > 60
                         ? event.action_summary.slice(0, 60) + "..."
                         : event.action_summary}
                     </td>
-                    <td className="p-3 text-xs text-[#64748B] max-w-[140px]">
+                    <td className="p-3 text-xs text-muted-foreground max-w-[140px]">
                       {event.compliance_impact ? (
                         <span className="text-[#B45309] dark:text-amber-400 truncate block">{event.compliance_impact}</span>
                       ) : (
@@ -323,8 +323,8 @@ export default function AuditPage() {
                     </td>
                     <td className="p-3">
                       {expandedId === event.id
-                        ? <ChevronDown className="w-4 h-4 text-[#64748B]" />
-                        : <ChevronRight className="w-4 h-4 text-[#64748B]" />}
+                        ? <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                        : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
                     </td>
                   </tr>
                   <AnimatePresence>
@@ -337,20 +337,20 @@ export default function AuditPage() {
                             exit={{ height: 0, opacity: 0 }}
                             className="overflow-hidden"
                           >
-                            <div className="p-4 border-b border-[#E2E8F0] grid md:grid-cols-2 gap-3 text-xs">
+                            <div className="p-4 border-b border-border grid md:grid-cols-2 gap-3 text-xs">
                               <div className="space-y-2">
-                                <p><span className="text-[#64748B]">Full Summary:</span> <span className="text-[#1A2332]">{event.action_summary}</span></p>
-                                {event.before_value && <p><span className="text-[#64748B]">Before:</span> <span className="text-[#B91C1C] dark:text-red-400">{event.before_value}</span></p>}
-                                {event.after_value && <p><span className="text-[#64748B]">After:</span> <span className="text-[#15803D] dark:text-green-400">{event.after_value}</span></p>}
-                                {event.ip_address && <p><span className="text-[#64748B]">IP Address:</span> <span className="text-[#1A2332] font-mono">{event.ip_address}</span></p>}
+                                <p><span className="text-muted-foreground">Full Summary:</span> <span className="text-foreground">{event.action_summary}</span></p>
+                                {event.before_value && <p><span className="text-muted-foreground">Before:</span> <span className="text-[#B91C1C] dark:text-red-400">{event.before_value}</span></p>}
+                                {event.after_value && <p><span className="text-muted-foreground">After:</span> <span className="text-[#15803D] dark:text-green-400">{event.after_value}</span></p>}
+                                {event.ip_address && <p><span className="text-muted-foreground">IP Address:</span> <span className="text-foreground font-mono">{event.ip_address}</span></p>}
                               </div>
                               <div className="space-y-2">
-                                <p><span className="text-[#64748B]">Resource ID:</span> <span className="text-[#1A2332] font-mono">{event.affected_resource_id}</span></p>
+                                <p><span className="text-muted-foreground">Resource ID:</span> <span className="text-foreground font-mono">{event.affected_resource_id}</span></p>
                                 {event.evidence_references && event.evidence_references.length > 0 && (
-                                  <p><span className="text-[#64748B]">Evidence:</span> <span className="text-[#0B6BCB]">{event.evidence_references.join(", ")}</span></p>
+                                  <p><span className="text-muted-foreground">Evidence:</span> <span className="text-[#0B6BCB]">{event.evidence_references.join(", ")}</span></p>
                                 )}
                                 {event.compliance_impact && (
-                                  <p><span className="text-[#64748B]">Compliance Impact:</span> <span className="text-[#B45309] dark:text-amber-400">{event.compliance_impact}</span></p>
+                                  <p><span className="text-muted-foreground">Compliance Impact:</span> <span className="text-[#B45309] dark:text-amber-400">{event.compliance_impact}</span></p>
                                 )}
                               </div>
                             </div>
@@ -363,7 +363,7 @@ export default function AuditPage() {
               ))}
               {!loading && filteredAudit.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-[#64748B] text-sm">
+                  <td colSpan={7} className="p-8 text-center text-muted-foreground text-sm">
                     {auditEntries.length === 0
                       ? "No activity has been logged yet - query or edit an SOP to generate audit events."
                       : "No audit events match your filters."}
@@ -372,7 +372,7 @@ export default function AuditPage() {
               )}
               {loading && (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-[#64748B] text-sm">
+                  <td colSpan={7} className="p-8 text-center text-muted-foreground text-sm">
                     Loading audit trail...
                   </td>
                 </tr>
@@ -409,13 +409,13 @@ export default function AuditPage() {
                   initial={{ opacity: 0, y: -8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
-                  className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 rounded-xl bg-card border border-[#E2E8F0] overflow-hidden shadow-md"
+                  className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 rounded-xl bg-card border border-border overflow-hidden shadow-md"
                 >
                   {(["csv", "pdf", "json"] as const).map((fmt) => (
                     <button
                       key={fmt}
                       onClick={() => handleExport(fmt)}
-                      className="w-full px-6 py-2.5 text-sm text-[#1A2332] hover:bg-muted transition-colors text-left uppercase font-medium"
+                      className="w-full px-6 py-2.5 text-sm text-foreground hover:bg-muted transition-colors text-left uppercase font-medium"
                     >
                       {fmt}
                     </button>

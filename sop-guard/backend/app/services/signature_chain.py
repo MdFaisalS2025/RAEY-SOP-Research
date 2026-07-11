@@ -1,5 +1,5 @@
 """
-SOP-Guard Signature Hash Chain
+Meridian Signature Hash Chain
 --------------------------------
 Tamper-evidence for AttestationRecord, styled after 21 CFR Part 11's
 requirement that electronic records be protected against undetected

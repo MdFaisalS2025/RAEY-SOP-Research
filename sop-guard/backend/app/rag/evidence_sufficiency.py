@@ -1,5 +1,5 @@
 """
-SOP-Guard Evidence Sufficiency Checker
+Meridian Evidence Sufficiency Checker
 Determines if retrieved evidence is adequate to answer safely.
 Research prototype. Not for clinical use.
 """
@@ -205,7 +205,8 @@ class EvidenceSufficiencyChecker:
         # the retrieved evidence - otherwise the named-entity check would
         # never be more than one vote among several and could be outvoted
         # by generic keyword overlap on shared common words.
-        sufficient = score >= 0.6 and score_ok and entity_grounded
+        from app.services.app_settings import get_confidence_threshold
+        sufficient = score >= get_confidence_threshold() and score_ok and entity_grounded
 
         reason = f"Evidence check: {passed}/{total} criteria met."
         if not sufficient:

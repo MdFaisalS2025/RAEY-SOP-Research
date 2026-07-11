@@ -1,4 +1,4 @@
-# SOP-Guard Permission Audit
+# Meridian Permission Audit
 
 Source of truth: `src/lib/role-context.tsx` (`Permission` type, `ROLE_HIERARCHY`, `ROLE_PERMISSIONS`, `hasPermission`).
 

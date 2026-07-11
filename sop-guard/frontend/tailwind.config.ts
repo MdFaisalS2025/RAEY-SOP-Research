@@ -58,6 +58,11 @@ const config: Config = {
           DEFAULT: "hsl(var(--warning))",
           foreground: "hsl(var(--warning-foreground))",
         },
+        subtle: "hsl(var(--text-subtle))",
+        brand: {
+          accent: "hsl(var(--brand-accent))",
+          ink: "hsl(var(--brand-ink))",
+        },
         "sop-clinical-blue": "#0B6BCB",
         "clinical": {
           cyan: "#0B6BCB",

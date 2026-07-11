@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 import { motion } from "framer-motion"
 import {
   AlertTriangle, Eye, ExternalLink, Shield,
-  Calendar, Building2, FileText, CheckCircle2, Clock, Loader2, GitCompare,
+  Calendar, Building2, FileText, CheckCircle2, Clock, Loader2, GitCompare, TrendingUp,
 } from "lucide-react"
 import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
@@ -17,12 +17,15 @@ interface RealSOP {
   sop_id: string
   title: string
   department: string
+  review_date?: string
 }
 
 interface PubMedRecord {
   title: string
   authors: string
   journal: string
+  journal_display_name?: string
+  trust_tier?: 1 | 2 | 3
   pub_date: string
   pmid: string
   url: string
@@ -40,19 +43,35 @@ interface RealConflict {
   message: string
 }
 
+type RiskLevel = "High" | "Medium" | "Low"
+
+function conflictRisk(conflict: RealConflict): RiskLevel {
+  if (conflict.severity === "critical") return "High"
+  if (conflict.severity === "high") return "Medium"
+  return "Low"
+}
+
+const RISK_STYLE: Record<RiskLevel, string> = {
+  High: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30",
+  Medium: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30",
+  Low: "bg-muted text-muted-foreground border-border",
+}
+
 type EvidenceItem =
   | { kind: "literature"; id: string; sop: RealSOP; record: PubMedRecord }
   | { kind: "conflict"; id: string; conflict: RealConflict }
+  | { kind: "review"; id: string; sop: RealSOP; daysUntilDue: number }
 
-type ItemFilter = "all" | "literature" | "conflict"
+type ItemFilter = "all" | "literature" | "conflict" | "review"
 
 const FILTER_TABS: { value: ItemFilter; label: string }[] = [
   { value: "all", label: "All" },
   { value: "literature", label: "External Literature" },
   { value: "conflict", label: "Internal Conflicts" },
+  { value: "review", label: "Reviews Due" },
 ]
 
-const MONITORED_SOURCES = ["PubMed", "PMC", "NIH", "NLM"]
+const MONITORED_SOURCES = ["PubMed", "Europe PMC", "CDC", "WHO", "ClinicalTrials.gov", "FDA", "MedlinePlus", "CMS"]
 
 function LiteratureCard({ sop, record, index }: { sop: RealSOP; record: PubMedRecord; index: number }) {
   return (
@@ -60,7 +79,7 @@ function LiteratureCard({ sop, record, index }: { sop: RealSOP; record: PubMedRe
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.06 }}
-      className="rounded-2xl bg-card border border-[#E2E8F0] overflow-hidden"
+      className="rounded-2xl bg-card border border-border overflow-hidden"
     >
       <div className="p-5 space-y-4">
         <div className="flex flex-wrap items-center gap-2">
@@ -72,22 +91,27 @@ function LiteratureCard({ sop, record, index }: { sop: RealSOP; record: PubMedRe
               {record.study_type}
             </span>
           )}
+          {record.trust_tier === 1 && (
+            <span className="px-2 py-0.5 rounded text-xs font-semibold bg-[#0B6BCB]/10 dark:bg-[#00E5FF]/10 text-[#0B6BCB] dark:text-[#00E5FF] border border-[#0B6BCB]/30 dark:border-[#00E5FF]/30">
+              {record.journal_display_name ?? record.journal} · Tier 1
+            </span>
+          )}
         </div>
 
-        <h3 className="font-display text-base font-bold text-[#1A2332] leading-snug">{record.title || "(untitled)"}</h3>
+        <h3 className="font-display text-base font-bold text-foreground leading-snug">{record.title || "(untitled)"}</h3>
 
-        <div className="flex flex-wrap gap-4 text-xs text-[#64748B]">
+        <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
           <span className="flex items-center gap-1.5"><Shield className="w-3 h-3" /> {record.journal}{record.authors ? ` · ${record.authors}` : ""}</span>
           <span className="flex items-center gap-1.5"><Calendar className="w-3 h-3" /> {record.pub_date}</span>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <Building2 className="w-3.5 h-3.5 text-[#64748B] shrink-0" />
-          <span className="px-2 py-0.5 rounded-full bg-muted border border-[#E2E8F0] text-xs text-[#64748B]">{sop.department}</span>
+          <Building2 className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+          <span className="px-2 py-0.5 rounded-full bg-muted border border-border text-xs text-muted-foreground">{sop.department}</span>
         </div>
 
         <div className="space-y-1">
-          <p className="text-xs font-medium text-[#64748B] flex items-center gap-1.5">
+          <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
             <FileText className="w-3 h-3" /> Monitored for
           </p>
           <p className="text-xs text-[#0B6BCB]">{sop.title} ({sop.sop_id})</p>
@@ -98,7 +122,7 @@ function LiteratureCard({ sop, record, index }: { sop: RealSOP; record: PubMedRe
             href={record.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#E2E8F0] text-xs text-[#64748B] hover:bg-muted transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs text-muted-foreground hover:bg-muted transition-colors"
           >
             <ExternalLink className="w-3 h-3" /> View on PubMed
           </a>
@@ -109,12 +133,13 @@ function LiteratureCard({ sop, record, index }: { sop: RealSOP; record: PubMedRe
 }
 
 function ConflictCard({ conflict, index }: { conflict: RealConflict; index: number }) {
+  const risk = conflictRisk(conflict)
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.06 }}
-      className="rounded-2xl bg-card border border-[#E2E8F0] overflow-hidden"
+      className="rounded-2xl bg-card border border-border overflow-hidden"
     >
       <div className="flex items-center gap-2 px-4 py-2 bg-[#FEF3C7] dark:bg-amber-500/10 border-b border-[#FDE68A] dark:border-amber-500/30">
         <AlertTriangle className="w-3.5 h-3.5 text-[#B45309] dark:text-amber-400 shrink-0" />
@@ -122,6 +147,9 @@ function ConflictCard({ conflict, index }: { conflict: RealConflict; index: numb
       </div>
       <div className="p-5 space-y-3">
         <div className="flex flex-wrap items-center gap-2">
+          <span className={cn("px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wide border", RISK_STYLE[risk])}>
+            {risk} risk
+          </span>
           <span className={cn(
             "px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wide",
             conflict.severity === "critical"
@@ -130,21 +158,67 @@ function ConflictCard({ conflict, index }: { conflict: RealConflict; index: numb
           )}>
             {conflict.severity} impact
           </span>
-          <span className="px-2 py-0.5 rounded text-xs font-semibold bg-muted text-[#64748B] border border-[#E2E8F0] font-mono">
+          <span className="px-2 py-0.5 rounded text-xs font-semibold bg-muted text-muted-foreground border border-border font-mono">
             {conflict.entity}
           </span>
         </div>
-        <h3 className="font-display text-base font-bold text-[#1A2332] leading-snug flex items-center gap-2">
+        <h3 className="font-display text-base font-bold text-foreground leading-snug flex items-center gap-2">
           <GitCompare className="w-4 h-4 text-[#0B6BCB]" /> Internal SOP conflict detected
         </h3>
-        <p className="text-sm text-[#64748B] leading-relaxed">{conflict.message}</p>
+        <p className="text-sm text-muted-foreground leading-relaxed">{conflict.message}</p>
         <div className="flex flex-wrap gap-2 text-xs">
-          <span className="px-2 py-0.5 rounded-lg bg-muted border border-[#E2E8F0] text-[#64748B]">{conflict.sop_a}</span>
-          <span className="px-2 py-0.5 rounded-lg bg-muted border border-[#E2E8F0] text-[#64748B]">{conflict.sop_b}</span>
+          <span className="px-2 py-0.5 rounded-lg bg-muted border border-border text-muted-foreground">Affected: {conflict.sop_a}</span>
+          <span className="px-2 py-0.5 rounded-lg bg-muted border border-border text-muted-foreground">Affected: {conflict.sop_b}</span>
         </div>
+        <p className="text-xs text-muted-foreground pt-1 border-t border-border">
+          <span className="font-semibold text-foreground">Recommendation: </span>
+          {risk === "High"
+            ? "Escalate to Governance Committee for immediate review - conflicting values may create patient-safety ambiguity."
+            : "Flag for the next scheduled SOP review cycle to reconcile the discrepancy."}
+        </p>
       </div>
     </motion.div>
   )
+}
+
+function ReviewCard({ sop, daysUntilDue, index }: { sop: RealSOP; daysUntilDue: number; index: number }) {
+  const overdue = daysUntilDue < 0
+  const risk: RiskLevel = overdue ? "High" : daysUntilDue <= 30 ? "Medium" : "Low"
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.06 }}
+      className="rounded-2xl bg-card border border-border overflow-hidden"
+    >
+      <div className="p-5 space-y-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className={cn("px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wide border", RISK_STYLE[risk])}>
+            {risk} risk
+          </span>
+          <span className="px-2 py-0.5 rounded text-xs font-semibold bg-muted text-muted-foreground border border-border">
+            {sop.department}
+          </span>
+        </div>
+        <h3 className="font-display text-base font-bold text-foreground leading-snug flex items-center gap-2">
+          <Clock className="w-4 h-4 text-[#0B6BCB]" /> {sop.title}
+        </h3>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          {overdue
+            ? `Review overdue by ${Math.abs(daysUntilDue)} day${Math.abs(daysUntilDue) === 1 ? "" : "s"}.`
+            : `Review due in ${daysUntilDue} day${daysUntilDue === 1 ? "" : "s"}.`}
+          {" "}({sop.sop_id})
+        </p>
+      </div>
+    </motion.div>
+  )
+}
+
+function daysUntil(dateStr: string | undefined): number | null {
+  if (!dateStr) return null
+  const target = new Date(dateStr).getTime()
+  if (Number.isNaN(target)) return null
+  return Math.round((target - Date.now()) / (1000 * 60 * 60 * 24))
 }
 
 export default function EvidenceWatchPage() {
@@ -161,8 +235,19 @@ export default function EvidenceWatchPage() {
           fetch(`${API_BASE}/api/sops`).then((r) => r.json()),
           fetch(`${API_BASE}/api/conflicts/graph`).then((r) => r.json()),
         ])
-        const sops: RealSOP[] = (Array.isArray(sopData) ? sopData : (sopData.sops ?? sopData.items ?? [])).slice(0, 6)
+        const allSops: RealSOP[] = Array.isArray(sopData) ? sopData : (sopData.sops ?? sopData.items ?? [])
+        const sops: RealSOP[] = allSops.slice(0, 6)
         const conflicts: RealConflict[] = Array.isArray(conflictData?.conflicts) ? conflictData.conflicts : []
+
+        // Version tracking: SOPs approaching or past their review_date,
+        // surfaced here as Evidence Watch items rather than a separate
+        // page, so drift and staleness live alongside literature/conflict
+        // signals in one executive view.
+        const reviewItems: EvidenceItem[] = allSops
+          .map((sop) => ({ sop, due: daysUntil(sop.review_date) }))
+          .filter((r): r is { sop: RealSOP; due: number } => r.due !== null && r.due <= 45)
+          .sort((a, b) => a.due - b.due)
+          .map((r) => ({ kind: "review" as const, id: `review-${r.sop.sop_id}`, sop: r.sop, daysUntilDue: r.due }))
 
         // NCBI E-utilities rate-limits unauthenticated requests to ~3/sec -
         // firing these in parallel silently returns empty results for most
@@ -190,8 +275,8 @@ export default function EvidenceWatchPage() {
           kind: "conflict", id: `conflict-${i}`, conflict: c,
         }))
 
-        setItems([...conflictItems, ...literatureItems])
-        setSopsScanned(sops.length)
+        setItems([...conflictItems, ...reviewItems, ...literatureItems])
+        setSopsScanned(allSops.length)
       } catch {
         setItems([])
       } finally {
@@ -209,12 +294,17 @@ export default function EvidenceWatchPage() {
 
   const conflictCount = items.filter((i) => i.kind === "conflict").length
   const literatureCount = items.filter((i) => i.kind === "literature").length
+  const reviewCount = items.filter((i) => i.kind === "review").length
+  const highRiskCount = items.filter((i) =>
+    (i.kind === "conflict" && conflictRisk(i.conflict) === "High") ||
+    (i.kind === "review" && i.daysUntilDue < 0)
+  ).length
 
   const stats = [
     { label: "SOPs Monitored", value: sopsScanned, icon: Shield, color: "text-[#0B6BCB]" },
-    { label: "Live Articles Found", value: literatureCount, icon: Eye, color: "text-[#64748B]" },
-    { label: "Internal Conflicts", value: conflictCount, icon: AlertTriangle, color: "text-[#B45309] dark:text-amber-400" },
-    { label: "Action Required", value: conflictCount, icon: CheckCircle2, color: "text-[#15803D] dark:text-green-400" },
+    { label: "Reviews Due", value: reviewCount, icon: Clock, color: "text-[#B45309] dark:text-amber-400" },
+    { label: "High-Risk Items", value: highRiskCount, icon: AlertTriangle, color: "text-[#B91C1C] dark:text-red-400" },
+    { label: "External Updates (live)", value: literatureCount, icon: TrendingUp, color: "text-[#15803D] dark:text-green-400" },
   ]
 
   return (
@@ -225,10 +315,11 @@ export default function EvidenceWatchPage() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex items-start justify-between gap-4 flex-wrap">
           <div className="space-y-1">
             <div className="flex items-center gap-3">
-              <h1 className="font-display text-3xl font-bold text-[#1A2332]">Evidence Watch</h1>
+              <h1 className="font-display text-3xl font-bold text-foreground">Evidence Watch</h1>
             </div>
-            <p className="text-[#64748B] text-sm">
-              Live PubMed literature search per SOP, plus internally-detected cross-SOP conflicts.
+            <p className="text-muted-foreground text-sm">
+              Live literature monitoring across 8 sources, cross-SOP conflict detection, and review-cycle
+              tracking - unified into one risk-ranked view.
             </p>
           </div>
         </motion.div>
@@ -246,7 +337,7 @@ export default function EvidenceWatchPage() {
         </motion.div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-16 text-[#64748B] gap-2">
+          <div className="flex items-center justify-center py-16 text-muted-foreground gap-2">
             <Loader2 className="w-5 h-5 animate-spin" /> Searching PubMed and scanning for conflicts...
           </div>
         ) : (
@@ -256,9 +347,9 @@ export default function EvidenceWatchPage() {
               className="grid grid-cols-2 lg:grid-cols-4 gap-4"
             >
               {stats.map(({ label, value, icon: Icon, color }) => (
-                <div key={label} className="rounded-2xl bg-card border border-[#E2E8F0] p-4 space-y-2">
+                <div key={label} className="rounded-2xl bg-card border border-border p-4 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-[#64748B] font-medium">{label}</span>
+                    <span className="text-xs text-muted-foreground font-medium">{label}</span>
                     <Icon className={cn("w-4 h-4", color)} />
                   </div>
                   <p className={cn("text-3xl font-bold font-display", color)}>{value}</p>
@@ -273,7 +364,7 @@ export default function EvidenceWatchPage() {
                   onClick={() => setActiveFilter(tab.value)}
                   className={cn(
                     "px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors",
-                    activeFilter === tab.value ? "bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30" : "text-[#64748B] hover:bg-muted"
+                    activeFilter === tab.value ? "bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30" : "text-muted-foreground hover:bg-muted"
                   )}
                 >
                   {tab.label}
@@ -284,24 +375,26 @@ export default function EvidenceWatchPage() {
             <div className="grid xl:grid-cols-[1fr_320px] gap-6">
               <div className="space-y-4">
                 {filtered.length === 0 ? (
-                  <div className="rounded-2xl bg-card border border-[#E2E8F0] p-12 text-center">
-                    <Eye className="w-8 h-8 text-[#64748B] mx-auto mb-3 opacity-40" />
-                    <p className="text-[#64748B] text-sm">No items match this filter.</p>
+                  <div className="rounded-2xl bg-card border border-border p-12 text-center">
+                    <Eye className="w-8 h-8 text-muted-foreground mx-auto mb-3 opacity-40" />
+                    <p className="text-muted-foreground text-sm">No items match this filter.</p>
                   </div>
                 ) : (
                   filtered.map((item, i) =>
                     item.kind === "literature"
                       ? <LiteratureCard key={item.id} sop={item.sop} record={item.record} index={i} />
-                      : <ConflictCard key={item.id} conflict={item.conflict} index={i} />
+                      : item.kind === "conflict"
+                      ? <ConflictCard key={item.id} conflict={item.conflict} index={i} />
+                      : <ReviewCard key={item.id} sop={item.sop} daysUntilDue={item.daysUntilDue} index={i} />
                   )
                 )}
               </div>
 
               <div className="space-y-4">
-                <div className="rounded-2xl bg-card border border-[#E2E8F0] p-5 space-y-3">
+                <div className="rounded-2xl bg-card border border-border p-5 space-y-3">
                   <div className="flex items-center gap-2">
                     <Shield className="w-4 h-4 text-[#0B6BCB]" />
-                    <h3 className="font-display text-sm font-bold text-[#1A2332]">Monitored Sources</h3>
+                    <h3 className="font-display text-sm font-bold text-foreground">Monitored Sources</h3>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {MONITORED_SOURCES.map((name) => (
@@ -310,14 +403,15 @@ export default function EvidenceWatchPage() {
                       </span>
                     ))}
                   </div>
-                  <p className="text-xs text-[#64748B]">
-                    Live search via NCBI E-utilities, scoped per-SOP by title. Internal conflicts come from the
-                    entity-graph detector (drug dose / threshold cross-checks across the current corpus).
+                  <p className="text-xs text-muted-foreground">
+                    Live search scoped per-SOP by title. Internal conflicts come from the entity-graph detector
+                    (drug dose / threshold cross-checks across the current corpus). Reviews Due comes from each
+                    SOP's own review_date.
                   </p>
                 </div>
 
-                <div className="rounded-xl bg-card border border-[#E2E8F0] px-4 py-3">
-                  <p className="text-[10px] text-[#64748B]/50 uppercase tracking-widest text-center">
+                <div className="rounded-xl bg-card border border-border px-4 py-3">
+                  <p className="text-[10px] text-muted-foreground/50 uppercase tracking-widest text-center">
                     Research Prototype - Not for Clinical Use
                   </p>
                 </div>

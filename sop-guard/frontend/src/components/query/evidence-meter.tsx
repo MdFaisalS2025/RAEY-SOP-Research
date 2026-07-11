@@ -23,8 +23,8 @@ export function EvidenceMeter({ items }: { items: EvidenceLike[] }) {
   ]
 
   return (
-    <div className="p-3 rounded-xl bg-muted border border-[#E2E8F0] mb-3">
-      <p className="text-[12px] font-medium text-[#1A2332] mb-2">
+    <div className="p-3 rounded-xl bg-muted border border-border mb-3">
+      <p className="text-[12px] font-medium text-foreground mb-2">
         Evidence Alignment: {aligned} of {total} external sources align with internal SOPs
       </p>
       <div className="flex h-2 rounded-full overflow-hidden bg-[#EDF1F5]">
@@ -43,7 +43,7 @@ export function EvidenceMeter({ items }: { items: EvidenceLike[] }) {
         {segments.map(
           (s, i) =>
             s.count > 0 && (
-              <span key={i} className="inline-flex items-center gap-1.5 text-[10px] text-[#64748B]">
+              <span key={i} className="inline-flex items-center gap-1.5 text-[10px] text-muted-foreground">
                 <span className={`w-2 h-2 rounded-full ${s.className}`} />
                 {s.label} ({s.count})
               </span>
@@ -65,9 +65,9 @@ export function EvidenceQualityTags({
   if (strength === "high") {
     tag = { label: "High-Quality Evidence", className: "text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30 bg-[#DCFCE7] dark:bg-green-500/10" }
   } else if (strength === "moderate") {
-    tag = { label: "Guideline / Consensus", className: "text-[#475569] border-[#CBD5E1] bg-card" }
+    tag = { label: "Guideline / Consensus", className: "text-muted-foreground border-input bg-card" }
   } else {
-    tag = { label: "Expert Opinion", className: "text-[#475569] border-[#CBD5E1] bg-card" }
+    tag = { label: "Expert Opinion", className: "text-muted-foreground border-input bg-card" }
   }
 
   // New research: published within 12 months of 2026-07

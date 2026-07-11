@@ -1,5 +1,5 @@
 """
-SOP-Guard Procedural Faithfulness Verifier
+Meridian Procedural Faithfulness Verifier
 -------------------------------------------
 CORE RESEARCH COMPONENT.
 

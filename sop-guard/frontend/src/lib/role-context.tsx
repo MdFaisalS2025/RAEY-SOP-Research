@@ -80,7 +80,7 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
   const [role, setRoleState] = useState<UserRole>("clinical_staff")
 
   useEffect(() => {
-    const saved = localStorage.getItem("sop-guard-demo-role") as UserRole | null
+    const saved = localStorage.getItem("meridian-demo-role") as UserRole | null
     if (saved && DEMO_USERS.find(u => u.role === saved)) {
       setRoleState(saved)
     }
@@ -88,7 +88,7 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
 
   const setRole = (newRole: UserRole) => {
     setRoleState(newRole)
-    localStorage.setItem("sop-guard-demo-role", newRole)
+    localStorage.setItem("meridian-demo-role", newRole)
   }
 
   const currentUser = DEMO_USERS.find(u => u.role === role) ?? DEMO_USERS[0]

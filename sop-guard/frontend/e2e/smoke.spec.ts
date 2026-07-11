@@ -49,7 +49,7 @@ test.describe("upload flow", () => {
     // the corpus vocabulary abstention signal, and every SOP-count display
     // in the app. Read it from the result card's data-sop-id attribute
     // (not page text) since the site header also contains text starting
-    // with "SOP-" ("SOP-Guard").
+    // with "SOP-" ("Meridian").
     const sopId = await page.locator("[data-sop-id]").getAttribute("data-sop-id")
 
     const libraryLink = page.getByRole("link", { name: /view in library/i })

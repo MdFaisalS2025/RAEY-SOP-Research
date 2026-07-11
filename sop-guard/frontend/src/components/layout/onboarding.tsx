@@ -13,7 +13,7 @@ const steps = [
   {
     icon: ShieldCheck,
     title: "Get a verified answer",
-    description: "SOP-Guard retrieves relevant SOPs, generates an answer, and checks it for procedural correctness.",
+    description: "Meridian retrieves relevant SOPs, generates an answer, and checks it for procedural correctness.",
   },
   {
     icon: FileText,
@@ -27,13 +27,13 @@ export function OnboardingTour() {
   const [step, setStep] = useState(0)
 
   useEffect(() => {
-    const seen = localStorage.getItem("sop-guard-onboarding-seen")
+    const seen = localStorage.getItem("meridian-onboarding-seen")
     if (!seen) setShow(true)
   }, [])
 
   const dismiss = () => {
     setShow(false)
-    localStorage.setItem("sop-guard-onboarding-seen", "true")
+    localStorage.setItem("meridian-onboarding-seen", "true")
   }
 
   const next = () => {

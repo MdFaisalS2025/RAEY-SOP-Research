@@ -47,7 +47,7 @@ function renderAnswerText(text: string) {
     if (headingMatch) {
       const level = headingMatch[1].length
       return (
-        <p key={i} className={cn("font-semibold text-[#1A2332] mt-4 mb-1", level === 1 ? "text-lg" : "text-base")}>
+        <p key={i} className={cn("font-semibold text-foreground mt-4 mb-1", level === 1 ? "text-lg" : "text-base")}>
           {headingMatch[2]}
         </p>
       )
@@ -60,7 +60,7 @@ function renderAnswerText(text: string) {
       )
     }
     return (
-      <p key={i} className="text-[15px] leading-relaxed text-[#1A2332] mb-2">
+      <p key={i} className="text-[15px] leading-relaxed text-foreground mb-2">
         {line.replace(/\*\*(.+?)\*\*/g, "$1")}
       </p>
     )
@@ -104,14 +104,14 @@ export default function AnswerPermalinkPage() {
         <Breadcrumb items={[{ label: "Shared answer" }]} />
 
         {status === "loading" && (
-          <div className="mt-8 text-sm text-[#64748B]">Loading answer...</div>
+          <div className="mt-8 text-sm text-muted-foreground">Loading answer...</div>
         )}
 
         {status === "notfound" && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-8 bg-card border border-[#0B6BCB]/20 rounded-xl p-8 text-center shadow-sm">
-            <FileQuestion className="w-10 h-10 text-[#94A3B8] mx-auto mb-3" />
-            <p className="text-[#1A2332] font-medium mb-1">This answer link is not available</p>
-            <p className="text-sm text-[#64748B] mb-5">It may have expired or the link is incorrect.</p>
+            <FileQuestion className="w-10 h-10 text-subtle mx-auto mb-3" />
+            <p className="text-foreground font-medium mb-1">This answer link is not available</p>
+            <p className="text-sm text-muted-foreground mb-5">It may have expired or the link is incorrect.</p>
             <button
               onClick={() => router.push("/query")}
               className="inline-flex items-center gap-2 text-sm font-medium text-white bg-[#0B6BCB] hover:bg-[#0959AC] rounded-lg px-4 py-2 transition-colors"
@@ -131,23 +131,23 @@ export default function AnswerPermalinkPage() {
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
             <button
               onClick={() => router.push("/query")}
-              className="inline-flex items-center gap-1.5 text-sm text-[#64748B] hover:text-[#0B6BCB] mb-4 transition-colors"
+              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-[#0B6BCB] mb-4 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" /> Back to query
             </button>
 
-            <h1 className="text-2xl font-semibold text-[#1A2332] mb-1 font-display">{record.query}</h1>
-            <p className="text-xs text-[#94A3B8] mb-5">
+            <h1 className="text-2xl font-semibold text-foreground mb-1 font-display">{record.query}</h1>
+            <p className="text-xs text-subtle mb-5">
               {record.created_at ? new Date(record.created_at).toLocaleString("en-US") : ""}
             </p>
 
-            <div className="bg-card border border-[#E2E8F0] rounded-xl shadow-sm p-6 mb-4">
+            <div className="bg-card border border-border rounded-xl shadow-sm p-6 mb-4">
               {renderAnswerText(record.answer)}
 
               {record.citations.length > 0 && (
-                <div className="mt-4 pt-4 border-t border-[#EDF1F5] flex flex-wrap gap-2">
+                <div className="mt-4 pt-4 border-t border-border flex flex-wrap gap-2">
                   {record.citations.map((c, i) => (
-                    <span key={i} className="text-xs text-[#475569] border border-[#CBD5E1] bg-card rounded px-2 py-0.5">
+                    <span key={i} className="text-xs text-muted-foreground border border-input bg-card rounded px-2 py-0.5">
                       {c}
                     </span>
                   ))}

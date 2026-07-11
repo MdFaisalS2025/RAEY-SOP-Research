@@ -44,7 +44,7 @@ export default function BedsidePage() {
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("sop-guard-bedside-audio")
+      const saved = localStorage.getItem("meridian-bedside-audio")
       if (saved === "off") setAudioEnabled(false)
     } catch { /* ignore */ }
 
@@ -71,7 +71,7 @@ export default function BedsidePage() {
   const toggleAudio = () => {
     setAudioEnabled(prev => {
       const next = !prev
-      try { localStorage.setItem("sop-guard-bedside-audio", next ? "on" : "off") } catch { /* ignore */ }
+      try { localStorage.setItem("meridian-bedside-audio", next ? "on" : "off") } catch { /* ignore */ }
       if (!next) window.speechSynthesis?.cancel()
       return next
     })
@@ -139,17 +139,17 @@ export default function BedsidePage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="flex items-center justify-between px-6 py-4 bg-card border-b border-[#E2E8F0]">
-        <h1 className="text-xl font-semibold text-[#1A2332]">Bedside Lookup</h1>
+      <header className="flex items-center justify-between px-6 py-4 bg-card border-b border-border">
+        <h1 className="text-xl font-semibold text-foreground">Bedside Lookup</h1>
         <div className="flex items-center gap-4">
           <button
             onClick={toggleAudio}
-            className="flex items-center gap-2 text-sm text-[#64748B] hover:text-[#0B6BCB] transition-colors"
+            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-[#0B6BCB] transition-colors"
           >
             {audioEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
             {audioEnabled ? "Audio on" : "Audio off"}
           </button>
-          <Link href="/query" className="flex items-center gap-1.5 text-sm text-[#64748B] hover:text-[#0B6BCB] transition-colors">
+          <Link href="/query" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-[#0B6BCB] transition-colors">
             <X className="w-5 h-5" /> Exit
           </Link>
         </div>
@@ -169,7 +169,7 @@ export default function BedsidePage() {
           </button>
         ) : null}
 
-        <p className="text-sm text-[#64748B] mb-4">
+        <p className="text-sm text-muted-foreground mb-4">
           {voiceSupported ? (listening ? "Listening..." : "Tap to speak, or type below") : "Voice input is not available on this device"}
         </p>
 
@@ -181,7 +181,7 @@ export default function BedsidePage() {
             value={transcript}
             onChange={e => setTranscript(e.target.value)}
             placeholder="Ask a clinical question"
-            className="flex-1 text-2xl px-4 py-4 rounded-xl border border-[#CBD5E1] bg-card text-[#1A2332] focus:outline-none focus:ring-2 focus:ring-[#0B6BCB]/40 focus:border-[#0B6BCB]"
+            className="flex-1 text-2xl px-4 py-4 rounded-xl border border-input bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-[#0B6BCB]/40 focus:border-[#0B6BCB]"
           />
           <button
             type="submit"
@@ -197,7 +197,7 @@ export default function BedsidePage() {
             <button
               key={q}
               onClick={() => { setTranscript(q); runQuery(q) }}
-              className="text-base px-4 py-3 rounded-xl bg-card border border-[#E2E8F0] text-[#1A2332] hover:border-[#0B6BCB]/40 hover:bg-[#0B6BCB]/5 transition-colors shadow-sm"
+              className="text-base px-4 py-3 rounded-xl bg-card border border-border text-foreground hover:border-[#0B6BCB]/40 hover:bg-[#0B6BCB]/5 transition-colors shadow-sm"
             >
               {q}
             </button>
@@ -210,7 +210,7 @@ export default function BedsidePage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="w-full bg-card border border-[#E2E8F0] rounded-2xl shadow-sm p-6"
+              className="w-full bg-card border border-border rounded-2xl shadow-sm p-6"
             >
               {answer.hasConflict && (
                 <div className="flex items-center gap-2 mb-4 px-4 py-2.5 bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 rounded-lg text-[#B91C1C] dark:text-red-400 font-medium text-lg">
@@ -225,12 +225,12 @@ export default function BedsidePage() {
                 </div>
               )}
 
-              <p className="text-xl leading-relaxed text-[#1A2332] mb-4">
+              <p className="text-xl leading-relaxed text-foreground mb-4">
                 {answer.answerText}
               </p>
 
               {answer.sourceSop && (
-                <p className="text-sm text-[#64748B]">Source: {answer.sourceSop}</p>
+                <p className="text-sm text-muted-foreground">Source: {answer.sourceSop}</p>
               )}
 
               {speaking && (
@@ -246,7 +246,7 @@ export default function BedsidePage() {
         </AnimatePresence>
       </main>
 
-      <footer className="text-center text-xs text-[#94A3B8] py-4">
+      <footer className="text-center text-xs text-subtle py-4">
         Research prototype. Verify against the source SOP before clinical use.
       </footer>
     </div>

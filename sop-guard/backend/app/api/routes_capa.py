@@ -1,5 +1,5 @@
 """
-SOP-Guard Incidents + CAPA Routes
+Meridian Incidents + CAPA Routes
 -----------------------------------
 Patient-safety incident reports and the Corrective and Preventive Action
 (CAPA) workflow that closes the loop from an incident to a documented root

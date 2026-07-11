@@ -1,5 +1,5 @@
 """
-SOP-Guard SOP-Aware Chunker
+Meridian SOP-Aware Chunker
 Creates typed chunks that preserve clinical structure.
 Research prototype. Not for clinical use.
 """

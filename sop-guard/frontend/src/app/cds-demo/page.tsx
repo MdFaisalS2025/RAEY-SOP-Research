@@ -32,7 +32,7 @@ function mockCards(medication: string, dose: string): CDSCard[] {
       indicator: "warning",
       summary: "Norepinephrine dose limit per ICU-SEP-002",
       detail: `Maximum norepinephrine dose is 3 mcg/kg/min. Titrate to MAP 65 mmHg or above. Add vasopressin at 0.5 mcg/kg/min norepinephrine if target not met.${doseNote}`,
-      source: "SOP-Guard",
+      source: "Meridian",
     }]
   }
   if (medication === "insulin") {
@@ -40,14 +40,14 @@ function mockCards(medication: string, dose: string): CDSCard[] {
       indicator: "warning",
       summary: "High-alert medication: independent double-check required",
       detail: `PHARM-MED-007 requires an independent double-check by a second qualified clinician before insulin infusion. Telephonic verification permitted when no second clinician is on site.${doseNote}`,
-      source: "SOP-Guard",
+      source: "Meridian",
     }]
   }
   return [{
     indicator: "info",
     summary: `Protocol guidance available for ${medication}`,
     detail: `Review the applicable hospital SOP before administration.${doseNote} PHARM-MED-007 applies to all ISMP high-alert medications including heparin and concentrated electrolytes.`,
-    source: "SOP-Guard",
+    source: "Meridian",
   }]
 }
 
@@ -75,7 +75,7 @@ export default function CDSDemoPage() {
     setCards(null)
     try {
       const res = await fetch(
-        (process.env.NEXT_PUBLIC_API_URL || "") + "/cds-services/sop-guard-protocol-check",
+        (process.env.NEXT_PUBLIC_API_URL || "") + "/cds-services/meridian-protocol-check",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -88,7 +88,7 @@ export default function CDSDemoPage() {
         indicator: (c.indicator === "critical" || c.indicator === "warning" ? c.indicator : "info") as Indicator,
         summary: c.summary || "Protocol guidance",
         detail: c.detail || "",
-        source: c.source?.label || "SOP-Guard",
+        source: c.source?.label || "Meridian",
       }))
       if (returned.length === 0) throw new Error("empty")
       setCards(returned)
@@ -116,8 +116,8 @@ export default function CDSDemoPage() {
           </div>
           <div>
             <h1 className="text-2xl font-bold font-display">EMR Integration (CDS Hooks)</h1>
-            <p className="text-sm text-[#64748B]">
-              When a clinician places an order in the EMR, SOP-Guard returns protocol guidance cards using the HL7 CDS Hooks standard.
+            <p className="text-sm text-muted-foreground">
+              When a clinician places an order in the EMR, Meridian returns protocol guidance cards using the HL7 CDS Hooks standard.
             </p>
           </div>
         </div>
@@ -130,21 +130,21 @@ export default function CDSDemoPage() {
 
         <div className="grid lg:grid-cols-2 gap-6">
           {/* Left: simulated EMR */}
-          <div className="rounded-xl border border-[#CBD5E1] bg-card shadow-sm overflow-hidden">
+          <div className="rounded-xl border border-input bg-card shadow-sm overflow-hidden">
             <div className="bg-[#475569] px-4 py-2.5">
               <p className="text-sm font-semibold text-white">Simulated EMR - Order Entry</p>
             </div>
             <div className="p-5 space-y-4">
-              <p className="text-xs text-[#64748B] border border-[#E2E8F0] bg-background rounded px-3 py-2">
+              <p className="text-xs text-muted-foreground border border-border bg-background rounded px-3 py-2">
                 Patient: Bed 12, sepsis, NEWS2 7
               </p>
               <div className="space-y-1.5">
-                <label htmlFor="cds-med" className="text-xs font-medium text-[#1A2332]">Medication</label>
+                <label htmlFor="cds-med" className="text-xs font-medium text-foreground">Medication</label>
                 <select
                   id="cds-med"
                   value={medication}
                   onChange={e => setMedication(e.target.value)}
-                  className="w-full rounded-lg border border-[#CBD5E1] bg-card px-3 py-2 text-sm text-[#1A2332] focus:outline-none focus:border-[#0B6BCB]"
+                  className="w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:border-[#0B6BCB]"
                 >
                   {MEDICATIONS.map(m => (
                     <option key={m} value={m}>{m}</option>
@@ -152,14 +152,14 @@ export default function CDSDemoPage() {
                 </select>
               </div>
               <div className="space-y-1.5">
-                <label htmlFor="cds-dose" className="text-xs font-medium text-[#1A2332]">Dose</label>
+                <label htmlFor="cds-dose" className="text-xs font-medium text-foreground">Dose</label>
                 <input
                   id="cds-dose"
                   type="text"
                   value={dose}
                   onChange={e => setDose(e.target.value)}
                   placeholder="e.g. 0.1 mcg/kg/min"
-                  className="w-full rounded-lg border border-[#CBD5E1] bg-card px-3 py-2 text-sm text-[#1A2332] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#0B6BCB]"
+                  className="w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground placeholder:text-subtle focus:outline-none focus:border-[#0B6BCB]"
                 />
               </div>
               <button
@@ -175,14 +175,14 @@ export default function CDSDemoPage() {
 
           {/* Right: CDS cards */}
           <div className="space-y-3">
-            <h2 className="text-sm font-semibold text-[#1A2332]">EMR Sidebar - Guidance Cards</h2>
+            <h2 className="text-sm font-semibold text-foreground">EMR Sidebar - Guidance Cards</h2>
             {!cards && !loading && (
-              <div className="rounded-xl border border-dashed border-[#CBD5E1] bg-muted p-8 text-center text-sm text-[#64748B]">
+              <div className="rounded-xl border border-dashed border-input bg-muted p-8 text-center text-sm text-muted-foreground">
                 Sign an order to see protocol guidance.
               </div>
             )}
             {loading && (
-              <div className="rounded-xl border border-[#E2E8F0] bg-card p-8 text-center text-sm text-[#64748B] flex items-center justify-center gap-2">
+              <div className="rounded-xl border border-border bg-card p-8 text-center text-sm text-muted-foreground flex items-center justify-center gap-2">
                 <Loader2 className="w-4 h-4 animate-spin" /> Checking protocols
               </div>
             )}
@@ -190,17 +190,17 @@ export default function CDSDemoPage() {
               const cfg = indicatorConfig[card.indicator]
               const Icon = cfg.icon
               return (
-                <div key={i} className="rounded-xl border border-[#E2E8F0] bg-card shadow-sm overflow-hidden flex">
+                <div key={i} className="rounded-xl border border-border bg-card shadow-sm overflow-hidden flex">
                   <div className={cn("w-1.5 shrink-0", cfg.strip)} />
                   <div className="p-4 space-y-2 flex-1">
                     <div className="flex items-center gap-2">
                       <span className={cn("px-2 py-0.5 rounded-full text-xs font-medium border flex items-center gap-1", cfg.chip)}>
                         <Icon className="w-3 h-3" /> {cfg.label}
                       </span>
-                      <span className="text-xs text-[#64748B]">Source: {card.source}</span>
+                      <span className="text-xs text-muted-foreground">Source: {card.source}</span>
                     </div>
-                    <p className="text-sm font-bold text-[#1A2332]">{card.summary}</p>
-                    <p className="text-sm text-[#64748B]">{card.detail}</p>
+                    <p className="text-sm font-bold text-foreground">{card.summary}</p>
+                    <p className="text-sm text-muted-foreground">{card.detail}</p>
                     <Link href="/library" className="text-xs text-[#0B6BCB] hover:text-[#0959AC] font-medium inline-flex items-center gap-1">
                       View full SOP <ExternalLink className="w-3 h-3" />
                     </Link>
@@ -209,7 +209,7 @@ export default function CDSDemoPage() {
               )
             })}
             {cards && usedFallback && (
-              <p className="text-xs text-[#64748B] italic">
+              <p className="text-xs text-muted-foreground italic">
                 Backend unreachable. Card generated from local demo logic.
               </p>
             )}
@@ -217,20 +217,20 @@ export default function CDSDemoPage() {
         </div>
 
         {/* How this works */}
-        <section className="rounded-2xl bg-card border border-[#E2E8F0] shadow-sm">
+        <section className="rounded-2xl bg-card border border-border shadow-sm">
           <button
             onClick={() => setHowOpen(!howOpen)}
-            className="w-full flex items-center justify-between px-5 py-4 text-sm font-semibold text-[#1A2332]"
+            className="w-full flex items-center justify-between px-5 py-4 text-sm font-semibold text-foreground"
           >
             How this works
-            {howOpen ? <ChevronDown className="w-4 h-4 text-[#64748B]" /> : <ChevronRight className="w-4 h-4 text-[#64748B]" />}
+            {howOpen ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
           </button>
           {howOpen && (
             <div className="px-5 pb-5 space-y-4">
-              <ul className="space-y-2 text-sm text-[#64748B]">
+              <ul className="space-y-2 text-sm text-muted-foreground">
                 <li className="flex items-start gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#0B6BCB] mt-1.5 shrink-0" />
-                  The EMR discovers SOP-Guard services at the CDS Hooks discovery endpoint.
+                  The EMR discovers Meridian services at the CDS Hooks discovery endpoint.
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#0B6BCB] mt-1.5 shrink-0" />
@@ -243,15 +243,15 @@ export default function CDSDemoPage() {
               </ul>
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs font-semibold text-[#64748B] mb-1.5">Request</p>
-                  <pre className="rounded-lg bg-muted border border-[#E2E8F0] p-3 text-xs text-[#1A2332] font-mono overflow-x-auto">
-{`POST /cds-services/sop-guard-protocol-check
+                  <p className="text-xs font-semibold text-muted-foreground mb-1.5">Request</p>
+                  <pre className="rounded-lg bg-muted border border-border p-3 text-xs text-foreground font-mono overflow-x-auto">
+{`POST /cds-services/meridian-protocol-check
 ${JSON.stringify(requestBody, null, 2)}`}
                   </pre>
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-[#64748B] mb-1.5">Response</p>
-                  <pre className="rounded-lg bg-muted border border-[#E2E8F0] p-3 text-xs text-[#1A2332] font-mono overflow-x-auto">
+                  <p className="text-xs font-semibold text-muted-foreground mb-1.5">Response</p>
+                  <pre className="rounded-lg bg-muted border border-border p-3 text-xs text-foreground font-mono overflow-x-auto">
 {lastResponse ?? "Sign an order to populate the response."}
                   </pre>
                 </div>

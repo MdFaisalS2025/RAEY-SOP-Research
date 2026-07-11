@@ -1,5 +1,5 @@
 """
-SOP-Guard Conversational Chat Routes
+Meridian Conversational Chat Routes
 ------------------------------------
 Multi-turn chat sessions over the existing agentic RAG pipeline.
 Research prototype. Not for clinical use.
@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.db import get_db
 from app.models.models import ChatSessionRecord, ChatMessageRecord
-from app.agents.pipeline import SOPGuardPipeline
+from app.agents.pipeline import MeridianPipeline
 from app.services.chunk_loader import load_chunks
 
 router = APIRouter(tags=["Chat"])
@@ -135,7 +135,7 @@ async def _persist_chat_messages(
             await db.rollback()
         except Exception:
             pass
-        print(f"[SOP-Guard] Warning: failed to persist chat messages: {e}")
+        print(f"[Meridian] Warning: failed to persist chat messages: {e}")
     return user_msg_id, assistant_msg_id
 
 
@@ -158,7 +158,7 @@ async def post_message(
     if not chunks:
         raise HTTPException(status_code=404, detail="No SOPs loaded.")
 
-    pipeline = SOPGuardPipeline(chunks, structured_sops)
+    pipeline = MeridianPipeline(chunks, structured_sops)
     result = await pipeline.run(
         query=req.content,
         news2_score=req.news2_score,
@@ -199,7 +199,7 @@ async def post_message_stream(
     if not chunks:
         raise HTTPException(status_code=404, detail="No SOPs loaded.")
 
-    pipeline = SOPGuardPipeline(chunks, structured_sops)
+    pipeline = MeridianPipeline(chunks, structured_sops)
 
     async def event_stream():
         async for event in pipeline.run_streaming(

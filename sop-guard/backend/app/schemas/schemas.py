@@ -1,5 +1,5 @@
 """
-SOP-Guard Pydantic Schemas
+Meridian Pydantic Schemas
 --------------------------
 Research prototype  - NOT for clinical use.
 """
@@ -77,6 +77,12 @@ class QueryResponse(BaseModel):
     abstained: bool = False
     answer_id: Optional[int] = None
     entities: dict[str, list[str]] = {}
+    # Answer-routing transparency (see agents/routing.py): which source(s)
+    # actually grounded this answer, so the UI can render "Sourced from:
+    # SOP Library" / "External Literature" / "SOP Library + External
+    # Literature" / "No source available" rather than leaving it implicit.
+    route: str = "sop_library"  # "sop_library" | "external_evidence" | "hybrid" | "no_evidence"
+    external_evidence: list[dict] = []
 
 
 # ── SOP ────────────────────────────────────────────────────────

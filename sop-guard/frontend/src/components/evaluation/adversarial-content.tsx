@@ -231,7 +231,7 @@ function severityBadge(severity: Severity) {
     critical: "bg-[#FEE2E2] dark:bg-red-500/10 border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400",
     high: "bg-[#FEE2E2] dark:bg-red-500/10 border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400",
     medium: "bg-[#FEF3C7] dark:bg-amber-500/10 border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400",
-    low: "bg-muted border-[#CBD5E1] text-[#64748B]",
+    low: "bg-muted border-input text-muted-foreground",
   }
   return (
     <span className={cn("inline-flex items-center px-2 py-0.5 rounded-md border text-xs font-medium", map[severity])}>
@@ -265,27 +265,27 @@ function TestCard({ test }: { test: AdversarialTest }) {
           <div className="flex flex-wrap items-center gap-2">
             {statusBadge(test.status)}
             {severityBadge(test.severity)}
-            <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-[#F1F5F9]/60 border border-[#E2E8F0] text-[#64748B] text-xs font-mono">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-[#F1F5F9]/60 border border-border text-muted-foreground text-xs font-mono">
               {CATEGORY_LABELS[test.category] ?? test.category}
             </span>
-            <span className="text-xs text-[#94A3B8] font-mono">{test.id}</span>
+            <span className="text-xs text-subtle font-mono">{test.id}</span>
           </div>
-          <p className="text-xs text-[#64748B]">{test.description}</p>
+          <p className="text-xs text-muted-foreground">{test.description}</p>
         </div>
       </div>
 
       {/* Query */}
       <div>
-        <p className="text-xs text-[#94A3B8] uppercase tracking-wide font-medium mb-1">Query</p>
-        <div className="px-4 py-3 rounded-xl bg-muted border border-[#E2E8F0] font-mono text-sm text-[#1A2332] leading-relaxed">
+        <p className="text-xs text-subtle uppercase tracking-wide font-medium mb-1">Query</p>
+        <div className="px-4 py-3 rounded-xl bg-muted border border-border font-mono text-sm text-foreground leading-relaxed">
           {test.query}
         </div>
       </div>
 
       {/* Expected behavior */}
       <div>
-        <p className="text-xs text-[#94A3B8] uppercase tracking-wide font-medium mb-1">Expected Behavior</p>
-        <p className="text-sm text-[#64748B]">{test.expected_behavior}</p>
+        <p className="text-xs text-subtle uppercase tracking-wide font-medium mb-1">Expected Behavior</p>
+        <p className="text-sm text-muted-foreground">{test.expected_behavior}</p>
       </div>
 
       {/* Actual response */}
@@ -298,16 +298,16 @@ function TestCard({ test }: { test: AdversarialTest }) {
             test.status === "pass" ? "text-[#15803D] dark:text-green-400" : test.status === "partial" ? "text-[#B45309] dark:text-amber-400" : "text-[#B91C1C] dark:text-red-400"
           )}>Actual Response Summary</span>
         </p>
-        <p className="text-sm text-[#334155]">{test.actual_response_summary}</p>
+        <p className="text-sm text-foreground">{test.actual_response_summary}</p>
       </div>
 
       {/* Notes */}
-      <p className="text-xs text-[#94A3B8] italic">{test.notes}</p>
+      <p className="text-xs text-subtle italic">{test.notes}</p>
 
       {/* Expand / collapse full response */}
       <button
         onClick={() => setExpanded((v) => !v)}
-        className="flex items-center gap-1.5 text-xs text-[#94A3B8] hover:text-[#0B6BCB] transition-colors"
+        className="flex items-center gap-1.5 text-xs text-subtle hover:text-[#0B6BCB] transition-colors"
       >
         {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
         {expanded ? "Collapse" : "View Full Response (Coming Soon)"}
@@ -319,7 +319,7 @@ function TestCard({ test }: { test: AdversarialTest }) {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="px-4 py-3 rounded-xl bg-card border border-[#E2E8F0] text-xs text-[#94A3B8] italic"
+            className="px-4 py-3 rounded-xl bg-card border border-border text-xs text-subtle italic"
           >
             Full response expansion requires backend integration (v2 feature). Expected response would include source chunk citations, query type classification, and confidence scores.
           </motion.div>
@@ -382,8 +382,8 @@ export function AdversarialContent() {
               <ShieldAlert className="w-5 h-5 text-[#B91C1C] dark:text-red-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-2xl font-bold font-display text-[#1A2332]">Adversarial Query Testing</h1>
-              <p className="text-sm text-[#64748B] mt-0.5">
+              <h1 className="text-2xl font-bold font-display text-foreground">Adversarial Query Testing</h1>
+              <p className="text-sm text-muted-foreground mt-0.5">
                 Probing failure modes and edge cases in clinical SOP retrieval
               </p>
             </div>
@@ -424,14 +424,14 @@ export function AdversarialContent() {
           className="grid grid-cols-2 md:grid-cols-4 gap-4"
         >
           {[
-            { label: "Total Tests", value: total, color: "text-[#1A2332]" },
+            { label: "Total Tests", value: total, color: "text-foreground" },
             { label: "Passing", value: passCount, color: "text-[#15803D] dark:text-green-400" },
             { label: "Partial", value: partialCount, color: "text-[#B45309] dark:text-amber-400" },
             { label: "Failing", value: failCount, color: "text-[#B91C1C] dark:text-red-400" },
           ].map((s) => (
             <div key={s.label} className="p-4 rounded-2xl bg-card border border-[#0B6BCB]/10 text-center">
               <p className={cn("text-3xl font-bold", s.color)}>{s.value}</p>
-              <p className="text-xs text-[#94A3B8] mt-1">{s.label}</p>
+              <p className="text-xs text-subtle mt-1">{s.label}</p>
             </div>
           ))}
         </motion.div>
@@ -451,7 +451,7 @@ export function AdversarialContent() {
                 "px-3 py-1.5 rounded-xl text-xs font-medium transition-colors border",
                 activeCategory === cat
                   ? "bg-[#0B6BCB]/10 border-[#0B6BCB]/30 text-[#0B6BCB]"
-                  : "bg-card border-[#E2E8F0] text-[#64748B] hover:text-[#1A2332] hover:border-[#CBD5E1]"
+                  : "bg-card border-border text-muted-foreground hover:text-foreground hover:border-input"
               )}
             >
               {CATEGORY_LABELS[cat] ?? cat}
@@ -481,7 +481,7 @@ export function AdversarialContent() {
           className="rounded-2xl bg-card border border-[#0B6BCB]/10 p-6 space-y-4"
         >
           <div className="flex items-center justify-between flex-wrap gap-2">
-            <h2 className="text-base font-semibold font-display text-[#1A2332] flex items-center gap-2">
+            <h2 className="text-base font-semibold font-display text-foreground flex items-center gap-2">
               <FlaskConical className="w-4 h-4 text-[#0B6BCB]" />
               Live Verifier Benchmark
             </h2>
@@ -491,7 +491,7 @@ export function AdversarialContent() {
           </div>
 
           {!benchmark && !loadingBenchmark && !benchmarkError && (
-            <p className="text-sm text-[#64748B]">
+            <p className="text-sm text-muted-foreground">
               Click &quot;Run Live Verifier Benchmark&quot; above to run the procedural faithfulness verifier
               against the real 120-case perturbation benchmark (17 hand-written + 103 programmatically-generated
               threshold/sequence/contraindication violations), including a second-opinion comparison against the
@@ -500,7 +500,7 @@ export function AdversarialContent() {
           )}
 
           {loadingBenchmark && (
-            <div className="flex items-center gap-2 text-sm text-[#64748B] py-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground py-4">
               <Loader2 className="w-4 h-4 animate-spin" />
               Running verifier against {"{"}17 hand-written + programmatically-generated{"}"} test cases...
             </div>
@@ -515,29 +515,29 @@ export function AdversarialContent() {
           {benchmark && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div className="p-3 rounded-xl bg-muted border border-[#E2E8F0] text-center">
-                  <p className="text-2xl font-bold text-[#1A2332]">{benchmark.total_tests}</p>
-                  <p className="text-xs text-[#94A3B8] mt-0.5">Test Cases</p>
+                <div className="p-3 rounded-xl bg-muted border border-border text-center">
+                  <p className="text-2xl font-bold text-foreground">{benchmark.total_tests}</p>
+                  <p className="text-xs text-subtle mt-0.5">Test Cases</p>
                 </div>
-                <div className="p-3 rounded-xl bg-muted border border-[#E2E8F0] text-center">
+                <div className="p-3 rounded-xl bg-muted border border-border text-center">
                   <p className="text-2xl font-bold text-[#0B6BCB]">{Math.round(benchmark.sensitivity * 100)}%</p>
-                  <p className="text-xs text-[#94A3B8] mt-0.5">Sensitivity</p>
+                  <p className="text-xs text-subtle mt-0.5">Sensitivity</p>
                 </div>
-                <div className="p-3 rounded-xl bg-muted border border-[#E2E8F0] text-center">
+                <div className="p-3 rounded-xl bg-muted border border-border text-center">
                   <p className="text-2xl font-bold text-[#0B6BCB]">{Math.round(benchmark.specificity * 100)}%</p>
-                  <p className="text-xs text-[#94A3B8] mt-0.5">Specificity</p>
+                  <p className="text-xs text-subtle mt-0.5">Specificity</p>
                 </div>
-                <div className="p-3 rounded-xl bg-muted border border-[#E2E8F0] text-center">
+                <div className="p-3 rounded-xl bg-muted border border-border text-center">
                   <p className="text-2xl font-bold text-[#0B6BCB]">{Math.round(benchmark.pairwise_separation * 100)}%</p>
-                  <p className="text-xs text-[#94A3B8] mt-0.5">Pairwise Separation</p>
+                  <p className="text-xs text-subtle mt-0.5">Pairwise Separation</p>
                 </div>
               </div>
 
               {benchmark.verifier_comparison && (
-                <div className="overflow-x-auto rounded-xl border border-[#E2E8F0]">
+                <div className="overflow-x-auto rounded-xl border border-border">
                   <table className="w-full min-w-[420px] text-sm border-collapse">
                     <thead>
-                      <tr className="bg-muted text-xs text-[#64748B] uppercase tracking-wide">
+                      <tr className="bg-muted text-xs text-muted-foreground uppercase tracking-wide">
                         <th className="text-left py-2 px-3">Verifier</th>
                         <th className="text-right py-2 px-3">Sensitivity</th>
                         <th className="text-right py-2 px-3">Specificity</th>
@@ -545,19 +545,19 @@ export function AdversarialContent() {
                       </tr>
                     </thead>
                     <tbody>
-                      <tr className="border-t border-[#EDF1F5]">
-                        <td className="py-2 px-3 font-medium text-[#1A2332]">Rule-based</td>
+                      <tr className="border-t border-border">
+                        <td className="py-2 px-3 font-medium text-foreground">Rule-based</td>
                         <td className="py-2 px-3 text-right font-mono">{Math.round(benchmark.verifier_comparison.rule_based.sensitivity * 100)}%</td>
                         <td className="py-2 px-3 text-right font-mono">{Math.round(benchmark.verifier_comparison.rule_based.specificity * 100)}%</td>
                         <td className="py-2 px-3 text-right font-mono">{Math.round(benchmark.verifier_comparison.rule_based.pairwise_separation * 100)}%</td>
                       </tr>
-                      <tr className="border-t border-[#EDF1F5]">
-                        <td className="py-2 px-3 font-medium text-[#1A2332]">NLI-lite</td>
+                      <tr className="border-t border-border">
+                        <td className="py-2 px-3 font-medium text-foreground">NLI-lite</td>
                         <td className="py-2 px-3 text-right font-mono">{Math.round(benchmark.verifier_comparison.nli_lite.sensitivity * 100)}%</td>
                         <td className="py-2 px-3 text-right font-mono">{Math.round(benchmark.verifier_comparison.nli_lite.specificity * 100)}%</td>
                         <td className="py-2 px-3 text-right font-mono">{Math.round(benchmark.verifier_comparison.nli_lite.pairwise_separation * 100)}%</td>
                       </tr>
-                      <tr className="border-t border-[#EDF1F5] bg-[#DCFCE7]/40 dark:bg-green-500/[0.06]">
+                      <tr className="border-t border-border bg-[#DCFCE7]/40 dark:bg-green-500/[0.06]">
                         <td className="py-2 px-3 font-semibold text-[#15803D] dark:text-green-400">Ensemble</td>
                         <td className="py-2 px-3 text-right font-mono font-semibold text-[#15803D] dark:text-green-400">{Math.round(benchmark.verifier_comparison.ensemble.sensitivity * 100)}%</td>
                         <td className="py-2 px-3 text-right font-mono font-semibold text-[#15803D] dark:text-green-400">{Math.round(benchmark.verifier_comparison.ensemble.specificity * 100)}%</td>
@@ -569,9 +569,9 @@ export function AdversarialContent() {
               )}
 
               {benchmark.verifier_comparison && (
-                <p className="text-xs text-[#64748B] italic">{benchmark.verifier_comparison.note}</p>
+                <p className="text-xs text-muted-foreground italic">{benchmark.verifier_comparison.note}</p>
               )}
-              <p className="text-xs text-[#94A3B8]">{benchmark.disclaimer}</p>
+              <p className="text-xs text-subtle">{benchmark.disclaimer}</p>
             </div>
           )}
         </motion.div>
@@ -584,11 +584,11 @@ export function AdversarialContent() {
           className="rounded-2xl bg-card border border-[#0B6BCB]/10 p-6 space-y-5"
         >
           <div>
-            <h2 className="text-base font-semibold font-display text-[#1A2332] flex items-center gap-2">
+            <h2 className="text-base font-semibold font-display text-foreground flex items-center gap-2">
               <FlaskConical className="w-4 h-4 text-[#0B6BCB]" />
               Illustrative Failure-Mode Categories
             </h2>
-            <p className="text-xs text-[#94A3B8] mt-1">
+            <p className="text-xs text-subtle mt-1">
               The pass/partial/fail rates below describe the 10 hand-authored example scenarios above, written to
               illustrate categories of failure mode - they are static and not live-tested. See Live Verifier
               Benchmark above for real, backend-computed results.
@@ -597,7 +597,7 @@ export function AdversarialContent() {
 
           {/* Pass/Partial/Fail bar */}
           <div>
-            <div className="flex text-xs text-[#64748B] justify-between mb-2">
+            <div className="flex text-xs text-muted-foreground justify-between mb-2">
               <span>Pass rate: {Math.round((passCount / total) * 100)}%</span>
               <span>{passCount} pass · {partialCount} partial · {failCount} fail</span>
             </div>
@@ -607,22 +607,22 @@ export function AdversarialContent() {
               <div className="bg-[#B91C1C] transition-all" style={{ width: `${(failCount / total) * 100}%` }} />
             </div>
             <div className="flex gap-4 mt-2">
-              <span className="flex items-center gap-1.5 text-xs text-[#94A3B8]"><span className="w-2.5 h-2.5 rounded-sm bg-[#15803D]" /> Pass ({Math.round((passCount / total) * 100)}%)</span>
-              <span className="flex items-center gap-1.5 text-xs text-[#94A3B8]"><span className="w-2.5 h-2.5 rounded-sm bg-[#B45309]" /> Partial ({Math.round((partialCount / total) * 100)}%)</span>
-              <span className="flex items-center gap-1.5 text-xs text-[#94A3B8]"><span className="w-2.5 h-2.5 rounded-sm bg-[#B91C1C]" /> Fail ({Math.round((failCount / total) * 100)}%)</span>
+              <span className="flex items-center gap-1.5 text-xs text-subtle"><span className="w-2.5 h-2.5 rounded-sm bg-[#15803D]" /> Pass ({Math.round((passCount / total) * 100)}%)</span>
+              <span className="flex items-center gap-1.5 text-xs text-subtle"><span className="w-2.5 h-2.5 rounded-sm bg-[#B45309]" /> Partial ({Math.round((partialCount / total) * 100)}%)</span>
+              <span className="flex items-center gap-1.5 text-xs text-subtle"><span className="w-2.5 h-2.5 rounded-sm bg-[#B91C1C]" /> Fail ({Math.round((failCount / total) * 100)}%)</span>
             </div>
           </div>
 
           {/* Key findings */}
           <div className="space-y-3">
-            <p className="text-xs font-semibold text-[#334155] uppercase tracking-wide">Key Findings</p>
+            <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Key Findings</p>
 
             <div className="space-y-2">
               <div className="flex items-start gap-3 p-3 rounded-xl bg-[#DCFCE7] dark:bg-green-500/10 border border-[#BBF7D0] dark:border-green-500/30">
                 <CheckCircle2 className="w-4 h-4 text-[#15803D] dark:text-green-400 shrink-0 mt-0.5" />
                 <div>
                   <p className="text-xs font-semibold text-[#15803D] dark:text-green-400 mb-0.5">Strong</p>
-                  <p className="text-xs text-[#64748B]">Out-of-scope refusal, procedure sequence retrieval, prompt injection resistance, NEWS2 escalation routing</p>
+                  <p className="text-xs text-muted-foreground">Out-of-scope refusal, procedure sequence retrieval, prompt injection resistance, NEWS2 escalation routing</p>
                 </div>
               </div>
 
@@ -630,7 +630,7 @@ export function AdversarialContent() {
                 <AlertCircle className="w-4 h-4 text-[#B45309] dark:text-amber-400 shrink-0 mt-0.5" />
                 <div>
                   <p className="text-xs font-semibold text-[#B45309] dark:text-amber-400 mb-0.5">Partial / Needs Work</p>
-                  <p className="text-xs text-[#64748B]">Outdated SOP detection (requires manual trigger), negation and co-reference resolution in contraindication queries</p>
+                  <p className="text-xs text-muted-foreground">Outdated SOP detection (requires manual trigger), negation and co-reference resolution in contraindication queries</p>
                 </div>
               </div>
 
@@ -638,14 +638,14 @@ export function AdversarialContent() {
                 <XCircle className="w-4 h-4 text-[#B91C1C] dark:text-red-400 shrink-0 mt-0.5" />
                 <div>
                   <p className="text-xs font-semibold text-[#B91C1C] dark:text-red-400 mb-0.5">Weak / Failure Mode</p>
-                  <p className="text-xs text-[#64748B]">Numeric hallucination on values absent from retrieved chunks, medication queries for drugs not in the SOP set</p>
+                  <p className="text-xs text-muted-foreground">Numeric hallucination on values absent from retrieved chunks, medication queries for drugs not in the SOP set</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Run live benchmark CTA */}
-          <div className="flex items-center gap-3 pt-2 border-t border-[#EDF1F5]">
+          <div className="flex items-center gap-3 pt-2 border-t border-border">
             <button
               onClick={handleRunTestSuite}
               disabled={loadingBenchmark}
@@ -654,7 +654,7 @@ export function AdversarialContent() {
               {loadingBenchmark ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
               {loadingBenchmark ? "Running..." : "Run Live Verifier Benchmark"}
             </button>
-            <span className="text-xs text-[#94A3B8] italic">Runs the real procedural faithfulness verifier - see the section above</span>
+            <span className="text-xs text-subtle italic">Runs the real procedural faithfulness verifier - see the section above</span>
           </div>
         </motion.div>
 
@@ -668,7 +668,7 @@ export function AdversarialContent() {
           <Info className="w-4 h-4 shrink-0 mt-0.5 text-[#B45309] dark:text-amber-400" />
           <span>
             These test cases use synthetic SOP data. Designed to probe failure modes - not for clinical use.
-            SOP-Guard v2.0 · Research Prototype Only.
+            Meridian v2.0 · Research Prototype Only.
           </span>
         </motion.div>
       </div>

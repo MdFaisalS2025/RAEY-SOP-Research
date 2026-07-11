@@ -1,5 +1,5 @@
 """
-SOP-Guard SOP Structurer
+Meridian SOP Structurer
 ------------------------
 Regex-based extraction of steps, thresholds, and contraindications
 from raw SOP text.

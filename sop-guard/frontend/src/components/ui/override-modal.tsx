@@ -87,7 +87,7 @@ export function OverrideModal({ open, onClose, contextType, contextId, contextLa
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 12 }}
             transition={{ duration: 0.15 }}
-            className="w-full max-w-md rounded-2xl bg-card border border-[#E2E8F0] shadow-md overflow-hidden"
+            className="w-full max-w-md rounded-2xl bg-card border border-border shadow-md overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {status !== "idle" ? (
@@ -101,12 +101,12 @@ export function OverrideModal({ open, onClose, contextType, contextId, contextLa
               </div>
             ) : (
               <>
-                <div className="flex items-start justify-between px-5 py-4 border-b border-[#E2E8F0]">
+                <div className="flex items-start justify-between px-5 py-4 border-b border-border">
                   <div>
-                    <h2 className="text-sm font-semibold text-[#1A2332]">Why are you overriding this?</h2>
-                    <p className="text-xs text-[#64748B] mt-1">{contextLabel}</p>
+                    <h2 className="text-sm font-semibold text-foreground">Why are you overriding this?</h2>
+                    <p className="text-xs text-muted-foreground mt-1">{contextLabel}</p>
                   </div>
-                  <button onClick={handleClose} aria-label="Close override dialog" className="text-[#64748B] hover:text-[#1A2332] transition-colors shrink-0">
+                  <button onClick={handleClose} aria-label="Close override dialog" className="text-muted-foreground hover:text-foreground transition-colors shrink-0">
                     <X className="w-4 h-4" />
                   </button>
                 </div>
@@ -120,13 +120,13 @@ export function OverrideModal({ open, onClose, contextType, contextId, contextLa
                         "w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-left text-sm font-medium transition-colors",
                         reason === r.key
                           ? "bg-[#0B6BCB]/10 border-[#0B6BCB]/40 text-[#0B6BCB]"
-                          : "border-[#E2E8F0] text-[#334155] hover:bg-muted"
+                          : "border-border text-foreground hover:bg-muted"
                       )}
                     >
                       <span
                         className={cn(
                           "w-4 h-4 rounded-full border-2 shrink-0 flex items-center justify-center",
-                          reason === r.key ? "border-[#0B6BCB]" : "border-[#CBD5E1]"
+                          reason === r.key ? "border-[#0B6BCB]" : "border-input"
                         )}
                       >
                         {reason === r.key && <span className="w-2 h-2 rounded-full bg-[#0B6BCB]" />}
@@ -142,7 +142,7 @@ export function OverrideModal({ open, onClose, contextType, contextId, contextLa
                       onChange={(e) => setNote(e.target.value)}
                       placeholder="Briefly describe your reason..."
                       rows={3}
-                      className="w-full px-3 py-2 rounded-xl bg-muted border border-[#E2E8F0] text-sm text-[#1A2332] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#0B6BCB]/30 resize-none"
+                      className="w-full px-3 py-2 rounded-xl bg-muted border border-border text-sm text-foreground placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-[#0B6BCB]/30 resize-none"
                     />
                   )}
                 </div>
@@ -157,7 +157,7 @@ export function OverrideModal({ open, onClose, contextType, contextId, contextLa
                   </button>
                   <button
                     onClick={handleClose}
-                    className="text-sm text-[#64748B] hover:text-[#1A2332] font-medium transition-colors"
+                    className="text-sm text-muted-foreground hover:text-foreground font-medium transition-colors"
                   >
                     Cancel
                   </button>

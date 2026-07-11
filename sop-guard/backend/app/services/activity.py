@@ -1,5 +1,5 @@
 """
-SOP-Guard Activity Logger
+Meridian Activity Logger
 Research prototype. Not for clinical use.
 """
 

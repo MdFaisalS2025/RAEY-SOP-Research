@@ -1,5 +1,5 @@
 """
-SOP-Guard Mock Generator
+Meridian Mock Generator
 ------------------------
 Compose answers from retrieved chunks in mock mode.
 Research prototype  - NOT for clinical use.

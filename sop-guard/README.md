@@ -1,4 +1,4 @@
-# SOP-Guard
+# Meridian
 
 **AI-powered clinical SOP assistant with procedural faithfulness verification.**
 
@@ -8,7 +8,7 @@
 
 ## What It Does
 
-SOP-Guard helps hospital staff find answers from Standard Operating Procedures. You ask a question, the system retrieves relevant SOP sections, generates a grounded answer, and verifies it for procedural correctness before showing it.
+Meridian helps hospital staff find answers from Standard Operating Procedures. You ask a question, the system retrieves relevant SOP sections, generates a grounded answer, and verifies it for procedural correctness before showing it.
 
 The core research contribution is the **Procedural Faithfulness Verifier**: an automated check that catches wrong thresholds, missing steps, and omitted contraindications in generated answers.
 

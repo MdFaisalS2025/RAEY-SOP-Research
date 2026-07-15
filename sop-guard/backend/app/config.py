@@ -23,9 +23,14 @@ class Settings(BaseSettings):
     # For PostgreSQL: postgresql+asyncpg://user:pass@localhost:5432/sopguard
 
     # --- LLM ---
-    # In-house only: no patient/query data is ever sent to a third-party LLM API.
-    # mock = no model, template answers (offline demo). ollama = local self-hosted model.
-    LLM_PROVIDER: str = "ollama"  # mock | ollama
+    # mock = no model, template answers (offline demo). ollama = local
+    # self-hosted model, no data ever leaves the hospital network. groq =
+    # opt-in third-party hosted inference for faster demo output - only
+    # active if GROQ_API_KEY is set, and query/answer text does leave the
+    # local network for that provider. Default stays "ollama" for any real
+    # deployment; groq is meant for live demos where response latency
+    # matters more than data locality.
+    LLM_PROVIDER: str = "ollama"  # mock | ollama | groq
     LLM_MODEL: str = "llama3.2"
     LLM_BASE_URL: Optional[str] = "http://localhost:11434"
     # A single local Ollama instance serializes inference internally - firing
@@ -36,6 +41,11 @@ class Settings(BaseSettings):
     # that can actually handle concurrent inference (e.g. a scaled endpoint).
     LLM_MAX_CONCURRENT_REQUESTS: int = 1
     LLM_MAX_RETRIES: int = 2
+
+    # --- Groq (opt-in, see LLM_PROVIDER above) ---
+    GROQ_API_KEY: str = ""
+    GROQ_MODEL: str = "llama-3.3-70b-versatile"
+    GROQ_BASE_URL: str = "https://api.groq.com/openai/v1"
 
     # --- Embeddings ---
     EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"

@@ -1,8 +1,12 @@
 """
 Meridian LLM Generator
-Generates grounded answers using a self-hosted Ollama model only - no patient
-or query data is ever sent to a third-party LLM API. Falls back to
-MockGenerator (deterministic templates, no model) when Ollama is unavailable.
+Generates grounded answers using a self-hosted Ollama model by default - no
+patient or query data leaves the hospital network. Optionally, with
+GROQ_API_KEY configured, can instead call Groq's hosted inference API for
+faster demo output (see settings.LLM_PROVIDER) - that path does send
+query/answer text to a third-party API and should not be used with real
+patient data. Falls back to MockGenerator (deterministic templates, no
+model) when the configured provider is unavailable.
 Research prototype. Not for clinical use.
 """
 
@@ -154,21 +158,29 @@ class LLMGenerator:
         if self.provider == "ollama":
             self.base_url = self.base_url or "http://localhost:11434"
             self.model = self.model or "llama3.2"
+        elif self.provider == "groq":
+            self.base_url = base_url or settings.GROQ_BASE_URL
+            self.model = model or settings.GROQ_MODEL
 
     async def _check_available(self) -> bool:
-        """Check if the local Ollama backend is reachable."""
+        """Check if the configured provider is reachable/usable."""
         if self._available is not None:
             return self._available
 
-        if self.provider != "ollama":
-            self._available = False
-            return False
-
-        try:
-            async with httpx.AsyncClient(timeout=3.0) as client:
-                r = await client.get(f"{self.base_url}/api/tags")
-                self._available = r.status_code == 200
-        except Exception:
+        if self.provider == "groq":
+            # Hosted API - no reachability probe needed, just confirm a key
+            # is configured. An invalid/expired key still surfaces as a
+            # normal call failure, handled by the existing mock-fallback
+            # path in generate_answer/stream_answer.
+            self._available = bool(settings.GROQ_API_KEY)
+        elif self.provider == "ollama":
+            try:
+                async with httpx.AsyncClient(timeout=3.0) as client:
+                    r = await client.get(f"{self.base_url}/api/tags")
+                    self._available = r.status_code == 200
+            except Exception:
+                self._available = False
+        else:
             self._available = False
 
         logger.info(f"LLM provider '{self.provider}' available: {self._available}")
@@ -400,8 +412,9 @@ Answer:"""
         )
 
         full_text = ""
+        stream_fn = self._stream_groq if self.provider == "groq" else self._stream_ollama
         try:
-            async for chunk in self._stream_ollama(user_prompt):
+            async for chunk in stream_fn(user_prompt):
                 full_text += chunk
                 yield {"type": "token", "text": chunk}
         except Exception as e:
@@ -419,7 +432,96 @@ Answer:"""
         """Call the configured LLM."""
         if self.provider == "ollama":
             return await self._call_ollama(prompt)
-        raise ValueError(f"Unsupported provider: {self.provider} (only 'ollama' and 'mock' are supported)")
+        if self.provider == "groq":
+            return await self._call_groq(prompt)
+        raise ValueError(f"Unsupported provider: {self.provider} (only 'ollama', 'groq', and 'mock' are supported)")
+
+    async def _call_groq(self, prompt: str) -> str:
+        """Call Groq's OpenAI-compatible chat completions API (non-streaming).
+        Retried with the same backoff/classification as Ollama - no
+        semaphore, since this is a hosted API rather than a single local
+        process that serializes inference."""
+        last_exc: Optional[Exception] = None
+        for attempt in range(settings.LLM_MAX_RETRIES + 1):
+            try:
+                async with httpx.AsyncClient(timeout=60.0) as client:
+                    response = await client.post(
+                        f"{self.base_url}/chat/completions",
+                        headers={"Authorization": f"Bearer {settings.GROQ_API_KEY}"},
+                        json={
+                            "model": self.model,
+                            "messages": [
+                                {"role": "system", "content": SYSTEM_PROMPT},
+                                {"role": "user", "content": prompt},
+                            ],
+                            "temperature": 0.1,
+                            "max_tokens": 1024,
+                            "stream": False,
+                        },
+                    )
+                    response.raise_for_status()
+                    data = response.json()
+                    return data["choices"][0]["message"]["content"].strip()
+            except Exception as e:  # noqa: BLE001 - classified by _is_retryable below
+                last_exc = e
+                if attempt < settings.LLM_MAX_RETRIES and _is_retryable(e):
+                    backoff = 0.5 * (3 ** attempt)
+                    logger.warning(f"Groq call failed (attempt {attempt + 1}/{settings.LLM_MAX_RETRIES + 1}): {e}. Retrying in {backoff}s.")
+                    await asyncio.sleep(backoff)
+                    continue
+                raise
+        raise last_exc  # pragma: no cover - loop always returns or raises above
+
+    async def _stream_groq(self, prompt: str) -> AsyncIterator[str]:
+        """Call Groq's chat completions endpoint with stream:true and yield
+        each delta fragment as it arrives (standard OpenAI-compatible SSE:
+        `data: {...}` lines terminated by `data: [DONE]`)."""
+        last_exc: Optional[Exception] = None
+        for attempt in range(settings.LLM_MAX_RETRIES + 1):
+            started = False
+            try:
+                async with httpx.AsyncClient(timeout=120.0) as client:
+                    async with client.stream(
+                        "POST",
+                        f"{self.base_url}/chat/completions",
+                        headers={"Authorization": f"Bearer {settings.GROQ_API_KEY}"},
+                        json={
+                            "model": self.model,
+                            "messages": [
+                                {"role": "system", "content": SYSTEM_PROMPT},
+                                {"role": "user", "content": prompt},
+                            ],
+                            "temperature": 0.1,
+                            "max_tokens": 1024,
+                            "stream": True,
+                        },
+                    ) as response:
+                        response.raise_for_status()
+                        async for line in response.aiter_lines():
+                            if not line.startswith("data: "):
+                                continue
+                            payload = line[len("data: "):].strip()
+                            if payload == "[DONE]":
+                                return
+                            try:
+                                data = json.loads(payload)
+                            except json.JSONDecodeError:
+                                continue
+                            fragment = data.get("choices", [{}])[0].get("delta", {}).get("content", "")
+                            if fragment:
+                                started = True
+                                yield fragment
+                return
+            except Exception as e:  # noqa: BLE001 - classified by _is_retryable below
+                if started or attempt >= settings.LLM_MAX_RETRIES or not _is_retryable(e):
+                    raise
+                last_exc = e
+                backoff = 0.5 * (3 ** attempt)
+                logger.warning(f"Groq stream failed before any tokens (attempt {attempt + 1}/{settings.LLM_MAX_RETRIES + 1}): {e}. Retrying in {backoff}s.")
+                await asyncio.sleep(backoff)
+                continue
+        if last_exc:
+            raise last_exc  # pragma: no cover - loop always returns or raises above
 
     async def _call_ollama(self, prompt: str) -> str:
         """Call Ollama API (non-streaming). Serialized via a shared
@@ -516,9 +618,13 @@ Answer:"""
 
 
 def get_generator() -> LLMGenerator:
-    """Get the configured generator."""
-    return LLMGenerator(
-        provider=settings.LLM_PROVIDER,
-        model=settings.LLM_MODEL,
-        base_url=settings.LLM_BASE_URL,
-    )
+    """Get the configured generator.
+
+    Only passes provider - model/base_url are left for LLMGenerator.__init__
+    to resolve per-provider from settings (LLM_MODEL/LLM_BASE_URL for
+    ollama, GROQ_MODEL/GROQ_BASE_URL for groq). Passing settings.LLM_MODEL/
+    LLM_BASE_URL here unconditionally would leak Ollama's defaults into a
+    groq-configured generator, since a non-empty explicit argument always
+    wins over the provider-specific default inside __init__.
+    """
+    return LLMGenerator(provider=settings.LLM_PROVIDER)

@@ -5,6 +5,7 @@ Sequential pipeline: intake -> retrieve -> generate -> verify -> gate.
 Research prototype  - NOT for clinical use.
 """
 
+import asyncio
 import re
 import time
 from typing import Any, AsyncIterator
@@ -180,7 +181,13 @@ class MeridianPipeline:
         # corresponding read side of this.
         if retrieved and isinstance(self.reranker, CrossEncoderReranker):
             try:
-                self.reranker.rerank(retrieval_query, list(retrieved[:5]), top_k=5)
+                # CrossEncoder.predict() is synchronous, CPU-bound model
+                # inference - calling it directly here would block the
+                # asyncio event loop for its whole duration, stalling every
+                # other in-flight request (including this same response's
+                # own SSE flush) until it returns. to_thread hands it to a
+                # worker thread so the loop stays free.
+                await asyncio.to_thread(self.reranker.rerank, retrieval_query, list(retrieved[:5]), top_k=5)
             except Exception as e:
                 reasoning.append(f"Semantic relevance scoring failed ({e}), skipping")
 

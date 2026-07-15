@@ -13,6 +13,22 @@ from typing import Any, Optional
 from app.rag.clinical_terms import expand_query as clinical_expand_query, SYNONYM_GROUPS
 from app.rag.reranker import NoOpReranker
 from app.rag.embedding_cache import is_dense_backend_active, dense_similarity, get_shared_embedding_provider
+from app.rag.entity_graph import DRUG_LEXICON, CONDITION_LEXICON
+
+# Same lexicon entity_sufficiency.py's entity_grounding check reads at the
+# other end of this pipeline. Reused here (not duplicated) so a query
+# naming a specific drug/condition ranks the chunk that actually contains
+# it above same-chunk-type chunks from unrelated SOPs - chunk-type
+# boosting alone (CHUNK_TYPE_BOOSTS below) can't tell "the sepsis SOP's
+# norepinephrine dosing" from "the code blue SOP's compression rate",
+# since both are just "threshold" chunks under a "medication" query.
+_ENTITY_TERMS = DRUG_LEXICON + CONDITION_LEXICON
+_ENTITY_MATCH_BOOST = 1.8
+
+
+def _query_entities(query: str) -> list[str]:
+    low = query.lower()
+    return [term for term in _ENTITY_TERMS if re.search(r"\b" + re.escape(term) + r"\b", low)]
 
 # Weight given to dense (semantic) similarity vs sparse (TF-IDF) score when
 # a real embedding model is available. Sparse stays in the mix because exact
@@ -118,6 +134,11 @@ class HybridRetriever:
         # 2. Score all chunks across query variants
         chunk_scores: dict[int, float] = {}
 
+        # Named drugs/conditions the query mentions - see _ENTITY_TERMS
+        # above for why this matters more than chunk-type boosting alone
+        # can express.
+        query_entities = _query_entities(query)
+
         for variant in query_variants:
             variant_tokens = self._tokenize(variant)
             if not variant_tokens:
@@ -148,6 +169,11 @@ class HybridRetriever:
                     type_boost = boosts.get(chunk_type, 1.0)
 
                     boosted_score = base_score * type_boost
+
+                    if query_entities:
+                        text_low = text.lower()
+                        if any(re.search(r"\b" + re.escape(e) + r"\b", text_low) for e in query_entities):
+                            boosted_score *= _ENTITY_MATCH_BOOST
 
                     # Keep best score across variants
                     if i not in chunk_scores or boosted_score > chunk_scores[i]:

@@ -82,8 +82,8 @@ def test_no_openai_or_anthropic_call_path():
 
 
 async def test_unknown_provider_raises():
-    gen = LLMGenerator(provider="groq")
-    with pytest.raises(ValueError, match="only 'ollama' and 'mock' are supported"):
+    gen = LLMGenerator(provider="bogus")
+    with pytest.raises(ValueError, match="only 'ollama', 'groq', and 'mock' are supported"):
         await gen._call_llm("prompt")
 
 
@@ -127,4 +127,54 @@ async def test_ollama_generate_fails_falls_back_to_mock_with_faithfulness(monkey
     assert result["generation_mode"] == "mock_fallback"
     assert result["faithfulness"] is not None
     assert "sentences" in result["faithfulness"]
+    assert result["sop_conflicts"] == []
+
+
+class _FakeGroqClient:
+    """Mimics the OpenAI-compatible chat completions shape Groq returns."""
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *exc):
+        return False
+
+    async def post(self, url, headers=None, json=None):
+        assert url.endswith("/chat/completions")
+        assert headers["Authorization"] == "Bearer test-groq-key"
+        assert json["model"] == "llama-3.3-70b-versatile"
+        return _FakeResponse(200, {
+            "choices": [{"message": {"content": "Give 500mL bolus. FOLLOWUPS:\nWhat next?"}}]
+        })
+
+
+def test_groq_defaults_when_provider_selected(monkeypatch):
+    monkeypatch.setattr(settings, "GROQ_MODEL", "llama-3.3-70b-versatile")
+    monkeypatch.setattr(settings, "GROQ_BASE_URL", "https://api.groq.com/openai/v1")
+    gen = LLMGenerator(provider="groq")
+    assert gen.base_url == "https://api.groq.com/openai/v1"
+    assert gen.model == "llama-3.3-70b-versatile"
+
+
+async def test_groq_unavailable_without_api_key(monkeypatch):
+    monkeypatch.setattr(settings, "GROQ_API_KEY", "")
+    gen = LLMGenerator(provider="groq")
+    assert await gen._check_available() is False
+
+
+async def test_groq_available_and_generates(monkeypatch):
+    monkeypatch.setattr(settings, "GROQ_API_KEY", "test-groq-key")
+    monkeypatch.setattr(settings, "GROQ_MODEL", "llama-3.3-70b-versatile")
+    monkeypatch.setattr("app.rag.llm_generator.httpx.AsyncClient", _FakeGroqClient)
+    gen = LLMGenerator(provider="groq")
+    assert await gen._check_available() is True
+
+    result = await gen.generate_answer("What is the bolus dose?", [
+        {"sop_title": "Sepsis SOP", "text": "Give 500mL bolus.", "relevance_score": 0.9}
+    ])
+    assert result["generation_mode"] == "llm"
+    assert "500mL bolus" in result["answer"]
     assert result["sop_conflicts"] == []

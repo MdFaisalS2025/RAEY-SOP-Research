@@ -317,10 +317,44 @@ export default function EvidenceWatchPage() {
             <div className="flex items-center gap-3">
               <h1 className="font-display text-3xl font-bold text-foreground">Evidence Watch</h1>
             </div>
-            <p className="text-muted-foreground text-sm">
-              Live literature monitoring across 8 sources, cross-SOP conflict detection, and review-cycle
-              tracking - unified into one risk-ranked view.
+            <p className="text-muted-foreground text-sm max-w-3xl">
+              SOPs go stale the moment new literature, a contradicting internal policy, or an expired review
+              date appears - usually invisibly, between formal review cycles. This page surveils all three
+              continuously so governance staff catch drift before a clinician relies on an outdated instruction.
             </p>
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }}
+          className="grid sm:grid-cols-3 gap-3"
+        >
+          <div className="rounded-xl bg-card border border-border p-4 flex items-start gap-3">
+            <div className="w-8 h-8 rounded-lg bg-[#0B6BCB]/10 flex items-center justify-center shrink-0">
+              <TrendingUp className="w-4 h-4 text-[#0B6BCB]" />
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-foreground">External Literature</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Each active SOP is matched against a live PubMed search on its own title, so new studies relevant to that specific procedure surface automatically.</p>
+            </div>
+          </div>
+          <div className="rounded-xl bg-card border border-border p-4 flex items-start gap-3">
+            <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
+              <GitCompare className="w-4 h-4 text-[#B45309] dark:text-amber-400" />
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-foreground">Internal Conflicts</p>
+              <p className="text-xs text-muted-foreground mt-0.5">The entity graph cross-checks drug doses and numeric thresholds across every SOP in the corpus and flags any two that disagree on the same value.</p>
+            </div>
+          </div>
+          <div className="rounded-xl bg-card border border-border p-4 flex items-start gap-3">
+            <div className="w-8 h-8 rounded-lg bg-[#15803D]/10 dark:bg-green-500/10 flex items-center justify-center shrink-0">
+              <Clock className="w-4 h-4 text-[#15803D] dark:text-green-400" />
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-foreground">Reviews Due</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Every SOP carries a review_date set at last approval. Anything within 45 days of - or past - that date is surfaced here, not just filed away.</p>
+            </div>
           </div>
         </motion.div>
 
@@ -330,9 +364,10 @@ export default function EvidenceWatchPage() {
         >
           <AlertTriangle className="w-4 h-4 text-[#B45309] dark:text-amber-400 shrink-0 mt-0.5" />
           <div className="text-sm text-[#B45309] dark:text-amber-400">
-            <span className="font-semibold">Responsible AI: </span>
-            Committee review is required before any SOP update. This dashboard is for monitoring only. Live PubMed
-            results are not clinical guidance - verify against primary sources.
+            <span className="font-semibold">This page is for monitoring, not authoring. </span>
+            Nothing here changes a live SOP automatically - every item is a signal for a human reviewer.
+            Committee sign-off is still required before any SOP update, and live PubMed results are supporting
+            evidence, not clinical guidance - verify against primary sources.
           </div>
         </motion.div>
 

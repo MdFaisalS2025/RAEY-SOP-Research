@@ -44,19 +44,25 @@ async def evidence_search(
         f"Available: {', '.join(source_names())}",
     ),
     max: int = Query(5, ge=1, le=20, description="Max results per source."),
+    sort: str = Query("grade", description="'grade' (default - highest-rated evidence first) or 'recency'."),
 ):
     """
     Search across all registered external evidence sources for `term` and
-    return the combined results sorted most-recent-first. Any individual
+    return the combined results, ranked by evidence grade (Strong/Moderate
+    study types and Tier-1/2 journals first) by default so the highest-
+    quality sources aren't buried under a pile of recent low-grade noise;
+    pass sort=recency for the old chronological ordering. Any individual
     source failure is swallowed (never 500) - a down source just contributes
     no results.
     """
     selected = [s.strip() for s in sources.split(",") if s.strip()] or None
-    records = await search_all(term, sources=selected, max_results=max)
+    sort_by = "recency" if sort == "recency" else "grade"
+    records = await search_all(term, sources=selected, max_results=max, sort_by=sort_by)
     return {
         "term": term,
         "count": len(records),
         "sources_queried": selected or source_names(),
+        "sorted_by": sort_by,
         "disclaimer": "Research prototype. Live external evidence results are not clinical guidance.",
         "results": records,
     }

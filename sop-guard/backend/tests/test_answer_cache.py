@@ -60,6 +60,42 @@ class TestAnswerCacheUnit:
         assert answer_cache.get("q3", None) is not None
 
 
+class TestSemanticFallback:
+    """The semantic-similarity fallback should only ever fire when a real
+    dense embedding model is active, and only above the high similarity
+    bar - it must never be the reason a wrong answer gets reused."""
+
+    def _patch_dense(self, monkeypatch, active: bool, similarity: float):
+        import app.rag.embedding_cache as embedding_cache
+        monkeypatch.setattr(embedding_cache, "is_dense_backend_active", lambda: active)
+        monkeypatch.setattr(embedding_cache, "dense_similarity", lambda a, b: similarity)
+
+    def test_no_semantic_fallback_when_dense_backend_inactive(self, monkeypatch):
+        self._patch_dense(monkeypatch, active=False, similarity=0.99)
+        resp = _response()
+        answer_cache.set("What is the maximum norepinephrine dose?", None, resp)
+        assert answer_cache.get("Max dose of norepinephrine?", None) is None
+
+    def test_semantic_fallback_hits_above_threshold(self, monkeypatch):
+        self._patch_dense(monkeypatch, active=True, similarity=0.97)
+        resp = _response()
+        answer_cache.set("What is the maximum norepinephrine dose?", None, resp)
+        assert answer_cache.get("Max dose of norepinephrine?", None) is resp
+
+    def test_semantic_fallback_misses_below_threshold(self, monkeypatch):
+        self._patch_dense(monkeypatch, active=True, similarity=0.5)
+        resp = _response()
+        answer_cache.set("What is the maximum norepinephrine dose?", None, resp)
+        assert answer_cache.get("What is the insulin sliding scale?", None) is None
+
+    def test_semantic_fallback_respects_news2_score(self, monkeypatch):
+        self._patch_dense(monkeypatch, active=True, similarity=0.99)
+        resp = _response()
+        answer_cache.set("q text one", 5, resp)
+        assert answer_cache.get("q text two", None) is None
+        assert answer_cache.get("q text two", 5) is resp
+
+
 class TestPipelineCacheIntegration:
     """MeridianPipeline.run() should skip generation entirely on a cache
     hit for a standalone question, and never cache/serve a follow-up

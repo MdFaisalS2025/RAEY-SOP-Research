@@ -261,6 +261,10 @@
   :focus-visible {
     outline: 2px solid #0B6BCB;
     outline-offset: 2px;
+    border-radius: 2px;
+  }
+  .dark :focus-visible {
+    outline-color: #00E5FF;
   }
 }
 

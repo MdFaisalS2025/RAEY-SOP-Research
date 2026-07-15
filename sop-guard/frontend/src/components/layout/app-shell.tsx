@@ -13,12 +13,63 @@ import { useRole } from "@/lib/role-context"
 
 const DEMO_BANNER_KEY = "meridian-demo-banner-dismissed"
 
+// Human-readable title per top-level route, shown as "<Title> | Meridian" in
+// the browser tab - distinct tab titles are what let a user with several
+// Meridian tabs open (Query, Evidence Watch, Proposals...) tell them apart
+// at a glance instead of every tab reading the same generic app name.
+const PAGE_TITLES: Record<string, string> = {
+  dashboard: "Dashboard",
+  query: "Ask Meridian",
+  library: "SOP Library",
+  "evidence-watch": "Evidence Watch",
+  proposals: "Proposals",
+  incidents: "Incident Reports",
+  compliance: "Compliance",
+  committee: "Committee Review",
+  "conflict-resolution": "Conflict Resolution",
+  regulatory: "Regulatory & Survey Prep",
+  "survey-prep": "Survey Prep",
+  audit: "Audit Log",
+  training: "Training",
+  leadership: "Leadership",
+  admin: "Admin",
+  settings: "Settings",
+  evaluation: "Evaluation",
+  effectiveness: "Effectiveness",
+  "human-eval": "Human Evaluation",
+  scenarios: "Scenarios",
+  adversarial: "Adversarial Testing",
+  expiry: "Expiring SOPs",
+  exceptions: "Exceptions",
+  "impact-map": "Impact Map",
+  "alert-stewardship": "Alert Stewardship",
+  upload: "Upload SOP",
+  updates: "Updates",
+  feedback: "Feedback",
+  legal: "Legal",
+  architecture: "Architecture",
+  "quick-ref": "Quick Reference",
+  bedside: "Bedside View",
+  "cds-demo": "CDS Demo",
+  learning: "Learning",
+  answers: "Answer",
+}
+
+function usePageTitle(pathname: string) {
+  useEffect(() => {
+    const segment = pathname.split("/")[1] || "dashboard"
+    const label = PAGE_TITLES[segment] ?? segment.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+    document.title = `${label} | Meridian`
+  }, [pathname])
+}
+
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const [bannerDismissed, setBannerDismissed] = useState(true) // start hidden to avoid flash
   const auth = useAuth()
   const { setRole } = useRole()
   const router = useRouter()
   const pathname = usePathname()
+  usePageTitle(pathname)
 
   // Redirect logic: wait for auth to finish loading before redirecting
   useEffect(() => {

@@ -18,6 +18,7 @@ interface EvidenceRecord {
   source_type: string
   study_type?: string
   stance?: "yes" | "no" | "unclear"
+  evidence_grade?: "Strong" | "Moderate" | "Limited" | "Research Only" | "Outdated" | "Unknown"
 }
 
 const TRUST_TIER_STYLE: Record<number, string> = {
@@ -55,6 +56,49 @@ const SOURCE_LABEL: Record<string, string> = {
   cms: "CMS",
 }
 
+type EvidenceGrade = "Strong" | "Moderate" | "Limited" | "Research Only" | "Outdated" | "Unknown"
+
+const GRADE_STYLE: Record<EvidenceGrade, string> = {
+  "Strong": "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30",
+  "Moderate": "bg-[#0B6BCB]/10 text-[#0B6BCB] border-[#0B6BCB]/30",
+  "Limited": "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30",
+  "Research Only": "bg-card text-muted-foreground border-input",
+  "Outdated": "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30",
+  "Unknown": "bg-muted text-subtle border-border",
+}
+
+const _STRONG_STUDY_TYPES = new Set(["Meta-Analysis", "Systematic Review", "Practice Guideline", "Guideline"])
+const _MODERATE_STUDY_TYPES = new Set(["Randomized Controlled Trial", "Clinical Trial"])
+
+/**
+ * Coarse evidence grade, in the spirit of GRADE-style clinical evidence
+ * tools - derived entirely from data already on the record (trust_tier,
+ * study_type, publication recency), not a second network call. "Outdated"
+ * only fires for non-guideline evidence older than 5 years - a decade-old
+ * practice guideline can still be current; a decade-old case report can't
+ * speak to it.
+ */
+function gradeEvidence(r: EvidenceRecord): EvidenceGrade {
+  // Prefer the server-computed grade (evidence_registry.py now attaches
+  // this to every record and sorts by it) so the badge always matches the
+  // ranking that determined the list order - only recompute client-side
+  // as a fallback for records that somehow lack it.
+  if (r.evidence_grade) return r.evidence_grade
+  const year = r.pub_date_parsed ? Number(r.pub_date_parsed.slice(0, 4)) : NaN
+  const currentYear = new Date().getFullYear()
+  const isOld = !Number.isNaN(year) && currentYear - year > 5
+
+  if (r.study_type && _STRONG_STUDY_TYPES.has(r.study_type)) return isOld ? "Moderate" : "Strong"
+  if (r.trust_tier === 1) return isOld ? "Moderate" : "Strong"
+  if (r.study_type && _MODERATE_STUDY_TYPES.has(r.study_type)) return "Moderate"
+  if (r.trust_tier === 2) return "Moderate"
+  if (r.study_type === "Case Reports") return "Limited"
+  if (isOld) return "Outdated"
+  if (r.source_type === "clinicaltrials") return "Research Only"
+  if (!r.study_type && !r.trust_tier) return "Unknown"
+  return "Limited"
+}
+
 const SOURCE_ORDER = ["pubmed", "europepmc", "cdc", "who", "clinicaltrials", "fda", "medlineplus", "cms"]
 
 // Coarse per-source icon so the results list scans quickly without reading
@@ -76,10 +120,27 @@ interface QueryEntities {
   conditions?: string[]
 }
 
+// Question/connector words carry no topical signal for a literature search -
+// sending "what is the maximum dose of X" to PubMed as-is is worse than
+// sending "maximum dose X", since automatic term expansion on common words
+// like "what"/"is" can pull in tangential matches. Only used as a fallback
+// when no drug/condition entity was extracted from the question.
+const SEARCH_STOPWORDS = new Set([
+  "what", "which", "who", "why", "when", "how", "does", "do", "did", "is",
+  "are", "was", "were", "be", "been", "the", "a", "an", "of", "in", "on",
+  "for", "and", "or", "to", "should", "must", "before", "after", "apply",
+  "exist", "can", "could", "would", "will", "shall", "this", "that",
+])
+
 function buildSearchTerm(entities: QueryEntities | undefined, queryText: string): string {
   const named = [...(entities?.drugs ?? []), ...(entities?.conditions ?? [])]
   if (named.length > 0) return named.slice(0, 3).join(" ")
-  return queryText.slice(0, 120)
+  const stripped = queryText
+    .replace(/[?!.]/g, "")
+    .split(/\s+/)
+    .filter((w) => w.length > 0 && !SEARCH_STOPWORDS.has(w.toLowerCase()))
+    .join(" ")
+  return (stripped || queryText).slice(0, 120)
 }
 
 /**
@@ -187,7 +248,7 @@ export function EvidencePanel({ entities, queryText }: { entities: QueryEntities
           External Evidence
         </h3>
         <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30">
-          LIVE · SORTED BY RECENCY
+          LIVE · SORTED BY EVIDENCE GRADE
         </span>
       </div>
 
@@ -214,6 +275,12 @@ export function EvidencePanel({ entities, queryText }: { entities: QueryEntities
               {SOURCE_LABEL[s] ?? s}
             </button>
           ))}
+          <span
+            className="px-2 py-0.5 rounded-full text-[10px] font-medium border border-dashed border-border text-subtle cursor-not-allowed"
+            title="OpenEvidence-style clinical evidence provider - not yet integrated"
+          >
+            OpenEvidence (coming soon)
+          </span>
         </div>
       )}
 
@@ -263,6 +330,9 @@ export function EvidencePanel({ entities, queryText }: { entities: QueryEntities
                         {r.journal_display_name ? `${r.journal_display_name} · ` : ""}{TRUST_TIER_LABEL[r.trust_tier]}
                       </span>
                     )}
+                    <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium border ${GRADE_STYLE[gradeEvidence(r)]}`} title="Evidence grade: strength/currency, not a claim-accuracy judgment">
+                      {gradeEvidence(r)}
+                    </span>
                     {r.stance === "yes" && (
                       <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30">
                         Supports

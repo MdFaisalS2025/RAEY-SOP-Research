@@ -192,9 +192,16 @@ async def search_pubmed(term: str, max_results: int = 5) -> list[dict[str, Any]]
                     "term": term,
                     "retmax": max_results,
                     "retmode": "json",
-                    # Recency-first: relevance alone can surface decades-old
-                    # articles ahead of newer, more clinically current ones.
-                    "sort": "pub_date",
+                    # Deliberately NOT sorting by pub_date: with a small
+                    # retmax, forcing recency-first surfaced loosely-related
+                    # recent papers ahead of genuinely on-topic ones (a
+                    # "blood transfusion" query returned unrelated recent
+                    # WHO/PubMed hits because term matching alone, sorted by
+                    # date, has no relevance floor). Omitting sort uses
+                    # PubMed's own "best match" relevance ranking, which
+                    # already factors in recency as one signal among several.
+                    # The merged, multi-source list is still sorted by date
+                    # for display - see evidence_registry.search_all.
                 },
             )
             esearch.raise_for_status()

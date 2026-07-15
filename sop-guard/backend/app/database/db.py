@@ -75,6 +75,7 @@ async def init_db() -> None:
             ChatSessionRecord, ChatMessageRecord, NotificationRecord,
             OverrideRecord, CreditRecord,
             IncidentRecord, CAPARecord,
+            SOPVersionRecord, SOPGapReportRecord,
         )
         await conn.run_sync(Base.metadata.create_all)
 

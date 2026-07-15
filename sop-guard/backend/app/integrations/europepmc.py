@@ -64,7 +64,10 @@ async def search_europepmc(term: str, max_results: int = 5) -> list[dict[str, An
                     "query": term,
                     "format": "json",
                     "pageSize": max_results,
-                    "sort": "P_PDATE_D desc",
+                    # No sort override - see pubmed.py's comment on the same
+                    # change. Europe PMC's default is relevance-ranked;
+                    # forcing date-descending on a small page size surfaced
+                    # recent-but-unrelated results ahead of on-topic ones.
                 },
             )
             resp.raise_for_status()

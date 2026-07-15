@@ -69,7 +69,11 @@ async def search_who(term: str, max_results: int = 5) -> list[dict[str, Any]]:
         async with httpx.AsyncClient(timeout=_TIMEOUT, headers=DEFAULT_HEADERS) as client:
             resp = await client.get(
                 _BASE,
-                params={"query": term, "size": max_results, "sort": "dc.date.issued,DESC"},
+                # No sort override - see pubmed.py's comment on the same
+                # change; forcing date-descending on a small result size
+                # surfaced unrelated recent WHO reports (e.g. regional
+                # annual reports) ahead of topically relevant guidelines.
+                params={"query": term, "size": max_results},
             )
             resp.raise_for_status()
             data = resp.json()

@@ -84,6 +84,96 @@ _REFUTE_KEYWORDS = [
 ]
 
 
+#: Question/connector words stripped before judging title relevance - none
+#: of these carry topical signal, and leaving them in would let "what is
+#: the maximum dose" match almost any title containing "dose".
+_RELEVANCE_STOPWORDS = {
+    "what", "which", "who", "why", "when", "how", "does", "do", "did",
+    "is", "are", "was", "were", "be", "been", "the", "a", "an", "of",
+    "in", "on", "for", "and", "or", "to", "should", "must", "before",
+    "after", "apply", "exist", "can", "could", "would", "will", "shall",
+    "this", "that", "these", "those", "with", "from", "about", "into",
+}
+
+
+def _significant_words(text: str) -> set[str]:
+    words = re.findall(r"[a-z]{4,}", (text or "").lower())
+    return {w for w in words if w not in _RELEVANCE_STOPWORDS}
+
+
+def is_title_relevant(term: str, title: str) -> bool:
+    """Cheap relevance gate applied after fetching: does this record's
+    title share at least one distinctive word with the search term?
+    Source APIs (PubMed, Europe PMC, WHO IRIS, ClinicalTrials.gov) can
+    all return loosely- or un-related results for a given term - broad
+    automatic term expansion, weak full-text-search relevance ranking, or
+    (for WHO IRIS specifically) a collection that's mostly institutional
+    reports rather than clinical literature. This doesn't replace fixing
+    each source's own query construction, but catches what slips through
+    regardless of source. Deliberately lenient (ANY shared word, not all)
+    so it screens out the clearly-unrelated case (zero overlap) without
+    being a de-facto second relevance ranker."""
+    term_words = _significant_words(term)
+    if not term_words:
+        return True  # nothing distinctive to check against - don't filter
+    title_words = _significant_words(title)
+    if not title_words:
+        return True  # can't judge an empty/unparsed title - don't penalize it
+    return bool(term_words & title_words)
+
+
+#: Mirrors the frontend's gradeEvidence() in evidence-panel.tsx - kept as
+#: two independent implementations (not a shared package) since frontend
+#: and backend don't share a code boundary here, but the classification
+#: rules must stay identical so a record's grade never disagrees between
+#: what search_all() sorts by and what the UI displays.
+_STRONG_STUDY_TYPES = {"Meta-Analysis", "Systematic Review", "Practice Guideline", "Guideline"}
+_MODERATE_STUDY_TYPES = {"Randomized Controlled Trial", "Clinical Trial"}
+_GRADE_RANK = {"Strong": 5, "Moderate": 4, "Limited": 3, "Research Only": 2, "Unknown": 1, "Outdated": 0}
+
+
+def grade_evidence(record: dict) -> str:
+    """Strong / Moderate / Limited / Research Only / Outdated / Unknown -
+    derived entirely from fields already on the record (trust_tier,
+    study_type, publication recency), same rules as the frontend badge."""
+    import datetime
+
+    pub_date_parsed = record.get("pub_date_parsed")
+    year = None
+    if pub_date_parsed:
+        try:
+            year = int(str(pub_date_parsed)[:4])
+        except ValueError:
+            year = None
+    is_old = year is not None and (datetime.date.today().year - year) > 5
+
+    study_type = record.get("study_type") or ""
+    trust_tier = record.get("trust_tier")
+
+    if study_type in _STRONG_STUDY_TYPES:
+        return "Moderate" if is_old else "Strong"
+    if trust_tier == 1:
+        return "Moderate" if is_old else "Strong"
+    if study_type in _MODERATE_STUDY_TYPES:
+        return "Moderate"
+    if trust_tier == 2:
+        return "Moderate"
+    if study_type == "Case Reports":
+        return "Limited"
+    if is_old:
+        return "Outdated"
+    if record.get("source_type") == "clinicaltrials":
+        return "Research Only"
+    if not study_type and not trust_tier:
+        return "Unknown"
+    return "Limited"
+
+
+def evidence_grade_rank(record: dict) -> int:
+    """Higher is better - used to sort highly-rated evidence to the top."""
+    return _GRADE_RANK.get(grade_evidence(record), 1)
+
+
 def classify_stance(title: str) -> str:
     """Best-effort 'yes' | 'no' | 'unclear' signal from a title's wording
     alone. Deliberately coarse - a real evidence-agreement read requires

@@ -3,8 +3,9 @@
 import { useState, useEffect, useCallback, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
-import { Search, BookOpen, Clock, Hash, FileText, AlertTriangle, Loader2, X, ExternalLink, ListOrdered, ShieldAlert, Gauge, LayoutGrid, List, FileCheck, CheckCircle2, Printer, Filter, CheckCircle } from "lucide-react"
+import { Search, BookOpen, Clock, Hash, FileText, AlertTriangle, Loader2, X, ExternalLink, ListOrdered, ShieldAlert, Gauge, LayoutGrid, List, FileCheck, CheckCircle2, Printer, Filter, CheckCircle, History } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
+import { VersionTimeline } from "@/components/query/version-history-panel"
 import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { getSOPs } from "@/lib/api"
@@ -14,7 +15,7 @@ import { MOCK_SOPS } from "@/lib/mock-data"
 import type { EnhancedSOP } from "@/lib/governance-types"
 import { useRole } from "@/lib/role-context"
 
-type TabId = "overview" | "procedure" | "thresholds" | "contraindications" | "fulltext"
+type TabId = "overview" | "procedure" | "thresholds" | "contraindications" | "fulltext" | "history"
 
 const tabs: { id: TabId; label: string; icon: LucideIcon }[] = [
   { id: "overview", label: "Overview", icon: BookOpen },
@@ -22,6 +23,7 @@ const tabs: { id: TabId; label: string; icon: LucideIcon }[] = [
   { id: "thresholds", label: "Thresholds", icon: Gauge },
   { id: "contraindications", label: "Safety", icon: ShieldAlert },
   { id: "fulltext", label: "Full Text", icon: FileText },
+  { id: "history", label: "History", icon: History },
 ]
 
 // ── AI Summaries defined inline (not in mock-data.ts) ─────────────────────────
@@ -815,6 +817,11 @@ function LibraryPageInner() {
                       </div>
                     )}
                   </div>
+                )}
+
+                {/* History Tab */}
+                {activeTab === "history" && (
+                  <VersionTimeline sopId={selectedSOP.sop_id} />
                 )}
               </div>
 

@@ -20,7 +20,27 @@ from app.agents.query_agent import QueryUnderstandingAgent
 from app.rag.citation_tracker import citation_coverage
 from app.agents.routing import classify_intent, build_external_evidence_answer, build_no_evidence_answer
 from app.integrations.evidence_registry import search_all as search_external_evidence
+from app.rag.entity_graph import DRUG_LEXICON, CONDITION_LEXICON
 from app.services import answer_cache
+from app.services.query_clarification import detect_ambiguity
+from app.services.query_decomposition import split_multi_part_query
+
+#: Cheap "does this look like a clinical question at all" gate for the
+#: post-generation fallback below - without it, an off-domain question
+#: (hospital parking, cafeteria hours) that happens to share one common
+#: English word ("validation", "lunch") with some indexed paper's title
+#: would surface that paper as "external evidence", which is misleading
+#: for a clinical-answer product. A hospital-admin question with genuinely
+#: no clinical vocabulary and no literature-seeking phrasing should abstain
+#: outright (Route D) rather than search external literature (Route B).
+_CLINICAL_VOCAB = {w.lower() for w in DRUG_LEXICON} | {w.lower() for w in CONDITION_LEXICON}
+
+
+def _looks_clinical(query: str) -> bool:
+    low = query.lower()
+    if any(term in low for term in _CLINICAL_VOCAB):
+        return True
+    return classify_intent(query) != "internal"
 
 
 class MeridianPipeline:
@@ -96,6 +116,33 @@ class MeridianPipeline:
             trace = self.retriever.get_retrieval_trace(query, query_type)
             reasoning.append(f"Retrieval: {trace['retrieval_method']}, variants: {len(trace['query_variants'])}")
 
+        # 2b. Multi-part questions ("what's the dose and when do I
+        # escalate?") get a retrieval pass per sub-question so the part
+        # asked second isn't starved by a single blended query - merged
+        # into `retrieved` before multi-hop/evidence-sufficiency run, so
+        # everything downstream (verification, citations, generation)
+        # sees one combined chunk set exactly as before.
+        sub_questions = split_multi_part_query(query)
+        if sub_questions:
+            reasoning.append(f"Multi-part question detected: {len(sub_questions)} sub-questions")
+            seen_ids = {c.get("chunk_id", c.get("sop_id", "") + str(c.get("chunk_index", ""))) for c in retrieved}
+            for sub_q in sub_questions:
+                try:
+                    sub_chunks = self.retriever.search(sub_q, top_k=4, query_type=query_type)
+                except Exception as e:
+                    reasoning.append(f"Sub-question retrieval failed for '{sub_q[:60]}': {e}")
+                    continue
+                added = 0
+                for c in sub_chunks:
+                    cid = c.get("chunk_id", c.get("sop_id", "") + str(c.get("chunk_index", "")))
+                    if cid in seen_ids:
+                        continue
+                    seen_ids.add(cid)
+                    retrieved.append(c)
+                    added += 1
+                reasoning.append(f"Sub-question '{sub_q[:60]}': +{added} chunks")
+            retrieved.sort(key=lambda c: c.get("relevance_score", 0), reverse=True)
+
         # Multi-hop retrieval
         t0 = time.perf_counter()
         hop_result = self.multihop.retrieve_with_hops(query, retrieved, top_k=8, query_type=query_type)
@@ -112,6 +159,33 @@ class MeridianPipeline:
         reasoning.append(f"Evidence: {'sufficient' if evidence['sufficient'] else 'insufficient'} (score: {evidence['score']})")
         intent = classify_intent(query)
         reasoning.append(f"Routing intent: {intent}")
+
+        # Ambiguity check: a dose/threshold question naming no specific
+        # drug/condition, with plausible matches in more than one SOP,
+        # should ask which one rather than guess or abstain. Checked before
+        # both the sufficient and insufficient branches below, since an
+        # ambiguous query can retrieve evidence that looks "sufficient" for
+        # entirely the wrong drug.
+        ambiguity = detect_ambiguity(query_type, analysis.get("entities", {}), retrieved)
+        if ambiguity:
+            reasoning.append(f"Ambiguous query detected: {ambiguity['question']}")
+            return {
+                "abstain": QueryResponse(
+                    answer=ambiguity["question"],
+                    citations=[],
+                    confidence=0.0,
+                    verification_result=None,
+                    retrieved_chunks=[],
+                    reasoning_trace=reasoning,
+                    query_type=query_type,
+                    abstained=False,
+                    entities=analysis.get("entities", {}),
+                    route="clarification",
+                    needs_clarification=True,
+                    clarification_question=ambiguity["question"],
+                    clarification_options=ambiguity["options"],
+                )
+            }
 
         if not evidence["sufficient"]:
             reasoning.append(f"Missing: {', '.join(evidence['missing'])}")
@@ -143,6 +217,7 @@ class MeridianPipeline:
                     "abstain": QueryResponse(
                         answer=ext_answer["answer"],
                         citations=ext_answer["citations"],
+                        inline_citations=ext_answer.get("inline_citations", []),
                         confidence=ext_answer["confidence"],
                         verification_result=None,
                         retrieved_chunks=response_chunks,
@@ -197,6 +272,42 @@ class MeridianPipeline:
             "route": route,
             "external_evidence": external_evidence,
         }
+
+    async def _post_generation_fallback(
+        self, query: str, gen_result: dict[str, Any], route: str, external_evidence: list[dict],
+    ) -> tuple[dict[str, Any], str, list[dict]]:
+        """Route A/C only decide "is there SOP evidence" from the coarse
+        EvidenceSufficiencyChecker score in _prepare(). The generator can
+        still abstain afterwards on its own, stricter grounds (see
+        generator.py's _MIN_RELEVANCE / the LLM's own "not covered"
+        instruction) - e.g. a loosely-matching chunk clears the sufficiency
+        bar but doesn't actually answer the question. Previously that left
+        the response mislabeled "Sourced from: SOP Library" with a generic
+        refusal, and skipped the external-evidence fallback entirely. Treat
+        it the same as Route B/D instead: try external evidence, then fall
+        back to the standard "No validated evidence found" answer."""
+        if not gen_result.get("abstained") or route != "sop_library":
+            return gen_result, route, external_evidence
+        results: list[dict] = []
+        if _looks_clinical(query):
+            try:
+                results = await search_external_evidence(query, max_results=5)
+            except Exception:
+                results = []
+        if results:
+            ext_answer = build_external_evidence_answer(query, results)
+            merged = {**gen_result, **ext_answer, "abstained": False}
+            return merged, "external_evidence", results
+        merged = {
+            **gen_result,
+            "answer": build_no_evidence_answer([
+                "Try rephrasing with more specific clinical terms.",
+                "The query may not match any uploaded SOP content.",
+            ]),
+            "citations": [],
+            "confidence": 0.1,
+        }
+        return merged, "no_evidence", external_evidence
 
     def _finalize(
         self,
@@ -332,6 +443,7 @@ class MeridianPipeline:
                 "reasoning_trace": [], "generation_mode": "error",
             }
 
+        gen_result, route, external_evidence = await self._post_generation_fallback(query, gen_result, route, external_evidence)
         response = self._finalize(gen_result, retrieved, query_type, reasoning, evidence, analysis, t_start, t_generate, route=route, external_evidence=external_evidence)
         if cache_eligible and not response.abstained:
             answer_cache.set(query, news2_score, response)
@@ -375,6 +487,8 @@ class MeridianPipeline:
             history_context=history_context,
         )
         t_generate = round((time.perf_counter() - t0) * 1000)
+
+        gen_result, route, external_evidence = await self._post_generation_fallback(query, gen_result, route, external_evidence)
 
         # 4-5. Verify, confidence-gate, and build the response
         response = self._finalize(gen_result, retrieved, query_type, reasoning, evidence, analysis, t_start, t_generate, route=route, external_evidence=external_evidence)

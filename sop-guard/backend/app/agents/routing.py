@@ -63,11 +63,35 @@ def build_external_evidence_answer(query: str, external_results: list[dict]) -> 
         "",
     ]
     citations: list[str] = []
+    inline_citations: list[dict] = []
     for i, r in enumerate(top, start=1):
         journal = r.get("journal_display_name") or r.get("journal") or r.get("source_type", "")
         date = r.get("pub_date") or ""
         lines.append(f"[{i}] {r.get('title', '(untitled)')} - {journal}{f' ({date})' if date else ''}")
         citations.append(f"[{i}] {journal}")
+        # Same shape the frontend's CitationChip already renders for internal
+        # SOP citations (see citation-chip.tsx) - reusing it here, rather
+        # than leaving these "[n]" markers as unclickable plain text, is
+        # what makes external evidence read as verifiable rather than just
+        # asserted (the hover-preview-with-source-link pattern Perplexity/
+        # OpenEvidence/Claude all use for citations).
+        inline_citations.append({
+            "number": i,
+            "sop_id": r.get("pmid", ""),
+            "sop_title": r.get("title", "(untitled)"),
+            "section_title": journal,
+            "chunk_type": r.get("study_type", "") or r.get("source_type", ""),
+            "snippet": r.get("title", ""),
+            "relevance_score": 0.0,
+            "cited_in_answer": True,
+            "version": "",
+            "effective_date": "",
+            "review_date": "",
+            "status": "external",
+            "url": r.get("url", ""),
+            "is_external": True,
+            "pub_date": date,
+        })
     lines.append("")
     lines.append(
         "This reflects external literature only, not institutional policy. "
@@ -77,6 +101,7 @@ def build_external_evidence_answer(query: str, external_results: list[dict]) -> 
     return {
         "answer": "\n".join(lines),
         "citations": citations,
+        "inline_citations": inline_citations,
         "confidence": round(confidence, 2),
         "reasoning_trace": [f"Route B: external evidence ({len(top)} records), no internal SOP match"],
         "generation_mode": "external_evidence",

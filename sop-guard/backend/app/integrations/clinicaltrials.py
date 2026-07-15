@@ -75,7 +75,12 @@ async def search_clinicaltrials(term: str, max_results: int = 5) -> list[dict[st
                 params={
                     "query.term": term,
                     "pageSize": max_results,
-                    "sort": "LastUpdatePostDate:desc",
+                    # No sort override - see pubmed.py's comment on the same
+                    # change. The default relevance ranking matters more
+                    # here than usual: with this endpoint already blocked
+                    # for some requests (see module docstring), the few
+                    # trials that do come through should be on-topic, not
+                    # just "recently touched".
                 },
             )
             resp.raise_for_status()

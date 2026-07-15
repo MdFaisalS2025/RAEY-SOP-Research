@@ -13,6 +13,7 @@ import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { cn } from "@/lib/utils"
 import { useRole } from "@/lib/role-context"
+import { DiffView, DiffStatsRow, type DiffSegment, type DiffStats } from "@/components/governance/diff-view"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
 
@@ -259,17 +260,12 @@ function OverviewTab({ proposal }: { proposal: Proposal }) {
   )
 }
 
-interface DiffSegment {
-  type: "equal" | "insert" | "delete"
-  text: string
-}
-
 interface DiffResponse {
   available: boolean
   reason?: string
   sop_title?: string
   segments: DiffSegment[]
-  stats?: { words_added: number; words_removed: number; words_unchanged: number }
+  stats?: DiffStats
 }
 
 function RedlineTab({ proposalId }: { proposalId: string }) {
@@ -307,33 +303,8 @@ function RedlineTab({ proposalId }: { proposalId: string }) {
       {diff.sop_title && (
         <p className="text-xs text-muted-foreground">Comparing against the current text of <span className="font-medium text-foreground">{diff.sop_title}</span></p>
       )}
-      {diff.stats && (
-        <div className="flex flex-wrap gap-3 text-xs">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30">
-            +{diff.stats.words_added} words added
-          </span>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30">
-            -{diff.stats.words_removed} words removed
-          </span>
-        </div>
-      )}
-      <div className="rounded-2xl bg-muted border border-border p-5">
-        <p className="text-[14px] leading-relaxed whitespace-pre-wrap font-mono">
-          {diff.segments.map((seg, i) => {
-            if (seg.type === "equal") return <span key={i} className="text-foreground">{seg.text}</span>
-            if (seg.type === "insert") return (
-              <span key={i} className="underline decoration-2 decoration-[#15803D] bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400">
-                {seg.text}
-              </span>
-            )
-            return (
-              <span key={i} className="line-through decoration-2 decoration-[#B91C1C] bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400">
-                {seg.text}
-              </span>
-            )
-          })}
-        </p>
-      </div>
+      {diff.stats && <DiffStatsRow stats={diff.stats} />}
+      <DiffView segments={diff.segments} />
       <p className="text-[11px] text-subtle">Word-level diff. Underlined = added, strikethrough = removed.</p>
     </div>
   )

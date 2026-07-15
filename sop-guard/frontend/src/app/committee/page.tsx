@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import {
   AlertTriangle, Scale, Calendar, Building2, FileText, Users, CheckCircle2,
-  Check, X, MinusCircle, Vote, Gavel, ShieldAlert, Loader2,
+  Check, X, MinusCircle, Vote, Gavel, ShieldAlert, Loader2, HelpCircle, PlusCircle,
 } from "lucide-react"
 import Link from "next/link"
 import AppShell from "@/components/layout/app-shell"
@@ -14,6 +14,93 @@ import { useRole } from "@/lib/role-context"
 import { DEMO_USERS } from "@/lib/mock-data"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
+
+interface GapCluster {
+  representative_question: string
+  count: number
+  report_ids: number[]
+  statuses: Record<string, number>
+  most_common_department: string
+  most_common_committee: string
+  most_common_risk_level: string
+  first_asked: string
+  last_asked: string
+}
+
+const RISK_STYLE: Record<string, string> = {
+  high: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30",
+  moderate: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30",
+  low: "bg-muted text-muted-foreground border-border",
+}
+
+// Surfaces what people keep asking that no SOP covers - each SOP Gap
+// Report (created from the Ask page's no-SOP-found flow, see
+// gap-report-panel.tsx) is one data point; clustered by question
+// similarity here so a single recurring gap doesn't get lost among
+// one-off questions, and a committee can see what's actually worth
+// prioritizing a new SOP for.
+function RecurringGapsWidget() {
+  const [clusters, setClusters] = useState<GapCluster[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/sop-gap-reports/summary`)
+      .then((r) => r.json())
+      .then((data) => setClusters(Array.isArray(data?.clusters) ? data.clusters : []))
+      .catch(() => setClusters([]))
+      .finally(() => setLoading(false))
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-8 text-muted-foreground gap-2 text-sm">
+        <Loader2 className="w-4 h-4 animate-spin" /> Loading recurring gaps...
+      </div>
+    )
+  }
+
+  const recurring = clusters.filter((c) => c.count >= 1).slice(0, 6)
+  if (recurring.length === 0) {
+    return (
+      <div className="rounded-2xl bg-card border border-border p-8 text-center">
+        <HelpCircle className="w-8 h-8 mx-auto mb-3 text-muted-foreground opacity-40" />
+        <p className="text-sm text-muted-foreground">No unanswered questions have been flagged yet.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-3">
+      {recurring.map((c, i) => (
+        <div key={i} className="rounded-2xl bg-card border border-border p-4 space-y-2.5">
+          <div className="flex items-start justify-between gap-3">
+            <p className="text-sm font-medium text-foreground leading-snug">{c.representative_question}</p>
+            {c.count > 1 && (
+              <span className="shrink-0 px-2 py-0.5 rounded-full bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30 text-[11px] font-semibold whitespace-nowrap">
+                Asked {c.count}x
+              </span>
+            )}
+          </div>
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            {c.most_common_department && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted border border-border text-muted-foreground">
+                <Building2 className="w-3 h-3" /> {c.most_common_department}
+              </span>
+            )}
+            <span className={cn("px-2 py-0.5 rounded-full border font-medium capitalize", RISK_STYLE[c.most_common_risk_level] ?? RISK_STYLE.moderate)}>
+              {c.most_common_risk_level} risk
+            </span>
+            <span className="text-muted-foreground">Last asked {new Date(c.last_asked).toLocaleDateString()}</span>
+          </div>
+          <Link href={`/proposals?new=1&query=${encodeURIComponent(c.representative_question)}`}
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-[#0B6BCB] hover:underline pt-1">
+            <PlusCircle className="w-3.5 h-3.5" /> Draft a new SOP for this
+          </Link>
+        </div>
+      ))}
+    </div>
+  )
+}
 
 interface Proposal {
   id: number
@@ -300,6 +387,16 @@ export default function CommitteePage() {
                     <CommitteeProposalCard key={p.id} proposal={p} index={i} onVoteCast={handleVoteCast} />
                   ))
                 )}
+              </section>
+
+              <section className="space-y-4">
+                <h2 className="font-display text-lg font-bold text-foreground flex items-center gap-2">
+                  <HelpCircle className="w-5 h-5 text-[#0B6BCB]" /> Recurring Unanswered Questions
+                </h2>
+                <p className="text-xs text-muted-foreground -mt-2">
+                  Sourced from SOP Gap Reports (created when Ask Meridian finds no matching internal SOP) - clustered by question similarity.
+                </p>
+                <RecurringGapsWidget />
               </section>
 
               <section className="space-y-4">

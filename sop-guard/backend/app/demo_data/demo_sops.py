@@ -15,7 +15,7 @@ DEMO_SOPS = [
         "sop_id": "SOP-ICU-001",
         "title": "Sepsis Management Protocol",
         "department": "ICU",
-        "version": "3.1",
+        "version": "2.1",  # matches the 4-version history seeded in demo_sop_versions.py
         "effective_date": "2025-01-15",
         "review_date": "2026-06-01",
         "raw_text": (

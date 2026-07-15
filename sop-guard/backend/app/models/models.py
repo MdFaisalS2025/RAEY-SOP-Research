@@ -363,3 +363,78 @@ class CAPARecord(Base):
     closed_at = Column(DateTime, nullable=True)
 
     incident = relationship("IncidentRecord", back_populates="capas")
+
+
+# ── SOP version history & gap reporting ────────────────────────
+
+
+class ChangeCategory(str, enum.Enum):
+    new_evidence = "new_evidence"
+    outdated_information = "outdated_information"
+    safety_improvement = "safety_improvement"
+    better_clinical_outcomes = "better_clinical_outcomes"
+    compliance_requirement = "compliance_requirement"
+    legal_risk_update = "legal_risk_update"
+    workflow_improvement = "workflow_improvement"
+    department_request = "department_request"
+    annual_review = "annual_review"
+
+
+class SOPVersionRecord(Base):
+    """
+    A full snapshot of one historical version of an SOP, with the committee
+    reasoning behind why it superseded the prior version. Distinct from
+    SOPUpdate (a single pending/approved section-level edit) and
+    ProposalRecord (a single governance vote on one proposed change) -
+    this is the append-only, read-mostly historical record of what an SOP
+    actually said at each point in time and why it changed, independent of
+    whichever mechanism (SOPUpdate, ProposalRecord, or a manual admin edit)
+    produced that change.
+    """
+    __tablename__ = "sop_version_records"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    sop_id = Column(String(64), nullable=False, index=True)  # matches SOP.sop_id / ProposalRecord.affected_sop_id
+    version_number = Column(String(32), nullable=False)
+    status = Column(String(16), default="archived")  # current | archived
+    effective_date = Column(String(32), default="")
+    archived_date = Column(String(32), default="")  # "" if this is the current version
+    changed_by = Column(String(256), default="")
+    changed_by_role = Column(String(64), default="")
+    approved_by = Column(String(256), default="")
+    committee_name = Column(String(256), default="")
+    committee_comment = Column(Text, default="")
+    reason_for_change = Column(Text, default="")
+    evidence_used = Column(Text, default="")
+    change_category = Column(String(32), default=ChangeCategory.annual_review.value)
+    summary_of_changes = Column(Text, default="")
+    old_text = Column(Text, nullable=True)  # null for the first version (nothing preceded it)
+    new_text = Column(Text, default="")
+    affected_sections = Column(JSON, default=list)
+    training_required = Column(Boolean, default=False)
+    acknowledgment_required = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=_utcnow)
+
+
+class SOPGapReportRecord(Base):
+    """
+    Created when a user's question has no matching approved internal SOP.
+    Captures what was asked, what was searched, and what external evidence
+    was found, so a real gap in SOP coverage becomes a trackable committee
+    item instead of a dead-end "not covered" answer.
+    """
+    __tablename__ = "sop_gap_reports"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    question = Column(Text, nullable=False)
+    asked_at = Column(DateTime, default=_utcnow)
+    searched_sops = Column(JSON, default=list)  # sop_ids considered and rejected as non-matches
+    no_match_reason = Column(Text, default="")
+    external_sources = Column(JSON, default=list)  # [{title, source, url, source_type}]
+    suggested_outline = Column(JSON, default=list)  # list[str], heuristic/illustrative only
+    risk_level = Column(String(16), default="moderate")  # low | moderate | high
+    affected_department = Column(String(128), default="")
+    recommended_committee = Column(String(256), default="")
+    recommended_action = Column(Text, default="")
+    status = Column(String(32), default="open")  # open | sent_to_committee | closed
+    created_at = Column(DateTime, default=_utcnow)

@@ -39,13 +39,18 @@ import {
   Link2,
   Check,
   Cpu,
+  GitCompare,
+  HelpCircle,
 } from "lucide-react"
-import { type InlineCitation } from "@/components/query/citation-chip"
+import { type InlineCitation, reviewStaleness, daysUntilReview } from "@/components/query/citation-chip"
 import { SourcePanel } from "@/components/query/source-panel"
 import { EvidencePanel } from "@/components/query/evidence-panel"
 import { FollowupChips } from "@/components/query/followup-chips"
 import { FeedbackRow } from "@/components/query/feedback-row"
 import { AnswerRenderer } from "@/components/query/answer-renderer"
+import { ProtocolComparisonPanel } from "@/components/query/protocol-comparison-panel"
+import { VersionHistoryPanel, LatestVersionBadge } from "@/components/query/version-history-panel"
+import { GapReportPanel } from "@/components/query/gap-report-panel"
 import { ReadingLevelToggle, simplifyAnswer, READING_LEVEL_KEY, type ReadingLevel } from "@/components/query/plain-language"
 import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
@@ -54,6 +59,7 @@ import { VoiceRecorder } from "@/components/voice/voice-recorder"
 import { querySOPs, submitFeedback } from "@/lib/api"
 import { cn } from "@/lib/utils"
 import { useRole } from "@/lib/role-context"
+import { toast } from "@/components/ui/use-toast"
 
 const suggestedQueries = [
 "What are the steps for sepsis management?",
@@ -103,6 +109,9 @@ export type AssistantData = {
   entities: { drugs?: string[]; conditions?: string[] }
   answeredAt: number
   error?: boolean
+  needsClarification: boolean
+  clarificationQuestion: string
+  clarificationOptions: string[]
 }
 
 /** Pulls "Evidence: sufficient (score: 0.83)" out of the joined reasoning trace. */
@@ -136,6 +145,9 @@ function mapCitations(raw: unknown): InlineCitation[] {
       effective_date: c.effective_date ?? "",
       review_date: c.review_date ?? "",
       status: c.status ?? "active",
+      url: c.url ?? "",
+      is_external: c.is_external ?? false,
+      pub_date: c.pub_date ?? "",
     }))
 }
 
@@ -231,6 +243,9 @@ function mapResponse(query: string, response: any, startedAt: number): Assistant
     responseTimeMs: typeof ext.response_time_ms === "number" ? ext.response_time_ms : Date.now() - startedAt,
     answerId: ext.answer_id != null ? String(ext.answer_id) : null,
     entities: (ext.entities && typeof ext.entities === "object") ? ext.entities as { drugs?: string[]; conditions?: string[] } : {},
+    needsClarification: (ext.needs_clarification as boolean | undefined) ?? false,
+    clarificationQuestion: typeof ext.clarification_question === "string" ? ext.clarification_question : "",
+    clarificationOptions: Array.isArray(ext.clarification_options) ? (ext.clarification_options as string[]).filter((o) => typeof o === "string") : [],
     answeredAt: Date.now(),
   }
 }
@@ -252,6 +267,34 @@ function PipelineStages({ currentStage }: { currentStage: number }) {
             </div>
           )
         })}
+      </div>
+    </div>
+  )
+}
+
+// Pulsing placeholder shaped like the answer card that's about to arrive
+// (heading, a few text lines, a couple of step rows) - shown alongside the
+// pipeline checklist so the wait reads as "the answer is forming" rather
+// than blank space, since a self-hosted model can take 30-50s per answer.
+function AnswerSkeleton() {
+  return (
+    <div className="p-6 sm:p-8 rounded-2xl bg-card border border-border shadow-sm space-y-4 animate-pulse" aria-hidden="true">
+      <div className="h-4 w-2/5 rounded bg-muted" />
+      <div className="space-y-2">
+        <div className="h-3 w-full rounded bg-muted" />
+        <div className="h-3 w-11/12 rounded bg-muted" />
+        <div className="h-3 w-4/5 rounded bg-muted" />
+      </div>
+      <div className="space-y-3 pt-2">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="flex items-start gap-3">
+            <div className="w-7 h-7 rounded-full bg-muted shrink-0" />
+            <div className="flex-1 space-y-1.5 pt-1">
+              <div className="h-3 w-full rounded bg-muted" />
+              <div className="h-3 w-2/3 rounded bg-muted" />
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   )
@@ -290,6 +333,76 @@ function news2RiskConfig(score: number) {
   if (score >= 5) return { label: "Medium Risk: Urgent Review", className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30" }
   if (score >= 3) return { label: "Low-Medium Risk", className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30" }
   return { label: "Low Risk", className: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30" }
+}
+
+// ─── NEWS2 (National Early Warning Score 2) ─────────────────────────────────
+// The real RCP scoring table (7 physiological parameters, each 0-3 points,
+// summed). Letting a nurse enter vitals directly - rather than requiring
+// them to already know their patient's NEWS2 total - is both more accurate
+// (no mental-math transcription error) and more honest about what the
+// number actually represents.
+interface News2Vitals {
+  respRate: string
+  spo2: string
+  onOxygen: boolean
+  sbp: string
+  pulse: string
+  consciousness: "alert" | "cvpu"
+  temp: string
+}
+
+const EMPTY_NEWS2_VITALS: News2Vitals = {
+  respRate: "", spo2: "", onOxygen: false, sbp: "", pulse: "", consciousness: "alert", temp: "",
+}
+
+function scoreRespRate(v: number): number {
+  if (v <= 8) return 3
+  if (v <= 11) return 1
+  if (v <= 20) return 0
+  if (v <= 24) return 2
+  return 3
+}
+function scoreSpo2(v: number): number {
+  if (v <= 91) return 3
+  if (v <= 93) return 2
+  if (v <= 95) return 1
+  return 0
+}
+function scoreSbp(v: number): number {
+  if (v <= 90) return 3
+  if (v <= 100) return 2
+  if (v <= 110) return 1
+  if (v <= 219) return 0
+  return 3
+}
+function scorePulse(v: number): number {
+  if (v <= 40) return 3
+  if (v <= 50) return 1
+  if (v <= 90) return 0
+  if (v <= 110) return 1
+  if (v <= 130) return 2
+  return 3
+}
+function scoreTemp(v: number): number {
+  if (v <= 35.0) return 3
+  if (v <= 36.0) return 1
+  if (v <= 38.0) return 0
+  if (v <= 39.0) return 1
+  return 2
+}
+
+/** Returns the computed NEWS2 total, or null if any required vital is
+ * still missing/unparseable - a partial score is worse than no score. */
+function computeNews2(v: News2Vitals): number | null {
+  const respRate = Number(v.respRate), spo2 = Number(v.spo2), sbp = Number(v.sbp), pulse = Number(v.pulse), temp = Number(v.temp)
+  if (![v.respRate, v.spo2, v.sbp, v.pulse, v.temp].every((f) => f !== "") ||
+      [respRate, spo2, sbp, pulse, temp].some((n) => Number.isNaN(n))) {
+    return null
+  }
+  return (
+    scoreRespRate(respRate) + scoreSpo2(spo2) + (v.onOxygen ? 2 : 0) +
+    scoreSbp(sbp) + scorePulse(pulse) + (v.consciousness === "cvpu" ? 3 : 0) + scoreTemp(temp)
+  )
 }
 
 // ─── Trust & Verification panel ──────────────────────────────────────────────
@@ -477,12 +590,16 @@ function CopyLinkButton({ data }: { data: AssistantData }) {
       if (data.answerId) {
         await navigator.clipboard.writeText(`${window.location.origin}/answers/${data.answerId}`)
         setCopied("link")
+        toast({ description: "Link copied to clipboard", variant: "success" })
       } else {
         await navigator.clipboard.writeText(data.answer)
         setCopied("answer")
+        toast({ description: "Answer copied to clipboard", variant: "success" })
       }
       setTimeout(() => setCopied(null), 2000)
-    } catch { /* ignore */ }
+    } catch {
+      toast({ description: "Couldn't copy to clipboard", variant: "error" })
+    }
   }
   return (
     <button onClick={handleCopy}
@@ -565,6 +682,31 @@ function SourceStrip({ citations, onSelect }: { citations: InlineCitation[]; onS
 
 // ─── Full assistant answer (latest message) ──────────────────────────────────
 
+// Pulls dose/threshold values out of the prose into a scannable strip at
+// the top of the answer - reuses VerificationData.thresholdChecks (already
+// computed by the backend verifier, see ThresholdVerifier in verifier.py)
+// rather than re-parsing the answer text, so this never disagrees with
+// what the "Trust details" panel already shows for the same checks.
+function QuickFactsStrip({ checks }: { checks: { parameter: string; value: string; status: string; source: string }[] }) {
+  if (checks.length === 0) return null
+  return (
+    <div className="rounded-2xl bg-[#0B6BCB]/[0.04] border border-[#0B6BCB]/20 p-4">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-[#0B6BCB] mb-2.5 flex items-center gap-1.5">
+        <Gauge className="w-3.5 h-3.5" /> Quick Facts
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {checks.map((c, i) => (
+          <span key={i}
+            className={cn("inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border",
+              c.status === "pass" ? "bg-card border-border text-foreground" : "bg-[#FEF3C7] dark:bg-amber-500/10 border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400")}>
+            <span className="font-semibold">{c.parameter}:</span> {c.value}
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function AssistantAnswer({
   data,
   onFollowup,
@@ -593,6 +735,13 @@ function AssistantAnswer({
   const distinctSopTitles = Array.from(new Set(groundingCitations.map(c => c.sop_title)))
   const isAbstained = data.abstained
 
+  const primaryInternalCitation = groundingCitations.find((c) => !c.is_external)
+  const primarySopId = primaryInternalCitation?.sop_id ?? ""
+  const primaryReviewDays = daysUntilReview(primaryInternalCitation?.review_date)
+  const primaryStaleness = primaryReviewDays !== null && primaryReviewDays <= 30 ? reviewStaleness(primaryInternalCitation?.review_date) : null
+  const primaryVersion = primaryInternalCitation?.version ?? ""
+  const primaryEffectiveDate = primaryInternalCitation?.effective_date ?? ""
+
   const plain = readingLevel === "plain" ? simplifyAnswer(data.answer) : null
   const displayAnswer = plain ? plain.text : data.answer
 
@@ -610,7 +759,10 @@ function AssistantAnswer({
     try {
       const typeMap: Record<string, "positive" | "negative" | "correction"> = { helpful: "positive", incorrect: "negative", unsafe: "negative", missing: "correction" }
       await submitFeedback(0, typeMap[key] || "positive")
-    } catch { /* ignore */ }
+      toast({ description: "Feedback submitted - thank you", variant: "success" })
+    } catch {
+      toast({ description: "Couldn't submit feedback - it wasn't saved", variant: "error" })
+    }
   }
 
   if (data.error) {
@@ -629,6 +781,38 @@ function AssistantAnswer({
           </div>
         </div>
       </div>
+    )
+  }
+
+  if (data.needsClarification) {
+    return (
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
+        className="p-6 sm:p-8 rounded-2xl bg-card border border-[#0B6BCB]/30">
+        <div className="flex items-start gap-4">
+          <div className="w-11 h-11 rounded-xl bg-[#0B6BCB]/10 flex items-center justify-center shrink-0">
+            <HelpCircle className="w-5 h-5 text-[#0B6BCB]" />
+          </div>
+          <div className="min-w-0">
+            <h2 className="text-lg font-semibold text-foreground">{data.clarificationQuestion || "Could you clarify your question?"}</h2>
+            <p className="text-[13px] leading-relaxed text-muted-foreground mt-2">
+              This question could match more than one protocol - answering without knowing which one risks giving you the wrong guidance.
+            </p>
+            {data.clarificationOptions.length > 0 && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {data.clarificationOptions.map((opt) => (
+                  <button
+                    key={opt}
+                    onClick={() => onFollowup(`${data.query} (regarding ${opt})`)}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium border border-[#0B6BCB]/30 bg-[#0B6BCB]/[0.04] text-[#0B6BCB] hover:bg-[#0B6BCB]/10 transition-colors"
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </motion.div>
     )
   }
 
@@ -710,33 +894,24 @@ function AssistantAnswer({
                 </div>
               </div>
               <div className="mt-6 pt-5 border-t border-border">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">What you can do next:</p>
-                <div className="space-y-2">
-                  {[
-                    { href: "/library", icon: BookOpen, label: "Browse the SOP Library" },
-                    { href: "/evidence-watch", icon: Search, label: "Check Evidence Watch for external guidance" },
-                    { href: "/proposals?new=1", icon: PlusCircle, label: "Request a new SOP via Proposals" },
-                  ].map((opt) => (
-                    <a key={opt.href} href={opt.href}
-                      className="flex items-center gap-2.5 border border-border rounded-lg px-4 py-2.5 hover:border-[#0B6BCB]/40 hover:bg-[#0B6BCB]/[0.04] transition-colors duration-150">
-                      <opt.icon className="w-4 h-4 text-[#0B6BCB] shrink-0" />
-                      <span className="text-sm text-foreground">{opt.label}</span>
-                    </a>
-                  ))}
-                </div>
+                <GapReportPanel queryText={data.query} externalCitations={data.inlineCitations.filter((c) => c.is_external)} />
               </div>
             </div>
           ) : (
             <>
-              {/* Grounding bar */}
+              {/* Grounding bar - worded per route so an external-literature
+                  answer never claims "SOP sections" for what are actually
+                  paper titles. */}
               {distinctSopTitles.length > 0 && (
                 <div className="p-3.5 rounded-2xl bg-card border border-border">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground">
                       <Layers className="w-4 h-4 text-[#0B6BCB]" />
-                      Grounded in {groundingCitations.length} SOP {groundingCitations.length === 1 ? "section" : "sections"}
+                      {data.route === "external_evidence"
+                        ? `Based on ${groundingCitations.length} external literature ${groundingCitations.length === 1 ? "source" : "sources"}`
+                        : `Grounded in ${groundingCitations.length} SOP ${groundingCitations.length === 1 ? "section" : "sections"}`}
                     </span>
-                    {distinctSopTitles.map((t) => (
+                    {data.route !== "external_evidence" && distinctSopTitles.map((t) => (
                       <span key={t} className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30">
                         {t}
                       </span>
@@ -754,7 +929,12 @@ function AssistantAnswer({
                       </span>
                     )}
                   </div>
-                  {distinctSopTitles.length === 1 && (
+                  {data.route === "external_evidence" ? (
+                    <p className="mt-2 text-[12px] text-[#0B6BCB] flex items-center gap-1.5">
+                      <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                      No internal SOP covers this - hover or tap a citation number to preview and open its source.
+                    </p>
+                  ) : distinctSopTitles.length === 1 && (
                     <p className="mt-2 text-[12px] text-[#B45309] dark:text-amber-400 flex items-center gap-1.5">
                       <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
                       Single-source answer - verify against the full SOP
@@ -762,6 +942,27 @@ function AssistantAnswer({
                   )}
                 </div>
               )}
+
+              {data.route === "external_evidence" && (
+                <GapReportPanel queryText={data.query} externalCitations={data.inlineCitations.filter((c) => c.is_external)} />
+              )}
+
+              {(data.route === "sop_library" || data.route === "hybrid") && primarySopId && (
+                <LatestVersionBadge
+                  sopId={primarySopId} sopTitle={distinctSopTitles[0] ?? ""}
+                  version={primaryVersion} effectiveDate={primaryEffectiveDate}
+                  onViewHistory={() => setActivePanel("versions")}
+                />
+              )}
+
+              {primaryStaleness && (
+                <div className={cn("flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium border", primaryStaleness.className)}>
+                  <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                  {distinctSopTitles[0] ? `${distinctSopTitles[0]}: ` : ""}{primaryStaleness.label} - this answer may be based on a protocol due for committee review.
+                </div>
+              )}
+
+              <QuickFactsStrip checks={data.verification.thresholdChecks} />
 
               <div className="p-6 sm:p-8 rounded-2xl bg-card border border-border shadow-sm relative">
                 <div>
@@ -809,6 +1010,8 @@ function AssistantAnswer({
           <div className="flex flex-wrap items-center gap-1">
             {[
               { key: "sources", icon: FileText, label: "Sources", count: data.inlineCitations.length > 0 ? data.inlineCitations.length : data.sources.length },
+              ...(primarySopId ? [{ key: "comparison", icon: GitCompare, label: "Protocol Comparison" }] : []),
+              ...(primarySopId ? [{ key: "versions", icon: History, label: "Version History" }] : []),
               { key: "trace", icon: Brain, label: "Pipeline trace" },
               { key: "feedback", icon: ThumbsUp, label: "Give feedback" },
               { key: "export", icon: Download, label: "Export" },
@@ -839,6 +1042,16 @@ function AssistantAnswer({
           <AnimatePresence mode="wait">
             {activePanel && (
               <motion.div key={activePanel} initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
+
+                {/* SOP vs External Protocol Comparison Panel */}
+                {activePanel === "comparison" && primarySopId && (
+                  <ProtocolComparisonPanel sopId={primarySopId} />
+                )}
+
+                {/* SOP Version History Panel */}
+                {activePanel === "versions" && primarySopId && (
+                  <VersionHistoryPanel sopId={primarySopId} />
+                )}
 
                 {/* Sources Panel */}
                 {activePanel === "sources" && data.inlineCitations.length > 0 && (
@@ -943,12 +1156,16 @@ function AssistantAnswer({
                       <button onClick={async () => {
                         try {
                           const res = await fetch("/api/query/export", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query: data.query }) })
+                          if (!res.ok) throw new Error("export failed")
                           const blob = await res.blob()
                           const url = URL.createObjectURL(blob)
                           const a = document.createElement("a")
                           a.href = url; a.download = `meridian-report-${Date.now()}.json`; a.click()
                           URL.revokeObjectURL(url)
-                        } catch { /* silently fail */ }
+                          toast({ description: "Report downloaded", variant: "success" })
+                        } catch {
+                          toast({ description: "Couldn't export the report - try again", variant: "error" })
+                        }
                       }}
                         className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border border-border text-muted-foreground hover:text-foreground transition-colors">
                         <Download className="w-4 h-4" />
@@ -957,14 +1174,16 @@ function AssistantAnswer({
                       <button onClick={async () => {
                         try {
                           const res = await fetch("/api/query/report", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query: data.query }) })
+                          if (!res.ok) throw new Error("report failed")
                           const report = await res.json()
                           const printWindow = window.open("", "_blank")
-                          if (printWindow) {
-                            printWindow.document.write(`<!DOCTYPE html><html><head><title>Meridian Report</title></head><body><h1>Meridian Clinical Query Report</h1><p>${report.header?.disclaimer || ''}</p><h2>Query</h2><p>${report.header?.query || data.query}</p><h2>Answer</h2><pre>${(report.result?.answer || '').replace(/</g, '&lt;')}</pre><h2>Sources</h2>${(report.sources || []).map((s: any) => '<p>' + s.sop_title + ' - ' + s.section + '</p>').join('')}</body></html>`)
-                            printWindow.document.close()
-                            setTimeout(() => printWindow.print(), 500)
-                          }
-                        } catch { /* silently fail */ }
+                          if (!printWindow) throw new Error("popup blocked")
+                          printWindow.document.write(`<!DOCTYPE html><html><head><title>Meridian Report</title></head><body><h1>Meridian Clinical Query Report</h1><p>${report.header?.disclaimer || ''}</p><h2>Query</h2><p>${report.header?.query || data.query}</p><h2>Answer</h2><pre>${(report.result?.answer || '').replace(/</g, '&lt;')}</pre><h2>Sources</h2>${(report.sources || []).map((s: any) => '<p>' + s.sop_title + ' - ' + s.section + '</p>').join('')}</body></html>`)
+                          printWindow.document.close()
+                          setTimeout(() => printWindow.print(), 500)
+                        } catch (err) {
+                          toast({ description: err instanceof Error && err.message === "popup blocked" ? "Print report blocked - allow pop-ups for this site" : "Couldn't generate the report - try again", variant: "error" })
+                        }
                       }}
                         className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border border-border text-muted-foreground hover:text-foreground transition-colors">
                         <Printer className="w-4 h-4" />
@@ -1063,7 +1282,13 @@ export default function QueryPage() {
   const [userRole, setUserRole] = useState("viewer")
   const [serverHistory, setServerHistory] = useState<Array<{ id: number; query: string; confidence: number; query_type: string; timestamp: string }>>([])
   const [news2Score, setNews2Score] = useState<number | null>(null)
+  const [news2Mode, setNews2Mode] = useState<"manual" | "calculate">("calculate")
+  const [news2Vitals, setNews2Vitals] = useState<News2Vitals>(EMPTY_NEWS2_VITALS)
   const [showPatientContext, setShowPatientContext] = useState(false)
+
+  useEffect(() => {
+    if (news2Mode === "calculate") setNews2Score(computeNews2(news2Vitals))
+  }, [news2Mode, news2Vitals])
   const [readingLevel, setReadingLevel] = useState<ReadingLevel>("clinical")
 
   const chatDisabledRef = useRef(false)
@@ -1289,6 +1514,9 @@ export default function QueryPage() {
         responseTimeMs: null,
         answerId: null,
         entities: {},
+        needsClarification: false,
+        clarificationQuestion: "",
+        clarificationOptions: [],
         answeredAt: Date.now(),
         error: true,
       }
@@ -1320,23 +1548,96 @@ export default function QueryPage() {
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden mt-2">
             <div className="p-4 rounded-xl bg-card border border-border space-y-3">
-              <div className="flex items-center gap-4">
-                <label className="text-sm font-medium shrink-0">NEWS2 Score</label>
-                <input
-                  type="number"
-                  min={0}
-                  max={20}
-                  value={news2Score ?? ""}
-                  onChange={e => setNews2Score(e.target.value === "" ? null : Number(e.target.value))}
-                  placeholder="0-20"
-                  className="w-24 px-3 py-1.5 rounded-lg bg-muted border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#0B6BCB]/40"
-                />
-                {news2Score !== null && (
-                  <span className={cn("inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border", news2RiskConfig(news2Score).className)}>
-                    {news2RiskConfig(news2Score).label}
-                  </span>
-                )}
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                NEWS2 (National Early Warning Score 2) is the NHS/Royal College of Physicians standard for scoring a
+                patient&apos;s deterioration risk from six vital signs. Attaching a score lets Meridian frame its answer
+                with matching urgency - e.g. surfacing escalation steps sooner for a high-risk patient - it does not
+                change which SOP is retrieved, only how the answer is worded.
+              </p>
+
+              <div className="flex items-center gap-1 p-0.5 rounded-lg bg-muted w-fit">
+                {([
+                  { key: "calculate" as const, label: "Calculate from vitals" },
+                  { key: "manual" as const, label: "I already know the score" },
+                ]).map((opt) => (
+                  <button key={opt.key} onClick={() => setNews2Mode(opt.key)}
+                    className={cn("px-3 py-1.5 rounded-md text-xs font-medium transition-colors",
+                      news2Mode === opt.key ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
+                    {opt.label}
+                  </button>
+                ))}
               </div>
+
+              {news2Mode === "manual" ? (
+                <div className="flex items-center gap-4">
+                  <label className="text-sm font-medium shrink-0">NEWS2 Score</label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={20}
+                    value={news2Score ?? ""}
+                    onChange={e => setNews2Score(e.target.value === "" ? null : Number(e.target.value))}
+                    placeholder="0-20"
+                    className="w-24 px-3 py-1.5 rounded-lg bg-muted border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#0B6BCB]/40"
+                  />
+                  {news2Score !== null && (
+                    <span className={cn("inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border", news2RiskConfig(news2Score).className)}>
+                      {news2RiskConfig(news2Score).label}
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {[
+                      { key: "respRate" as const, label: "Resp. rate", unit: "/min" },
+                      { key: "spo2" as const, label: "SpO₂", unit: "%" },
+                      { key: "sbp" as const, label: "Systolic BP", unit: "mmHg" },
+                      { key: "pulse" as const, label: "Pulse", unit: "bpm" },
+                      { key: "temp" as const, label: "Temp", unit: "°C" },
+                    ].map((f) => (
+                      <div key={f.key}>
+                        <label className="text-xs text-muted-foreground">{f.label} ({f.unit})</label>
+                        <input
+                          type="number"
+                          value={news2Vitals[f.key]}
+                          onChange={(e) => setNews2Vitals((prev) => ({ ...prev, [f.key]: e.target.value }))}
+                          className="mt-0.5 w-full px-2.5 py-1.5 rounded-lg bg-muted border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#0B6BCB]/40"
+                        />
+                      </div>
+                    ))}
+                    <div>
+                      <label className="text-xs text-muted-foreground">Consciousness</label>
+                      <select
+                        value={news2Vitals.consciousness}
+                        onChange={(e) => setNews2Vitals((prev) => ({ ...prev, consciousness: e.target.value as "alert" | "cvpu" }))}
+                        className="mt-0.5 w-full px-2.5 py-1.5 rounded-lg bg-muted border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#0B6BCB]/40">
+                        <option value="alert">Alert</option>
+                        <option value="cvpu">Confusion / Voice / Pain / Unresponsive</option>
+                      </select>
+                    </div>
+                  </div>
+                  <label className="inline-flex items-center gap-2 text-xs text-muted-foreground">
+                    <input type="checkbox" checked={news2Vitals.onOxygen}
+                      onChange={(e) => setNews2Vitals((prev) => ({ ...prev, onOxygen: e.target.checked }))}
+                      className="rounded border-border" />
+                    Patient is on supplemental oxygen
+                  </label>
+                  <div className="flex items-center gap-3 pt-1 border-t border-border">
+                    {news2Score !== null ? (
+                      <>
+                        <span className="text-sm font-medium text-foreground">NEWS2 = {news2Score}</span>
+                        <span className={cn("inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border", news2RiskConfig(news2Score).className)}>
+                          {news2RiskConfig(news2Score).label}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">Enter all five vitals to calculate the score.</span>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <p className="text-xs text-muted-foreground">
                 Applies to your next question. Higher scores indicate greater deterioration risk.
               </p>
@@ -1494,7 +1795,10 @@ export default function QueryPage() {
                     <span className="inline-block w-1.5 h-4 ml-0.5 bg-[#0B6BCB] animate-pulse align-text-bottom" />
                   </div>
                 ) : (
-                  <PipelineStages currentStage={currentStage} />
+                  <div className="space-y-4">
+                    <PipelineStages currentStage={currentStage} />
+                    <AnswerSkeleton />
+                  </div>
                 )}
               </motion.div>
             )}

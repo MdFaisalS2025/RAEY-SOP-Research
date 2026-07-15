@@ -63,6 +63,10 @@ function LoginPageInner() {
   const [formLoading, setFormLoading] = useState(false)
   const [signedOut, setSignedOut] = useState(false)
 
+  useEffect(() => {
+    document.title = "Sign In | Meridian"
+  }, [])
+
   // Show signed-out banner when redirected with ?signedOut=1
   useEffect(() => {
     if (searchParams.get("signedOut") === "1") {

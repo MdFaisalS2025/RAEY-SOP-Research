@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { MessageCircleQuestion, ThumbsDown, ThumbsUp } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { OverrideModal } from "@/components/ui/override-modal"
+import { toast } from "@/components/ui/use-toast"
 
 type FeedbackChoice = "helpful" | "clarification" | "disagree"
 
@@ -40,6 +41,8 @@ export function FeedbackRow({ queryText, answerId }: { queryText: string; answer
     }
     if (c === "disagree") {
       setShowOverride(true)
+    } else {
+      toast({ description: "Feedback recorded", variant: "success" })
     }
   }
 

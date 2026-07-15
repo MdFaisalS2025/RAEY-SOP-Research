@@ -15,7 +15,7 @@ from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.database.db import init_db, async_session
-from app.api import routes_query, routes_sops, routes_feedback, routes_voice, routes_evaluation, routes_activity, routes_evidence, routes_governance, routes_chat, routes_cds, routes_overrides, routes_credits, routes_analytics, routes_smart, routes_capa, routes_settings
+from app.api import routes_query, routes_sops, routes_feedback, routes_voice, routes_evaluation, routes_activity, routes_evidence, routes_governance, routes_chat, routes_cds, routes_overrides, routes_credits, routes_analytics, routes_smart, routes_capa, routes_settings, routes_sop_versions, routes_comparison, routes_gap_reports
 
 
 async def _load_demo_data() -> None:
@@ -236,6 +236,31 @@ async def _seed_demo_incidents_if_empty(session) -> None:
     print(f"[Meridian] Seeded {len(demo_incidents)} demo incidents with CAPA records.")
 
 
+async def _seed_sop_versions_if_empty(session) -> None:
+    """Seed the Sepsis Management Protocol's 4-version history once. Also
+    backfills SOP-ICU-001.version to "2.1" on already-populated dev
+    databases (predating this feature), mirroring _backfill_review_dates'
+    pattern for the same reason: the SQLite file persists across restarts,
+    so a plain demo_sops.py edit alone never reaches an already-seeded row."""
+    from sqlalchemy import select, func
+    from app.models.models import SOP, SOPVersionRecord
+    from app.demo_data.demo_sop_versions import SEPSIS_VERSION_HISTORY
+
+    sop = (await session.execute(select(SOP).where(SOP.sop_id == "SOP-ICU-001"))).scalar_one_or_none()
+    if sop and sop.version != "2.1":
+        sop.version = "2.1"
+
+    count = (await session.execute(
+        select(func.count(SOPVersionRecord.id)).where(SOPVersionRecord.sop_id == "SOP-ICU-001")
+    )).scalar() or 0
+    if count == 0:
+        for data in SEPSIS_VERSION_HISTORY:
+            session.add(SOPVersionRecord(**data))
+        print(f"[Meridian] Seeded {len(SEPSIS_VERSION_HISTORY)} SOP version history records.")
+
+    await session.commit()
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup: init DB and load demo data."""
@@ -251,6 +276,11 @@ async def lifespan(app: FastAPI):
             await _seed_demo_incidents_if_empty(session)
     except Exception as e:
         print(f"[Meridian] Warning: incident seed skipped: {e}")
+    try:
+        async with async_session() as session:
+            await _seed_sop_versions_if_empty(session)
+    except Exception as e:
+        print(f"[Meridian] Warning: SOP version history seed skipped: {e}")
     print("[Meridian] Backend ready.")
     yield
     print("[Meridian] Shutting down.")
@@ -304,6 +334,9 @@ app.include_router(routes_analytics.router)
 app.include_router(routes_smart.router)
 app.include_router(routes_capa.router)
 app.include_router(routes_settings.router)
+app.include_router(routes_sop_versions.router)
+app.include_router(routes_comparison.router)
+app.include_router(routes_gap_reports.router)
 
 
 @app.get("/")

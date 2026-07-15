@@ -81,8 +81,15 @@ class QueryResponse(BaseModel):
     # actually grounded this answer, so the UI can render "Sourced from:
     # SOP Library" / "External Literature" / "SOP Library + External
     # Literature" / "No source available" rather than leaving it implicit.
-    route: str = "sop_library"  # "sop_library" | "external_evidence" | "hybrid" | "no_evidence"
+    route: str = "sop_library"  # "sop_library" | "external_evidence" | "hybrid" | "no_evidence" | "clarification"
     external_evidence: list[dict] = []
+    # Set when the query is too ambiguous to answer safely (e.g. "what's the
+    # max dose?" with no drug named, or top matches split evenly across
+    # multiple unrelated SOPs) - the UI shows clarification_question with
+    # clarification_options as quick-reply chips instead of a guessed answer.
+    needs_clarification: bool = False
+    clarification_question: str = ""
+    clarification_options: list[str] = []
 
 
 # ── SOP ────────────────────────────────────────────────────────

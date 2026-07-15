@@ -115,6 +115,64 @@ class TestMockGeneratorAbstention:
         assert result["abstained"] is False
 
 
+class TestSemanticRelevanceGate:
+    """
+    Hard gate fed by the real cross-encoder score (app/rag/reranker.py's
+    CrossEncoderReranker), attached to chunks as `rerank_score` by
+    pipeline.py before the sufficiency check runs. Catches same-token,
+    different-domain confusions (e.g. "heat stroke" vs. a SOP about
+    cerebrovascular stroke) that lexical/embedding-cosine overlap and the
+    ~70-term entity_grounding lexicon both miss. See the diagnostic run
+    referenced in evidence_sufficiency.py's min_semantic_relevance default
+    for the real score distribution this threshold was calibrated against.
+    """
+
+    def test_absent_rerank_score_skips_check(self, checker):
+        """Backward compatible: chunks without rerank_score (e.g. any test
+        or code path that doesn't run the cross-encoder) leave this check
+        inactive rather than failing closed."""
+        chunks = [_chunk(0.3)]
+        result = checker.check("What is the vasopressor dose threshold?", chunks, "threshold")
+        names = [c["name"] for c in result["checks"]]
+        assert "semantic_relevance" not in names
+
+    def test_low_rerank_score_hard_gates_insufficient(self, checker):
+        """A confidently topic-mismatched candidate (e.g. 'heat stroke'
+        scored against a cerebrovascular-stroke SOP) must veto sufficiency
+        even when other soft signals pass."""
+        chunk = _chunk(0.3, "stroke protocol door-to-CT target time thrombolysis")
+        chunk["rerank_score"] = -6.5
+        result = checker.check("What is the protocol for heat stroke?", [chunk], "procedure_steps")
+        check = next(c for c in result["checks"] if c["name"] == "semantic_relevance")
+        assert check["passed"] is False
+        assert result["sufficient"] is False
+
+    def test_high_rerank_score_passes(self, checker):
+        chunk = _chunk(0.3, "sepsis lactate vasopressor norepinephrine dose threshold")
+        chunk["rerank_score"] = 5.0
+        result = checker.check(
+            "What are the steps for sepsis management?", [chunk], "procedure_steps"
+        )
+        check = next(c for c in result["checks"] if c["name"] == "semantic_relevance")
+        assert check["passed"] is True
+
+    def test_uses_max_score_among_top_candidates(self, checker):
+        """One strong candidate among several weak ones should still pass -
+        the gate looks at the best evidence, not the average."""
+        weak1 = _chunk(0.3, "irrelevant filler text")
+        weak1["rerank_score"] = -8.0
+        weak2 = _chunk(0.3, "more irrelevant filler")
+        weak2["rerank_score"] = -7.0
+        strong = _chunk(0.3, "sepsis lactate vasopressor norepinephrine dose threshold")
+        strong["rerank_score"] = 4.0
+        result = checker.check(
+            "What are the steps for sepsis management?", [weak1, weak2, strong], "procedure_steps"
+        )
+        check = next(c for c in result["checks"] if c["name"] == "semantic_relevance")
+        assert check["passed"] is True
+        assert check["value"] == 4.0
+
+
 class TestCorpusVocabularyCoverage:
     """
     Cheaper interim signal for out-of-scope queries that name nothing from

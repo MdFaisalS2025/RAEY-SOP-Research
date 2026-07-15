@@ -127,3 +127,22 @@ def get_reranker(
             logger.info(f"CrossEncoder not available ({e}), using heuristic reranker")
 
     return HeuristicReranker()
+
+
+_shared_reranker: "CrossEncoderReranker | HeuristicReranker | None" = None
+
+
+def get_shared_reranker(
+    backend: str = "auto",
+    model_name: str = "cross-encoder/ms-marco-MiniLM-L-6-v2",
+) -> CrossEncoderReranker | HeuristicReranker:
+    """
+    Process-wide singleton, mirroring app.rag.embedding_cache's pattern for
+    the embedding model - a MeridianPipeline is constructed fresh on every
+    request (see app/agents/pipeline.py call sites), so without this the
+    cross-encoder model would reload from disk on every single query.
+    """
+    global _shared_reranker
+    if _shared_reranker is None:
+        _shared_reranker = get_reranker(backend=backend, model_name=model_name)
+    return _shared_reranker

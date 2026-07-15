@@ -32,6 +32,19 @@ _STOPWORDS = {
 }
 
 
+def confidence_tier(score: float) -> str:
+    """Labels the checker's 0-1 `score` (fraction of sufficiency checks
+    passed) into a physician-readable band for explainability - shown in
+    Trust Details / the pipeline trace rather than a bare number."""
+    if score >= 0.85:
+        return "High Confidence"
+    if score >= 0.65:
+        return "Moderate Confidence"
+    if score >= 0.40:
+        return "Weak Match"
+    return "No Reliable Match"
+
+
 def build_corpus_vocabulary(chunks: list[dict[str, Any]]) -> set[str]:
     """
     Content-word vocabulary across the entire indexed corpus (not just the
@@ -67,6 +80,20 @@ class EvidenceSufficiencyChecker:
         min_keyword_overlap: float = 0.15,
         corpus_vocabulary: set[str] | None = None,
         min_corpus_vocabulary_coverage: float = 0.34,
+        # Calibrated empirically against app/rag/reranker.py's
+        # CrossEncoderReranker (cross-encoder/ms-marco-MiniLM-L-6-v2) output
+        # on this corpus - raw logits, not a 0-1 probability, so this is
+        # NOT comparable to the other 0-1 thresholds above. Real measured
+        # values (see the diagnostic run this was calibrated from): true
+        # topic-mismatch queries ("heat stroke" vs. Code Stroke Response
+        # Protocol - shares the literal token but is a different condition;
+        # "jellyfish sting"/"kitchen faucet"/"broken elevator"/"cafeteria
+        # menu") scored -3.0 to -11.2. Every legitimate in-corpus query
+        # tested that reaches this check with evidence actually retrieved
+        # scored +0.68 to +8.9 - see test_evidence_sufficiency.py for the
+        # locked calibration cases. -2.0 sits with margin on both sides of
+        # that gap.
+        min_semantic_relevance: float = -2.0,
     ):
         self.min_chunks = min_chunks
         self.min_top_score = min_top_score
@@ -76,6 +103,7 @@ class EvidenceSufficiencyChecker:
         # without a corpus don't need to change. None disables check 6.
         self.corpus_vocabulary = corpus_vocabulary
         self.min_corpus_vocabulary_coverage = min_corpus_vocabulary_coverage
+        self.min_semantic_relevance = min_semantic_relevance
 
     def check(
         self,
@@ -189,6 +217,30 @@ class EvidenceSufficiencyChecker:
                 if not vocab_ok:
                     missing.append("corpus vocabulary overlap")
 
+        # 7b. Semantic relevance (cross-encoder) - a real semantic judge of
+        # query-vs-evidence relevance, independent of lexical/embedding-
+        # cosine overlap. This is what distinguishes "heat stroke" from a
+        # SOP whose steps densely repeat the literal token "stroke"
+        # (cerebrovascular stroke - a different condition) - something no
+        # keyword-overlap or dense-cosine signal above reliably catches on
+        # its own, since both would see meaningful token/embedding overlap
+        # from the shared word. Hard-gated like entity_grounding below, but
+        # only enforced when the pipeline actually attached a genuine
+        # cross-encoder score to the top candidates (see
+        # app/agents/pipeline.py._prepare) - reads whatever `rerank_score`
+        # is present on the chunks it's given rather than taking a
+        # parameter, so existing unit tests constructing this checker with
+        # synthetic chunks (no rerank_score field) are completely
+        # unaffected and this check simply sits out for them.
+        semantic_scores = [c["rerank_score"] for c in retrieved_chunks[:5] if "rerank_score" in c]
+        semantic_ok = True
+        if semantic_scores:
+            top_semantic = max(semantic_scores)
+            semantic_ok = top_semantic >= self.min_semantic_relevance
+            checks.append(("semantic_relevance", semantic_ok, round(top_semantic, 3)))
+            if not semantic_ok:
+                missing.append("semantically relevant evidence (topic mismatch)")
+
         # 7. SOP status check
         sop_statuses = {c.get("status", "active") for c in retrieved_chunks[:5]}
         status_warning = "archived" in sop_statuses
@@ -204,9 +256,11 @@ class EvidenceSufficiencyChecker:
         # specific lexicon entity, that entity must actually be grounded in
         # the retrieved evidence - otherwise the named-entity check would
         # never be more than one vote among several and could be outvoted
-        # by generic keyword overlap on shared common words.
+        # by generic keyword overlap on shared common words. semantic_ok is
+        # the same kind of hard gate, but generalizes past the ~70-term
+        # lexicon entity_grounded is limited to - see check 7b above.
         from app.services.app_settings import get_confidence_threshold
-        sufficient = score >= get_confidence_threshold() and score_ok and entity_grounded
+        sufficient = score >= get_confidence_threshold() and score_ok and entity_grounded and semantic_ok
 
         reason = f"Evidence check: {passed}/{total} criteria met."
         if not sufficient:
@@ -219,12 +273,15 @@ class EvidenceSufficiencyChecker:
             recommendations.append("Try rephrasing with more specific clinical terms.")
             if not score_ok:
                 recommendations.append("The query may not match any uploaded SOP content.")
+            if not semantic_ok:
+                recommendations.append("No approved SOP achieved sufficient topical relevance to this question.")
             if missing:
                 recommendations.append(f"Consider uploading SOPs that cover: {', '.join(missing[:2])}.")
 
         return {
             "sufficient": sufficient,
             "score": round(score, 3),
+            "confidence_tier": confidence_tier(score),
             "reason": reason,
             "missing": missing,
             "recommendations": recommendations,

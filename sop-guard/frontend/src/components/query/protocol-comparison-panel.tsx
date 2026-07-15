@@ -22,7 +22,7 @@ interface ComparisonRow {
   grade?: EvidenceGrade
 }
 
-interface ComparisonResponse {
+export interface ComparisonResponse {
   available: boolean
   reason?: string
   sop_id?: string
@@ -156,11 +156,20 @@ function ComparisonMatrix({ rows, mode }: { rows: ComparisonRow[]; mode?: Compar
   )
 }
 
-export function ProtocolComparisonPanel({ sopId }: { sopId: string }) {
-  const [data, setData] = useState<ComparisonResponse | null>(null)
-  const [loading, setLoading] = useState(true)
+export function ProtocolComparisonPanel({ sopId, preloaded }: { sopId: string; preloaded?: ComparisonResponse | null }) {
+  const [data, setData] = useState<ComparisonResponse | null>(preloaded ?? null)
+  const [loading, setLoading] = useState(!preloaded)
 
   useEffect(() => {
+    // If the physician already saw this via the inline alignment status
+    // (chat-answer-message.tsx auto-fetches the same endpoint as soon as
+    // the answer's SOP is known), reuse that instead of re-fetching and
+    // making them wait again just to open this drawer.
+    if (preloaded) {
+      setData(preloaded)
+      setLoading(false)
+      return
+    }
     let cancelled = false
     setLoading(true)
     fetch(`${API_BASE}/api/sops/${encodeURIComponent(sopId)}/protocol-comparison`)
@@ -169,7 +178,7 @@ export function ProtocolComparisonPanel({ sopId }: { sopId: string }) {
       .catch(() => { if (!cancelled) setData({ available: false, reason: "Could not load the protocol comparison." }) })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
-  }, [sopId])
+  }, [sopId, preloaded])
 
   if (loading) {
     return (

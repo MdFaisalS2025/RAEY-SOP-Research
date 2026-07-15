@@ -9,10 +9,12 @@ import re
 import time
 from typing import Any, AsyncIterator
 
+from app.config import settings
 from app.schemas.schemas import QueryResponse, RetrievedChunk, VerificationResult, VerificationStatus
 from app.rag.hybrid_retriever import HybridRetriever
 from app.rag.llm_generator import LLMGenerator
 from app.rag.multihop import MultiHopRetriever
+from app.rag.reranker import get_shared_reranker, CrossEncoderReranker
 from app.rag.evidence_sufficiency import EvidenceSufficiencyChecker, build_corpus_vocabulary
 from app.rag.hyde import generate_hypothetical_doc
 from app.verifier.verifier import ProceduralFaithfulnessVerifier
@@ -57,6 +59,14 @@ class MeridianPipeline:
         """
         self.retriever = HybridRetriever(chunks)
         self.multihop = MultiHopRetriever(self.retriever)
+        # Real semantic-relevance judge (see evidence_sufficiency.py's
+        # semantic_relevance check) - process-wide singleton so the model
+        # loads once, not on every request. Deliberately never passed into
+        # HybridRetriever: it's used to score the sufficiency decision, not
+        # to reorder retrieval - see _prepare() below for why.
+        self.reranker = get_shared_reranker(
+            backend=settings.RAG_RERANKER_BACKEND, model_name=settings.RAG_RERANKER_MODEL
+        )
         self.evidence_checker = EvidenceSufficiencyChecker(
             corpus_vocabulary=build_corpus_vocabulary(chunks)
         )
@@ -153,6 +163,26 @@ class MeridianPipeline:
         if hop_result["second_hop_queries"]:
             reasoning.append(f"Second-hop queries: {hop_result['second_hop_queries']}")
         reasoning.append(f"Timing - Multi-hop: {t_multihop}ms")
+
+        # Score (not reorder) the top candidates for genuine semantic
+        # relevance, independent of lexical/embedding-cosine overlap - this
+        # is what actually distinguishes "heat stroke" from a SOP whose
+        # steps densely repeat the literal token "stroke" (cerebrovascular
+        # stroke), something no keyword or dense-cosine signal reliably
+        # catches on its own. Passing a *copy* of the list means the
+        # cross-encoder's internal sort never touches `retrieved`'s own
+        # order - generation, citations, and verification below see exactly
+        # the same ranking as before this change. Only run for the genuine
+        # cross-encoder: if get_reranker() fell back to the heuristic
+        # reranker (model unavailable), its score is on an incomparable
+        # scale, so skip attaching it rather than mislabel it - see
+        # evidence_sufficiency.py's semantic_relevance check for the
+        # corresponding read side of this.
+        if retrieved and isinstance(self.reranker, CrossEncoderReranker):
+            try:
+                self.reranker.rerank(retrieval_query, list(retrieved[:5]), top_k=5)
+            except Exception as e:
+                reasoning.append(f"Semantic relevance scoring failed ({e}), skipping")
 
         # Evidence sufficiency check
         evidence = self.evidence_checker.check(query, retrieved, query_type)

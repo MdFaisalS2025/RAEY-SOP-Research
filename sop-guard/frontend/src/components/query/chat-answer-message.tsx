@@ -11,13 +11,13 @@
 // themselves, defaulting to expanded, so history is visible by default and
 // tidy-able on request rather than silently discarded.
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   ShieldCheck, AlertTriangle, FileText, ExternalLink, GitCompare, History,
   BookOpen, Download, Printer, Flag, PlusCircle, HelpCircle, ChevronDown, ChevronUp,
-  Link2, Check,
+  Link2, Check, Loader2, CheckCircle2, ClipboardEdit,
 } from "lucide-react"
 import { type InlineCitation } from "@/components/query/citation-chip"
 import { cn } from "@/lib/utils"
@@ -25,7 +25,7 @@ import { EvidenceDrawer } from "@/components/query/evidence-drawer"
 import { FollowupChips } from "@/components/query/followup-chips"
 import { FeedbackRow } from "@/components/query/feedback-row"
 import { AnswerRenderer } from "@/components/query/answer-renderer"
-import { ProtocolComparisonPanel } from "@/components/query/protocol-comparison-panel"
+import { ProtocolComparisonPanel, type ComparisonResponse } from "@/components/query/protocol-comparison-panel"
 import { VersionHistoryPanel } from "@/components/query/version-history-panel"
 import { GapReportPanel } from "@/components/query/gap-report-panel"
 import { AnswerActionToolbar } from "@/components/query/answer-action-toolbar"
@@ -37,6 +37,8 @@ import { submitFeedback } from "@/lib/api"
 import { useRole } from "@/lib/role-context"
 import { toast } from "@/components/ui/use-toast"
 import type { AssistantData } from "@/app/query/page"
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
 
 type SourceData = { id: string; sop_title: string; section: string; content: string; score: number }
 
@@ -68,6 +70,61 @@ function SourceStrip({ citations, onSelect }: { citations: InlineCitation[]; onS
 function plainTextPreview(answer: string, maxLen = 200): string {
   const plain = answer.replace(/[#*>]/g, "").replace(/\[\d+\]/g, "").replace(/\s+/g, " ").trim()
   return plain.length > maxLen ? plain.slice(0, maxLen - 1).trimEnd() + "…" : plain
+}
+
+// ─── Alignment status line (Workflow 1: physician clinical question) ────────
+// Auto-checks whether the SOP just used to answer is still aligned with
+// current external evidence - the physician sees this resolve in place
+// right under the answer, without clicking "Compare SOP vs Internet" first.
+// This is the single most important connective piece of the redesign: it
+// turns "here's your answer" into "here's your answer, and here's whether
+// it's still current" without an extra step.
+const ALIGNMENT_META: Record<string, { icon: typeof CheckCircle2; className: string }> = {
+  "Aligned": { icon: CheckCircle2, className: "text-[#15803D] dark:text-green-400" },
+  "Partially Aligned": { icon: AlertTriangle, className: "text-[#B45309] dark:text-amber-400" },
+  "Needs Review": { icon: AlertTriangle, className: "text-[#B91C1C] dark:text-red-400" },
+}
+
+function AlignmentStatusLine({
+  comparison,
+  onOpenComparison,
+  onCreateRecommendation,
+}: {
+  comparison: ComparisonResponse | "loading" | null
+  onOpenComparison: () => void
+  onCreateRecommendation: () => void
+}) {
+  if (comparison === null) return null
+  if (comparison === "loading") {
+    return (
+      <p className="flex items-center gap-1.5 text-xs text-muted-foreground px-1">
+        <Loader2 className="w-3 h-3 animate-spin shrink-0" />
+        Checking alignment with external evidence…
+      </p>
+    )
+  }
+  if (!comparison.available || !comparison.summary) return null
+  const meta = ALIGNMENT_META[comparison.summary.overall_alignment] ?? ALIGNMENT_META["Needs Review"]
+  const { match_count, partial_count, overall_alignment, recommended_action } = comparison.summary
+  return (
+    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 px-1 text-xs">
+      <button onClick={onOpenComparison} className={cn("inline-flex items-center gap-1.5 font-semibold hover:underline", meta.className)}>
+        <meta.icon className="w-3.5 h-3.5 shrink-0" />
+        {overall_alignment} with external evidence
+      </button>
+      <span className="text-muted-foreground">
+        ({match_count} match{match_count === 1 ? "" : "es"}{partial_count > 0 ? `, ${partial_count} partial` : ""})
+      </span>
+      <span className="text-muted-foreground">· {recommended_action}</span>
+      {overall_alignment !== "Aligned" && (
+        <button onClick={onCreateRecommendation}
+          className="inline-flex items-center gap-1 text-[#0B6BCB] font-medium hover:underline">
+          <ClipboardEdit className="w-3.5 h-3.5 shrink-0" />
+          Create Update Recommendation
+        </button>
+      )}
+    </div>
+  )
 }
 
 function CopyLinkButton({ data }: { data: AssistantData }) {
@@ -125,6 +182,7 @@ export function ChatAnswerMessage({
   // latest message always expanded avoids collapsing the answer someone
   // just asked for.
   const [collapsed, setCollapsed] = useState(false)
+  const [comparison, setComparison] = useState<ComparisonResponse | "loading" | null>(null)
 
   const hasConflict = data.sopConflicts.length > 0
   const firstCitation = data.sources[0]?.sop_title ?? ""
@@ -139,6 +197,24 @@ export function ChatAnswerMessage({
   const primaryVersion = primaryInternalCitation?.version ?? ""
   const primaryReviewDate = primaryInternalCitation?.review_date ?? ""
 
+  // Auto-checks the SOP just used against external evidence as soon as we
+  // know which SOP that is - never blocks the answer above from rendering,
+  // and fails silently (no alignment line at all) rather than showing a
+  // broken state if the check comes back unavailable.
+  useEffect(() => {
+    if (!primarySopId || isAbstained) {
+      setComparison(null)
+      return
+    }
+    let cancelled = false
+    setComparison("loading")
+    fetch(`${API_BASE}/api/sops/${encodeURIComponent(primarySopId)}/protocol-comparison`)
+      .then((r) => r.json())
+      .then((d) => { if (!cancelled) setComparison(d) })
+      .catch(() => { if (!cancelled) setComparison(null) })
+    return () => { cancelled = true }
+  }, [primarySopId, isAbstained])
+
   const plain = readingLevel === "plain" ? simplifyAnswer(data.answer) : null
   const displayAnswer = plain ? plain.text : data.answer
 
@@ -149,6 +225,15 @@ export function ChatAnswerMessage({
       document.getElementById(`source-entry-${n}`)?.scrollIntoView({ behavior: "smooth", block: "center" })
     }, 250)
     setTimeout(() => setHighlightedSource(null), 2500)
+  }
+
+  const handleCreateRecommendation = () => {
+    if (comparison === "loading" || comparison === null) return
+    const sopTitle = distinctSopTitles[0] || comparison.sop_title || ""
+    const refName = comparison.reference_source?.name || "current external evidence"
+    const title = sopTitle ? `Align ${sopTitle} with ${refName}` : `SOP update recommendation`
+    const summary = comparison.summary?.recommended_action || ""
+    router.push(`/proposals?new=1&sop=${encodeURIComponent(primarySopId)}&title=${encodeURIComponent(title)}&summary=${encodeURIComponent(summary)}`)
   }
 
   const handleFlagFeedback = async (key: string, note: string) => {
@@ -328,6 +413,14 @@ export function ChatAnswerMessage({
         </div>
       </div>
 
+      {!collapsed && !isAbstained && (
+        <AlignmentStatusLine
+          comparison={comparison}
+          onOpenComparison={() => setActiveDrawer("comparison")}
+          onCreateRecommendation={handleCreateRecommendation}
+        />
+      )}
+
       {collapsed ? (
         <button onClick={() => setCollapsed(false)}
           className="w-full text-left p-4 rounded-2xl bg-card border border-border hover:border-[#0B6BCB]/30 transition-colors">
@@ -339,22 +432,23 @@ export function ChatAnswerMessage({
           )}
         </button>
       ) : isAbstained ? (
-        <div className="p-6 sm:p-8 rounded-2xl bg-card border border-[#0B6BCB]/30">
+        <div className="p-6 sm:p-8 rounded-2xl bg-card border border-[#FDE68A] dark:border-amber-500/30">
           <div className="flex items-start gap-4">
-            <div className="w-11 h-11 rounded-xl bg-[#0B6BCB]/10 flex items-center justify-center shrink-0">
-              <ShieldCheck className="w-5 h-5 text-[#0B6BCB]" />
+            <div className="w-11 h-11 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 flex items-center justify-center shrink-0 text-xl">
+              🚨
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-lg font-semibold text-foreground">No grounded answer - by design</h2>
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30">
-                  Safe refusal
+                <h2 className="text-lg font-semibold text-foreground">Potential SOP Gap Detected</h2>
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30">
+                  No approved SOP found
                 </span>
               </div>
               <p className="text-[15px] leading-relaxed text-muted-foreground mt-2">{data.answer.replace(/\[\d+\]/g, "")}</p>
               <p className="text-[13px] leading-relaxed text-muted-foreground mt-2">
-                This is a deliberate safety decision, not a system failure: Meridian only answers when it can point to
-                grounded SOP evidence, and declines rather than guess when it can&apos;t.
+                No approved hospital procedure currently covers this question, and no supporting external evidence was
+                found either. Meridian only answers when it can point to grounded evidence, and flags the gap instead
+                of guessing.
               </p>
             </div>
           </div>
@@ -365,7 +459,14 @@ export function ChatAnswerMessage({
       ) : (
         <div className="space-y-3">
           {data.route === "external_evidence" && (
-            <GapReportPanel queryText={data.query} externalCitations={data.inlineCitations.filter((c) => c.is_external)} />
+            <div className="p-4 rounded-2xl bg-card border border-[#FDE68A] dark:border-amber-500/30">
+              <div className="flex items-center gap-2 flex-wrap mb-3">
+                <span className="text-lg leading-none">🚨</span>
+                <h3 className="text-sm font-semibold text-foreground">Potential SOP Gap Detected</h3>
+                <span className="text-xs text-muted-foreground">— no approved SOP covers this question</span>
+              </div>
+              <GapReportPanel queryText={data.query} externalCitations={data.inlineCitations.filter((c) => c.is_external)} />
+            </div>
           )}
 
           <div className="p-6 sm:p-8 rounded-2xl bg-card border border-border shadow-sm relative">
@@ -399,13 +500,6 @@ export function ChatAnswerMessage({
               Single-source answer - verify against the full SOP
             </p>
           )}
-          {data.route === "external_evidence" && (
-            <p className="text-[12px] text-muted-foreground flex items-center gap-1.5 px-1">
-              <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-              No internal SOP covers this - tap a citation number to open its source.
-            </p>
-          )}
-
           <FeedbackRow queryText={data.query} />
         </div>
       )}
@@ -442,7 +536,7 @@ export function ChatAnswerMessage({
       {/* SOP vs External Protocol Comparison drawer */}
       <SlideOver open={activeDrawer === "comparison"} onClose={() => setActiveDrawer(null)} title="Compare SOP vs Internet" icon={GitCompare} width="2xl"
         subtitle="Internal SOP steps checked against external guidance, side by side.">
-        {primarySopId && <ProtocolComparisonPanel sopId={primarySopId} />}
+        {primarySopId && <ProtocolComparisonPanel sopId={primarySopId} preloaded={comparison !== "loading" ? comparison : undefined} />}
       </SlideOver>
 
       {/* SOP Version History drawer */}

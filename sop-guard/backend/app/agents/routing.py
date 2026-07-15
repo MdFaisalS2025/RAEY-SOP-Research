@@ -111,6 +111,11 @@ def build_external_evidence_answer(query: str, external_results: list[dict]) -> 
 def build_no_evidence_answer(recommendations: list[str]) -> str:
     """Route D message. Leads with the exact required phrase so it's
     never ambiguous that this is an explicit non-answer, not a low-
-    confidence guess."""
+    confidence guess (test_routing.py asserts this exact prefix) - the
+    rest of the message is the physician-readable explanation of *why*,
+    surfaced verbatim in the "Potential SOP Gap Detected" card
+    (chat-answer-message.tsx)."""
     rec_text = (". ".join(recommendations)).strip()
-    return "No validated evidence found. " + (rec_text if rec_text else "Try rephrasing your question or contact the relevant department.")
+    return "No validated evidence found. No approved SOP achieved sufficient relevance to this question. " + (
+        rec_text if rec_text else "Try rephrasing your question or contact the relevant department."
+    )

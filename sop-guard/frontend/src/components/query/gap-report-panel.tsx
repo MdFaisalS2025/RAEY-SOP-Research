@@ -18,11 +18,11 @@ interface GapReport {
 
 export function ExternalOnlyWarning() {
   return (
-    <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30">
-      <AlertTriangle className="w-4 h-4 text-[#B91C1C] dark:text-red-400 shrink-0 mt-0.5" />
-      <p className="text-xs text-[#B91C1C] dark:text-red-400">
-        No approved internal SOP was found. The following information is external reference material only
-        and should not be treated as hospital policy. Do not enter patient-identifiable information.
+    <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30">
+      <AlertTriangle className="w-4 h-4 text-[#B45309] dark:text-amber-400 shrink-0 mt-0.5" />
+      <p className="text-xs text-[#B45309] dark:text-amber-400">
+        No approved SOP exists for this yet, so the material below is external reference literature only -
+        not hospital policy. Do not enter patient-identifiable information.
       </p>
     </div>
   )
@@ -51,7 +51,7 @@ export function GapReportPanel({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           question: queryText,
-          no_match_reason: "No internal SOP content met the evidence-sufficiency threshold for this question.",
+          no_match_reason: "No approved SOP covers this question yet.",
           external_sources: externalCitations.map((c) => ({ title: c.sop_title, source: c.section_title, url: c.url })),
           suggested_outline: outline,
           risk_level: "moderate",
@@ -149,7 +149,7 @@ export function GapReportPanel({
               <Gavel className="w-4 h-4" /> Sent to {report.recommended_committee}
             </span>
           )}
-          <a href={`/proposals?new=1&query=${encodeURIComponent(queryText)}`}
+          <a href={`/proposals?new=1&title=${encodeURIComponent(`New SOP: ${queryText}`)}&summary=${encodeURIComponent(`SOP gap identified - no approved procedure currently covers: "${queryText}". ${outline.length > 0 ? "Draft outline available from retrieved external evidence." : ""}`)}&query=${encodeURIComponent(queryText)}`}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium border border-border text-foreground hover:bg-muted transition-colors">
             <PlusCircle className="w-4 h-4" /> Create Draft SOP Proposal
           </a>

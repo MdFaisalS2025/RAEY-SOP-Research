@@ -157,13 +157,19 @@ function ProposalCard({ proposal, index }: { proposal: Proposal; index: number }
   )
 }
 
-function NewProposalModal({ onClose, onCreated }: { onClose: () => void; onCreated: (p: Proposal) => void }) {
+interface NewProposalInitial {
+  title?: string
+  affectedSopId?: string
+  aiSummary?: string
+}
+
+function NewProposalModal({ onClose, onCreated, initial }: { onClose: () => void; onCreated: (p: Proposal) => void; initial?: NewProposalInitial }) {
   const { currentUser } = useRole()
-  const [title, setTitle] = useState("")
+  const [title, setTitle] = useState(initial?.title ?? "")
   const [department, setDepartment] = useState("")
-  const [affectedSopId, setAffectedSopId] = useState("")
+  const [affectedSopId, setAffectedSopId] = useState(initial?.affectedSopId ?? "")
   const [priority, setPriority] = useState("normal")
-  const [aiSummary, setAiSummary] = useState("")
+  const [aiSummary, setAiSummary] = useState(initial?.aiSummary ?? "")
   const [legalReview, setLegalReview] = useState(false)
   const [showTextChange, setShowTextChange] = useState(false)
   const [oldText, setOldText] = useState("")
@@ -291,6 +297,7 @@ export default function ProposalsPage() {
   const [proposals, setProposals] = useState<Proposal[]>([])
   const [loading, setLoading] = useState(true)
   const [showNewModal, setShowNewModal] = useState(false)
+  const [newModalInitial, setNewModalInitial] = useState<NewProposalInitial | undefined>(undefined)
 
   useEffect(() => {
     fetch(`${API_BASE}/api/governance/proposals?limit=200`)
@@ -298,6 +305,29 @@ export default function ProposalsPage() {
       .then((data) => setProposals(Array.isArray(data?.proposals) ? data.proposals : []))
       .catch(() => setProposals([]))
       .finally(() => setLoading(false))
+  }, [])
+
+  // Physician workflow entry points (alignment status "Create Update
+  // Recommendation", SOP gap panel's "Create Draft SOP Proposal") link here
+  // with ?new=1&sop=...&title=...&summary=...&query=... - read via plain
+  // window.location.search (not useSearchParams) so this stays a fully
+  // client component with no Suspense-boundary requirement, and pre-fill
+  // the modal instead of landing on a blank form.
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search)
+      if (params.get("new") !== "1") return
+      const title = params.get("title") ?? ""
+      const summary = params.get("summary") ?? (params.get("query") ? `Related to question: "${params.get("query")}"` : "")
+      setNewModalInitial({
+        title,
+        affectedSopId: params.get("sop") ?? "",
+        aiSummary: summary,
+      })
+      setShowNewModal(true)
+    } catch {
+      // ignore malformed URL
+    }
   }, [])
 
   const filtered = proposals.filter((p) => activeFilter === "all" || p.status === activeFilter)
@@ -325,7 +355,7 @@ export default function ProposalsPage() {
 
           {hasPermission("create_proposal") && (
             <button
-              onClick={() => setShowNewModal(true)}
+              onClick={() => { setNewModalInitial(undefined); setShowNewModal(true) }}
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0B6BCB] hover:bg-[#0959AC] text-white text-sm font-semibold transition-colors"
             >
               <Plus className="w-4 h-4" /> New Proposal
@@ -387,6 +417,7 @@ export default function ProposalsPage() {
         <NewProposalModal
           onClose={() => setShowNewModal(false)}
           onCreated={(p) => setProposals((prev) => [p, ...prev])}
+          initial={newModalInitial}
         />
       )}
     </AppShell>

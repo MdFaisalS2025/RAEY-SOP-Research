@@ -7,6 +7,7 @@ Ollama server needs to be running for this suite to pass.
 import httpx
 import pytest
 
+from app.config import settings
 from app.rag.llm_generator import LLMGenerator
 
 
@@ -57,7 +58,17 @@ class _FakeReachableButGenerateFailsClient(_FakeAvailableClient):
         return _FakeResponse(404)
 
 
-def test_provider_defaults_to_ollama():
+def test_provider_defaults_to_ollama(monkeypatch):
+    """
+    Asserts the *code-level* default (no explicit provider argument falls
+    back to settings.LLM_PROVIDER, which defaults to "ollama" in
+    config.py). Pinned here rather than left to ambient environment state
+    because CI deliberately sets LLM_PROVIDER=mock so the suite never
+    needs a live Ollama server - without this override the test would
+    pass or fail based on how it happens to be invoked rather than on
+    the behavior it's meant to check.
+    """
+    monkeypatch.setattr(settings, "LLM_PROVIDER", "ollama")
     gen = LLMGenerator()
     assert gen.provider == "ollama"
     assert gen.base_url == "http://localhost:11434"

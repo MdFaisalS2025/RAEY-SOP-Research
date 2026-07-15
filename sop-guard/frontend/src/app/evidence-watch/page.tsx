@@ -441,7 +441,7 @@ export default function EvidenceWatchPage() {
                   <p className="text-xs text-muted-foreground">
                     Live search scoped per-SOP by title. Internal conflicts come from the entity-graph detector
                     (drug dose / threshold cross-checks across the current corpus). Reviews Due comes from each
-                    SOP's own review_date.
+                    SOP&apos;s own review_date.
                   </p>
                 </div>
 

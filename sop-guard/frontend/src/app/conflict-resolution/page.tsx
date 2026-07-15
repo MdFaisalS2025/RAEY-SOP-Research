@@ -253,7 +253,7 @@ function ImpactBySopTab({ conflicts, loading }: { conflicts: RealConflict[]; loa
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
         Live view of which SOPs share conflicting drug doses or thresholds with the selected SOP - the same
-        entity-graph detector as the "All Conflicts" tab, filtered to one SOP. There is no persisted SOP-to-SOP
+        entity-graph detector as the &ldquo;All Conflicts&rdquo; tab, filtered to one SOP. There is no persisted SOP-to-SOP
         citation graph in the backend, so this reflects detected conflicts only, not a full reference network.
       </p>
 

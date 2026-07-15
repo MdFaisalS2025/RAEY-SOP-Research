@@ -2,7 +2,17 @@
 
 **AI-powered clinical SOP assistant with procedural faithfulness verification.**
 
+Meridian is an AI-powered hospital SOP intelligence platform that combines internal SOP retrieval, AI-assisted question answering, external clinical evidence retrieval, SOP-vs-evidence comparison, SOP version history, committee review workflows, and compliance/governance tooling into one conversational assistant.
+
 > Research prototype. Not for clinical use. All SOP data is synthetic.
+
+[![CI](https://github.com/USERNAME/REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/USERNAME/REPO/actions/workflows/ci.yml)
+[![Frontend](https://img.shields.io/badge/frontend-Next.js%2014-000000)](frontend)
+[![Backend](https://img.shields.io/badge/backend-FastAPI-009688)](backend)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](#license)
+
+**Live demo:** _add the deployed frontend URL here once deployed (see [Deployment](#deployment))_
+**Reviewer / professor guide:** [PROFESSOR_GUIDE.md](PROFESSOR_GUIDE.md)
 
 ---
 
@@ -69,34 +79,129 @@ The core research contribution is the **Procedural Faithfulness Verifier**: an a
 | Voice | Web Speech API (browser) + optional Whisper |
 | LLM | Mock (default) / Ollama / OpenAI-compatible |
 
-## Quick Start
+## Local Development
 
 ### Prerequisites
-- Python 3.11+
+- Python 3.11 (pinned - see [`backend/requirements.txt`](backend/requirements.txt) for why)
 - Node.js 18+
+- (Optional) Docker + Docker Compose, for the one-command option below
 
-### Backend
+### Option A: One command (Docker Compose)
+
+From `sop-guard/`:
+```bash
+docker compose up --build
+```
+This builds and starts both services - backend on `:8000`, frontend on `:3000` - wired together automatically. Open **http://localhost:3000**. No manual `.env` setup needed for the default (mock LLM, SQLite, auto-seeded demo data) configuration.
+
+### Option B: Run backend and frontend directly
+
+**Backend** (terminal 1):
 ```bash
 cd sop-guard/backend
 pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
 ```
+The database is created and seeded with demo SOPs, versions, incidents, and notifications automatically on first startup - no manual seed step required.
 
-### Frontend
+**Frontend** (terminal 2):
 ```bash
 cd sop-guard/frontend
 npm install
 npm run dev
 ```
 
-Open http://localhost:3000
+Open **http://localhost:3000**.
 
-### Optional: Ollama for LLM answers
+### Environment variables
+
+Copy [`.env.example`](../.env.example) (repo root) into `sop-guard/backend/.env` for backend settings and `sop-guard/frontend/.env.local` for frontend settings. Every variable has a working default for local development - you only need a `.env` file at all if you want to change LLM provider, database, or CORS behavior. See the file for the full list and explanations.
+
+### Optional: Ollama for LLM-generated answers
+
+By default `LLM_PROVIDER=mock` and the app answers using extractive templates - no API key or local model required. For LLM-generated prose:
 ```bash
 # Install Ollama from https://ollama.com
 ollama pull llama3.2
-# Set in .env:
+# In sop-guard/backend/.env:
 LLM_PROVIDER=ollama
+```
+If Ollama isn't running/reachable, the pipeline gracefully falls back to mock mode - it never calls a third-party LLM API with hospital data.
+
+## Running the Project
+
+| Task | Command |
+|---|---|
+| Start backend (dev, auto-reload) | `cd sop-guard/backend && uvicorn app.main:app --reload --port 8000` |
+| Start frontend (dev) | `cd sop-guard/frontend && npm run dev` |
+| Start both via Docker | `cd sop-guard && docker compose up --build` |
+| Run backend tests | `cd sop-guard/backend && python -m pytest -q` |
+| Type-check frontend | `cd sop-guard/frontend && npx tsc --noEmit` |
+| Lint frontend | `cd sop-guard/frontend && npm run lint` |
+| End-to-end tests (Playwright) | `cd sop-guard/frontend && npm run test:e2e` |
+
+## Building
+
+```bash
+# Frontend production build
+cd sop-guard/frontend
+npm run build
+npm start          # serves the production build on :3000
+
+# Backend - no separate build step; run the same way in production
+cd sop-guard/backend
+uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
+```
+
+## Deployment
+
+The frontend and backend deploy as two separate services. **Vercel** for the Next.js frontend and **Render** for the FastAPI backend is the recommended pairing - both have generous free tiers, both deploy straight from this GitHub repo with no Docker knowledge required, and a blueprint file for the backend is already included.
+
+### 1. Backend on Render
+
+1. Push this repo to GitHub (see the root [README](../README.md) / [PROFESSOR_GUIDE.md](PROFESSOR_GUIDE.md) for git commands).
+2. In [Render](https://render.com), click **New +** -> **Blueprint** and point it at this repository. Render will detect [`backend/render.yaml`](backend/render.yaml) automatically (root directory `sop-guard/backend`, Python 3.11, mock/Ollama LLM, SQLite, health check on `/api/health`).
+3. Deploy. Note the resulting public URL, e.g. `https://meridian-backend.onrender.com`.
+4. In the Render service's environment settings, update `CORS_ORIGINS` to include your Vercel frontend URL once you have it (step 2 below), e.g. `["https://your-app.vercel.app"]`.
+
+SQLite lives on Render's ephemeral disk by design here - the backend auto-seeds fresh demo data on every startup (see `_seed_demo_activity_if_empty` and friends in `app/main.py`), so a restart just resets to a clean demo state rather than losing anything that matters for review. For durable storage instead, attach a Render disk or point `DATABASE_URL` at managed PostgreSQL.
+
+### 2. Frontend on Vercel
+
+1. In [Vercel](https://vercel.com), **Add New** -> **Project**, import this repository.
+2. Set **Root Directory** to `sop-guard/frontend` (Vercel's monorepo picker - required, since this repo has the frontend in a subdirectory).
+3. Framework preset: Next.js (auto-detected).
+4. Add environment variables:
+   - `NEXT_PUBLIC_API_URL` = your Render backend URL (e.g. `https://meridian-backend.onrender.com`)
+   - `BACKEND_URL` = the same URL (used server-side by the `/api/*` rewrite in `next.config.js` - see that file for why both are needed)
+5. Deploy. Vercel gives you a `https://<project>.vercel.app` URL immediately - no further routing config needed, since Next.js App Router handles all pages and there's no SPA-refresh/404 issue to work around.
+6. Go back to Render and set `CORS_ORIGINS` to this Vercel URL (step 4 above), then redeploy the backend so it accepts requests from the live frontend.
+
+### Alternatives considered
+
+- **Netlify**: works for the frontend similarly to Vercel, but Vercel has first-party Next.js support (App Router, rewrites, image optimization) with zero extra config, so it's the safer default here.
+- **Railway**: a solid alternative to Render for the backend (also supports blueprint-style deploys and Python), if Render's free-tier cold starts are a problem for a live demo.
+- **Fully static/frontend-only hosting**: not viable - the app is full-stack; the backend does retrieval, verification, and evidence lookups that can't move to the client.
+
+## Demo Accounts
+
+The app uses client-side demo authentication (no real patient or staff data). Sign in with any of the four role accounts below and password **`demo1234`**, or use the "continue as demo user" cards on the login screen:
+
+| Staff ID | Name | Role | Access Level |
+|---|---|---|---|
+| `u1` | Dr. Sarah Mitchell | Clinical Staff | Level 1 |
+| `u2` | Nurse Educator Marcus Chen | Educator / Trainer | Level 2 |
+| `u3` | Dr. Linda Yeo | Governance & Compliance | Level 3 |
+| `u4` | Tariq Farooq | System Admin | Level 4 (highest) |
+
+## Screenshots
+
+_Add screenshots of the Ask Meridian chat view, SOP Library, Version History drawer, and SOP-vs-Internet Comparison panel here before submission, e.g.:_
+
+```md
+![Ask Meridian](docs/screenshots/ask-meridian.png)
+![SOP Version History](docs/screenshots/version-history.png)
+![SOP vs Internet Comparison](docs/screenshots/comparison.png)
 ```
 
 ## Demo Walkthrough

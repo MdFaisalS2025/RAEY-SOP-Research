@@ -19,4 +19,7 @@ services:
       - backend
     environment:
       - NEXT_PUBLIC_API_URL=http://backend:8000
+      # Server-side rewrite target (see next.config.js) - covers the many
+      # relative `/api/...` fetches that don't go through NEXT_PUBLIC_API_URL.
+      - BACKEND_URL=http://backend:8000
     restart: unless-stopped

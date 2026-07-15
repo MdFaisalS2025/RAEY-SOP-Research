@@ -26,7 +26,7 @@ jobs:
           WHISPER_MODE: mock
 
   frontend:
-    name: Frontend typecheck & build
+    name: Frontend lint, typecheck & build
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -39,6 +39,7 @@ jobs:
           cache: "npm"
           cache-dependency-path: sop-guard/frontend/package-lock.json
       - run: npm ci
+      - run: npm run lint
       - run: npx tsc --noEmit
       - run: npm run build
 

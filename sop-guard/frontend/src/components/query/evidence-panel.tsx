@@ -1,9 +1,66 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { BookOpen, ChevronDown, ChevronUp, ExternalLink, Loader2, SearchX, FileText, ShieldCheck, FlaskConical, type LucideIcon } from "lucide-react"
+import { BookOpen, ChevronDown, ChevronUp, ExternalLink, Loader2, SearchX, FileText, ShieldCheck, FlaskConical, KeyRound, CircleSlash, type LucideIcon } from "lucide-react"
 
 const COLLAPSED_COUNT = 3
+
+type ProviderStatus = "active" | "mock" | "not_configured" | "requires_api_key"
+
+interface ProviderInfo {
+  key: string
+  name: string
+  status: ProviderStatus
+  capabilities: string[]
+  requires: string[]
+  notes: string
+}
+
+const PROVIDER_STATUS_META: Record<ProviderStatus, { label: string; className: string; icon: LucideIcon }> = {
+  active: { label: "Active", className: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30", icon: ShieldCheck },
+  mock: { label: "Mock", className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30", icon: FlaskConical },
+  not_configured: { label: "Not Configured", className: "bg-muted text-subtle border-border", icon: CircleSlash },
+  requires_api_key: { label: "Requires API Key", className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30", icon: KeyRound },
+}
+
+/**
+ * Honest provider status row, replacing the old "OpenEvidence (coming
+ * soon)" dashed chip - fetches real status from the backend instead of
+ * hardcoding a claim about any provider's integration state.
+ */
+function ProviderStatusRow() {
+  const [providers, setProviders] = useState<ProviderInfo[] | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    fetch("/api/evidence/providers")
+      .then((r) => r.json())
+      .then((data) => { if (!cancelled) setProviders(Array.isArray(data?.providers) ? data.providers : []) })
+      .catch(() => { if (!cancelled) setProviders([]) })
+    return () => { cancelled = true }
+  }, [])
+
+  if (!providers || providers.length === 0) return null
+
+  return (
+    <div className="mb-3 p-3 rounded-xl bg-muted/50 border border-border">
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">Evidence Providers</p>
+      <div className="flex flex-wrap gap-1.5">
+        {providers.map((p) => {
+          const meta = PROVIDER_STATUS_META[p.status] ?? PROVIDER_STATUS_META.not_configured
+          return (
+            <span key={p.key}
+              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border ${meta.className}`}
+              title={p.notes || `${p.name}: ${meta.label}`}>
+              <meta.icon className="w-2.5 h-2.5" />
+              {p.name} · {meta.label}
+            </span>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
 
 interface EvidenceRecord {
   title: string
@@ -186,7 +243,7 @@ function AgreementMeter({ results }: { results: EvidenceRecord[] }) {
  * chips let the user narrow to one or more sources without re-querying
  * everything by hand.
  */
-export function EvidencePanel({ entities, queryText }: { entities: QueryEntities; queryText: string }) {
+export function EvidencePanel({ entities, queryText, variant = "card" }: { entities: QueryEntities; queryText: string; variant?: "card" | "bare" }) {
   const [results, setResults] = useState<EvidenceRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [failed, setFailed] = useState(false)
@@ -201,7 +258,7 @@ export function EvidencePanel({ entities, queryText }: { entities: QueryEntities
     setLoading(true)
     setFailed(false)
     setExpanded(false)
-    fetch(`/api/evidence/search?term=${encodeURIComponent(searchTerm)}&max=4`)
+    fetch(`/api/evidence/search?term=${encodeURIComponent(searchTerm)}&max=${variant === "bare" ? 8 : 4}`)
       .then((r) => {
         if (!r.ok) throw new Error(`status ${r.status}`)
         return r.json()
@@ -241,16 +298,20 @@ export function EvidencePanel({ entities, queryText }: { entities: QueryEntities
   }
 
   return (
-    <div className="p-5 rounded-2xl bg-card border border-border shadow-sm h-fit">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold flex items-center gap-2">
-          <BookOpen className="w-4 h-4 text-[#0B6BCB]" />
-          External Evidence
-        </h3>
-        <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30">
-          LIVE · SORTED BY EVIDENCE GRADE
-        </span>
-      </div>
+    <div className={variant === "card" ? "p-5 rounded-2xl bg-card border border-border shadow-sm h-fit" : ""}>
+      {variant === "card" && (
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold flex items-center gap-2">
+            <BookOpen className="w-4 h-4 text-[#0B6BCB]" />
+            External Evidence
+          </h3>
+          <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30">
+            LIVE · SORTED BY EVIDENCE GRADE
+          </span>
+        </div>
+      )}
+
+      {variant === "bare" && <ProviderStatusRow />}
 
       {term && (
         <p className="text-[11px] text-subtle mb-3">
@@ -275,12 +336,6 @@ export function EvidencePanel({ entities, queryText }: { entities: QueryEntities
               {SOURCE_LABEL[s] ?? s}
             </button>
           ))}
-          <span
-            className="px-2 py-0.5 rounded-full text-[10px] font-medium border border-dashed border-border text-subtle cursor-not-allowed"
-            title="OpenEvidence-style clinical evidence provider - not yet integrated"
-          >
-            OpenEvidence (coming soon)
-          </span>
         </div>
       )}
 

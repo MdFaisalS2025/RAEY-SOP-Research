@@ -5,61 +5,27 @@ import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   Send,
-  ThumbsUp,
-  XCircle,
-  AlertTriangle,
-  FileText,
   ChevronDown,
   ChevronRight,
-  ShieldCheck,
-  ShieldAlert,
-  ShieldX,
   Search,
   Sparkles,
   CheckCircle2,
   Circle,
   Loader2,
-  X,
-  BookOpen,
-  Brain,
-  Crosshair,
-  Database,
-  FlaskConical,
-  Gauge,
-  ExternalLink,
-  Download,
   History,
-  Clock,
-  Printer,
   User,
-  PlusCircle,
   Activity,
-  Layers,
   RotateCcw,
-  Link2,
-  Check,
-  Cpu,
-  GitCompare,
-  HelpCircle,
 } from "lucide-react"
-import { type InlineCitation, reviewStaleness, daysUntilReview } from "@/components/query/citation-chip"
-import { SourcePanel } from "@/components/query/source-panel"
-import { EvidencePanel } from "@/components/query/evidence-panel"
-import { FollowupChips } from "@/components/query/followup-chips"
-import { FeedbackRow } from "@/components/query/feedback-row"
+import { type InlineCitation } from "@/components/query/citation-chip"
 import { AnswerRenderer } from "@/components/query/answer-renderer"
-import { ProtocolComparisonPanel } from "@/components/query/protocol-comparison-panel"
-import { VersionHistoryPanel, LatestVersionBadge } from "@/components/query/version-history-panel"
-import { GapReportPanel } from "@/components/query/gap-report-panel"
-import { ReadingLevelToggle, simplifyAnswer, READING_LEVEL_KEY, type ReadingLevel } from "@/components/query/plain-language"
+import { ChatAnswerMessage } from "@/components/query/chat-answer-message"
+import { READING_LEVEL_KEY, type ReadingLevel } from "@/components/query/plain-language"
 import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
-import { OverrideModal } from "@/components/ui/override-modal"
 import { VoiceRecorder } from "@/components/voice/voice-recorder"
-import { querySOPs, submitFeedback } from "@/lib/api"
+import { querySOPs } from "@/lib/api"
 import { cn } from "@/lib/utils"
-import { useRole } from "@/lib/role-context"
-import { toast } from "@/components/ui/use-toast"
 
 const suggestedQueries = [
 "What are the steps for sepsis management?",
@@ -300,34 +266,6 @@ function AnswerSkeleton() {
   )
 }
 
-function mapReasoningToTimeline(reasoning: string) {
-  const lines = reasoning.split("\n").filter(Boolean)
-  const stageMap: { pattern: RegExp; label: string; icon: typeof Brain }[] = [
-    { pattern: /classif/i, label: "Query understood", icon: Brain },
-    { pattern: /retrieved/i, label: "SOPs retrieved", icon: Database },
-    { pattern: /used chunk/i, label: "Evidence gathered", icon: FlaskConical },
-    { pattern: /verification/i, label: "Safety verified", icon: ShieldCheck },
-    { pattern: /confidence/i, label: "Confidence computed", icon: Gauge },
-  ]
-  const stages: { label: string; icon: typeof Brain; raw: string }[] = []
-  const matched = new Set<number>()
-  for (const line of lines) {
-    for (let si = 0; si < stageMap.length; si++) {
-      if (!matched.has(si) && stageMap[si].pattern.test(line)) {
-        stages.push({ label: stageMap[si].label, icon: stageMap[si].icon, raw: line })
-        matched.add(si)
-        break
-      }
-    }
-  }
-  if (stages.length === 0) {
-    for (const line of lines.slice(0, 5)) {
-      stages.push({ label: line.substring(0, 60), icon: Crosshair, raw: line })
-    }
-  }
-  return stages
-}
-
 function news2RiskConfig(score: number) {
   if (score >= 7) return { label: "HIGH RISK: Consider ICU", className: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30" }
   if (score >= 5) return { label: "Medium Risk: Urgent Review", className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30" }
@@ -405,862 +343,6 @@ function computeNews2(v: News2Vitals): number | null {
   )
 }
 
-// ─── Trust & Verification panel ──────────────────────────────────────────────
-// One consolidated place for every trust signal (verification status,
-// confidence, faithfulness, safety checks, provenance) instead of four
-// separate always-visible blocks competing for attention. A single summary
-// row is always shown; "Trust details" reveals the rest on demand.
-
-function TrustPanel({ data }: { data: AssistantData }) {
-  const [expanded, setExpanded] = useState(false)
-  const [showSentenceCheck, setShowSentenceCheck] = useState(false)
-
-  const status = data.verification.status
-  const statusConfig = {
-    passed: { icon: ShieldCheck, label: "Verified", className: "text-[#15803D] dark:text-green-400" },
-    warning: { icon: ShieldAlert, label: "Caution", className: "text-[#B45309] dark:text-amber-400" },
-    failed: { icon: ShieldX, label: "Unverified", className: "text-[#B91C1C] dark:text-red-400" },
-  }
-  const sc = statusConfig[status]
-
-  const confidencePct = Math.round(data.verification.confidence * 100)
-  const confidenceLevel = data.verification.confidence >= 0.7 ? "high" : data.verification.confidence >= 0.5 ? "medium" : "low"
-  const confidenceColor = confidenceLevel === "high" ? "text-[#15803D] dark:text-green-400" : confidenceLevel === "medium" ? "text-[#B45309] dark:text-amber-400" : "text-[#B91C1C] dark:text-red-400"
-
-  const faithfulness = data.faithfulness
-  const faithfulnessPct = faithfulness ? Math.round(faithfulness.overall_faithfulness * 100) : null
-  const faithfulnessColor = faithfulnessPct === null ? "" : faithfulnessPct >= 90 ? "text-[#15803D] dark:text-green-400" : faithfulnessPct >= 70 ? "text-[#B45309] dark:text-amber-400" : "text-[#B91C1C] dark:text-red-400"
-
-  const evScore = extractEvidenceScore(data.reasoning)
-  const distinctSopTitles = Array.from(new Set(data.inlineCitations.map(c => c.sop_title)))
-
-  const routeConfig: Record<string, { label: string; className: string }> = {
-    sop_library: { label: "Sourced from: SOP Library", className: "bg-muted text-muted-foreground border-border" },
-    external_evidence: { label: "Sourced from: External Literature", className: "bg-[#0B6BCB]/10 dark:bg-[#00E5FF]/10 text-[#0B6BCB] dark:text-[#00E5FF] border-[#0B6BCB]/30 dark:border-[#00E5FF]/30" },
-    hybrid: { label: "Sourced from: SOP Library + External Literature", className: "bg-[#0B6BCB]/10 dark:bg-[#00E5FF]/10 text-[#0B6BCB] dark:text-[#00E5FF] border-[#0B6BCB]/30 dark:border-[#00E5FF]/30" },
-    no_evidence: { label: "No source available", className: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30" },
-  }
-  const routeInfo = routeConfig[data.route] ?? routeConfig.sop_library
-
-  const allChecks = [
-    ...data.verification.thresholdChecks,
-    ...data.verification.sequenceChecks.map((c) => ({ status: c.correct ? "pass" : "fail" })),
-    ...data.verification.contraindicationChecks.map((c) => ({ status: c.safe ? "pass" : "fail" })),
-  ]
-  const checksPassed = allChecks.filter((c) => c.status === "pass").length
-
-  return (
-    <div className="rounded-2xl bg-card border border-border overflow-hidden">
-      {/* Always-visible summary row - the "at a glance" trust story */}
-      <button onClick={() => setExpanded(!expanded)} className="w-full flex flex-wrap items-center gap-x-4 gap-y-2 p-4 text-left hover:bg-muted/40 transition-colors">
-        <span className={cn("inline-flex items-center gap-1.5 text-sm font-semibold", sc.className)}>
-          <sc.icon className="w-4 h-4" />
-          {sc.label}
-        </span>
-        <span className={cn("inline-flex items-center gap-1.5 text-sm font-medium", confidenceColor)}>
-          <Gauge className="w-3.5 h-3.5" />
-          {confidencePct}% confidence
-        </span>
-        {faithfulnessPct !== null && (
-          <span className={cn("inline-flex items-center gap-1.5 text-sm font-medium", faithfulnessColor)}>
-            <Layers className="w-3.5 h-3.5" />
-            {faithfulnessPct}% grounded in source
-          </span>
-        )}
-        <span className="inline-flex items-center gap-1.5 text-xs text-subtle">
-          <Cpu className="w-3 h-3" />
-          {data.generationMode === "llm" ? "In-house model" : data.generationMode === "mock_fallback" ? "Extractive (model fallback)" : "Extractive (no model configured)"}
-        </span>
-        <span className={cn("inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold border", routeInfo.className)}>
-          {routeInfo.label}
-        </span>
-        <span className="ml-auto inline-flex items-center gap-1 text-xs text-[#0B6BCB] font-medium">
-          {expanded ? "Hide trust details" : "Trust details"}
-          {expanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
-        </span>
-      </button>
-
-      <AnimatePresence>
-        {expanded && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-            <div className="px-4 pb-4 space-y-4 border-t border-border pt-4">
-
-              {/* Why this confidence / verification status */}
-              <p className="text-xs text-muted-foreground">
-                {confidenceLevel === "high" && "Well supported by SOP evidence. All key details verified."}
-                {confidenceLevel === "medium" && "Partially supported. Some details may need manual verification."}
-                {confidenceLevel === "low" && "Limited evidence found. Check the source SOP before acting."}
-                {allChecks.length > 0 && ` ${checksPassed} of ${allChecks.length} safety checks passed`}
-                {evScore !== null && ` · evidence score ${evScore.toFixed(2)}`}
-                {distinctSopTitles.length > 0 && ` · ${distinctSopTitles.length} SOP${distinctSopTitles.length === 1 ? "" : "s"} consulted`}
-                {` · ${new Date(data.answeredAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`}
-              </p>
-
-              {/* Safety checks */}
-              {allChecks.length > 0 && (
-                <div className="space-y-3">
-                  {data.verification.thresholdChecks.length > 0 && (
-                    <div>
-                      <p className="text-xs font-semibold uppercase text-muted-foreground mb-2">Threshold Checks</p>
-                      <div className="space-y-2">
-                        {data.verification.thresholdChecks.map((c, i) => (
-                          <div key={i} className="flex items-center gap-2 p-2.5 rounded-lg bg-muted">
-                            {c.status === "pass" ? <CheckCircle2 className="w-4 h-4 text-[#15803D] dark:text-green-400 shrink-0" /> : <XCircle className="w-4 h-4 text-[#B91C1C] dark:text-red-400 shrink-0" />}
-                            <span className="flex-1 text-sm text-foreground">{c.parameter}: <span className="font-mono text-[#0B6BCB]">{c.value}</span></span>
-                            <span className={cn("text-xs font-semibold", c.status === "pass" ? "text-[#15803D] dark:text-green-400" : "text-[#B91C1C] dark:text-red-400")}>{c.status.toUpperCase()}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {data.verification.sequenceChecks.length > 0 && (
-                    <div>
-                      <p className="text-xs font-semibold uppercase text-muted-foreground mb-2">Sequence Checks</p>
-                      <div className="space-y-2">
-                        {data.verification.sequenceChecks.map((c, i) => (
-                          <div key={i} className="flex items-center gap-2 p-2.5 rounded-lg bg-muted">
-                            {c.correct ? <CheckCircle2 className="w-4 h-4 text-[#15803D] dark:text-green-400" /> : <XCircle className="w-4 h-4 text-[#B91C1C] dark:text-red-400" />}
-                            <span className="text-sm text-foreground">{c.procedure}</span>
-                            <span className="text-muted-foreground text-xs ml-auto">{c.correct ? "Correct order" : "Order issue"}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {data.verification.contraindicationChecks.length > 0 && (
-                    <div>
-                      <p className="text-xs font-semibold uppercase text-muted-foreground mb-2">Contraindication Checks</p>
-                      <div className="space-y-2">
-                        {data.verification.contraindicationChecks.map((c, i) => (
-                          <div key={i} className="flex items-center gap-2 p-2.5 rounded-lg bg-muted">
-                            {c.safe ? <CheckCircle2 className="w-4 h-4 text-[#15803D] dark:text-green-400" /> : <AlertTriangle className="w-4 h-4 text-[#B45309] dark:text-amber-400" />}
-                            <span className="flex-1 text-sm text-foreground">{c.item}</span>
-                            <span className="text-xs text-muted-foreground">{c.note}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Sentence-level faithfulness */}
-              {faithfulness?.sentences && faithfulness.sentences.length > 0 && (
-                <div>
-                  <button onClick={() => setShowSentenceCheck(!showSentenceCheck)}
-                    className="text-xs text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1">
-                    {showSentenceCheck ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
-                    Sentence-level grounding check ({faithfulness.total_checked} sentences)
-                  </button>
-                  <AnimatePresence>
-                    {showSentenceCheck && (
-                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-                        <div className="space-y-2 pt-2">
-                          {faithfulness.sentences.map((s: any, i: number) => (
-                            <div key={i} className={cn("p-2.5 rounded-lg text-[13px] leading-relaxed", s.grounded ? "bg-muted" : "bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30")}>
-                              <span className="text-foreground">{s.text}</span>
-                              {!s.grounded && (
-                                <span className="ml-2 text-[#B45309] dark:text-amber-400 text-xs font-semibold">Not found in SOP</span>
-                              )}
-                              {s.source_chunk && s.source_chunk !== "Unknown" && s.source_chunk !== "General context" && (
-                                <span className="ml-2 text-[11px] text-muted-foreground">- {s.source_chunk}</span>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  )
-}
-
-// ─── Copy link button ────────────────────────────────────────────────────────
-
-function CopyLinkButton({ data }: { data: AssistantData }) {
-  const [copied, setCopied] = useState<"link" | "answer" | null>(null)
-  const handleCopy = async () => {
-    try {
-      if (data.answerId) {
-        await navigator.clipboard.writeText(`${window.location.origin}/answers/${data.answerId}`)
-        setCopied("link")
-        toast({ description: "Link copied to clipboard", variant: "success" })
-      } else {
-        await navigator.clipboard.writeText(data.answer)
-        setCopied("answer")
-        toast({ description: "Answer copied to clipboard", variant: "success" })
-      }
-      setTimeout(() => setCopied(null), 2000)
-    } catch {
-      toast({ description: "Couldn't copy to clipboard", variant: "error" })
-    }
-  }
-  return (
-    <button onClick={handleCopy}
-      title={copied === "link" ? "Link copied" : copied === "answer" ? "Answer copied" : "Copy link"}
-      aria-label="Copy link"
-      className={cn("inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all",
-        copied ? "text-[#15803D] dark:text-green-400" : "text-muted-foreground hover:text-foreground hover:bg-muted")}>
-      {copied ? <Check className="w-4 h-4" /> : <Link2 className="w-4 h-4" />}
-    </button>
-  )
-}
-
-// ─── Collapsed older assistant message ───────────────────────────────────────
-
-function CollapsedAssistant({ data }: { data: AssistantData }) {
-  const [expanded, setExpanded] = useState(false)
-  const sourceCount = data.inlineCitations.length > 0 ? data.inlineCitations.length : data.sources.length
-  const plainText = data.answer.replace(/[#*>]/g, "").replace(/\[\d+\]/g, "").replace(/\s+/g, " ").trim()
-  if (data.error) {
-    return (
-      <div className="p-4 rounded-2xl bg-card border border-[#FECACA] dark:border-red-500/30 text-sm text-[#B91C1C] dark:text-red-400">
-        Backend unavailable for this question.
-      </div>
-    )
-  }
-  return (
-    <div className="p-5 rounded-2xl bg-card border border-border">
-      {expanded ? (
-        <AnswerRenderer text={data.answer} citations={data.inlineCitations} />
-      ) : (
-        <p className="text-[15px] leading-relaxed text-foreground">
-          {plainText.length > 260 ? plainText.slice(0, 257) + "..." : plainText}
-        </p>
-      )}
-      <button onClick={() => setExpanded(!expanded)}
-        className="mt-3 inline-flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-[#0B6BCB] transition-colors">
-        {expanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
-        <FileText className="w-3.5 h-3.5" />
-        {sourceCount} {sourceCount === 1 ? "source" : "sources"}
-      </button>
-      {expanded && sourceCount > 0 && (
-        <div className="mt-2 space-y-1">
-          {(data.inlineCitations.length > 0
-            ? data.inlineCitations.map((c) => `${c.sop_title}${c.section_title ? " - " + c.section_title : ""}`)
-            : data.sources.map((s) => `${s.sop_title} - ${s.section}`)
-          ).map((t, i) => (
-            <p key={i} className="text-[12px] text-muted-foreground pl-5">{t}</p>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ─── Compact source strip ─────────────────────────────────────────────────
-// Perplexity/modern-AI-chat pattern: sources are shown as a scrollable row
-// of small pills directly under the answer by default, not hidden behind
-// a click - the deep-dive SourcePanel (relevance scores, full snippets,
-// version/review metadata) stays available via the action bar for anyone
-// who wants more than "what grounded this".
-function SourceStrip({ citations, onSelect }: { citations: InlineCitation[]; onSelect: (n: number) => void }) {
-  if (citations.length === 0) return null
-  return (
-    <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar -mx-1 px-1 pb-0.5">
-      {citations.map((c) => (
-        <button
-          key={c.number}
-          onClick={() => onSelect(c.number)}
-          className="inline-flex items-center gap-1.5 shrink-0 px-2.5 py-1 rounded-full border border-border bg-muted/60 hover:border-[#0B6BCB]/40 hover:bg-[#0B6BCB]/[0.06] transition-colors text-left"
-        >
-          <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#0B6BCB]/10 dark:bg-[#00E5FF]/10 text-[#0B6BCB] dark:text-[#00E5FF] text-[9px] font-bold shrink-0">
-            {c.number}
-          </span>
-          <span className="text-[11px] font-medium text-foreground truncate max-w-[160px]">{c.sop_title}</span>
-        </button>
-      ))}
-    </div>
-  )
-}
-
-// ─── Full assistant answer (latest message) ──────────────────────────────────
-
-// Pulls dose/threshold values out of the prose into a scannable strip at
-// the top of the answer - reuses VerificationData.thresholdChecks (already
-// computed by the backend verifier, see ThresholdVerifier in verifier.py)
-// rather than re-parsing the answer text, so this never disagrees with
-// what the "Trust details" panel already shows for the same checks.
-function QuickFactsStrip({ checks }: { checks: { parameter: string; value: string; status: string; source: string }[] }) {
-  if (checks.length === 0) return null
-  return (
-    <div className="rounded-2xl bg-[#0B6BCB]/[0.04] border border-[#0B6BCB]/20 p-4">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-[#0B6BCB] mb-2.5 flex items-center gap-1.5">
-        <Gauge className="w-3.5 h-3.5" /> Quick Facts
-      </p>
-      <div className="flex flex-wrap gap-2">
-        {checks.map((c, i) => (
-          <span key={i}
-            className={cn("inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border",
-              c.status === "pass" ? "bg-card border-border text-foreground" : "bg-[#FEF3C7] dark:bg-amber-500/10 border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400")}>
-            <span className="font-semibold">{c.parameter}:</span> {c.value}
-          </span>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function AssistantAnswer({
-  data,
-  onFollowup,
-  readingLevel,
-  onReadingLevelChange,
-}: {
-  data: AssistantData
-  onFollowup: (q: string) => void
-  readingLevel: ReadingLevel
-  onReadingLevelChange: (v: ReadingLevel) => void
-}) {
-  const router = useRouter()
-  const { hasPermission } = useRole()
-  const [activePanel, setActivePanel] = useState<string | null>(null)
-  const [showConflictDetails, setShowConflictDetails] = useState(false)
-  const [selectedSource, setSelectedSource] = useState<SourceData | null>(null)
-  const [highlightedSource, setHighlightedSource] = useState<number | null>(null)
-  const [feedbackGiven, setFeedbackGiven] = useState<string | null>(null)
-
-  const hasConflict = data.sopConflicts.length > 0
-  const firstCitation = data.sources[0]?.sop_title ?? ""
-  const wordCount = (text: string) => text.split(/\s+/).filter(Boolean).length
-
-  const citedCitations = data.inlineCitations.filter(c => c.cited_in_answer)
-  const groundingCitations = citedCitations.length > 0 ? citedCitations : data.inlineCitations
-  const distinctSopTitles = Array.from(new Set(groundingCitations.map(c => c.sop_title)))
-  const isAbstained = data.abstained
-
-  const primaryInternalCitation = groundingCitations.find((c) => !c.is_external)
-  const primarySopId = primaryInternalCitation?.sop_id ?? ""
-  const primaryReviewDays = daysUntilReview(primaryInternalCitation?.review_date)
-  const primaryStaleness = primaryReviewDays !== null && primaryReviewDays <= 30 ? reviewStaleness(primaryInternalCitation?.review_date) : null
-  const primaryVersion = primaryInternalCitation?.version ?? ""
-  const primaryEffectiveDate = primaryInternalCitation?.effective_date ?? ""
-
-  const plain = readingLevel === "plain" ? simplifyAnswer(data.answer) : null
-  const displayAnswer = plain ? plain.text : data.answer
-
-  const handleCitationClick = (n: number) => {
-    setActivePanel("sources")
-    setHighlightedSource(n)
-    setTimeout(() => {
-      document.getElementById(`source-entry-${n}`)?.scrollIntoView({ behavior: "smooth", block: "center" })
-    }, 250)
-    setTimeout(() => setHighlightedSource(null), 2500)
-  }
-
-  const handleFeedback = async (key: string) => {
-    setFeedbackGiven(key)
-    try {
-      const typeMap: Record<string, "positive" | "negative" | "correction"> = { helpful: "positive", incorrect: "negative", unsafe: "negative", missing: "correction" }
-      await submitFeedback(0, typeMap[key] || "positive")
-      toast({ description: "Feedback submitted - thank you", variant: "success" })
-    } catch {
-      toast({ description: "Couldn't submit feedback - it wasn't saved", variant: "error" })
-    }
-  }
-
-  if (data.error) {
-    return (
-      <div className="p-6 rounded-2xl bg-card border border-[#FECACA] dark:border-red-500/30">
-        <div className="flex items-start gap-4">
-          <div className="w-10 h-10 rounded-xl bg-[#FEE2E2] dark:bg-red-500/10 flex items-center justify-center shrink-0">
-            <AlertTriangle className="w-5 h-5 text-[#B91C1C] dark:text-red-400" />
-          </div>
-          <div>
-            <p className="font-semibold text-foreground mb-1">Backend unavailable</p>
-            <p className="text-[15px] text-muted-foreground">Could not reach the Meridian backend. Make sure the Python server is running on port 8000, then try again.</p>
-            <p className="text-xs text-muted-foreground mt-3 font-mono bg-muted px-3 py-2 rounded-lg inline-block">
-              cd backend &amp;&amp; uvicorn app.main:app --reload
-            </p>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (data.needsClarification) {
-    return (
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
-        className="p-6 sm:p-8 rounded-2xl bg-card border border-[#0B6BCB]/30">
-        <div className="flex items-start gap-4">
-          <div className="w-11 h-11 rounded-xl bg-[#0B6BCB]/10 flex items-center justify-center shrink-0">
-            <HelpCircle className="w-5 h-5 text-[#0B6BCB]" />
-          </div>
-          <div className="min-w-0">
-            <h2 className="text-lg font-semibold text-foreground">{data.clarificationQuestion || "Could you clarify your question?"}</h2>
-            <p className="text-[13px] leading-relaxed text-muted-foreground mt-2">
-              This question could match more than one protocol - answering without knowing which one risks giving you the wrong guidance.
-            </p>
-            {data.clarificationOptions.length > 0 && (
-              <div className="mt-4 flex flex-wrap gap-2">
-                {data.clarificationOptions.map((opt) => (
-                  <button
-                    key={opt}
-                    onClick={() => onFollowup(`${data.query} (regarding ${opt})`)}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium border border-[#0B6BCB]/30 bg-[#0B6BCB]/[0.04] text-[#0B6BCB] hover:bg-[#0B6BCB]/10 transition-colors"
-                  >
-                    {opt}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </motion.div>
-    )
-  }
-
-  return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="space-y-4">
-
-      {/* Conflict Alert Banner */}
-      {hasConflict && (
-        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-          className="p-4 rounded-2xl bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 flex flex-col sm:flex-row sm:items-center gap-3">
-          <div className="flex items-start gap-3 flex-1">
-            <AlertTriangle className="w-5 h-5 text-[#B91C1C] dark:text-red-400 shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold text-[#B91C1C] dark:text-red-400 text-sm">CONFLICT DETECTED</p>
-              <p className="text-[13px] text-muted-foreground mt-0.5">The retrieved SOP content contains potentially conflicting guidance.</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <button onClick={() => setShowConflictDetails(!showConflictDetails)}
-              className="px-3 py-1.5 rounded-lg text-sm border border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400 hover:bg-[#FEE2E2] dark:bg-red-500/10 transition-colors">
-              {showConflictDetails ? "Hide Details" : "View Details"}
-            </button>
-            <button onClick={() => router.push("/proposals?from_conflict=true")}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30 hover:bg-[#FEE2E2] dark:bg-red-500/10 transition-colors">
-              <PlusCircle className="w-4 h-4" />
-              Create Update Proposal
-            </button>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Conflict details */}
-      <AnimatePresence>
-        {showConflictDetails && hasConflict && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden">
-            <div className="p-4 rounded-2xl bg-card border border-[#FECACA] dark:border-red-500/30 space-y-2">
-              {data.sopConflicts.map((c, i) => (
-                <div key={i} className="p-3 rounded-lg bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 text-sm">
-                  <p className="font-semibold text-[#B91C1C] dark:text-red-400">{c.message}</p>
-                  <p className="text-muted-foreground text-xs mt-1">Values in {c.sop_a}: {c.values_a?.join(", ")} vs {c.sop_b}: {c.values_b?.join(", ")}</p>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Dual-Column Answer Layout */}
-      <div className="flex flex-col lg:flex-row gap-6 lg:divide-x lg:divide-[#E2E8F0]">
-
-        {/* Left column - Internal SOP Answer */}
-        <div className="flex-[3] min-w-0 space-y-4 lg:pr-6">
-          <div className="flex items-center justify-between gap-2 pb-1">
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-[#0B6BCB]" />
-              <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Internal SOP Answer</h2>
-            </div>
-            <ReadingLevelToggle value={readingLevel} onChange={onReadingLevelChange} />
-          </div>
-          {isAbstained ? (
-            <div className="p-6 sm:p-8 rounded-2xl bg-card border border-[#0B6BCB]/30">
-              <div className="flex items-start gap-4">
-                <div className="w-11 h-11 rounded-xl bg-[#0B6BCB]/10 flex items-center justify-center shrink-0">
-                  <ShieldCheck className="w-5 h-5 text-[#0B6BCB]" />
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h2 className="text-lg font-semibold text-foreground">No grounded answer - by design</h2>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30">
-                      Safe refusal
-                    </span>
-                  </div>
-                  <p className="text-[15px] leading-relaxed text-muted-foreground mt-2">{data.answer.replace(/\[\d+\]/g, "")}</p>
-                  <p className="text-[13px] leading-relaxed text-muted-foreground mt-2">
-                    This is a deliberate safety decision, not a system failure: Meridian only answers when it can point to
-                    grounded SOP evidence, and declines rather than guess when it can&apos;t.
-                  </p>
-                </div>
-              </div>
-              <div className="mt-6 pt-5 border-t border-border">
-                <GapReportPanel queryText={data.query} externalCitations={data.inlineCitations.filter((c) => c.is_external)} />
-              </div>
-            </div>
-          ) : (
-            <>
-              {/* Grounding bar - worded per route so an external-literature
-                  answer never claims "SOP sections" for what are actually
-                  paper titles. */}
-              {distinctSopTitles.length > 0 && (
-                <div className="p-3.5 rounded-2xl bg-card border border-border">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground">
-                      <Layers className="w-4 h-4 text-[#0B6BCB]" />
-                      {data.route === "external_evidence"
-                        ? `Based on ${groundingCitations.length} external literature ${groundingCitations.length === 1 ? "source" : "sources"}`
-                        : `Grounded in ${groundingCitations.length} SOP ${groundingCitations.length === 1 ? "section" : "sections"}`}
-                    </span>
-                    {data.route !== "external_evidence" && distinctSopTitles.map((t) => (
-                      <span key={t} className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30">
-                        {t}
-                      </span>
-                    ))}
-                    {data.generationMode && (
-                      <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase border",
-                        data.generationMode === "llm" ? "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30" : "bg-card text-muted-foreground border-input")}>
-                        {data.generationMode}
-                      </span>
-                    )}
-                    {data.responseTimeMs !== null && (
-                      <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground font-mono">
-                        <Clock className="w-3 h-3" />
-                        {(data.responseTimeMs / 1000).toFixed(1)}s
-                      </span>
-                    )}
-                  </div>
-                  {data.route === "external_evidence" ? (
-                    <p className="mt-2 text-[12px] text-[#0B6BCB] flex items-center gap-1.5">
-                      <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-                      No internal SOP covers this - hover or tap a citation number to preview and open its source.
-                    </p>
-                  ) : distinctSopTitles.length === 1 && (
-                    <p className="mt-2 text-[12px] text-[#B45309] dark:text-amber-400 flex items-center gap-1.5">
-                      <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-                      Single-source answer - verify against the full SOP
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {data.route === "external_evidence" && (
-                <GapReportPanel queryText={data.query} externalCitations={data.inlineCitations.filter((c) => c.is_external)} />
-              )}
-
-              {(data.route === "sop_library" || data.route === "hybrid") && primarySopId && (
-                <LatestVersionBadge
-                  sopId={primarySopId} sopTitle={distinctSopTitles[0] ?? ""}
-                  version={primaryVersion} effectiveDate={primaryEffectiveDate}
-                  onViewHistory={() => setActivePanel("versions")}
-                />
-              )}
-
-              {primaryStaleness && (
-                <div className={cn("flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium border", primaryStaleness.className)}>
-                  <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-                  {distinctSopTitles[0] ? `${distinctSopTitles[0]}: ` : ""}{primaryStaleness.label} - this answer may be based on a protocol due for committee review.
-                </div>
-              )}
-
-              <QuickFactsStrip checks={data.verification.thresholdChecks} />
-
-              <div className="p-6 sm:p-8 rounded-2xl bg-card border border-border shadow-sm relative">
-                <div>
-                  {plain?.summary && (
-                    <div className="mb-4 p-3.5 rounded-xl bg-[#0B6BCB]/[0.06] border border-[#0B6BCB]/20">
-                      <p className="text-[15px] leading-relaxed text-foreground">
-                        <span className="font-semibold text-[#0B6BCB]">In short: </span>
-                        {plain.summary}
-                      </p>
-                    </div>
-                  )}
-                  {data.faithfulness?.sentences && data.faithfulness.sentences.length > 0 && (
-                    <div className="flex flex-wrap items-center gap-3 mb-3 text-[11px] text-muted-foreground">
-                      <span className="inline-flex items-center gap-1"><span className="w-2.5 h-0.5 rounded bg-[#15803D]/50" />Grounded</span>
-                      <span className="inline-flex items-center gap-1"><span className="w-2.5 h-0.5 rounded bg-[#B45309]/60" />Partially grounded</span>
-                      <span className="inline-flex items-center gap-1"><span className="w-2.5 h-0.5 rounded bg-[#B91C1C]/60" />Not grounded</span>
-                    </div>
-                  )}
-                  <AnswerRenderer text={displayAnswer} citations={data.inlineCitations} onCitationClick={handleCitationClick} groundingSentences={data.faithfulness?.sentences} animate />
-                </div>
-                {data.inlineCitations.length > 0 && (
-                  <div className="mt-5 pt-4 border-t border-border">
-                    <SourceStrip citations={data.inlineCitations} onSelect={handleCitationClick} />
-                  </div>
-                )}
-              </div>
-
-              <FeedbackRow queryText={data.query} />
-            </>
-          )}
-
-          {/* Follow-up questions */}
-          {data.followupQuestions.length > 0 && (
-            <FollowupChips questions={data.followupQuestions} onSelect={onFollowup} />
-          )}
-
-          {/* Trust & Verification - one consolidated place for every trust
-              signal instead of four separate always-visible blocks. */}
-          {!isAbstained && <TrustPanel data={data} />}
-
-          {/* Action Bar - icon-first, tooltip-labeled row (ChatGPT/Perplexity
-              pattern) instead of a wall of text buttons. Sources keeps a
-              visible count since "how many sources" is worth a glance
-              without hovering. */}
-          <div className="flex flex-wrap items-center gap-1">
-            {[
-              { key: "sources", icon: FileText, label: "Sources", count: data.inlineCitations.length > 0 ? data.inlineCitations.length : data.sources.length },
-              ...(primarySopId ? [{ key: "comparison", icon: GitCompare, label: "Protocol Comparison" }] : []),
-              ...(primarySopId ? [{ key: "versions", icon: History, label: "Version History" }] : []),
-              { key: "trace", icon: Brain, label: "Pipeline trace" },
-              { key: "feedback", icon: ThumbsUp, label: "Give feedback" },
-              { key: "export", icon: Download, label: "Export" },
-            ].map((action) => (
-              <button key={action.key}
-                onClick={() => setActivePanel(activePanel === action.key ? null : action.key)}
-                title={action.label}
-                aria-label={action.label}
-                className={cn("inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all",
-                  activePanel === action.key ? "bg-[#0B6BCB]/10 dark:bg-[#00E5FF]/10 text-[#0B6BCB] dark:text-[#00E5FF]" : "text-muted-foreground hover:text-foreground hover:bg-muted")}>
-                <action.icon className="w-4 h-4" />
-                {action.count !== undefined && action.count > 0 && <span>{action.count}</span>}
-              </button>
-            ))}
-            <CopyLinkButton data={data} />
-            {hasPermission("create_proposal") && (
-              <button
-                onClick={() => router.push(`/proposals?new=1&sop=${encodeURIComponent(firstCitation)}&query=${encodeURIComponent(data.query)}`)}
-                title="Create Update Proposal"
-                aria-label="Create Update Proposal"
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all">
-                <PlusCircle className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-
-          {/* Expandable Panels */}
-          <AnimatePresence mode="wait">
-            {activePanel && (
-              <motion.div key={activePanel} initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
-
-                {/* SOP vs External Protocol Comparison Panel */}
-                {activePanel === "comparison" && primarySopId && (
-                  <ProtocolComparisonPanel sopId={primarySopId} />
-                )}
-
-                {/* SOP Version History Panel */}
-                {activePanel === "versions" && primarySopId && (
-                  <VersionHistoryPanel sopId={primarySopId} />
-                )}
-
-                {/* Sources Panel */}
-                {activePanel === "sources" && data.inlineCitations.length > 0 && (
-                  <SourcePanel
-                    citations={data.inlineCitations}
-                    highlightedNumber={highlightedSource}
-                    onSelect={(c) => setSelectedSource({ id: String(c.number), sop_title: c.sop_title, section: c.section_title, content: c.snippet, score: c.relevance_score })}
-                  />
-                )}
-                {activePanel === "sources" && data.inlineCitations.length === 0 && (
-                  <div className="p-5 rounded-2xl bg-card border border-border">
-                    <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-[#0B6BCB]" />
-                      Source Evidence
-                    </h3>
-                    <div className="space-y-3">
-                      {data.sources.map((s) => (
-                        <button key={s.id} onClick={() => setSelectedSource(s)}
-                          className="w-full text-left p-4 rounded-xl bg-card border border-border hover:border-[#0B6BCB]/30 transition-all group">
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-sm font-semibold group-hover:text-[#0B6BCB] transition-colors">{s.sop_title}</span>
-                            <span className="text-xs font-mono text-[#0B6BCB]">{Math.round(s.score * 100)}% match</span>
-                          </div>
-                          <p className="text-xs text-muted-foreground mb-2">{s.section}</p>
-                          <p className="text-[15px] leading-relaxed text-foreground">{s.content.substring(0, 150)}...</p>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Pipeline Trace Panel */}
-                {activePanel === "trace" && (
-                  <div className="p-5 rounded-2xl bg-card border border-border">
-                    <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
-                      <Brain className="w-4 h-4 text-[#0B6BCB]" />
-                      How This Answer Was Built
-                    </h3>
-                    {(() => {
-                      const lines = data.reasoning.split("\n").filter((l) => l.includes("Timing -"))
-                      const totalLine = lines.find((l) => l.includes("Total"))
-                      const total = totalLine ? totalLine.match(/(\d+)ms/)?.[1] : null
-                      if (!lines.length) return null
-                      return (
-                        <div className="flex flex-wrap items-center gap-3 mb-4 text-xs text-muted-foreground">
-                          <Clock className="w-3.5 h-3.5" />
-                          {lines.filter((l) => !l.includes("Total")).map((l, i) => {
-                            const m = l.match(/Timing - (.+?): (\d+)ms/)
-                            return m ? <span key={i}>{m[1]}: {m[2]}ms</span> : null
-                          })}
-                          {total && <span className="font-semibold text-[#0B6BCB]">Total: {total}ms</span>}
-                        </div>
-                      )
-                    })()}
-                    <div className="relative pl-6 border-l-2 border-border space-y-4">
-                      {mapReasoningToTimeline(data.reasoning).map((stage, i) => (
-                        <div key={i} className="relative">
-                          <div className="absolute -left-[25px] w-4 h-4 rounded-full bg-[#0B6BCB]/15 border-2 border-[#0B6BCB] flex items-center justify-center">
-                            <stage.icon className="w-2.5 h-2.5 text-[#0B6BCB]" />
-                          </div>
-                          <p className="text-sm font-medium">{stage.label}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">{stage.raw}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Feedback Panel */}
-                {activePanel === "feedback" && (
-                  <div className="p-5 rounded-2xl bg-card border border-border">
-                    <h3 className="text-sm font-semibold mb-4">Was this answer helpful?</h3>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {[
-                        { key: "helpful", icon: ThumbsUp, label: "Helpful" },
-                        { key: "incorrect", icon: XCircle, label: "Incorrect" },
-                        { key: "unsafe", icon: AlertTriangle, label: "Unsafe" },
-                        { key: "missing", icon: FileText, label: "Missing Info" },
-                      ].map((fb) => (
-                        <button key={fb.key} onClick={() => handleFeedback(fb.key)}
-                          className={cn("inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm border transition-colors",
-                            feedbackGiven === fb.key ? "bg-[#0B6BCB]/10 border-[#0B6BCB]/30 text-[#0B6BCB]" : "border-border text-muted-foreground hover:text-foreground")}>
-                          <fb.icon className="w-4 h-4" />
-                          {fb.label}
-                        </button>
-                      ))}
-                    </div>
-                    {feedbackGiven && (
-                      <p className="text-xs text-[#15803D] dark:text-green-400 flex items-center gap-1.5">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        Feedback submitted. Thank you!
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                {/* Export Panel */}
-                {activePanel === "export" && (
-                  <div className="p-5 rounded-2xl bg-card border border-border">
-                    <h3 className="text-sm font-semibold mb-4">Export This Result</h3>
-                    <div className="flex flex-wrap gap-3">
-                      <button onClick={async () => {
-                        try {
-                          const res = await fetch("/api/query/export", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query: data.query }) })
-                          if (!res.ok) throw new Error("export failed")
-                          const blob = await res.blob()
-                          const url = URL.createObjectURL(blob)
-                          const a = document.createElement("a")
-                          a.href = url; a.download = `meridian-report-${Date.now()}.json`; a.click()
-                          URL.revokeObjectURL(url)
-                          toast({ description: "Report downloaded", variant: "success" })
-                        } catch {
-                          toast({ description: "Couldn't export the report - try again", variant: "error" })
-                        }
-                      }}
-                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border border-border text-muted-foreground hover:text-foreground transition-colors">
-                        <Download className="w-4 h-4" />
-                        Download JSON
-                      </button>
-                      <button onClick={async () => {
-                        try {
-                          const res = await fetch("/api/query/report", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query: data.query }) })
-                          if (!res.ok) throw new Error("report failed")
-                          const report = await res.json()
-                          const printWindow = window.open("", "_blank")
-                          if (!printWindow) throw new Error("popup blocked")
-                          printWindow.document.write(`<!DOCTYPE html><html><head><title>Meridian Report</title></head><body><h1>Meridian Clinical Query Report</h1><p>${report.header?.disclaimer || ''}</p><h2>Query</h2><p>${report.header?.query || data.query}</p><h2>Answer</h2><pre>${(report.result?.answer || '').replace(/</g, '&lt;')}</pre><h2>Sources</h2>${(report.sources || []).map((s: any) => '<p>' + s.sop_title + ' - ' + s.section + '</p>').join('')}</body></html>`)
-                          printWindow.document.close()
-                          setTimeout(() => printWindow.print(), 500)
-                        } catch (err) {
-                          toast({ description: err instanceof Error && err.message === "popup blocked" ? "Print report blocked - allow pop-ups for this site" : "Couldn't generate the report - try again", variant: "error" })
-                        }
-                      }}
-                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border border-border text-muted-foreground hover:text-foreground transition-colors">
-                        <Printer className="w-4 h-4" />
-                        Print Report
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-        </div>
-
-        {/* Right column - External Evidence */}
-        <div className="flex-[2] min-w-0 space-y-4 lg:pl-6">
-          <div className="flex items-center gap-2 pb-1">
-            <BookOpen className="w-4 h-4 text-[#0B6BCB]" />
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">External Evidence</h2>
-          </div>
-          <EvidencePanel entities={data.entities} queryText={data.query} />
-        </div>
-      </div>
-
-      {/* Source Detail Drawer */}
-      <AnimatePresence>
-        {selectedSource && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex justify-end bg-black/50 backdrop-blur-sm"
-            onClick={() => setSelectedSource(null)}>
-            <motion.div initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="w-full max-w-lg h-full bg-card border-l border-border shadow-2xl overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}>
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold">Source Detail</h3>
-                  <button onClick={() => setSelectedSource(null)} className="p-2 rounded-lg hover:bg-muted text-muted-foreground transition-colors">
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">SOP Title</label>
-                    <p className="text-sm font-semibold mt-1">{selectedSource.sop_title}</p>
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Section</label>
-                    <p className="text-sm mt-1">{selectedSource.section}</p>
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Relevance Score</label>
-                    <div className="flex items-center gap-2 mt-1">
-                      <div className="w-24 h-2 rounded-full bg-muted overflow-hidden">
-                        <div className="h-full rounded-full bg-[#0B6BCB]" style={{ width: `${selectedSource.score * 100}%` }} />
-                      </div>
-                      <span className="text-sm font-mono text-[#0B6BCB]">{(selectedSource.score * 100).toFixed(0)}%</span>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Content</label>
-                    <p className="text-sm text-muted-foreground mt-2 leading-relaxed p-3 rounded-xl bg-muted border border-border">
-                      {selectedSource.content}
-                    </p>
-                  </div>
-                  <a href="/library" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0B6BCB] hover:bg-[#0959AC] text-white text-sm font-medium transition-colors mt-4">
-                    <ExternalLink className="w-4 h-4" />
-                    Open Full SOP in Library
-                  </a>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
-  )
-}
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
@@ -1670,16 +752,32 @@ export default function QueryPage() {
 
   return (
     <AppShell>
-      <div className="flex-1 p-4 sm:p-6 max-w-7xl mx-auto w-full">
-        <Breadcrumb items={[{ label: "Query SOPs" }]} />
+      <div className="flex-1 p-4 sm:p-6 max-w-[880px] mx-auto w-full">
+        <Breadcrumb items={[{ label: "Ask Meridian" }]} />
 
-        {/* Toolbar */}
-        <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+        {/* Chat header */}
+        <div className="mb-4 flex items-start justify-between gap-3 flex-wrap">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-xl font-semibold text-foreground">Ask Meridian</h1>
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30">
+                Research support only
+              </span>
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">
+              Ask questions across approved SOPs, external evidence, and protocol history.
+            </p>
+            <p className="text-[11px] text-subtle mt-0.5">
+              Do not enter patient-identifiable information.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
             <button onClick={() => setShowHistory(!showHistory)}
-              className={cn("p-2 rounded-lg transition-colors", showHistory ? "bg-[#0B6BCB]/10 text-[#0B6BCB]" : "text-muted-foreground hover:text-foreground")}
+              className={cn("inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors",
+                showHistory ? "bg-[#0B6BCB]/10 text-[#0B6BCB] border-[#0B6BCB]/30" : "border-border text-muted-foreground hover:text-foreground hover:border-input")}
               title="Query history">
-              <History className="w-5 h-5" />
+              <History className="w-4 h-4" />
+              History
             </button>
             {submitted && (
               <button onClick={resetConversation}
@@ -1689,12 +787,12 @@ export default function QueryPage() {
                 New conversation
               </button>
             )}
-          </div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <User className="w-3.5 h-3.5" />
-            <span className="capitalize">{userRole}</span>
-            {userRole === "admin" && <span className="px-1.5 py-0.5 rounded bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 text-[10px] font-semibold">ADMIN</span>}
-            {userRole === "editor" && <span className="px-1.5 py-0.5 rounded bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 text-[10px] font-semibold">EDITOR</span>}
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground pl-1">
+              <User className="w-3.5 h-3.5" />
+              <span className="capitalize">{userRole}</span>
+              {userRole === "admin" && <span className="px-1.5 py-0.5 rounded bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 text-[10px] font-semibold">ADMIN</span>}
+              {userRole === "editor" && <span className="px-1.5 py-0.5 rounded bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 text-[10px] font-semibold">EDITOR</span>}
+            </div>
           </div>
         </div>
 
@@ -1768,17 +866,15 @@ export default function QueryPage() {
                 </div>
               )
             }
-            const isLatest = m.id === lastAssistantId && !loading
-            return isLatest ? (
-              <AssistantAnswer
+            return (
+              <ChatAnswerMessage
                 key={m.id}
                 data={m.data}
                 onFollowup={(q) => handleSubmit(q)}
                 readingLevel={readingLevel}
                 onReadingLevelChange={changeReadingLevel}
+                isLatest={m.id === lastAssistantId && !loading}
               />
-            ) : (
-              <CollapsedAssistant key={m.id} data={m.data} />
             )
           })}
 
@@ -1807,10 +903,11 @@ export default function QueryPage() {
         </div>
 
         {/* Composer follows the thread once a conversation exists, like a
-            real chat input, instead of sitting above the messages it's
-            about to add to. */}
+            real chat input, and stays pinned to the bottom of the viewport
+            instead of scrolling away above the messages it's about to add
+            to. */}
         {submitted && (
-          <div className="mt-6 pt-4 border-t border-border">
+          <div className="sticky bottom-0 mt-6 pt-4 pb-4 border-t border-border bg-background/95 backdrop-blur-sm">
             {patientContextToggle}
             {composer}
           </div>

@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { useEffect, useState } from "react"
+import { createPortal } from "react-dom"
 import { X, CheckCircle2, Eye, UserX, ShieldOff, MoreHorizontal } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useRole } from "@/lib/role-context"
@@ -30,6 +30,8 @@ export function OverrideModal({ open, onClose, contextType, contextId, contextLa
   const [note, setNote] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [status, setStatus] = useState<"idle" | "success" | "local">("idle")
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
 
   const reset = () => {
     setReason(null)
@@ -72,25 +74,32 @@ export function OverrideModal({ open, onClose, contextType, contextId, contextLa
     }
   }
 
-  return (
-    <AnimatePresence>
-      {open && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-          onClick={handleClose}
-        >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.96, y: 12 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96, y: 12 }}
-            transition={{ duration: 0.15 }}
-            className="w-full max-w-md rounded-2xl bg-card border border-border shadow-md overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {status !== "idle" ? (
+  // Always mounted + portaled to document.body, driven by inline style
+  // (not AnimatePresence unmount, not Tailwind opacity classes) - see
+  // slide-over.tsx / feedback-modal.tsx for why: a non-portaled fixed
+  // backdrop breaks under a transformed ancestor (e.g. a framer-motion `y`
+  // animation on a wrapping element makes that ancestor the containing
+  // block for `position: fixed`), and AnimatePresence exit-unmount can get
+  // stuck if a descendant re-renders mid-exit, leaving an invisible but
+  // still-clickable backdrop blocking the whole page.
+  if (!mounted) return null
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-opacity duration-150"
+      style={{ opacity: open ? 1 : 0, pointerEvents: open ? "auto" : "none" }}
+      aria-hidden={!open}
+      onClick={handleClose}
+    >
+      <div
+        className="w-full max-w-md rounded-2xl bg-card border border-border shadow-md overflow-hidden transition-all duration-150"
+        style={{
+          opacity: open ? 1 : 0,
+          transform: open ? "scale(1) translateY(0)" : "scale(0.96) translateY(12px)",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {open && (
+            status !== "idle" ? (
               <div className="flex flex-col items-center justify-center gap-3 px-6 py-10">
                 <div className="w-12 h-12 rounded-full bg-[#DCFCE7] dark:bg-green-500/10 flex items-center justify-center">
                   <CheckCircle2 className="w-6 h-6 text-[#15803D] dark:text-green-400" />
@@ -163,10 +172,10 @@ export function OverrideModal({ open, onClose, contextType, contextId, contextLa
                   </button>
                 </div>
               </>
-            )}
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+            )
+        )}
+      </div>
+    </div>,
+    document.body
   )
 }

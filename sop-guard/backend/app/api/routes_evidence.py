@@ -10,8 +10,17 @@ from fastapi import APIRouter, Query
 
 from app.integrations.pubmed import search_pubmed
 from app.integrations.evidence_registry import search_all, source_names
+from app.integrations.openevidence import provider_status as openevidence_status
 
 router = APIRouter(tags=["Evidence"])
+
+#: Real, always-queryable sources (no API key, no "requires configuration"
+#: story) - everything in the registry except the OpenEvidence placeholder,
+#: which reports its own honest status via openevidence_status().
+_ACTIVE_SOURCE_LABELS = {
+    "pubmed": "PubMed", "europepmc": "Europe PMC", "cdc": "CDC", "who": "WHO",
+    "clinicaltrials": "ClinicalTrials.gov", "fda": "FDA", "medlineplus": "MedlinePlus", "cms": "CMS",
+}
 
 
 @router.get("/api/evidence/pubmed")
@@ -66,3 +75,20 @@ async def evidence_search(
         "disclaimer": "Research prototype. Live external evidence results are not clinical guidance.",
         "results": records,
     }
+
+
+@router.get("/api/evidence/providers")
+async def evidence_providers():
+    """Honest status for every evidence source, real or placeholder - used
+    by the Evidence Drawer's provider list instead of a hardcoded "coming
+    soon" chip. Real sources need no key and are always "active"; only
+    OpenEvidence reports a configuration-dependent status."""
+    providers = [
+        {
+            "key": key, "name": label, "status": "active",
+            "capabilities": ["live search"], "requires": [], "notes": "",
+        }
+        for key, label in _ACTIVE_SOURCE_LABELS.items()
+    ]
+    providers.append(openevidence_status())
+    return {"providers": providers}

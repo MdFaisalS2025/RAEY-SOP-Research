@@ -47,6 +47,17 @@ class Settings(BaseSettings):
     # --- Voice ---
     WHISPER_MODE: str = "mock"  # mock | api
 
+    # --- OpenEvidence (provider-ready placeholder - see app/integrations/openevidence.py) ---
+    # No public OpenEvidence API is configured in this deployment - these are
+    # unset by default and the provider always reports "not_configured" via
+    # GET /api/evidence/providers regardless of whether they're set, since
+    # there's no real call path here to verify a key actually works. Wiring
+    # a real OpenEvidence integration later means implementing OpenEvidenceSource
+    # .search() for real and updating the status check - not just setting these.
+    OPENEVIDENCE_API_KEY: Optional[str] = None
+    OPENEVIDENCE_BASE_URL: Optional[str] = None
+    OPENEVIDENCE_ORG_ID: Optional[str] = None
+
     # --- RAG ---
     RAG_EMBEDDING_BACKEND: str = "auto"  # auto | sentence_transformers | tfidf
     RAG_EMBEDDING_MODEL: str = "BAAI/bge-small-en-v1.5"

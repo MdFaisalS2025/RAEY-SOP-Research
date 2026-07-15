@@ -81,17 +81,19 @@ export function CommitteeCommentCard({ version }: { version: SOPVersion }) {
   )
 }
 
-function VersionDiff({ sopId, versionNumber }: { sopId: string; versionNumber: string }) {
-  const [diff, setDiff] = useState<{ available: boolean; reason?: string; segments: DiffSegment[]; stats?: DiffStats } | null>(null)
+function VersionDiff({ sopId, versionNumber, fromVersion }: { sopId: string; versionNumber: string; fromVersion?: string }) {
+  const [diff, setDiff] = useState<{ available: boolean; reason?: string; segments: DiffSegment[]; stats?: DiffStats; from_version?: string | null } | null>(null)
 
   useEffect(() => {
     let cancelled = false
-    fetch(`${API_BASE}/api/sops/${encodeURIComponent(sopId)}/version-history/${encodeURIComponent(versionNumber)}/diff`)
+    setDiff(null)
+    const query = fromVersion ? `?from_version=${encodeURIComponent(fromVersion)}` : ""
+    fetch(`${API_BASE}/api/sops/${encodeURIComponent(sopId)}/version-history/${encodeURIComponent(versionNumber)}/diff${query}`)
       .then((r) => r.json())
       .then((d) => { if (!cancelled) setDiff(d) })
       .catch(() => { if (!cancelled) setDiff({ available: false, reason: "Could not load diff.", segments: [] }) })
     return () => { cancelled = true }
-  }, [sopId, versionNumber])
+  }, [sopId, versionNumber, fromVersion])
 
   if (!diff) return <div className="flex items-center gap-2 text-xs text-muted-foreground py-3"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading diff...</div>
   if (!diff.available) return <p className="text-xs text-muted-foreground py-2">{diff.reason ?? "No prior version to compare against."}</p>
@@ -100,6 +102,49 @@ function VersionDiff({ sopId, versionNumber }: { sopId: string; versionNumber: s
     <div className="space-y-2">
       {diff.stats && <DiffStatsRow stats={diff.stats} />}
       <DiffView segments={diff.segments} />
+    </div>
+  )
+}
+
+// ─── Compare-any-two-versions picker ─────────────────────────────────────────
+
+function VersionComparePicker({ sopId, versions }: { sopId: string; versions: SOPVersion[] }) {
+  const sorted = [...versions].sort((a, b) => a.version_number.localeCompare(b.version_number, undefined, { numeric: true }))
+  const [fromVersion, setFromVersion] = useState(sorted[0]?.version_number ?? "")
+  const [toVersion, setToVersion] = useState(sorted[sorted.length - 1]?.version_number ?? "")
+  const [compared, setCompared] = useState<{ from: string; to: string } | null>(null)
+
+  if (sorted.length < 2) return null
+
+  return (
+    <div className="rounded-2xl bg-card border border-border p-4 space-y-3">
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Compare versions</p>
+      <div className="flex flex-wrap items-center gap-2">
+        <select value={fromVersion} onChange={(e) => setFromVersion(e.target.value)}
+          className="px-3 py-2 rounded-lg bg-muted border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#0B6BCB]/40">
+          {sorted.map((v) => <option key={v.id} value={v.version_number}>v{v.version_number}</option>)}
+        </select>
+        <span className="text-xs text-muted-foreground">vs.</span>
+        <select value={toVersion} onChange={(e) => setToVersion(e.target.value)}
+          className="px-3 py-2 rounded-lg bg-muted border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#0B6BCB]/40">
+          {sorted.map((v) => <option key={v.id} value={v.version_number}>v{v.version_number}</option>)}
+        </select>
+        <button
+          onClick={() => setCompared({ from: fromVersion, to: toVersion })}
+          disabled={fromVersion === toVersion}
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium bg-[#0B6BCB] hover:bg-[#0959AC] disabled:opacity-40 disabled:cursor-not-allowed text-white transition-colors">
+          Compare
+        </button>
+      </div>
+      {fromVersion === toVersion && (
+        <p className="text-xs text-muted-foreground">Choose two different versions to compare.</p>
+      )}
+      {compared && compared.from !== compared.to && (
+        <div className="pt-2 border-t border-border">
+          <p className="text-xs text-muted-foreground mb-2">v{compared.from} &rarr; v{compared.to}</p>
+          <VersionDiff sopId={sopId} versionNumber={compared.to} fromVersion={compared.from} />
+        </div>
+      )}
     </div>
   )
 }
@@ -209,6 +254,17 @@ export function LatestVersionBadge({
 }
 
 export function VersionHistoryPanel({ sopId }: { sopId: string }) {
+  const [versions, setVersions] = useState<SOPVersion[]>([])
+
+  useEffect(() => {
+    let cancelled = false
+    fetch(`${API_BASE}/api/sops/${encodeURIComponent(sopId)}/version-history`)
+      .then((r) => r.json())
+      .then((d) => { if (!cancelled) setVersions(d.versions ?? []) })
+      .catch(() => { if (!cancelled) setVersions([]) })
+    return () => { cancelled = true }
+  }, [sopId])
+
   return (
     <div className="space-y-4">
       <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30">
@@ -217,6 +273,7 @@ export function VersionHistoryPanel({ sopId }: { sopId: string }) {
           This response supports SOP review and clinical workflow. It does not replace approved hospital policy or clinical judgment.
         </p>
       </div>
+      {versions.length >= 2 && <VersionComparePicker sopId={sopId} versions={versions} />}
       <VersionTimeline sopId={sopId} />
     </div>
   )

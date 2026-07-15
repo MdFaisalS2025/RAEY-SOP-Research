@@ -184,6 +184,27 @@ async def test_version_diff_404_for_unknown_version(client):
     assert resp.status_code == 404
 
 
+async def test_version_diff_defaults_to_immediately_preceding_version(client):
+    resp = await client.get("/api/sops/SOP-ICU-001/version-history/2.1/diff")
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["from_version"] == "1.0"
+
+
+async def test_version_diff_accepts_explicit_from_version(client):
+    # Same pair as the default case here (only two versions exist), but
+    # exercised via the explicit query param to confirm it's honored.
+    resp = await client.get("/api/sops/SOP-ICU-001/version-history/2.1/diff?from_version=1.0")
+    assert resp.status_code == 200, resp.text
+    data = resp.json()
+    assert data["from_version"] == "1.0"
+    assert data["available"] is True
+
+
+async def test_version_diff_404_for_unknown_from_version(client):
+    resp = await client.get("/api/sops/SOP-ICU-001/version-history/2.1/diff?from_version=9.9")
+    assert resp.status_code == 404
+
+
 async def test_protocol_comparison_endpoint_returns_available_result(client):
     resp = await client.get("/api/sops/SOP-ICU-001/protocol-comparison")
     assert resp.status_code == 200, resp.text

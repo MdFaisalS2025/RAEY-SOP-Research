@@ -20,6 +20,7 @@ from app.integrations.clinicaltrials import ClinicalTrialsSource
 from app.integrations.fda import FDASource
 from app.integrations.medlineplus import MedlinePlusSource
 from app.integrations.cms import CMSSource
+from app.integrations.openevidence import OpenEvidenceSource
 
 _REGISTRY: dict[str, EvidenceSource] = {
     "pubmed": PubMedSource(),
@@ -30,6 +31,10 @@ _REGISTRY: dict[str, EvidenceSource] = {
     "fda": FDASource(),
     "medlineplus": MedlinePlusSource(),
     "cms": CMSSource(),
+    # Always returns [] - see openevidence.py's module docstring for why
+    # this is registered (so the pluggable-source shape is real) but never
+    # produces results.
+    "openevidence": OpenEvidenceSource(),
 }
 
 

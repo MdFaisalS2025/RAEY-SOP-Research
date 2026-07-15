@@ -21,8 +21,8 @@ No login is required to explore — use any demo account below, or the "continue
 If you'd rather run it locally than use the live demo:
 
 ```bash
-git clone https://github.com/USERNAME/REPO.git
-cd REPO/sop-guard
+git clone https://github.com/MdFaisalS2025/Meridian-SOP-Research.git
+cd Meridian-SOP-Research/sop-guard
 docker compose up --build
 ```
 

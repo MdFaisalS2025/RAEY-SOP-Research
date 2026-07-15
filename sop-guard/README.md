@@ -6,7 +6,7 @@ Meridian is an AI-powered hospital SOP intelligence platform that combines inter
 
 > Research prototype. Not for clinical use. All SOP data is synthetic.
 
-[![CI](https://github.com/USERNAME/REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/USERNAME/REPO/actions/workflows/ci.yml)
+[![CI](https://github.com/MdFaisalS2025/Meridian-SOP-Research/actions/workflows/ci.yml/badge.svg)](https://github.com/MdFaisalS2025/Meridian-SOP-Research/actions/workflows/ci.yml)
 [![Frontend](https://img.shields.io/badge/frontend-Next.js%2014-000000)](frontend)
 [![Backend](https://img.shields.io/badge/backend-FastAPI-009688)](backend)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](#license)

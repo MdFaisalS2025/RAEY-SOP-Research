@@ -151,8 +151,15 @@ async def post_message(
         raise HTTPException(status_code=404, detail=f"Chat session {session_id} not found.")
 
     history, history_context = await _build_context(session_id, db)
+    # Retrieval runs on the new message alone (retrieval_query defaults to
+    # `query` when unset) - prior questions go in as context_query instead
+    # of being concatenated into one string. Concatenation let a strong
+    # earlier question (e.g. "sepsis management") dominate scoring for
+    # every follow-up regardless of what the follow-up actually asked,
+    # since both ended up in the same bag-of-words - see the context_query
+    # docstring on HybridRetriever.search for the fix.
     prior_user_questions = [m.content for m in history if m.role == "user"][-2:]
-    retrieval_query = f"{' '.join(prior_user_questions)} {req.content}" if prior_user_questions else req.content
+    context_query = " ".join(prior_user_questions)
 
     chunks, structured_sops = await load_chunks(db)
     if not chunks:
@@ -162,7 +169,7 @@ async def post_message(
     result = await pipeline.run(
         query=req.content,
         news2_score=req.news2_score,
-        retrieval_query=retrieval_query,
+        context_query=context_query,
         history_context=history_context,
     )
 
@@ -192,8 +199,11 @@ async def post_message_stream(
         raise HTTPException(status_code=404, detail=f"Chat session {session_id} not found.")
 
     history, history_context = await _build_context(session_id, db)
+    # See the matching comment in post_message above: context_query (not
+    # concatenation) is what keeps follow-ups from all retrieving the
+    # same evidence as the first question in the conversation.
     prior_user_questions = [m.content for m in history if m.role == "user"][-2:]
-    retrieval_query = f"{' '.join(prior_user_questions)} {req.content}" if prior_user_questions else req.content
+    context_query = " ".join(prior_user_questions)
 
     chunks, structured_sops = await load_chunks(db)
     if not chunks:
@@ -205,7 +215,7 @@ async def post_message_stream(
         async for event in pipeline.run_streaming(
             query=req.content,
             news2_score=req.news2_score,
-            retrieval_query=retrieval_query,
+            context_query=context_query,
             history_context=history_context,
         ):
             if event["type"] == "token":

@@ -82,6 +82,7 @@ class MeridianPipeline:
         news2_score: int | None = None,
         use_hyde: bool = False,
         retrieval_query: str | None = None,
+        context_query: str = "",
     ) -> dict[str, Any]:
         """Steps 1-2 shared by both the single-shot and streaming pipelines:
         query understanding, optional HyDE expansion, retrieval, multi-hop,
@@ -119,7 +120,7 @@ class MeridianPipeline:
 
         # 2. Retrieve (with query-type boosting and synonym expansion)
         t0 = time.perf_counter()
-        retrieved = self.retriever.search(retrieval_query, top_k=8, query_type=query_type)
+        retrieved = self.retriever.search(retrieval_query, top_k=8, query_type=query_type, context_query=context_query)
         t_retrieve = round((time.perf_counter() - t0) * 1000)
         reasoning.append(f"Retrieved {len(retrieved)} chunks")
         reasoning.append(f"Timing - Retrieval: {t_retrieve}ms")
@@ -426,6 +427,7 @@ class MeridianPipeline:
         use_hyde: bool = False,
         retrieval_query: str | None = None,
         history_context: str = "",
+        context_query: str = "",
     ) -> AsyncIterator[dict[str, Any]]:
         """Stream tokens as the model generates the answer, then yield one
         final event carrying the same QueryResponse the non-streaming
@@ -449,7 +451,7 @@ class MeridianPipeline:
                 yield {"type": "final", "response": cached}
                 return
 
-        prep = await self._prepare(query, news2_score=news2_score, use_hyde=use_hyde, retrieval_query=retrieval_query)
+        prep = await self._prepare(query, news2_score=news2_score, use_hyde=use_hyde, retrieval_query=retrieval_query, context_query=context_query)
         if "abstain" in prep:
             yield {"type": "final", "response": prep["abstain"]}
             return
@@ -495,6 +497,7 @@ class MeridianPipeline:
         use_hyde: bool = False,
         retrieval_query: str | None = None,
         history_context: str = "",
+        context_query: str = "",
     ) -> QueryResponse:
         """Execute the full pipeline.
 
@@ -507,7 +510,7 @@ class MeridianPipeline:
             if cached is not None:
                 return cached
 
-        prep = await self._prepare(query, news2_score=news2_score, use_hyde=use_hyde, retrieval_query=retrieval_query)
+        prep = await self._prepare(query, news2_score=news2_score, use_hyde=use_hyde, retrieval_query=retrieval_query, context_query=context_query)
         if "abstain" in prep:
             return prep["abstain"]
 

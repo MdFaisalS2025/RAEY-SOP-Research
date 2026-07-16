@@ -119,9 +119,24 @@ class HybridRetriever:
         sop_id: Optional[str] = None,
         status_filter: str = "active",
         expand_query: bool = True,
+        context_query: str = "",
+        context_weight: float = 0.25,
     ) -> list[dict[str, Any]]:
         """
         Hybrid search with query expansion, chunk-type boosting, and metadata filtering.
+
+        context_query (optional): prior conversation turns (e.g. earlier
+        questions in the same chat session), scored as a separate,
+        discounted signal rather than concatenated into `query`.
+        Concatenating let a strong earlier question (e.g. "sepsis
+        management") dominate TF-IDF/dense scoring for every follow-up
+        regardless of what the follow-up actually asked, since both ended
+        up baked into one bag-of-words string - every reply in the
+        conversation kept retrieving (and thus answering from) the same
+        chunks. Scored independently at `context_weight` so it can
+        nudge/tie-break, or contribute chunks a too-vague-to-stand-alone
+        follow-up misses on its own, without ever outweighing the current
+        question's own relevance.
         """
         # 1. Expand query with synonyms
         query_variants = self._expand_query(query) if expand_query else [query]
@@ -178,6 +193,32 @@ class HybridRetriever:
                     # Keep best score across variants
                     if i not in chunk_scores or boosted_score > chunk_scores[i]:
                         chunk_scores[i] = boosted_score
+
+        # 2c. Discounted context pass (see context_query docstring above) -
+        # a single, unboosted score added on top of whatever the primary
+        # query found, so prior conversation turns can only nudge/assist,
+        # never dominate.
+        context_tokens = self._tokenize(context_query) if context_query else []
+        if context_tokens:
+            for i, chunk in enumerate(self.chunks):
+                if department and chunk.get("department", "").lower() != department.lower():
+                    continue
+                if sop_id and chunk.get("sop_id", "") != sop_id:
+                    continue
+                if status_filter and chunk.get("status", "active") == "archived":
+                    continue
+
+                text = chunk.get("text", chunk.get("chunk_text", ""))
+                sparse_score = self._tfidf_score(context_tokens, text)
+
+                if use_dense:
+                    dense_score = dense_similarity(context_query, text)
+                    context_base = (_DENSE_WEIGHT * dense_score) + (_SPARSE_WEIGHT * sparse_score)
+                else:
+                    context_base = sparse_score
+
+                if context_base > 0:
+                    chunk_scores[i] = chunk_scores.get(i, 0.0) + context_base * context_weight
 
         # 3. Build results
         scored = []

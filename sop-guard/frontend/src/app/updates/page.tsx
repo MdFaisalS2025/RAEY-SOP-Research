@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { GitBranch, Plus, Check, X, Clock, ChevronDown, ChevronRight, AlertTriangle, Loader2, Send } from "lucide-react"
 import AppShell from "@/components/layout/app-shell"
+import { SafetyNote } from "@/components/ui/safety-note"
 import { cn } from "@/lib/utils"
 import { getSOPs, proposeUpdate } from "@/lib/api"
 import Link from "next/link"
@@ -111,11 +112,7 @@ export default function UpdatesPage() {
   return (
     <AppShell>
       <div className="p-6 max-w-4xl mx-auto space-y-6">
-        {/* Research Disclaimer */}
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 text-sm">
-          <AlertTriangle className="w-4 h-4 shrink-0" />
-          <span>Research Prototype -- SOP update proposals are for demonstration purposes. Changes require clinical governance approval in production.</span>
-        </div>
+        <SafetyNote />
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">

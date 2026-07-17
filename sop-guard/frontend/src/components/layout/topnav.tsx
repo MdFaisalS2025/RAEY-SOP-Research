@@ -543,19 +543,6 @@ export function TopNav() {
 
           {/* Right cluster */}
           <div className="flex items-center gap-1 ml-auto">
-            {/* Research-only disclaimer - a compact badge rather than a
-                full-width banner on every page. Still always visible (not
-                buried in a menu) since it's a compliance-relevant notice,
-                just sized to match the rest of the utility row instead of
-                dominating the header. */}
-            <div
-              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-100 dark:bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-[#FFD600] text-[11px] font-medium shrink-0"
-              title="Research Only - Not for Clinical Use"
-            >
-              <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-              <span className="hidden 2xl:inline whitespace-nowrap">Research Only</span>
-            </div>
-
             {/* Backend status dot */}
             <div
               className="hidden xl:flex items-center justify-center w-8 h-8 shrink-0"
@@ -872,10 +859,6 @@ export function TopNav() {
                     <span>Sign Out</span>
                   </button>
                 )}
-                <div className="flex items-center gap-2 px-3 py-2 mt-3 rounded-lg bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30">
-                  <div className="w-2 h-2 rounded-full bg-[#B45309] animate-pulse" />
-                  <span className="text-xs text-[#B45309] dark:text-amber-400 font-medium">Research Prototype</span>
-                </div>
               </nav>
             </motion.div>
           </>

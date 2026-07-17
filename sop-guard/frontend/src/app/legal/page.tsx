@@ -8,6 +8,7 @@ import {
 } from "lucide-react"
 import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
+import { SafetyNote } from "@/components/ui/safety-note"
 import { cn } from "@/lib/utils"
 import { MOCK_LEGAL, MOCK_PROPOSALS } from "@/lib/mock-data"
 import { useRole } from "@/lib/role-context"
@@ -81,11 +82,7 @@ export default function LegalPage() {
           </div>
         </div>
 
-        {/* Research disclaimer */}
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400 text-sm">
-          <AlertTriangle className="w-4 h-4 shrink-0" />
-          <span><strong>Research Prototype. Not for Clinical Use.</strong> For demonstration only.</span>
-        </div>
+        <SafetyNote />
 
         {/* Important disclaimer */}
         <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400 text-sm">

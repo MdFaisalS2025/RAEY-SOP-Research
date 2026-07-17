@@ -1,15 +1,14 @@
 "use client"
 
 import Link from "next/link"
-import { AlertTriangle } from "lucide-react"
+import { SafetyNote } from "@/components/ui/safety-note"
 
 export function LandingFooter() {
   return (
     <footer className="relative py-14 px-6 bg-background border-t border-border">
       <div className="max-w-6xl mx-auto text-center">
-        <div className="flex items-center justify-center gap-2 text-[#B45309] dark:text-[#FFD600] text-sm mb-6">
-          <AlertTriangle className="w-4 h-4" />
-          Research prototype. Not for clinical use.
+        <div className="mb-6">
+          <SafetyNote />
         </div>
         <div className="flex items-center justify-center gap-8 text-sm text-muted-foreground">
           <Link href="/architecture" className="hover:text-foreground transition-colors">

@@ -11,7 +11,7 @@ const sora = Sora({ subsets: ["latin"], variable: "--font-display", weight: ["50
 export const metadata: Metadata = {
   title: "Meridian | Hospital SOP & Clinical Knowledge Platform",
   description:
-    "Research prototype: every decision, grounded in evidence. A governed hospital knowledge system unifying SOPs and clinical literature, with built-in procedural faithfulness verification.",
+    "A governed hospital knowledge system unifying SOPs and clinical literature, with built-in procedural faithfulness verification - every answer grounded in evidence, never fabricated.",
   icons: {
     icon: "/favicon.svg",
   },

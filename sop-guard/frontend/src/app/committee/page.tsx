@@ -9,6 +9,7 @@ import {
 import Link from "next/link"
 import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
+import { SafetyNote } from "@/components/ui/safety-note"
 import { cn } from "@/lib/utils"
 import { useRole } from "@/lib/role-context"
 import { DEMO_USERS } from "@/lib/mock-data"
@@ -342,10 +343,10 @@ export default function CommitteePage() {
 
         <motion.div
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.04 }}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30"
+          className="flex items-center justify-between gap-2 flex-wrap"
         >
-          <AlertTriangle className="w-4 h-4 text-[#B45309] dark:text-amber-400 shrink-0" />
-          <span className="text-xs text-[#B45309] dark:text-amber-400">Research Prototype - Not for Clinical Use. Votes are persisted to the backend and affect real quorum outcomes.</span>
+          <span className="text-xs text-muted-foreground">Votes are persisted to the backend and affect real quorum outcomes.</span>
+          <SafetyNote />
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="grid grid-cols-2 lg:grid-cols-4 gap-4">

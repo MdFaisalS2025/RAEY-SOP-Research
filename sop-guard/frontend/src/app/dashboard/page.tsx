@@ -260,7 +260,7 @@ function WinsStat() {
           saving an estimated <span className="font-semibold text-[#0B6BCB]">{hours}</span> hours
         </p>
         {stats.illustrative && (
-          <p className="text-[11px] text-subtle mt-0.5">Illustrative example</p>
+          <p className="text-[11px] text-subtle mt-0.5">Estimated - usage data unavailable</p>
         )}
       </div>
     </div>

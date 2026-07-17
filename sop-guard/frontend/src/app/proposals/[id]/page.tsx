@@ -11,6 +11,7 @@ import {
 import Link from "next/link"
 import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
+import { SafetyNote } from "@/components/ui/safety-note"
 import { cn } from "@/lib/utils"
 import { useRole } from "@/lib/role-context"
 import { DiffView, DiffStatsRow, type DiffSegment, type DiffStats } from "@/components/governance/diff-view"
@@ -565,10 +566,7 @@ export default function ProposalDetailPage() {
 
         {proposal.status === "approved" && <EffectiveDateCard proposal={proposal} onUpdated={setProposal} />}
 
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30">
-          <AlertTriangle className="w-4 h-4 text-[#B45309] dark:text-amber-400 shrink-0" />
-          <span className="text-xs text-[#B45309] dark:text-amber-400">Research Prototype - Not for Clinical Use.</span>
-        </div>
+        <SafetyNote />
 
         <div className="flex items-center gap-1 overflow-x-auto pb-1 border-b border-border">
           {TABS.map((tab) => {

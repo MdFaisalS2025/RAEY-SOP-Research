@@ -3,11 +3,12 @@
 import { Fragment, useState, useMemo, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
-  Shield, AlertTriangle, ChevronDown, ChevronRight,
+  Shield, ChevronDown, ChevronRight,
   Download, Search, Calendar, Loader2, Check
 } from "lucide-react"
 import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
+import { SafetyNote } from "@/components/ui/safety-note"
 import { cn } from "@/lib/utils"
 import type { AuditEntry, AuditEventType } from "@/lib/governance-types"
 import { useRole } from "@/lib/role-context"
@@ -182,11 +183,7 @@ export default function AuditPage() {
           </div>
         </div>
 
-        {/* Research disclaimer */}
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400 text-sm">
-          <AlertTriangle className="w-4 h-4 shrink-0" />
-          <span><strong>Research Prototype. Not for Clinical Use.</strong> For demonstration only.</span>
-        </div>
+        <SafetyNote />
 
         {/* JCI note */}
         <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 text-[#0B6BCB] text-sm">

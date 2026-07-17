@@ -8,6 +8,7 @@ import {
   FileText, Activity,
 } from "lucide-react"
 import AppShell from "@/components/layout/app-shell"
+import { SafetyNote } from "@/components/ui/safety-note"
 import { Skeleton } from "@/components/ui/skeleton"
 
 /* ─── Demo / fallback data ─── */
@@ -233,10 +234,9 @@ export default function FeedbackPage() {
           </div>
         )}
 
-        {/* Research disclaimer */}
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-muted border border-border text-muted-foreground text-xs">
-          <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-          <span>Research Prototype -- Activity data is collected for system evaluation. Not intended for clinical decision-making.</span>
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <span className="text-xs text-muted-foreground">Activity data is collected for system evaluation.</span>
+          <SafetyNote />
         </div>
 
         {/* Page header */}

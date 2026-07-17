@@ -19,6 +19,7 @@ import {
 } from "lucide-react"
 import { useRole } from "@/lib/role-context"
 import AppShell from "@/components/layout/app-shell"
+import { SafetyNote } from "@/components/ui/safety-note"
 import { cn } from "@/lib/utils"
 
 const LEADERSHIP_ROLES = [
@@ -430,7 +431,7 @@ export default function LeadershipPage() {
               </>
             )}
           </button>
-          <p className="text-[11px] text-subtle">Research Prototype - Not for Clinical Use</p>
+          <SafetyNote className="text-[11px]" />
         </div>
       </div>
     </div>

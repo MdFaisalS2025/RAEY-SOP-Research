@@ -5,16 +5,10 @@ import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   Send,
-  ChevronDown,
-  ChevronRight,
   Search,
   Sparkles,
-  CheckCircle2,
-  Circle,
-  Loader2,
   History,
   User,
-  Activity,
   RotateCcw,
 } from "lucide-react"
 import { type InlineCitation } from "@/components/query/citation-chip"
@@ -23,6 +17,7 @@ import { ChatAnswerMessage } from "@/components/query/chat-answer-message"
 import { READING_LEVEL_KEY, type ReadingLevel } from "@/components/query/plain-language"
 import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
+import { SafetyNote } from "@/components/ui/safety-note"
 import { VoiceRecorder } from "@/components/voice/voice-recorder"
 import { querySOPs } from "@/lib/api"
 import { cn } from "@/lib/utils"
@@ -33,14 +28,6 @@ const suggestedQueries = [
 "What contraindications apply before blood transfusion?",
 "What should a nurse monitor after central line insertion?",
 "When should insulin be held for hypoglycemia?",
-]
-
-const pipelineStages = [
-  { label: "Understanding your question...", duration: 1000 },
-  { label: "Searching SOP database...", duration: 1500 },
-  { label: "Generating grounded answer...", duration: 1500 },
-  { label: "Running faithfulness verification...", duration: 1000 },
-  { label: "Computing confidence score...", duration: 500 },
 ]
 
 const CHAT_SESSION_KEY = "meridian-chat-session"
@@ -218,30 +205,12 @@ function mapResponse(query: string, response: any, startedAt: number): Assistant
 
 // ─── Badges and small components ─────────────────────────────────────────────
 
-function PipelineStages({ currentStage }: { currentStage: number }) {
-  return (
-    <div className="p-6 rounded-2xl bg-card border border-border">
-      <h3 className="text-sm font-semibold mb-4">Processing Pipeline</h3>
-      <div className="space-y-3">
-        {pipelineStages.map((stage, i) => {
-          const completed = i < currentStage
-          const active = i === currentStage
-          return (
-            <div key={i} className={cn("flex items-center gap-3 text-sm transition-all duration-300", completed ? "text-[#15803D] dark:text-green-400" : active ? "text-[#0B6BCB]" : "text-subtle")}>
-              {completed ? <CheckCircle2 className="w-5 h-5 text-[#15803D] dark:text-green-400 shrink-0" /> : active ? <Loader2 className="w-5 h-5 text-[#0B6BCB] animate-spin shrink-0" /> : <Circle className="w-5 h-5 shrink-0" />}
-              <span className={cn("font-medium", active && "text-foreground")}>{stage.label}</span>
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
 // Pulsing placeholder shaped like the answer card that's about to arrive
-// (heading, a few text lines, a couple of step rows) - shown alongside the
-// pipeline checklist so the wait reads as "the answer is forming" rather
-// than blank space, since a self-hosted model can take 30-50s per answer.
+// (heading, a few text lines, a couple of step rows) - a quiet shimmer
+// reads as "the answer is forming" without the theatrics of a fake
+// progress checklist, since a self-hosted model can take 30-50s per
+// answer and a step-by-step list of internal pipeline stages doesn't
+// actually tell the reader anything useful about that wait.
 function AnswerSkeleton() {
   return (
     <div className="p-6 sm:p-8 rounded-2xl bg-card border border-border shadow-sm space-y-4 animate-pulse" aria-hidden="true">
@@ -266,84 +235,6 @@ function AnswerSkeleton() {
   )
 }
 
-function news2RiskConfig(score: number) {
-  if (score >= 7) return { label: "HIGH RISK: Consider ICU", className: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30" }
-  if (score >= 5) return { label: "Medium Risk: Urgent Review", className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30" }
-  if (score >= 3) return { label: "Low-Medium Risk", className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30" }
-  return { label: "Low Risk", className: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30" }
-}
-
-// ─── NEWS2 (National Early Warning Score 2) ─────────────────────────────────
-// The real RCP scoring table (7 physiological parameters, each 0-3 points,
-// summed). Letting a nurse enter vitals directly - rather than requiring
-// them to already know their patient's NEWS2 total - is both more accurate
-// (no mental-math transcription error) and more honest about what the
-// number actually represents.
-interface News2Vitals {
-  respRate: string
-  spo2: string
-  onOxygen: boolean
-  sbp: string
-  pulse: string
-  consciousness: "alert" | "cvpu"
-  temp: string
-}
-
-const EMPTY_NEWS2_VITALS: News2Vitals = {
-  respRate: "", spo2: "", onOxygen: false, sbp: "", pulse: "", consciousness: "alert", temp: "",
-}
-
-function scoreRespRate(v: number): number {
-  if (v <= 8) return 3
-  if (v <= 11) return 1
-  if (v <= 20) return 0
-  if (v <= 24) return 2
-  return 3
-}
-function scoreSpo2(v: number): number {
-  if (v <= 91) return 3
-  if (v <= 93) return 2
-  if (v <= 95) return 1
-  return 0
-}
-function scoreSbp(v: number): number {
-  if (v <= 90) return 3
-  if (v <= 100) return 2
-  if (v <= 110) return 1
-  if (v <= 219) return 0
-  return 3
-}
-function scorePulse(v: number): number {
-  if (v <= 40) return 3
-  if (v <= 50) return 1
-  if (v <= 90) return 0
-  if (v <= 110) return 1
-  if (v <= 130) return 2
-  return 3
-}
-function scoreTemp(v: number): number {
-  if (v <= 35.0) return 3
-  if (v <= 36.0) return 1
-  if (v <= 38.0) return 0
-  if (v <= 39.0) return 1
-  return 2
-}
-
-/** Returns the computed NEWS2 total, or null if any required vital is
- * still missing/unparseable - a partial score is worse than no score. */
-function computeNews2(v: News2Vitals): number | null {
-  const respRate = Number(v.respRate), spo2 = Number(v.spo2), sbp = Number(v.sbp), pulse = Number(v.pulse), temp = Number(v.temp)
-  if (![v.respRate, v.spo2, v.sbp, v.pulse, v.temp].every((f) => f !== "") ||
-      [respRate, spo2, sbp, pulse, temp].some((n) => Number.isNaN(n))) {
-    return null
-  }
-  return (
-    scoreRespRate(respRate) + scoreSpo2(spo2) + (v.onOxygen ? 2 : 0) +
-    scoreSbp(sbp) + scorePulse(pulse) + (v.consciousness === "cvpu" ? 3 : 0) + scoreTemp(temp)
-  )
-}
-
-
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 let messageCounter = 0
@@ -357,24 +248,14 @@ export default function QueryPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const [currentStage, setCurrentStage] = useState(0)
   const [streamingText, setStreamingText] = useState("")
   const [queryHistory, setQueryHistory] = useState<Array<{ query: string; confidence: number; type: string; timestamp: number }>>([])
   const [showHistory, setShowHistory] = useState(false)
   const [userRole, setUserRole] = useState("viewer")
   const [serverHistory, setServerHistory] = useState<Array<{ id: number; query: string; confidence: number; query_type: string; timestamp: string }>>([])
-  const [news2Score, setNews2Score] = useState<number | null>(null)
-  const [news2Mode, setNews2Mode] = useState<"manual" | "calculate">("calculate")
-  const [news2Vitals, setNews2Vitals] = useState<News2Vitals>(EMPTY_NEWS2_VITALS)
-  const [showPatientContext, setShowPatientContext] = useState(false)
-
-  useEffect(() => {
-    if (news2Mode === "calculate") setNews2Score(computeNews2(news2Vitals))
-  }, [news2Mode, news2Vitals])
   const [readingLevel, setReadingLevel] = useState<ReadingLevel>("clinical")
 
   const chatDisabledRef = useRef(false)
-  const stageTimerRef = useRef<NodeJS.Timeout | null>(null)
   const threadEndRef = useRef<HTMLDivElement | null>(null)
   const wasNearBottomRef = useRef(true)
   const prevMessageCountRef = useRef(0)
@@ -446,21 +327,6 @@ export default function QueryPage() {
       })
       .catch(() => { sessionStorage.removeItem(CHAT_SESSION_KEY) })
   }, [])
-
-  useEffect(() => {
-    if (!loading) return
-    setCurrentStage(0)
-    let stage = 0
-    const advanceStage = () => {
-      stage++
-      if (stage < pipelineStages.length) {
-        setCurrentStage(stage)
-        stageTimerRef.current = setTimeout(advanceStage, pipelineStages[stage].duration)
-      }
-    }
-    stageTimerRef.current = setTimeout(advanceStage, pipelineStages[0].duration)
-    return () => { if (stageTimerRef.current) clearTimeout(stageTimerRef.current) }
-  }, [loading])
 
   // Track whether the reader is already near the bottom, so a new answer
   // never yanks them away from something they scrolled up to read.
@@ -551,7 +417,7 @@ export default function QueryPage() {
           try {
             response = await streamSSE(
               `/api/chat/sessions/${sid}/messages/stream`,
-              { content: q, news2_score: news2Score ?? null },
+              { content: q },
               onToken,
             )
             if (!response) throw new Error("chat stream failed")
@@ -567,14 +433,14 @@ export default function QueryPage() {
         try {
           response = await streamSSE(
             "/api/query/stream",
-            { query: q, news2_score: news2Score ?? null },
+            { query: q },
             onToken,
           )
         } catch { /* fall through to non-streaming */ }
       }
 
       if (!response) {
-        response = await querySOPs(q, news2Score !== null ? news2Score : undefined)
+        response = await querySOPs(q)
       }
 
       data = mapResponse(q, response, startedAt)
@@ -612,124 +478,6 @@ export default function QueryPage() {
 
   const lastAssistantId = [...messages].reverse().find(m => m.role === "assistant")?.id ?? null
 
-  // Composer and patient-context toggle are defined once and placed
-  // conditionally below: centered above an empty conversation, or pinned
-  // after the thread once a conversation exists - so the page reads like a
-  // real chat (history above, input where you'd expect it, near the latest
-  // message) instead of a form bolted above a results list.
-  const patientContextToggle = (
-    <div className="mb-3">
-      <button onClick={() => setShowPatientContext(!showPatientContext)}
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-        {showPatientContext ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-        <Activity className="w-4 h-4" />
-        Add Patient Context (NEWS2)
-      </button>
-      <AnimatePresence>
-        {showPatientContext && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden mt-2">
-            <div className="p-4 rounded-xl bg-card border border-border space-y-3">
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                NEWS2 (National Early Warning Score 2) is the NHS/Royal College of Physicians standard for scoring a
-                patient&apos;s deterioration risk from six vital signs. Attaching a score lets Meridian frame its answer
-                with matching urgency - e.g. surfacing escalation steps sooner for a high-risk patient - it does not
-                change which SOP is retrieved, only how the answer is worded.
-              </p>
-
-              <div className="flex items-center gap-1 p-0.5 rounded-lg bg-muted w-fit">
-                {([
-                  { key: "calculate" as const, label: "Calculate from vitals" },
-                  { key: "manual" as const, label: "I already know the score" },
-                ]).map((opt) => (
-                  <button key={opt.key} onClick={() => setNews2Mode(opt.key)}
-                    className={cn("px-3 py-1.5 rounded-md text-xs font-medium transition-colors",
-                      news2Mode === opt.key ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-
-              {news2Mode === "manual" ? (
-                <div className="flex items-center gap-4">
-                  <label className="text-sm font-medium shrink-0">NEWS2 Score</label>
-                  <input
-                    type="number"
-                    min={0}
-                    max={20}
-                    value={news2Score ?? ""}
-                    onChange={e => setNews2Score(e.target.value === "" ? null : Number(e.target.value))}
-                    placeholder="0-20"
-                    className="w-24 px-3 py-1.5 rounded-lg bg-muted border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#0B6BCB]/40"
-                  />
-                  {news2Score !== null && (
-                    <span className={cn("inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border", news2RiskConfig(news2Score).className)}>
-                      {news2RiskConfig(news2Score).label}
-                    </span>
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {[
-                      { key: "respRate" as const, label: "Resp. rate", unit: "/min" },
-                      { key: "spo2" as const, label: "SpO₂", unit: "%" },
-                      { key: "sbp" as const, label: "Systolic BP", unit: "mmHg" },
-                      { key: "pulse" as const, label: "Pulse", unit: "bpm" },
-                      { key: "temp" as const, label: "Temp", unit: "°C" },
-                    ].map((f) => (
-                      <div key={f.key}>
-                        <label className="text-xs text-muted-foreground">{f.label} ({f.unit})</label>
-                        <input
-                          type="number"
-                          value={news2Vitals[f.key]}
-                          onChange={(e) => setNews2Vitals((prev) => ({ ...prev, [f.key]: e.target.value }))}
-                          className="mt-0.5 w-full px-2.5 py-1.5 rounded-lg bg-muted border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#0B6BCB]/40"
-                        />
-                      </div>
-                    ))}
-                    <div>
-                      <label className="text-xs text-muted-foreground">Consciousness</label>
-                      <select
-                        value={news2Vitals.consciousness}
-                        onChange={(e) => setNews2Vitals((prev) => ({ ...prev, consciousness: e.target.value as "alert" | "cvpu" }))}
-                        className="mt-0.5 w-full px-2.5 py-1.5 rounded-lg bg-muted border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#0B6BCB]/40">
-                        <option value="alert">Alert</option>
-                        <option value="cvpu">Confusion / Voice / Pain / Unresponsive</option>
-                      </select>
-                    </div>
-                  </div>
-                  <label className="inline-flex items-center gap-2 text-xs text-muted-foreground">
-                    <input type="checkbox" checked={news2Vitals.onOxygen}
-                      onChange={(e) => setNews2Vitals((prev) => ({ ...prev, onOxygen: e.target.checked }))}
-                      className="rounded border-border" />
-                    Patient is on supplemental oxygen
-                  </label>
-                  <div className="flex items-center gap-3 pt-1 border-t border-border">
-                    {news2Score !== null ? (
-                      <>
-                        <span className="text-sm font-medium text-foreground">NEWS2 = {news2Score}</span>
-                        <span className={cn("inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border", news2RiskConfig(news2Score).className)}>
-                          {news2RiskConfig(news2Score).label}
-                        </span>
-                      </>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">Enter all five vitals to calculate the score.</span>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              <p className="text-xs text-muted-foreground">
-                Applies to your next question. Higher scores indicate greater deterioration risk.
-              </p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  )
-
   const composer = (
     <div className="relative">
       <textarea
@@ -758,18 +506,7 @@ export default function QueryPage() {
         {/* Chat header */}
         <div className="mb-4 flex items-start justify-between gap-3 flex-wrap">
           <div className="min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-xl font-semibold text-foreground">Ask Meridian</h1>
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30">
-                Research support only
-              </span>
-            </div>
-            <p className="text-sm text-muted-foreground mt-1">
-              Ask questions across approved SOPs, external evidence, and protocol history.
-            </p>
-            <p className="text-[11px] text-subtle mt-0.5">
-              Do not enter patient-identifiable information.
-            </p>
+            <h1 className="text-xl font-semibold text-foreground">Ask Meridian</h1>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <button onClick={() => setShowHistory(!showHistory)}
@@ -800,8 +537,8 @@ export default function QueryPage() {
             conversation exists they move below the thread (see bottom). */}
         {!submitted && (
           <div className="mb-6">
-            {patientContextToggle}
             {composer}
+            <SafetyNote className="mt-2" />
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
               className="mt-4 flex gap-2 overflow-x-auto pb-2 scrollbar-thin sm:flex-wrap">
               {suggestedQueries.map((q) => (
@@ -878,10 +615,11 @@ export default function QueryPage() {
             )
           })}
 
-          {/* Inline processing pipeline where the next answer will appear.
-              Once real tokens start arriving from the self-hosted model,
-              swap the fake stage timer for the live text itself - the
-              growing answer is a clearer progress signal than a checklist. */}
+          {/* Inline placeholder where the next answer will appear. Once
+              real tokens start arriving from the model, the growing text
+              itself is the progress signal; before that, a quiet shimmer
+              shaped like the answer that's coming - no fake step
+              checklist. */}
           <AnimatePresence>
             {loading && (
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
@@ -891,10 +629,7 @@ export default function QueryPage() {
                     <span className="inline-block w-1.5 h-4 ml-0.5 bg-[#0B6BCB] animate-pulse align-text-bottom" />
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    <PipelineStages currentStage={currentStage} />
-                    <AnswerSkeleton />
-                  </div>
+                  <AnswerSkeleton />
                 )}
               </motion.div>
             )}
@@ -908,8 +643,8 @@ export default function QueryPage() {
             to. */}
         {submitted && (
           <div className="sticky bottom-0 mt-6 pt-4 pb-4 border-t border-border bg-background/95 backdrop-blur-sm">
-            {patientContextToggle}
             {composer}
+            <SafetyNote className="mt-2" />
           </div>
         )}
       </div>

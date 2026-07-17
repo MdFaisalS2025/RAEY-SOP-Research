@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import { Mic, MicOff, Volume2, VolumeX, X, AlertTriangle, Loader2 } from "lucide-react"
+import { SafetyNote } from "@/components/ui/safety-note"
 import { cn } from "@/lib/utils"
 
 const QUICK_QUERIES = [
@@ -246,8 +247,8 @@ export default function BedsidePage() {
         </AnimatePresence>
       </main>
 
-      <footer className="text-center text-xs text-subtle py-4">
-        Research prototype. Verify against the source SOP before clinical use.
+      <footer className="text-center py-4">
+        <SafetyNote />
       </footer>
     </div>
   )

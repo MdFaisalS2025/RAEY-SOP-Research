@@ -3,11 +3,12 @@
 import { useEffect, useMemo, useState } from "react"
 import { motion } from "framer-motion"
 import {
-  BookOpen, Users, AlertTriangle, TrendingUp, ArrowRight, Zap,
+  BookOpen, Users, TrendingUp, ArrowRight, Zap,
   Loader2, ShieldCheck, Trophy,
 } from "lucide-react"
 import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
+import { SafetyNote } from "@/components/ui/safety-note"
 import { cn } from "@/lib/utils"
 import { useRole } from "@/lib/role-context"
 
@@ -108,9 +109,9 @@ export default function TrainingPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400 text-sm">
-          <AlertTriangle className="w-4 h-4 shrink-0" />
-          <span><strong>Research Prototype. Not for Clinical Use.</strong> Credit totals are illustrative, not accredited CE/CPD hours.</span>
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <span className="text-xs text-muted-foreground">Credit totals are illustrative, not accredited CE/CPD hours.</span>
+          <SafetyNote />
         </div>
 
         <div className="px-4 py-3 rounded-xl bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 text-[#0B6BCB] text-sm">

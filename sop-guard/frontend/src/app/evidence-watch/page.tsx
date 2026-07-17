@@ -8,6 +8,7 @@ import {
 } from "lucide-react"
 import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
+import { SafetyNote } from "@/components/ui/safety-note"
 import { cn } from "@/lib/utils"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
@@ -445,10 +446,8 @@ export default function EvidenceWatchPage() {
                   </p>
                 </div>
 
-                <div className="rounded-xl bg-card border border-border px-4 py-3">
-                  <p className="text-[10px] text-muted-foreground/50 uppercase tracking-widest text-center">
-                    Research Prototype - Not for Clinical Use
-                  </p>
+                <div className="rounded-xl bg-card border border-border px-4 py-3 text-center">
+                  <SafetyNote />
                 </div>
               </div>
             </div>

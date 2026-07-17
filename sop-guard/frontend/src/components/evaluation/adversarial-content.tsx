@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
-  AlertTriangle,
   CheckCircle2,
   XCircle,
   AlertCircle,
@@ -15,6 +14,7 @@ import {
   Info,
   Loader2,
 } from "lucide-react"
+import { SafetyNote } from "@/components/ui/safety-note"
 import { cn } from "@/lib/utils"
 import { useRole } from "@/lib/role-context"
 import { useToast } from "@/components/ui/use-toast"
@@ -397,22 +397,9 @@ export function AdversarialContent() {
             </button>
           </div>
 
-          {/* Badges */}
-          <div className="flex flex-wrap gap-2 mt-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 text-xs font-medium">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#B45309]" />
-              Research Prototype
-            </span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400 text-xs font-medium">
-              <AlertTriangle className="w-3 h-3" />
-              Research Prototype - Not for Clinical Use
-            </span>
-          </div>
-
-          {/* Disclaimer */}
-          <div className="mt-4 flex items-start gap-2 px-4 py-3 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 text-xs">
-            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-[#B45309] dark:text-amber-400" />
-            <span>These are designed failure-mode tests, not clinical queries.</span>
+          <div className="mt-3 flex items-center justify-between gap-2 flex-wrap">
+            <span className="text-xs text-muted-foreground">These are designed failure-mode tests, not clinical queries.</span>
+            <SafetyNote />
           </div>
         </motion.div>
 
@@ -667,8 +654,7 @@ export function AdversarialContent() {
         >
           <Info className="w-4 h-4 shrink-0 mt-0.5 text-[#B45309] dark:text-amber-400" />
           <span>
-            These test cases use synthetic SOP data. Designed to probe failure modes - not for clinical use.
-            Meridian v2.0 · Research Prototype Only.
+            These test cases use synthetic SOP data, designed to probe failure modes - not for clinical use.
           </span>
         </motion.div>
       </div>

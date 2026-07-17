@@ -3,12 +3,13 @@
 import { useState } from "react"
 import { motion } from "framer-motion"
 import {
-  Settings, Lock, AlertTriangle, Database, Activity,
+  Settings, Lock, Database, Activity,
   Users, Globe, ToggleLeft, ToggleRight, Plus,
   Server, Brain, HardDrive, Eye, ShieldCheck, Bell, Mail, Smartphone
 } from "lucide-react"
 import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
+import { SafetyNote } from "@/components/ui/safety-note"
 import { cn } from "@/lib/utils"
 import { DEMO_USERS } from "@/lib/mock-data"
 import { useRole } from "@/lib/role-context"
@@ -110,11 +111,7 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Research disclaimer */}
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400 text-sm">
-          <AlertTriangle className="w-4 h-4 shrink-0" />
-          <span><strong>Research Prototype. Not for Clinical Use.</strong> For demonstration only.</span>
-        </div>
+        <SafetyNote />
 
         {/* External Evidence Sources */}
         <section className="space-y-3">

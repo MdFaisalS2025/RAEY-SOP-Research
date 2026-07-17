@@ -114,8 +114,6 @@ export function HeroSection() {
             className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-card border border-border text-muted-foreground text-xs font-medium mb-8"
           >
             <ShieldCheck className="w-3.5 h-3.5 text-[#0B6BCB] dark:text-[#00E5FF]" />
-            Research prototype
-            <span className="w-1 h-1 rounded-full bg-border" />
             Self-hosted, retrieval-grounded, never fabricated
           </motion.div>
 

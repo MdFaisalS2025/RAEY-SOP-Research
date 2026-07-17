@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { BookOpen, ChevronDown, ChevronUp, ExternalLink, Loader2, SearchX, FileText, ShieldCheck, FlaskConical, KeyRound, CircleSlash, type LucideIcon } from "lucide-react"
+import { SafetyNote } from "@/components/ui/safety-note"
 
 const COLLAPSED_COUNT = 3
 
@@ -438,9 +439,7 @@ export function EvidencePanel({ entities, queryText, variant = "card" }: { entit
         </div>
       )}
 
-      <p className="text-[10px] text-subtle mt-3">
-        Research prototype. Live external evidence results are not clinical guidance - verify against primary sources.
-      </p>
+      <SafetyNote variant="external" className="mt-3" />
     </div>
   )
 }

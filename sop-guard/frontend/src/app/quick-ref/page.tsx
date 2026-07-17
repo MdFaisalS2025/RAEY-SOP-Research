@@ -8,6 +8,7 @@ import {
 import Link from "next/link"
 import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
+import { SafetyNote } from "@/components/ui/safety-note"
 import { cn } from "@/lib/utils"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
@@ -186,12 +187,7 @@ export default function QuickRefPage() {
           </button>
         </div>
 
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400 text-sm print:hidden">
-          <AlertTriangle className="w-4 h-4 shrink-0" />
-          <span>
-            <strong>Research Prototype - Not for Clinical Use.</strong> Follow your institution&apos;s approved SOPs.
-          </span>
-        </div>
+        <SafetyNote className="print:hidden" />
 
         <div className="flex flex-col sm:flex-row gap-3 print:hidden">
           <div className="relative flex-1">

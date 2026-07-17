@@ -16,6 +16,7 @@ import {
   Info,
 } from "lucide-react"
 import AppShell from "@/components/layout/app-shell"
+import { SafetyNote } from "@/components/ui/safety-note"
 import { cn } from "@/lib/utils"
 import { useRole } from "@/lib/role-context"
 import { AdversarialContent } from "@/components/evaluation/adversarial-content"
@@ -275,21 +276,15 @@ export default function EvaluationPage() {
 
           {/* Badges */}
           <div className="flex flex-wrap gap-2 mt-3">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 text-xs font-medium">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#B45309]" />
-              Research Prototype
-            </span>
             {llmStatus && (
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 text-[#0B6BCB] text-xs font-medium">
                 <span className={cn("w-1.5 h-1.5 rounded-full", llmStatus.available ? "bg-green-500" : "bg-[#0B6BCB]")} />
                 {llmStatus.mode === "mock" ? "Mock generation (no live LLM configured)" : `${llmStatus.provider} / ${llmStatus.model}`}
               </span>
             )}
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400 text-xs font-medium">
-              <AlertTriangle className="w-3 h-3" />
-              Research Prototype - Not for Clinical Use
-            </span>
           </div>
+
+          <SafetyNote className="mt-3" />
 
           <div className="mt-4 flex items-start gap-2 px-4 py-3 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 text-xs">
             <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-[#B45309] dark:text-amber-400" />
@@ -607,7 +602,7 @@ export default function EvaluationPage() {
             )}
 
             <motion.div {...fade(0.2)} className="text-center text-xs text-subtle pb-4">
-              Meridian · Research Prototype · All metrics computed live from the current pipeline and SOP corpus · Not from real clinical queries
+              All metrics computed live from the current pipeline and SOP corpus · Not from real clinical queries
             </motion.div>
           </>
         )}

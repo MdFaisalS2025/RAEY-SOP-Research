@@ -4,6 +4,7 @@ import { useState, useEffect, FormEvent, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
 import { CheckCircle2, LogIn, ChevronRight, ShieldCheck, Lock, FileCheck } from "lucide-react"
+import { SafetyNote } from "@/components/ui/safety-note"
 import { useAuth } from "@/lib/auth-context"
 import { DEMO_USERS } from "@/lib/mock-data"
 import { ROLE_HIERARCHY } from "@/lib/role-context"
@@ -193,13 +194,7 @@ function LoginPageInner() {
             ))}
           </div>
 
-          {/* Disclaimer */}
-          <div className="mt-4 rounded-lg border border-[#FDE68A] dark:border-amber-500/30 bg-[#FEF3C7] dark:bg-amber-500/10 px-4 py-3">
-            <p className="text-[11px] text-[#B45309] dark:text-amber-400 leading-relaxed font-medium">
-              Research Prototype - Not for Clinical Use. All data shown is simulated for demonstration
-              purposes only.
-            </p>
-          </div>
+          <SafetyNote className="mt-4" />
         </div>
       </div>
 

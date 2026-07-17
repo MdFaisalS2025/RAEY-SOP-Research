@@ -8,6 +8,7 @@ import {
 } from "lucide-react"
 import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
+import { SafetyNote } from "@/components/ui/safety-note"
 import { cn } from "@/lib/utils"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
@@ -435,14 +436,14 @@ export default function ConflictResolutionPage() {
 
         <motion.div
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.04 }}
-          className="flex items-start gap-2 px-4 py-2.5 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30"
+          className="flex items-start justify-between gap-2 flex-wrap"
         >
-          <AlertTriangle className="w-4 h-4 text-[#B45309] dark:text-amber-400 shrink-0 mt-0.5" />
-          <span className="text-xs text-[#B45309] dark:text-amber-400">
-            Research Prototype - Not for Clinical Use. Conflicts are detected automatically from SOP text (regex-based
-            drug-dose and threshold extraction) - there is no manual reporting, assignment, or resolution workflow
-            wired to persistence yet. This is a detection tool, not a case tracker.
+          <span className="text-xs text-muted-foreground max-w-2xl">
+            Conflicts are detected automatically from SOP text (regex-based drug-dose and threshold extraction) -
+            there is no manual reporting, assignment, or resolution workflow wired to persistence yet. This is a
+            detection tool, not a case tracker.
           </span>
+          <SafetyNote />
         </motion.div>
 
         <div className="flex gap-1 p-1 rounded-xl bg-muted border border-border w-fit">

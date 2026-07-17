@@ -88,12 +88,29 @@ class EvidenceSufficiencyChecker:
         # topic-mismatch queries ("heat stroke" vs. Code Stroke Response
         # Protocol - shares the literal token but is a different condition;
         # "jellyfish sting"/"kitchen faucet"/"broken elevator"/"cafeteria
-        # menu") scored -3.0 to -11.2. Every legitimate in-corpus query
-        # tested that reaches this check with evidence actually retrieved
-        # scored +0.68 to +8.9 - see test_evidence_sufficiency.py for the
-        # locked calibration cases. -2.0 sits with margin on both sides of
-        # that gap.
+        # menu") scored -3.0 to -11.2. Most legitimate in-corpus queries
+        # score +0.68 to +8.9, comfortably above this floor - but short,
+        # monitoring-style phrasings of a genuinely correct match can score
+        # as low as -3.1, directly overlapping the "heat stroke" case. See
+        # the semantic_dominance_floor/_margin fallback below for how that
+        # overlap is actually resolved - the absolute floor alone is not
+        # sufficient. See test_evidence_sufficiency.py for locked cases.
         min_semantic_relevance: float = -2.0,
+        # Fallback for the absolute threshold above: some legitimately
+        # in-scope phrasings (short "what should I monitor for X" style
+        # questions) score below -2.0 on raw cross-encoder logits, in a
+        # range that directly overlaps genuine topic-mismatch queries
+        # ("heat stroke" scored -3.0, "central line care" scored -3.1 -
+        # no single cutoff separates them). What does separate them: the
+        # legitimate query's single best-matching SOP dominates every
+        # *other* SOP in the top-5 by a wide margin (or no other SOP even
+        # appears), while the mismatch query's best SOP is only narrowly
+        # ahead of a different, also-plausible SOP. Both conditions must
+        # hold - a merely "less bad than everything else" candidate still
+        # has to clear this floor - see test_evidence_sufficiency.py for
+        # the calibration cases this was measured against.
+        semantic_dominance_floor: float = -6.0,
+        semantic_dominance_margin: float = 5.0,
     ):
         self.min_chunks = min_chunks
         self.min_top_score = min_top_score
@@ -104,6 +121,8 @@ class EvidenceSufficiencyChecker:
         self.corpus_vocabulary = corpus_vocabulary
         self.min_corpus_vocabulary_coverage = min_corpus_vocabulary_coverage
         self.min_semantic_relevance = min_semantic_relevance
+        self.semantic_dominance_floor = semantic_dominance_floor
+        self.semantic_dominance_margin = semantic_dominance_margin
 
     def check(
         self,
@@ -232,11 +251,21 @@ class EvidenceSufficiencyChecker:
         # parameter, so existing unit tests constructing this checker with
         # synthetic chunks (no rerank_score field) are completely
         # unaffected and this check simply sits out for them.
-        semantic_scores = [c["rerank_score"] for c in retrieved_chunks[:5] if "rerank_score" in c]
+        scored = [c for c in retrieved_chunks[:5] if "rerank_score" in c]
         semantic_ok = True
-        if semantic_scores:
-            top_semantic = max(semantic_scores)
+        if scored:
+            top_semantic = max(c["rerank_score"] for c in scored)
             semantic_ok = top_semantic >= self.min_semantic_relevance
+            if not semantic_ok:
+                # Dominance fallback: does the best-scoring SOP clearly
+                # beat every *other* SOP among the top candidates?
+                top_sop = max(scored, key=lambda c: c["rerank_score"]).get("sop_id")
+                rival_scores = [c["rerank_score"] for c in scored if c.get("sop_id") != top_sop]
+                margin = (top_semantic - max(rival_scores)) if rival_scores else float("inf")
+                semantic_ok = (
+                    top_semantic >= self.semantic_dominance_floor
+                    and margin >= self.semantic_dominance_margin
+                )
             checks.append(("semantic_relevance", semantic_ok, round(top_semantic, 3)))
             if not semantic_ok:
                 missing.append("semantically relevant evidence (topic mismatch)")

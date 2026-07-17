@@ -172,6 +172,62 @@ class TestSemanticRelevanceGate:
         assert check["passed"] is True
         assert check["value"] == 4.0
 
+    def test_dominant_but_below_floor_score_still_passes(self, checker):
+        """Real regression: 'What should a nurse monitor after central
+        line insertion?' scored -2.23 against the correct SOP (below the
+        -2.0 absolute floor) purely because of its short, monitoring-style
+        phrasing - not because it's off-topic. When every other candidate
+        in the top-5 belongs to a clearly different, unrelated SOP and
+        scores far worse, that decisive dominance is itself evidence of
+        genuine relevance and should rescue the match."""
+        chunk = _chunk(0.3, "central line insertion site monitoring dressing change")
+        chunk["rerank_score"] = -2.23
+        chunk["sop_id"] = "central-line"
+        rival1 = _chunk(0.3, "unrelated discharge planning content")
+        rival1["rerank_score"] = -11.2
+        rival1["sop_id"] = "discharge"
+        rival2 = _chunk(0.3, "unrelated blood transfusion content")
+        rival2["rerank_score"] = -11.0
+        rival2["sop_id"] = "transfusion"
+        result = checker.check(
+            "What should a nurse monitor after central line insertion?",
+            [chunk, rival1, rival2], "monitoring",
+        )
+        check = next(c for c in result["checks"] if c["name"] == "semantic_relevance")
+        assert check["passed"] is True
+
+    def test_narrow_margin_below_floor_still_hard_gates(self, checker):
+        """Guard against re-breaking the original bug: 'heat stroke' scored
+        -3.0 against a cerebrovascular-stroke SOP, only narrowly ahead of a
+        different SOP at -6.45. A narrow margin must NOT be treated as
+        dominance - the dominance fallback requires a wide, decisive gap,
+        not merely being the least-bad candidate."""
+        chunk = _chunk(0.3, "stroke protocol door-to-CT target time thrombolysis")
+        chunk["rerank_score"] = -3.0
+        chunk["sop_id"] = "code-stroke"
+        rival = _chunk(0.3, "cardiac arrest resuscitation protocol")
+        rival["rerank_score"] = -6.45
+        rival["sop_id"] = "code-blue"
+        result = checker.check(
+            "What is the protocol for heat stroke?", [chunk, rival], "procedure_steps",
+        )
+        check = next(c for c in result["checks"] if c["name"] == "semantic_relevance")
+        assert check["passed"] is False
+        assert result["sufficient"] is False
+
+    def test_low_absolute_score_not_rescued_even_with_no_rivals(self, checker):
+        """The dominance fallback still requires a floor - a single weak
+        candidate with no competing SOP in the top-5 must not be rescued
+        just because nothing else was retrieved."""
+        chunk = _chunk(0.3, "irrelevant unrelated content")
+        chunk["rerank_score"] = -11.2
+        chunk["sop_id"] = "patient-flow"
+        result = checker.check(
+            "What is the cafeteria menu?", [chunk], "general",
+        )
+        check = next(c for c in result["checks"] if c["name"] == "semantic_relevance")
+        assert check["passed"] is False
+
 
 class TestCorpusVocabularyCoverage:
     """

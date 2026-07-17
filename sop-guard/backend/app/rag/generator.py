@@ -83,7 +83,7 @@ class MockGenerator:
         section = top_chunk.get("section_title", "")
         top_text = top_chunk.get("chunk_text", "")
 
-        source_label = f"**Source:** {sop_title}"
+        source_label = f"Source: {sop_title}"
         if section:
             source_label += f", {section}"
 

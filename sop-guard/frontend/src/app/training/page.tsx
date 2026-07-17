@@ -238,7 +238,7 @@ export default function TrainingPage() {
               {leaderboard.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No credit activity recorded yet.</p>
               ) : (
-                <div className="rounded-2xl bg-card border border-border divide-y divide-[#EDF1F5]">
+                <div className="rounded-2xl bg-card border border-border divide-y divide-border">
                   {leaderboard.map((entry, i) => (
                     <div key={entry.user_id} className="flex items-center gap-3 p-4">
                       <span className="w-6 text-sm font-bold text-muted-foreground">#{i + 1}</span>

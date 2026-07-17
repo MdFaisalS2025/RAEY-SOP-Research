@@ -420,13 +420,6 @@ function NurseDashboard() {
         </div>
       )}
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatTile label="Acknowledgments Pending" value={pendingCount} color="amber" icon={CheckCheck} />
-        <StatTile label="Training Overdue" value={2} color="red" icon={GraduationCap} />
-        <StatTile label="Protocol Updates" value={5} color="teal" icon={FileText} trend="up" />
-        <StatTile label="Alerts" value={1} color="amber" icon={AlertTriangle} />
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="space-y-3">
           <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
@@ -1257,16 +1250,30 @@ export default function DashboardPage() {
         {role === "clinical_staff" && (
           <>
             <PhysicianDashboard />
-            <NurseDashboard />
+            <div className="pt-2 border-t border-border">
+              <h2 className="text-xs font-semibold uppercase tracking-widest text-subtle mb-4">
+                Acknowledgments &amp; Training
+              </h2>
+              <NurseDashboard />
+            </div>
           </>
         )}
         {role === "educator" && <NurseEducatorDashboard />}
         {role === "governance_compliance" && (
           <>
             <DeptAdminDashboard />
-            <CommitteeDashboard />
-            <ComplianceOfficerDashboard />
-            <LegalRiskDashboard />
+            <div className="pt-2 border-t border-border">
+              <h2 className="text-xs font-semibold uppercase tracking-widest text-subtle mb-4">Committee</h2>
+              <CommitteeDashboard />
+            </div>
+            <div className="pt-2 border-t border-border">
+              <h2 className="text-xs font-semibold uppercase tracking-widest text-subtle mb-4">Compliance</h2>
+              <ComplianceOfficerDashboard />
+            </div>
+            <div className="pt-2 border-t border-border">
+              <h2 className="text-xs font-semibold uppercase tracking-widest text-subtle mb-4">Legal &amp; Risk</h2>
+              <LegalRiskDashboard />
+            </div>
           </>
         )}
         {role === "system_admin" && <SystemAdminDashboard />}

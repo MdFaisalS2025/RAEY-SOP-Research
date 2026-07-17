@@ -270,14 +270,26 @@ function WinsStat() {
 // ─── Role Views ───────────────────────────────────────────────────────────────
 
 function PhysicianDashboard() {
+  const { currentUser } = useRole()
   const proposal = MOCK_PROPOSALS.find((p) => p.id === "prop-001")
   const evidenceAlert = MOCK_EVIDENCE_WATCH[0]
+
+  // Real specialty scoping - this used to be a hardcoded "12" regardless
+  // of who was logged in, and "Recently Updated SOPs" showed the same
+  // first two SOPs for every physician. Falls back to the full corpus,
+  // most-recent-first, if the user's department has no SOPs of its own
+  // (e.g. an admin/compliance department) rather than showing an empty
+  // section.
+  const specialtySops = MOCK_SOPS.filter((s) => s.department === currentUser.department)
+  const recentSops = [...(specialtySops.length > 0 ? specialtySops : MOCK_SOPS)]
+    .sort((a, b) => (b.last_updated || "").localeCompare(a.last_updated || ""))
+    .slice(0, 2)
 
   return (
     <div className="space-y-6">
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatTile label="SOPs in Specialty" value={12} color="teal" icon={BookOpen} trend="neutral" />
+        <StatTile label="SOPs in Specialty" value={specialtySops.length} color="teal" icon={BookOpen} trend="neutral" />
         <StatTile label="Evidence Alerts" value={2} color="amber" icon={AlertTriangle} />
         <StatTile label="Open Proposals" value={3} color="gray" icon={FileText} />
         <StatTile label="Training Due" value={1} color="red" icon={GraduationCap} />
@@ -287,9 +299,9 @@ function PhysicianDashboard() {
         {/* Recently Updated SOPs */}
         <div className="space-y-3">
           <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
-            Recently Updated SOPs
+            Recently Updated SOPs {specialtySops.length > 0 ? `in ${currentUser.department}` : ""}
           </h3>
-          {MOCK_SOPS.slice(0, 2).map((sop) => (
+          {recentSops.map((sop) => (
             <SopCard key={sop.id} sop={sop} />
           ))}
         </div>

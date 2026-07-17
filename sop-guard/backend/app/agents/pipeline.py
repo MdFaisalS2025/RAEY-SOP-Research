@@ -16,7 +16,7 @@ from app.rag.hybrid_retriever import HybridRetriever
 from app.rag.llm_generator import LLMGenerator
 from app.rag.multihop import MultiHopRetriever
 from app.rag.reranker import get_shared_reranker, CrossEncoderReranker
-from app.rag.evidence_sufficiency import EvidenceSufficiencyChecker, build_corpus_vocabulary
+from app.rag.evidence_sufficiency import EvidenceSufficiencyChecker, build_corpus_vocabulary, confidence_tier
 from app.rag.hyde import generate_hypothetical_doc
 from app.verifier.verifier import ProceduralFaithfulnessVerifier
 from app.agents.query_agent import QueryUnderstandingAgent
@@ -416,6 +416,7 @@ class MeridianPipeline:
             entities=analysis.get("entities", {}),
             route=route,
             external_evidence=external_evidence or [],
+            confidence_tier=confidence_tier(final_confidence),
         )
 
     async def run_streaming(

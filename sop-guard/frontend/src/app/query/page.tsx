@@ -65,6 +65,10 @@ export type AssistantData = {
   needsClarification: boolean
   clarificationQuestion: string
   clarificationOptions: string[]
+  /** "High Confidence" | "Moderate Confidence" | "Weak Match" | "No
+   * Reliable Match" | "" (not computed, e.g. clarification/gap routes) -
+   * see backend evidence_sufficiency.py's confidence_tier(). */
+  confidenceTier: string
 }
 
 /** Pulls "Evidence: sufficient (score: 0.83)" out of the joined reasoning trace. */
@@ -199,6 +203,7 @@ function mapResponse(query: string, response: any, startedAt: number): Assistant
     needsClarification: (ext.needs_clarification as boolean | undefined) ?? false,
     clarificationQuestion: typeof ext.clarification_question === "string" ? ext.clarification_question : "",
     clarificationOptions: Array.isArray(ext.clarification_options) ? (ext.clarification_options as string[]).filter((o) => typeof o === "string") : [],
+    confidenceTier: typeof ext.confidence_tier === "string" ? ext.confidence_tier : "",
     answeredAt: Date.now(),
   }
 }
@@ -465,6 +470,7 @@ export default function QueryPage() {
         needsClarification: false,
         clarificationQuestion: "",
         clarificationOptions: [],
+        confidenceTier: "",
         answeredAt: Date.now(),
         error: true,
       }

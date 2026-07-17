@@ -38,6 +38,7 @@ export interface TrustAuditData {
   generationMode: string | null
   answerId: string | null
   answeredAt: number
+  confidenceTier: string
 }
 
 function extractEvidenceScore(reasoning: string): number | null {
@@ -93,6 +94,15 @@ export function TrustAuditPanel({
   const confidencePct = Math.round(data.verification.confidence * 100)
   const confidenceLevel = data.verification.confidence >= 0.7 ? "high" : data.verification.confidence >= 0.5 ? "medium" : "low"
   const confidenceColor = confidenceLevel === "high" ? "text-[#15803D] dark:text-green-400" : confidenceLevel === "medium" ? "text-[#B45309] dark:text-amber-400" : "text-[#B91C1C] dark:text-red-400"
+  // Backend-calibrated label (see evidence_sufficiency.py's
+  // confidence_tier()) - calibrated against real separation between
+  // sufficient/insufficient evidence, not just a bare score cutoff. Shown
+  // in place of the raw percentage since a calibrated word ("Moderate
+  // Confidence") is more honest than false precision like "73%
+  // confidence" for a number that was never a true probability. Falls
+  // back to the percentage for older/restored answers computed before
+  // this field existed.
+  const tierLabel = data.confidenceTier || null
 
   const faithfulness = data.faithfulness
   const faithfulnessPct = faithfulness ? Math.round(faithfulness.overall_faithfulness * 100) : null
@@ -120,8 +130,8 @@ export function TrustAuditPanel({
         <span className={cn("inline-flex items-center gap-1.5 text-sm font-semibold", sc.className)}>
           <sc.icon className="w-4 h-4" /> {sc.label}
         </span>
-        <span className={cn("inline-flex items-center gap-1.5 text-sm font-medium", confidenceColor)}>
-          <Gauge className="w-3.5 h-3.5" /> {confidencePct}% confidence
+        <span className={cn("inline-flex items-center gap-1.5 text-sm font-medium", confidenceColor)} title={`${confidencePct}% raw score`}>
+          <Gauge className="w-3.5 h-3.5" /> {tierLabel ?? `${confidencePct}% confidence`}
         </span>
         {faithfulnessPct !== null && (
           <span className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground">

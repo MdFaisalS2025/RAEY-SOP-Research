@@ -90,6 +90,10 @@ class QueryResponse(BaseModel):
     needs_clarification: bool = False
     clarification_question: str = ""
     clarification_options: list[str] = []
+    # Physician-readable label for the evidence-sufficiency score (High /
+    # Moderate / Weak / No Reliable Match - see evidence_sufficiency.py's
+    # confidence_tier()) - calibrated honesty instead of a bare percentage.
+    confidence_tier: str = ""
 
 
 # ── SOP ────────────────────────────────────────────────────────

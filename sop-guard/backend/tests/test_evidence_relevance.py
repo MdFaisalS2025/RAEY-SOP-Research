@@ -61,3 +61,40 @@ async def test_search_all_drops_irrelevant_titles(monkeypatch):
     assert "Standards for donor human milk banking" not in titles
     assert "Sepsis management in the emergency department" in titles
     assert "Norepinephrine dosing in septic shock" in titles
+
+
+class TestSemanticTitleGate:
+    """
+    Real bug this guards against: is_title_relevant is pure lexical
+    overlap, so "heat stroke" matched a WHO paper titled "Health economic
+    assessment tools (HEAT) for walking and for cycling" purely because
+    "heat"/"HEAT" collide after lowercasing - same-token-different-meaning,
+    exactly the failure mode already fixed for internal SOP retrieval (see
+    evidence_sufficiency.py's semantic_relevance check). search_all's
+    cross-encoder gate is the same fix applied to external evidence
+    titles.
+    """
+
+    async def test_lexical_collision_is_dropped_by_semantic_gate(self, monkeypatch):
+        from app.integrations import evidence_registry
+        fake = _FakeSource([
+            "Health economic assessment tools (HEAT) for walking and for cycling: methodology and user guide",
+            "Outcome of heat stroke patients referred to a tertiary hospital in Pakistan: a retrospective study",
+        ])
+        monkeypatch.setattr(evidence_registry, "_REGISTRY", {"fake": fake})
+        results = await search_all("What is the protocol for heat stroke?", sources=["fake"], max_results=5)
+        titles = [r["title"] for r in results]
+        assert "Outcome of heat stroke patients referred to a tertiary hospital in Pakistan: a retrospective study" in titles
+        assert not any("walking and for cycling" in t for t in titles)
+
+    async def test_sparse_titles_are_not_penalized(self, monkeypatch):
+        """Titles with no distinctive content words (too short/garbled to
+        judge) must pass through ungated, same leniency is_title_relevant
+        itself already applies - a real source occasionally returns one."""
+        from app.integrations import evidence_registry
+        fake = _FakeSource(["Old", "New"])
+        monkeypatch.setattr(evidence_registry, "_REGISTRY", {"fake": fake})
+        results = await search_all("sepsis", sources=["fake"], max_results=5)
+        titles = [r["title"] for r in results]
+        assert "Old" in titles
+        assert "New" in titles

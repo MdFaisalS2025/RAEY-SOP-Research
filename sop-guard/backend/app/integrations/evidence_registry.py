@@ -11,7 +11,41 @@ Research prototype. Not for clinical use.
 
 from typing import Any, Optional
 
-from app.integrations.evidence_source import EvidenceSource, classify_stance, is_title_relevant, grade_evidence, evidence_grade_rank
+from app.integrations.evidence_source import EvidenceSource, classify_stance, is_title_relevant, grade_evidence, evidence_grade_rank, _significant_words
+
+# Real bug this guards against: is_title_relevant is pure lexical overlap
+# (any shared significant word), so "heat stroke" matched a WHO paper
+# titled "Health economic assessment tools (HEAT) for walking and for
+# cycling" purely because "heat"/"HEAT" collide after lowercasing - the
+# exact same same-token-different-meaning failure the cross-encoder
+# semantic gate already fixed for internal SOP retrieval (see
+# evidence_sufficiency.py's semantic_relevance check). Applied here as a
+# second gate on top of (not instead of) is_title_relevant, since the
+# lexical check is a cheap, useful pre-filter and this is genuinely
+# expensive per-title.
+#
+# Threshold calibrated separately from the internal-SOP one (-2.0) because
+# titles are much shorter than SOP chunks and score systematically lower:
+# real weakest-true-positive titles scored ~-7.2, strongest false
+# positives (the HEAT/heat-stroke collision, etc.) scored ~-8.9 - -8.0
+# sits at the midpoint of that real, measured gap.
+_MIN_TITLE_RELEVANCE = -8.0
+
+
+def _semantic_scores(term: str, titles: list[str]) -> list[float] | None:
+    """Cross-encoder relevance score for `term` against each title, or
+    None if the real cross-encoder isn't available (falls back to
+    lexical-only filtering, same as before this gate existed)."""
+    from app.config import settings
+    from app.rag.reranker import get_shared_reranker, CrossEncoderReranker
+
+    reranker = get_shared_reranker(backend=settings.RAG_RERANKER_BACKEND, model_name=settings.RAG_RERANKER_MODEL)
+    if not isinstance(reranker, CrossEncoderReranker) or not titles:
+        return None
+    try:
+        return [float(s) for s in reranker.model.predict([(term, t) for t in titles])]
+    except Exception:
+        return None
 from app.integrations.pubmed import PubMedSource
 from app.integrations.europepmc import EuropePMCSource
 from app.integrations.cdc import CDCSource
@@ -96,6 +130,23 @@ async def search_all(
             r["stance"] = classify_stance(r.get("title", ""))
             r["evidence_grade"] = grade_evidence(r)
         relevant = [r for r in records if is_title_relevant(term, r.get("title", ""))]
+
+        # Second, real gate on top of the lexical one above - see
+        # _semantic_scores' docstring for the exact bug this catches
+        # (shared-token, different-meaning title collisions the lexical
+        # check can't tell apart). Only judges titles that actually have
+        # distinctive content words, same "can't judge, don't penalize"
+        # leniency is_title_relevant itself uses for sparse/empty titles.
+        judgeable = [r for r in relevant if _significant_words(r.get("title", ""))]
+        scores = _semantic_scores(term, [r.get("title", "") for r in judgeable])
+        if scores is not None:
+            below_threshold = set()
+            for r, s in zip(judgeable, scores):
+                r["semantic_relevance"] = round(s, 3)
+                if s < _MIN_TITLE_RELEVANCE:
+                    below_threshold.add(id(r))
+            relevant = [r for r in relevant if id(r) not in below_threshold]
+
         if sort_by == "grade":
             relevant.sort(key=lambda r: (evidence_grade_rank(r), r.get("pub_date_parsed") or "0000-00-00"), reverse=True)
         else:

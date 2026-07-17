@@ -424,9 +424,9 @@ export function ChatAnswerMessage({
         <button onClick={() => setCollapsed(false)}
           className="w-full text-left p-4 rounded-2xl bg-card border border-border hover:border-[#0B6BCB]/30 transition-colors">
           <p className="text-sm text-muted-foreground leading-relaxed">{plainTextPreview(data.answer)}</p>
-          {data.inlineCitations.length > 0 && (
+          {groundingCitations.length > 0 && (
             <div className="mt-3" onClick={(e) => e.stopPropagation()}>
-              <SourceStrip citations={data.inlineCitations} onSelect={handleCitationClick} />
+              <SourceStrip citations={groundingCitations} onSelect={handleCitationClick} />
             </div>
           )}
         </button>
@@ -475,9 +475,9 @@ export function ChatAnswerMessage({
               )}
               <AnswerRenderer text={displayAnswer} citations={data.inlineCitations} onCitationClick={handleCitationClick} animate={isLatest} />
             </div>
-            {data.inlineCitations.length > 0 && (
+            {groundingCitations.length > 0 && (
               <div className="mt-5 pt-4 border-t border-border">
-                <SourceStrip citations={data.inlineCitations} onSelect={handleCitationClick} />
+                <SourceStrip citations={groundingCitations} onSelect={handleCitationClick} />
               </div>
             )}
           </div>

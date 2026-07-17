@@ -22,7 +22,7 @@ export function EvidenceDrawer({
 }) {
   return (
     <SlideOver open={open} onClose={onClose} title="External Evidence" icon={BookOpen}
-      subtitle="Live external literature, guidelines, and provider status - for reference only, not clinical guidance.">
+      subtitle="Clinical literature and guidelines for reference, not clinical guidance.">
       <EvidencePanel entities={entities} queryText={queryText} variant="bare" />
     </SlideOver>
   )

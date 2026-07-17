@@ -183,7 +183,7 @@ export function ProtocolComparisonPanel({ sopId, preloaded }: { sopId: string; p
   if (loading) {
     return (
       <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground py-12">
-        <Loader2 className="w-4 h-4 animate-spin" /> Comparing internal SOP against external protocol...
+        <Loader2 className="w-4 h-4 animate-spin" /> Comparing with clinical evidence...
       </div>
     )
   }
@@ -199,13 +199,9 @@ export function ProtocolComparisonPanel({ sopId, preloaded }: { sopId: string; p
 
   return (
     <div className="space-y-4">
-      <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30">
-        <AlertTriangle className="w-4 h-4 text-[#B45309] dark:text-amber-400 shrink-0 mt-0.5" />
-        <p className="text-xs text-[#B45309] dark:text-amber-400">
-          External evidence is for reference and must be reviewed by the appropriate hospital committee before any SOP change.
-          This comparison does not replace clinical judgment.
-        </p>
-      </div>
+      <p className="text-xs text-muted-foreground px-1">
+        Meridian compared the SOP with current clinical evidence. Review with the appropriate committee before any SOP change.
+      </p>
 
       {data.reference_source ? (
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
@@ -231,11 +227,19 @@ export function ProtocolComparisonPanel({ sopId, preloaded }: { sopId: string; p
         </div>
       )}
 
-      {data.summary.overall_alignment !== "Aligned" && (
+      {data.summary.overall_alignment === "Partially Aligned" && (
+        <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30">
+          <AlertTriangle className="w-4 h-4 text-[#B45309] dark:text-amber-400 shrink-0 mt-0.5" />
+          <p className="text-xs text-[#B45309] dark:text-amber-400">
+            Some recommendations differ from the current SOP. Review may be useful.
+          </p>
+        </div>
+      )}
+      {data.summary.overall_alignment === "Needs Review" && (
         <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30">
           <AlertTriangle className="w-4 h-4 text-[#B91C1C] dark:text-red-400 shrink-0 mt-0.5" />
           <p className="text-xs font-medium text-[#B91C1C] dark:text-red-400">
-            Potential SOP-evidence difference detected. Committee review recommended.
+            Meaningful differences from current evidence. Committee review recommended.
           </p>
         </div>
       )}

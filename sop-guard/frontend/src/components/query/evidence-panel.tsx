@@ -1,67 +1,10 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { BookOpen, ChevronDown, ChevronUp, ExternalLink, Loader2, SearchX, FileText, ShieldCheck, FlaskConical, KeyRound, CircleSlash, type LucideIcon } from "lucide-react"
+import { BookOpen, ChevronDown, ChevronUp, ExternalLink, Loader2, SearchX, FileText, ShieldCheck, FlaskConical, type LucideIcon } from "lucide-react"
 import { SafetyNote } from "@/components/ui/safety-note"
 
 const COLLAPSED_COUNT = 3
-
-type ProviderStatus = "active" | "mock" | "not_configured" | "requires_api_key"
-
-interface ProviderInfo {
-  key: string
-  name: string
-  status: ProviderStatus
-  capabilities: string[]
-  requires: string[]
-  notes: string
-}
-
-const PROVIDER_STATUS_META: Record<ProviderStatus, { label: string; className: string; icon: LucideIcon }> = {
-  active: { label: "Active", className: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30", icon: ShieldCheck },
-  mock: { label: "Mock", className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30", icon: FlaskConical },
-  not_configured: { label: "Not Configured", className: "bg-muted text-subtle border-border", icon: CircleSlash },
-  requires_api_key: { label: "Requires API Key", className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30", icon: KeyRound },
-}
-
-/**
- * Honest provider status row, replacing the old "OpenEvidence (coming
- * soon)" dashed chip - fetches real status from the backend instead of
- * hardcoding a claim about any provider's integration state.
- */
-function ProviderStatusRow() {
-  const [providers, setProviders] = useState<ProviderInfo[] | null>(null)
-
-  useEffect(() => {
-    let cancelled = false
-    fetch("/api/evidence/providers")
-      .then((r) => r.json())
-      .then((data) => { if (!cancelled) setProviders(Array.isArray(data?.providers) ? data.providers : []) })
-      .catch(() => { if (!cancelled) setProviders([]) })
-    return () => { cancelled = true }
-  }, [])
-
-  if (!providers || providers.length === 0) return null
-
-  return (
-    <div className="mb-3 p-3 rounded-xl bg-muted/50 border border-border">
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">Evidence Providers</p>
-      <div className="flex flex-wrap gap-1.5">
-        {providers.map((p) => {
-          const meta = PROVIDER_STATUS_META[p.status] ?? PROVIDER_STATUS_META.not_configured
-          return (
-            <span key={p.key}
-              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border ${meta.className}`}
-              title={p.notes || `${p.name}: ${meta.label}`}>
-              <meta.icon className="w-2.5 h-2.5" />
-              {p.name} · {meta.label}
-            </span>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
 
 interface EvidenceRecord {
   title: string
@@ -79,28 +22,10 @@ interface EvidenceRecord {
   evidence_grade?: "Strong" | "Moderate" | "Limited" | "Research Only" | "Outdated" | "Unknown"
 }
 
-const TRUST_TIER_STYLE: Record<number, string> = {
-  1: "bg-[#0B6BCB]/10 dark:bg-[#00E5FF]/10 text-[#0B6BCB] dark:text-[#00E5FF] border-[#0B6BCB]/30 dark:border-[#00E5FF]/30",
-  2: "bg-muted text-muted-foreground border-border",
-  3: "bg-muted text-subtle border-border",
-}
 const TRUST_TIER_LABEL: Record<number, string> = {
   1: "Tier 1 · Flagship Journal",
   2: "Tier 2 · Indexed",
   3: "Tier 3 · Unranked",
-}
-
-// Rough evidence-hierarchy tinting, same spirit as the GRADE-style tags
-// UpToDate uses - a scannable hint, not a substitute for full appraisal.
-const STUDY_TYPE_STYLE: Record<string, string> = {
-  "Meta-Analysis": "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30",
-  "Systematic Review": "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30",
-  "Practice Guideline": "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30",
-  "Guideline": "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30",
-  "Randomized Controlled Trial": "bg-[#0B6BCB]/10 text-[#0B6BCB] border-[#0B6BCB]/30",
-  "Clinical Trial": "bg-[#0B6BCB]/10 text-[#0B6BCB] border-[#0B6BCB]/30",
-  "Review": "bg-card text-muted-foreground border-input",
-  "Case Reports": "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30",
 }
 
 const SOURCE_LABEL: Record<string, string> = {
@@ -312,8 +237,6 @@ export function EvidencePanel({ entities, queryText, variant = "card" }: { entit
         </div>
       )}
 
-      {variant === "bare" && <ProviderStatusRow />}
-
       {term && (
         <p className="text-[11px] text-subtle mb-3">
           Search term: <span className="font-mono">{term}</span>
@@ -376,17 +299,10 @@ export function EvidencePanel({ entities, queryText, variant = "card" }: { entit
                     <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#F1F5F9] dark:bg-white/5 text-muted-foreground border border-border">
                       {SOURCE_LABEL[r.source_type] ?? r.source_type}
                     </span>
-                    {r.study_type && (
-                      <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium border ${STUDY_TYPE_STYLE[r.study_type] ?? "bg-card text-muted-foreground border-input"}`}>
-                        {r.study_type}
-                      </span>
-                    )}
-                    {r.trust_tier && (
-                      <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium border ${TRUST_TIER_STYLE[r.trust_tier]}`}>
-                        {r.journal_display_name ? `${r.journal_display_name} · ` : ""}{TRUST_TIER_LABEL[r.trust_tier]}
-                      </span>
-                    )}
-                    <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium border ${GRADE_STYLE[gradeEvidence(r)]}`} title="Evidence grade: strength/currency, not a claim-accuracy judgment">
+                    <span
+                      className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium border ${GRADE_STYLE[gradeEvidence(r)]}`}
+                      title={[r.study_type, r.trust_tier ? TRUST_TIER_LABEL[r.trust_tier] : null].filter(Boolean).join(" · ") || "Evidence grade: strength/currency, not a claim-accuracy judgment"}
+                    >
                       {gradeEvidence(r)}
                     </span>
                     {r.stance === "yes" && (

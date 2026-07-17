@@ -5,7 +5,7 @@ import { motion } from "framer-motion"
 import {
   Save, CheckCircle2, XCircle, Loader2,
   Mic, MicOff, Palette, Database, ShieldCheck, Lock, Sliders,
-  BookOpen, Users, BarChart3, Info,
+  BookOpen, Users, BarChart3, Info, FlaskConical, KeyRound, CircleSlash, type LucideIcon,
 } from "lucide-react"
 import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
@@ -61,6 +61,44 @@ function ComingSoonRow({ label, description }: { label: string; description: str
       <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-muted text-subtle border border-border shrink-0">
         Coming soon
       </span>
+    </div>
+  )
+}
+
+type ProviderStatus = "active" | "mock" | "not_configured" | "requires_api_key"
+interface ProviderInfo { key: string; name: string; status: ProviderStatus; notes: string }
+const PROVIDER_STATUS_META: Record<ProviderStatus, { label: string; className: string; icon: LucideIcon }> = {
+  active: { label: "Active", className: "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/25", icon: ShieldCheck },
+  mock: { label: "Mock", className: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25", icon: FlaskConical },
+  not_configured: { label: "Not Configured", className: "bg-muted text-subtle border-border", icon: CircleSlash },
+  requires_api_key: { label: "Requires API Key", className: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25", icon: KeyRound },
+}
+
+// Provider infrastructure status - moved here from the Ask Meridian evidence
+// drawer, which should show search results, not backend configuration state.
+function ProviderStatusList() {
+  const [providers, setProviders] = useState<ProviderInfo[] | null>(null)
+  useEffect(() => {
+    fetch("/api/evidence/providers")
+      .then((r) => r.json())
+      .then((data) => setProviders(Array.isArray(data?.providers) ? data.providers : []))
+      .catch(() => setProviders([]))
+  }, [])
+  if (!providers) return <p className="text-xs text-muted-foreground">Loading provider status...</p>
+  if (providers.length === 0) return null
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {providers.map((p) => {
+        const meta = PROVIDER_STATUS_META[p.status] ?? PROVIDER_STATUS_META.not_configured
+        return (
+          <span key={p.key}
+            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border ${meta.className}`}
+            title={p.notes || `${p.name}: ${meta.label}`}>
+            <meta.icon className="w-2.5 h-2.5" />
+            {p.name} · {meta.label}
+          </span>
+        )
+      })}
     </div>
   )
 }
@@ -535,6 +573,12 @@ export default function SettingsPage() {
                     </div>
                   ))}
                 </div>
+              </SettingsCard>
+              <SettingsCard title="Provider Status">
+                <p className="text-xs text-muted-foreground">
+                  Live connection status for each evidence source's backend integration.
+                </p>
+                <ProviderStatusList />
               </SettingsCard>
               <SettingsCard title="Trust Scoring">
                 <p className="text-xs text-muted-foreground">

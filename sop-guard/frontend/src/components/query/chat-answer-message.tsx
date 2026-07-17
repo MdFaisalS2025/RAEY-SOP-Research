@@ -336,7 +336,6 @@ export function ChatAnswerMessage({
     : distinctSopTitles[0]
       ? `Based on ${distinctSopTitles[0]}${primaryVersion ? ` v${primaryVersion}` : ""}`
       : null
-  const singleSourceCaveat = !isAbstained && data.route !== "external_evidence" && distinctSopTitles.length === 1
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="space-y-3">
@@ -432,23 +431,16 @@ export function ChatAnswerMessage({
           )}
         </button>
       ) : isAbstained ? (
-        <div className="p-6 sm:p-8 rounded-2xl bg-card border border-[#FDE68A] dark:border-amber-500/30">
+        <div className="p-6 sm:p-8 rounded-2xl bg-card border border-border">
           <div className="flex items-start gap-4">
-            <div className="w-11 h-11 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 flex items-center justify-center shrink-0 text-xl">
-              🚨
+            <div className="w-11 h-11 rounded-xl bg-muted flex items-center justify-center shrink-0">
+              <FileText className="w-5 h-5 text-muted-foreground" />
             </div>
             <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-lg font-semibold text-foreground">Potential SOP Gap Detected</h2>
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30">
-                  No approved SOP found
-                </span>
-              </div>
-              <p className="text-[15px] leading-relaxed text-muted-foreground mt-2">{data.answer.replace(/\[\d+\]/g, "")}</p>
-              <p className="text-[13px] leading-relaxed text-muted-foreground mt-2">
-                No approved hospital procedure currently covers this question, and no supporting external evidence was
-                found either. Meridian only answers when it can point to grounded evidence, and flags the gap instead
-                of guessing.
+              <h2 className="text-lg font-semibold text-foreground">No approved SOP found</h2>
+              <p className="text-[15px] leading-relaxed text-muted-foreground mt-2">
+                Meridian did not find an approved internal SOP or external clinical evidence that directly
+                answers this question.
               </p>
             </div>
           </div>
@@ -459,12 +451,14 @@ export function ChatAnswerMessage({
       ) : (
         <div className="space-y-3">
           {data.route === "external_evidence" && (
-            <div className="p-4 rounded-2xl bg-card border border-[#FDE68A] dark:border-amber-500/30">
-              <div className="flex items-center gap-2 flex-wrap mb-3">
-                <span className="text-lg leading-none">🚨</span>
-                <h3 className="text-sm font-semibold text-foreground">Potential SOP Gap Detected</h3>
-                <span className="text-xs text-muted-foreground">— no approved SOP covers this question</span>
+            <div className="p-4 rounded-2xl bg-card border border-border">
+              <div className="flex items-center gap-2 flex-wrap mb-1">
+                <FileText className="w-4 h-4 text-muted-foreground shrink-0" />
+                <h3 className="text-sm font-semibold text-foreground">No approved SOP found</h3>
               </div>
+              <p className="text-[13px] text-muted-foreground mb-3">
+                Relevant external clinical evidence is shown below for review.
+              </p>
               <GapReportPanel queryText={data.query} externalCitations={data.inlineCitations.filter((c) => c.is_external)} />
             </div>
           )}
@@ -479,14 +473,7 @@ export function ChatAnswerMessage({
                   </p>
                 </div>
               )}
-              {data.faithfulness?.sentences && data.faithfulness.sentences.length > 0 && (
-                <div className="flex flex-wrap items-center gap-3 mb-3 text-[11px] text-muted-foreground">
-                  <span className="inline-flex items-center gap-1"><span className="w-2.5 h-0.5 rounded bg-[#15803D]/50" />Grounded</span>
-                  <span className="inline-flex items-center gap-1"><span className="w-2.5 h-0.5 rounded bg-[#B45309]/60" />Partially grounded</span>
-                  <span className="inline-flex items-center gap-1"><span className="w-2.5 h-0.5 rounded bg-[#B91C1C]/60" />Not grounded</span>
-                </div>
-              )}
-              <AnswerRenderer text={displayAnswer} citations={data.inlineCitations} onCitationClick={handleCitationClick} groundingSentences={data.faithfulness?.sentences} animate={isLatest} />
+              <AnswerRenderer text={displayAnswer} citations={data.inlineCitations} onCitationClick={handleCitationClick} animate={isLatest} />
             </div>
             {data.inlineCitations.length > 0 && (
               <div className="mt-5 pt-4 border-t border-border">
@@ -494,12 +481,6 @@ export function ChatAnswerMessage({
               </div>
             )}
           </div>
-          {singleSourceCaveat && (
-            <p className="text-[12px] text-muted-foreground flex items-center gap-1.5 px-1">
-              <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-              Single-source answer - verify against the full SOP
-            </p>
-          )}
           <FeedbackRow queryText={data.query} />
         </div>
       )}
@@ -513,8 +494,8 @@ export function ChatAnswerMessage({
           {!isAbstained && (
             <AnswerActionToolbar
               primary={[
-                ...(primarySopId ? [{ key: "comparison", label: "Compare SOP vs Internet", icon: GitCompare, onClick: () => setActiveDrawer("comparison"), active: activeDrawer === "comparison" }] : []),
-                ...(primarySopId ? [{ key: "versions", label: "View Version History", icon: History, onClick: () => setActiveDrawer("versions"), active: activeDrawer === "versions" }] : []),
+                ...(primarySopId ? [{ key: "comparison", label: "Compare with Clinical Evidence", icon: GitCompare, onClick: () => setActiveDrawer("comparison"), active: activeDrawer === "comparison" }] : []),
+                ...(primarySopId ? [{ key: "versions", label: "Version History", icon: History, onClick: () => setActiveDrawer("versions"), active: activeDrawer === "versions" }] : []),
                 ...(hasPermission("create_proposal") ? [{ key: "proposal", label: "Create Update Proposal", icon: PlusCircle, onClick: () => router.push(`/proposals?new=1&sop=${encodeURIComponent(firstCitation)}&query=${encodeURIComponent(data.query)}`) }] : []),
               ]}
               secondary={[
@@ -534,8 +515,8 @@ export function ChatAnswerMessage({
       <EvidenceDrawer open={activeDrawer === "evidence"} onClose={() => setActiveDrawer(null)} entities={data.entities} queryText={data.query} />
 
       {/* SOP vs External Protocol Comparison drawer */}
-      <SlideOver open={activeDrawer === "comparison"} onClose={() => setActiveDrawer(null)} title="Compare SOP vs Internet" icon={GitCompare} width="2xl"
-        subtitle="Internal SOP steps checked against external guidance, side by side.">
+      <SlideOver open={activeDrawer === "comparison"} onClose={() => setActiveDrawer(null)} title="Compare with Clinical Evidence" icon={GitCompare} width="2xl"
+        subtitle="Meridian compared the SOP with current clinical evidence.">
         {primarySopId && <ProtocolComparisonPanel sopId={primarySopId} preloaded={comparison !== "loading" ? comparison : undefined} />}
       </SlideOver>
 

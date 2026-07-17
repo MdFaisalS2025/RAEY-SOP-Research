@@ -217,26 +217,39 @@ function mapResponse(query: string, response: any, startedAt: number): Assistant
 // reads as "the answer is forming" without the theatrics of a fake
 // progress checklist, since a self-hosted model can take 30-50s per
 // answer and a step-by-step list of internal pipeline stages doesn't
-// actually tell the reader anything useful about that wait.
+// actually tell the reader anything useful about that wait. A single
+// rotating status line above it gives a sense of progress without
+// exposing pipeline internals - closer to ChatGPT/Claude/Copilot's "..."
+// than a research prototype's stage-by-stage trace.
+const LOADING_PHRASES = ["Searching approved SOPs…", "Reviewing clinical evidence…", "Preparing answer…"]
+
 function AnswerSkeleton() {
+  const [phraseIndex, setPhraseIndex] = useState(0)
+  useEffect(() => {
+    const t = setInterval(() => setPhraseIndex((i) => Math.min(i + 1, LOADING_PHRASES.length - 1)), 1800)
+    return () => clearInterval(t)
+  }, [])
   return (
-    <div className="p-6 sm:p-8 rounded-2xl bg-card border border-border shadow-sm space-y-4 animate-pulse" aria-hidden="true">
-      <div className="h-4 w-2/5 rounded bg-muted" />
-      <div className="space-y-2">
-        <div className="h-3 w-full rounded bg-muted" />
-        <div className="h-3 w-11/12 rounded bg-muted" />
-        <div className="h-3 w-4/5 rounded bg-muted" />
-      </div>
-      <div className="space-y-3 pt-2">
-        {[0, 1, 2].map((i) => (
-          <div key={i} className="flex items-start gap-3">
-            <div className="w-7 h-7 rounded-full bg-muted shrink-0" />
-            <div className="flex-1 space-y-1.5 pt-1">
-              <div className="h-3 w-full rounded bg-muted" />
-              <div className="h-3 w-2/3 rounded bg-muted" />
+    <div className="p-6 sm:p-8 rounded-2xl bg-card border border-border shadow-sm space-y-4" aria-hidden="true">
+      <p className="text-sm text-muted-foreground">{LOADING_PHRASES[phraseIndex]}</p>
+      <div className="space-y-4 animate-pulse">
+        <div className="h-4 w-2/5 rounded bg-muted" />
+        <div className="space-y-2">
+          <div className="h-3 w-full rounded bg-muted" />
+          <div className="h-3 w-11/12 rounded bg-muted" />
+          <div className="h-3 w-4/5 rounded bg-muted" />
+        </div>
+        <div className="space-y-3 pt-2">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="flex items-start gap-3">
+              <div className="w-7 h-7 rounded-full bg-muted shrink-0" />
+              <div className="flex-1 space-y-1.5 pt-1">
+                <div className="h-3 w-full rounded bg-muted" />
+                <div className="h-3 w-2/3 rounded bg-muted" />
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   )

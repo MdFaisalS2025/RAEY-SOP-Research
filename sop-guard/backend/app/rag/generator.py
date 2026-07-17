@@ -26,11 +26,6 @@ from app.rag.citation_tracker import build_numbered_context, extract_citations, 
 # does useful, narrow work: catching near-zero-relevance queries.
 _MIN_RELEVANCE = 0.05
 
-_DISCLAIMER = (
-    "\n\n---\n"
-    "Research prototype - verify against official SOP documents."
-)
-
 # Patterns to strip from chunk text during cleaning
 _NOISE_PATTERNS = [
     re.compile(r"^DISCLAIMER.*$", re.MULTILINE | re.IGNORECASE),
@@ -128,7 +123,6 @@ class MockGenerator:
             answer = self._build_general_answer(sop_title, top_text, good_chunks, citation_map)
 
         answer += f"\n\n{source_label}"
-        answer += _DISCLAIMER
 
         # Validate/strip [N] markers and mark which citation records were
         # actually used - same post-processing the LLM path does, so both

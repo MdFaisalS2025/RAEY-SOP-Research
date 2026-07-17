@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { AlertTriangle, FileWarning, Gavel, PlusCircle, Eye, Users, CheckCircle2, Loader2 } from "lucide-react"
+import { FileWarning, Gavel, PlusCircle, Eye, Users, CheckCircle2, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { toast } from "@/components/ui/use-toast"
 import type { InlineCitation } from "@/components/query/citation-chip"
@@ -18,13 +18,9 @@ interface GapReport {
 
 export function ExternalOnlyWarning() {
   return (
-    <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30">
-      <AlertTriangle className="w-4 h-4 text-[#B45309] dark:text-amber-400 shrink-0 mt-0.5" />
-      <p className="text-xs text-[#B45309] dark:text-amber-400">
-        No approved SOP exists for this yet, so the material below is external reference literature only -
-        not hospital policy. Do not enter patient-identifiable information.
-      </p>
-    </div>
+    <p className="text-xs text-muted-foreground px-1">
+      External evidence should be reviewed before any SOP change.
+    </p>
   )
 }
 
@@ -107,7 +103,7 @@ export function GapReportPanel({
       {outline.length > 0 && (
         <div className="rounded-2xl bg-card border border-border p-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2 flex items-center gap-1.5">
-            <FileWarning className="w-3.5 h-3.5" /> Suggested Procedure Outline (illustrative only)
+            <FileWarning className="w-3.5 h-3.5" /> Suggested Procedure Outline
           </p>
           <ul className="space-y-1.5">
             {outline.map((title, i) => (
@@ -117,8 +113,7 @@ export function GapReportPanel({
             ))}
           </ul>
           <p className="text-[11px] text-subtle mt-2">
-            Derived from external literature titles only - not a vetted clinical procedure. A committee must
-            author any real SOP content.
+            Derived from external literature titles. A committee must author any real SOP content.
           </p>
         </div>
       )}

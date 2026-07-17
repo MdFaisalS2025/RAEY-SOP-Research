@@ -293,7 +293,6 @@ Answer:"""
         citations = [f"[Source: {t}]" for t in sop_titles]
 
         answer_text += "\n\nSource: " + ", ".join(sop_titles)
-        answer_text += "\n\n---\nResearch prototype. Check the source SOP before acting on this information."
 
         top_score = retrieved_chunks[0].get("relevance_score", 0) if retrieved_chunks else 0
         confidence = min(0.95, max(0.5, top_score * 8))

@@ -15,7 +15,7 @@ from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.database.db import init_db, async_session
-from app.api import routes_query, routes_sops, routes_feedback, routes_voice, routes_evaluation, routes_activity, routes_evidence, routes_governance, routes_chat, routes_cds, routes_overrides, routes_credits, routes_analytics, routes_smart, routes_capa, routes_settings, routes_sop_versions, routes_comparison, routes_gap_reports
+from app.api import routes_query, routes_sops, routes_feedback, routes_voice, routes_evaluation, routes_activity, routes_evidence, routes_governance, routes_chat, routes_cds, routes_overrides, routes_credits, routes_analytics, routes_smart, routes_capa, routes_settings, routes_sop_versions, routes_comparison, routes_gap_reports, routes_privacy
 
 
 async def _load_demo_data() -> None:
@@ -337,6 +337,7 @@ app.include_router(routes_settings.router)
 app.include_router(routes_sop_versions.router)
 app.include_router(routes_comparison.router)
 app.include_router(routes_gap_reports.router)
+app.include_router(routes_privacy.router)
 
 
 @app.get("/")

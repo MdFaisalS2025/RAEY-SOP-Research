@@ -76,6 +76,15 @@ class Settings(BaseSettings):
     RAG_MAX_CHUNKS: int = 8
     RAG_MIN_CONFIDENCE: float = 0.3
 
+    # --- Privacy / PHI guard (see app/privacy/phi_guard.py) ---
+    # "rule" = fast, dependency-free regex/heuristic PHI detector (default,
+    # always available). "openmed" selects an optional OpenMed-based clinical
+    # NER adapter that is NOT bundled - it degrades gracefully back to the
+    # rule provider with a logged warning if the package isn't installed,
+    # exactly like RAG_RERANKER_BACKEND's cross-encoder fallback. The guard
+    # is OpenMed-INSPIRED, not OpenMed-integrated, under the default.
+    PHI_PROVIDER_BACKEND: str = "rule"  # rule | openmed
+
     # --- Security ---
     CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:5173"]
     SESSION_EXPIRY_HOURS: int = 24

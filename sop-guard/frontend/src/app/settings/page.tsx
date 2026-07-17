@@ -109,6 +109,7 @@ export default function SettingsPage() {
   const [enabledSources, setEnabledSources] = useState<Set<string>>(new Set())
   const [settingsLoading, setSettingsLoading] = useState(true)
   const [settingsSaved, setSettingsSaved] = useState(false)
+  const [privacy, setPrivacy] = useState<{ phi_guard?: string; active?: boolean; openmed_integrated?: boolean; note?: string } | null>(null)
 
   const setDensity = (value: "comfortable" | "compact") => {
     setDensityState(value)
@@ -170,6 +171,7 @@ export default function SettingsPage() {
         setConfidenceThreshold(data.confidence_threshold ?? 0.6)
         setAllSources(Array.isArray(data.all_evidence_sources) ? data.all_evidence_sources : [])
         setEnabledSources(new Set(Array.isArray(data.enabled_evidence_sources) ? data.enabled_evidence_sources : []))
+        setPrivacy(data.privacy ?? null)
       })
       .catch(() => {})
       .finally(() => setSettingsLoading(false))
@@ -427,6 +429,30 @@ export default function SettingsPage() {
           )}
 
           {activeTab === "security" && (
+            <>
+            <SettingsCard
+              title="Privacy & PHI Protection"
+              badge={
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border bg-green-500/10 border-green-500/25 text-green-400">
+                  Active
+                </span>
+              }
+            >
+              <p className="text-xs text-muted-foreground">
+                Questions are scanned for likely patient identifiers (name, MRN, dates,
+                phone, email, SSN, address) in the Ask Meridian composer before they reach
+                the model, with one-click redaction. Detection runs locally on this
+                deployment — no query text is sent to a third party to perform the scan.
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <StatusItem label="PHI guard" value={privacy?.phi_guard ?? "rule-based"} />
+                <StatusItem label="Status" value={privacy?.active === false ? "Inactive" : "Active"} />
+              </div>
+              <p className="text-xs text-subtle pt-2 border-t border-border">
+                {privacy?.note ??
+                  "Rule-based, OpenMed-inspired heuristic. Flags common direct identifiers; not exhaustive or clinical-grade de-identification."}
+              </p>
+            </SettingsCard>
             <SettingsCard title="Identity & Access">
               <ComingSoonRow label="Single Sign-On (SSO)" description="SAML / OIDC integration with hospital identity provider" />
               <ComingSoonRow label="LDAP / Active Directory" description="Directory-synced roles and department assignment" />
@@ -438,6 +464,7 @@ export default function SettingsPage() {
                 deployment - flagged honestly as not yet built, not toggled on.
               </p>
             </SettingsCard>
+            </>
           )}
 
           {activeTab === "ai" && (

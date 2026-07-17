@@ -12,8 +12,24 @@ from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
 from app.services.app_settings import get_settings, update_settings
+from app.privacy.phi_guard import get_phi_provider
 
 router = APIRouter(prefix="/api/settings", tags=["Settings"])
+
+
+def _privacy_status() -> dict:
+    """Honest privacy/provider status surfaced on the Settings page. Kept in
+    sync with GET /api/privacy/status - both read the same live provider."""
+    return {
+        "phi_guard": get_phi_provider().name,
+        "active": True,
+        "openmed_integrated": False,
+        "note": (
+            "Rule-based, OpenMed-inspired heuristic. Flags common direct "
+            "identifiers before a question reaches the model. Not exhaustive "
+            "or clinical-grade de-identification."
+        ),
+    }
 
 
 class SettingsUpdate(BaseModel):
@@ -23,7 +39,7 @@ class SettingsUpdate(BaseModel):
 
 @router.get("")
 async def read_settings():
-    return get_settings()
+    return {**get_settings(), "privacy": _privacy_status()}
 
 
 @router.put("")

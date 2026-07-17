@@ -18,8 +18,30 @@ from app.database.db import get_db
 from app.models.models import ChatSessionRecord, ChatMessageRecord
 from app.agents.pipeline import MeridianPipeline
 from app.services.chunk_loader import load_chunks
+from app.services.activity import log_activity
+from app.privacy.phi_guard import get_phi_provider
 
 router = APIRouter(tags=["Chat"])
+
+
+def _audit_phi(content: str) -> None:
+    """Best-effort PHI audit on an inbound question. Records only the *types*
+    and count of identifiers detected - never the raw PHI text - so the audit
+    trail can show 'PHI was present and flagged' without itself becoming a
+    place PHI is stored. Never raises: a guard failure must not block answering.
+
+    Detection here is advisory/annotative only (matches the composer's
+    non-blocking indicator); the question is still answered normally."""
+    try:
+        spans = get_phi_provider().detect(content or "")
+        if spans:
+            types = sorted({s.type for s in spans})
+            log_activity(
+                action="phi_detected",
+                details=f"{len(spans)} identifier(s) flagged before generation: {', '.join(types)}",
+            )
+    except Exception as e:  # pragma: no cover - defensive
+        print(f"[Meridian] Warning: PHI audit failed: {e}")
 
 
 class ChatSessionCreate(BaseModel):
@@ -165,6 +187,7 @@ async def post_message(
     if not chunks:
         raise HTTPException(status_code=404, detail="No SOPs loaded.")
 
+    _audit_phi(req.content)
     pipeline = MeridianPipeline(chunks, structured_sops)
     result = await pipeline.run(
         query=req.content,
@@ -209,6 +232,7 @@ async def post_message_stream(
     if not chunks:
         raise HTTPException(status_code=404, detail="No SOPs loaded.")
 
+    _audit_phi(req.content)
     pipeline = MeridianPipeline(chunks, structured_sops)
 
     async def event_stream():

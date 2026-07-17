@@ -10,6 +10,8 @@ import {
   History,
   User,
   RotateCcw,
+  ShieldCheck,
+  ShieldAlert,
 } from "lucide-react"
 import { type InlineCitation } from "@/components/query/citation-chip"
 import { AnswerRenderer } from "@/components/query/answer-renderer"
@@ -259,6 +261,9 @@ export default function QueryPage() {
   const [userRole, setUserRole] = useState("viewer")
   const [serverHistory, setServerHistory] = useState<Array<{ id: number; query: string; confidence: number; query_type: string; timestamp: string }>>([])
   const [readingLevel, setReadingLevel] = useState<ReadingLevel>("clinical")
+  // PHI guard: result of scanning the current composer text (see
+  // /api/privacy/scan). Advisory only - never blocks sending.
+  const [phi, setPhi] = useState<{ has_phi: boolean; types: string[]; redacted_text: string } | null>(null)
 
   const chatDisabledRef = useRef(false)
   const threadEndRef = useRef<HTMLDivElement | null>(null)
@@ -266,6 +271,24 @@ export default function QueryPage() {
   const prevMessageCountRef = useRef(0)
 
   const submitted = messages.length > 0
+
+  // Debounced PHI scan of the composer text. Skips very short input (no point
+  // scanning "sepsis?") and clears the indicator when the box is emptied.
+  useEffect(() => {
+    const text = query.trim()
+    if (text.length < 8) { setPhi(null); return }
+    const t = setTimeout(() => {
+      fetch("/api/privacy/scan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: query }),
+      })
+        .then((r) => r.json())
+        .then((d) => setPhi({ has_phi: !!d.has_phi, types: d.types ?? [], redacted_text: d.redacted_text ?? query }))
+        .catch(() => setPhi(null))
+    }, 400)
+    return () => clearTimeout(t)
+  }, [query])
 
   useEffect(() => {
     fetch("/api/query/history?limit=10")
@@ -501,6 +524,27 @@ export default function QueryPage() {
           <Send className="w-5 h-5" />
         </button>
       </div>
+      {phi && (
+        phi.has_phi ? (
+          <div className="mt-2 flex items-center flex-wrap gap-x-2 gap-y-1 text-xs">
+            <span className="inline-flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-medium">
+              <ShieldAlert className="w-3.5 h-3.5" />
+              Possible patient identifier detected{phi.types.length ? ` (${phi.types.join(", ").toLowerCase()})` : ""}
+            </span>
+            <button
+              onClick={() => setQuery(phi.redacted_text)}
+              className="underline underline-offset-2 text-[#0B6BCB] dark:text-[#00E5FF] hover:opacity-80"
+            >
+              Redact before sending
+            </button>
+          </div>
+        ) : (
+          <div className="mt-2 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+            <ShieldCheck className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
+            No patient identifiers detected
+          </div>
+        )
+      )}
     </div>
   )
 

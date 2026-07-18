@@ -468,6 +468,60 @@ GOLD_CASES: list[GoldCase] = [
         acceptable_routes=("sop_library",),
     ),
 
+    # ── Chemotherapy Administration Safety Protocol ──
+    GoldCase(
+        id="chemo-anc-threshold", category="sop",
+        query="What ANC is required before giving chemotherapy?",
+        expected_sop="Chemotherapy Administration Safety Protocol",
+        reference_answer="The absolute neutrophil count must be at least 1500/mm3 to proceed, unless there is a documented oncologist-approved exception.",
+        must_include=("1500/mm3",),
+        acceptable_routes=("sop_library",),
+    ),
+    GoldCase(
+        id="chemo-double-check", category="sop",
+        query="Who must verify a chemotherapy dose before it is given?",
+        expected_sop="Chemotherapy Administration Safety Protocol",
+        reference_answer="Two chemotherapy-certified clinicians must complete an independent double-check of patient, drug, dose, and route immediately before administration.",
+        must_include=("independent double-check",),
+        acceptable_routes=("sop_library",),
+    ),
+
+    # ── Cardiogenic Shock and Vasopressor Management Protocol ──
+    GoldCase(
+        id="cardiogenic-ci-threshold", category="sop",
+        query="What cardiac index defines cardiogenic shock?",
+        expected_sop="Cardiogenic Shock and Vasopressor Management Protocol",
+        reference_answer="Cardiogenic shock is defined as a cardiac index below 2.2 L/min/m2 with a pulmonary capillary wedge pressure above 18 mmHg.",
+        must_include=("2.2 l/min/m2",),
+        acceptable_routes=("sop_library",),
+    ),
+    GoldCase(
+        id="cardiogenic-first-line-inotrope", category="sop",
+        query="What is the first-line inotrope for cardiogenic shock?",
+        expected_sop="Cardiogenic Shock and Vasopressor Management Protocol",
+        reference_answer="Dobutamine is first-line, started at 2.5 mcg/kg/min and titrated to a maximum of 20 mcg/kg/min.",
+        must_include=("2.5 mcg/kg/min",),
+        acceptable_routes=("sop_library",),
+    ),
+
+    # ── Opioid Analgesia and Overdose Prevention Protocol ──
+    GoldCase(
+        id="opioid-hold-dose-trigger", category="sop",
+        query="When should an opioid dose be held for sedation concerns?",
+        expected_sop="Opioid Analgesia and Overdose Prevention Protocol",
+        reference_answer="Hold the dose if RASS is -2 or lower, or respiratory rate is below 10 per minute.",
+        must_include=("10/min",),
+        acceptable_routes=("sop_library",),
+    ),
+    GoldCase(
+        id="opioid-naloxone-dose", category="sop",
+        query="What is the naloxone dose for opioid overdose reversal?",
+        expected_sop="Opioid Analgesia and Overdose Prevention Protocol",
+        reference_answer="Naloxone 0.04-0.4 mg IV, repeated every 2-3 minutes as needed until adequate respiratory rate and responsiveness return.",
+        must_include=("0.04-0.4 mg",),
+        acceptable_routes=("sop_library",),
+    ),
+
     # ── External-fallback (no internal SOP) ──
     GoldCase(
         id="ext-jellyfish", category="external",

@@ -21,6 +21,7 @@ DRUG_LEXICON = [
     "piperacillin", "tazobactam", "meropenem", "ceftriaxone", "cefepime",
     "morphine", "fentanyl", "hydromorphone", "acetaminophen", "ibuprofen",
     "propofol", "midazolam", "ketamine", "labetalol", "nicardipine",
+    "naloxone",
 ]
 
 # ~30-term condition lexicon
@@ -33,6 +34,12 @@ CONDITION_LEXICON = [
     "stroke", "seizure", "diabetic ketoacidosis", "arrhythmia",
     "bradycardia", "tachycardia", "hypoxia", "acidosis", "fever",
     "delirium", "pain",
+    # D6 corpus expansion: general topic-identifying terms for the three
+    # new clinical domains, mirroring "pain" already being a generic
+    # symptom rather than a specific disease - these ground a query to its
+    # SOP's clinical topic even when no single named drug/condition is
+    # present (e.g. "who must verify a chemotherapy dose" names no drug).
+    "cardiogenic shock", "chemotherapy", "opioid",
 ]
 
 # Dose pattern: number + unit (mcg/kg/min, units/min, units/hr, mg, mL/kg, etc.)

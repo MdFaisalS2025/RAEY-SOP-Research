@@ -1,6 +1,8 @@
 """Tests for the numbered citation tracker: numbering, dedupe, invalid stripping."""
 
-from app.rag.citation_tracker import build_numbered_context, extract_citations, attach_citation_numbers
+from app.rag.citation_tracker import (
+    build_numbered_context, extract_citations, attach_citation_numbers, citation_coverage,
+)
 
 
 def _chunks():
@@ -68,3 +70,46 @@ def test_attach_citation_numbers_sentence_not_found_is_safe():
     sentences = [{"text": "This text is not in the answer at all."}]
     attach_citation_numbers("Completely different answer text.", sentences)
     assert sentences[0]["citation_numbers"] == []
+
+
+class TestCitationCoverage:
+    """Real bug (found empirically while diagnosing a D6 corpus-expansion
+    test failure): the sentence-splitting regex fired on the whitespace
+    between a sentence-ending period and a trailing "[N]" marker - e.g.
+    "...organism. [1]" split into "...organism." and "[1]" as two separate
+    fragments. The 3-character "[1]" fragment failed the length filter and
+    was dropped, so the sentence it was marking was counted as uncited even
+    though every mock-generated line ends exactly this way (". [N]"). This
+    was silently broken for the entire deterministic mock-mode answer
+    format the whole time - it just wasn't caught because a live-LLM
+    answer's different sentence shape occasionally kept the RAGAS-lite
+    aggregate average above zero."""
+
+    def test_marker_immediately_after_sentence_period_counts(self):
+        answer = "Norepinephrine starting dose is 0.05 mcg/kg/min, titrated to target. [1]"
+        assert citation_coverage(answer) == 1.0
+
+    def test_multiple_bullet_lines_each_with_trailing_marker(self):
+        answer = (
+            "- Norepinephrine starting dose is 0.05 mcg/kg/min, titrated to target. [1]\n"
+            "- MAP target is >=65 mmHg, initiate vasopressor if below target. [4]\n"
+        )
+        assert citation_coverage(answer) == 1.0
+
+    def test_numbered_step_lines_with_trailing_marker(self):
+        answer = (
+            "1. Contact: private room or cohort with same organism. [1]\n"
+            "2. Contact: don gloves and gown before entering room. [1]\n"
+        )
+        assert citation_coverage(answer) == 1.0
+
+    def test_sentence_with_no_marker_is_uncited(self):
+        answer = "This is a substantive sentence with no citation marker at all."
+        assert citation_coverage(answer) == 0.0
+
+    def test_mixed_cited_and_uncited_sentences(self):
+        answer = (
+            "This substantive sentence has a citation marker attached. [1]\n"
+            "This other substantive sentence has no marker attached at all.\n"
+        )
+        assert citation_coverage(answer) == 0.5

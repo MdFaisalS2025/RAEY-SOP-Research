@@ -89,15 +89,37 @@ class TestHarness:
     # substring of "Risk Management" and misclassified any query mentioning
     # that department, starving the real threshold chunk.
     #
+    # The set was grown again (D6) from 55 to 61 cases, adding Chemotherapy
+    # Administration Safety, Cardiogenic Shock and Vasopressor Management,
+    # and Opioid Analgesia and Overdose Prevention - three clinical domains
+    # with zero prior coverage. That growth exposed two more real bugs:
+    # (1) citation_tracker.py's citation_coverage() sentence-splitter fired
+    # on the whitespace between a sentence-ending period and a trailing
+    # "[N]" marker, orphaning the marker into its own sub-20-char fragment
+    # that the length filter then dropped - silently broken for every
+    # mock-generated answer the whole time, just masked by live-LLM answers
+    # occasionally keeping the RAGAS-lite average above zero; and (2) two
+    # independent, narrower entity lexicons (query_agent.py's own
+    # drug/condition pattern lists, separate from entity_graph.py's
+    # DRUG_LEXICON/CONDITION_LEXICON) didn't recognize the new SOPs'
+    # vocabulary (dobutamine/inotrope, naloxone/opioid, chemotherapy,
+    # cardiogenic shock), so queries naming no other drug fell back to
+    # generic classification or false ambiguity. Both fixed; one narrower
+    # case (a "who must verify" role question that a topically-dense new
+    # threshold chunk out-competes for evidence-sufficiency purposes) is
+    # left as a known, documented gap rather than chased into a deeper
+    # retrieval-reweighting change for a single query's benefit.
+    #
     # Mock-mode (fully reproducible, not rate-limit-dependent) is the floor
-    # basis: 0.673 pass-rate / 0.653 completeness on the current 55-case
-    # set, up from 0.64 / 0.6 on the prior 36-case set. Floors sit just
-    # under that so an occasional rate-limit-induced mock fallback mid-run
-    # doesn't flake CI. Ratchet up as retrieval improves further - not an
-    # aspirational bar to hit by hiding a real deficiency, an honest floor
-    # at the measured baseline.
-    _PASS_RATE_FLOOR = 0.60
-    _COMPLETENESS_FLOOR = 0.55
+    # basis: 0.672 pass-rate / 0.655 completeness on the current 61-case
+    # set - essentially matching the pre-expansion 55-case baseline (0.673/
+    # 0.653) despite adding three entirely new clinical domains. Floors sit
+    # just under that so an occasional rate-limit-induced mock fallback
+    # mid-run doesn't flake CI. Ratchet up as retrieval improves further -
+    # not an aspirational bar to hit by hiding a real deficiency, an honest
+    # floor at the measured baseline.
+    _PASS_RATE_FLOOR = 0.63
+    _COMPLETENESS_FLOOR = 0.60
 
     @pytest.mark.asyncio
     async def test_harness_produces_valid_scored_report(self):

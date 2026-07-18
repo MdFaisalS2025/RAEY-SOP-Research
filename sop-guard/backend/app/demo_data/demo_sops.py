@@ -58,6 +58,7 @@ DEMO_SOPS = [
             "as soon as medically feasible, ideally within 6-12 hours.\n\n"
             "5. THRESHOLDS AND TARGETS\n"
             "- MAP target: >=65 mmHg (initiate vasopressor if MAP <65 mmHg)\n"
+            "- Norepinephrine starting dose: 0.05 mcg/kg/min, titrate to MAP >=65 mmHg\n"
             "- Lactate: >2 mmol/L triggers repeat measurement and aggressive resuscitation\n"
             "- Fluid resuscitation: 30 mL/kg crystalloid within 3 hours\n"
             "- Antibiotics: within 1 hour of recognition\n"
@@ -110,6 +111,7 @@ DEMO_SOPS = [
             ],
             "thresholds": [
                 {"parameter": "MAP", "value": ">=65 mmHg", "action": "Initiate vasopressor if MAP <65 mmHg"},
+                {"parameter": "Norepinephrine starting dose", "value": "0.05 mcg/kg/min", "action": "First-line vasopressor, titrate to MAP >=65 mmHg"},
                 {"parameter": "Lactate", "value": ">2 mmol/L", "action": "Repeat within 2-4 hours, aggressive resuscitation"},
                 {"parameter": "Fluid resuscitation", "value": "30 mL/kg", "action": "Administer crystalloid within 3 hours"},
                 {"parameter": "Antibiotic timing", "value": "<=1 hour", "action": "Administer within 1 hour of recognition"},
@@ -1958,6 +1960,311 @@ DEMO_SOPS = [
             "contraindications": [
                 "Rolling out an intervention house-wide without a completed small-scale PDSA test cycle.",
                 "Closing a QI project as successful without a documented sustainment check.",
+            ],
+        },
+    },
+    # ------------------------------------------------------------------ 20
+    {
+        "sop_id": "SOP-ONC-020",
+        "title": "Chemotherapy Administration Safety Protocol",
+        "department": "Oncology",
+        "version": "1.1",
+        "effective_date": "2025-04-01",
+        "review_date": "2026-10-01",
+        "raw_text": (
+            "CHEMOTHERAPY ADMINISTRATION SAFETY PROTOCOL - ONCOLOGY\n"
+            "Version 1.1 | Effective 2025-04-01\n"
+            "DISCLAIMER: This is a SYNTHETIC SOP for research demonstration only.\n\n"
+            "1. PURPOSE\n"
+            "This protocol standardizes safe verification, administration, and monitoring "
+            "of chemotherapy to prevent dosing errors, extravasation injury, and "
+            "hypersensitivity harm.\n\n"
+            "2. SCOPE\n"
+            "Applies to all chemotherapy-certified nursing staff and pharmacists preparing "
+            "or administering antineoplastic agents in inpatient and infusion-center settings.\n\n"
+            "3. DEFINITIONS\n"
+            "Vesicant: an agent that causes tissue necrosis if extravasated. Independent "
+            "Double-Check: two chemotherapy-certified clinicians separately verifying the "
+            "order against the patient, drug, dose, and route before administration.\n\n"
+            "4. PROCEDURE\n"
+            "Step 1: Confirm active informed consent for the current treatment cycle before "
+            "any chemotherapy is prepared.\n"
+            "Step 2: Verify absolute neutrophil count (ANC) and platelet count are within "
+            "range on same-day labs before releasing the order to pharmacy.\n"
+            "Step 3: Pharmacy calculates dose from current height/weight (body surface area) "
+            "and confirms against the original order and any protocol-specified dose cap.\n"
+            "Step 4: Complete an independent double-check with a second chemotherapy-"
+            "certified clinician immediately before administration, verifying patient "
+            "identifiers, drug, dose, route, and infusion rate.\n"
+            "Step 5: Administer ordered antiemetic premedication before starting a "
+            "moderate-to-high emetogenic-risk regimen.\n"
+            "Step 6: For vesicant agents, confirm a patent, freely-flowing central line or "
+            "newly-placed peripheral line with a documented blood return before starting.\n"
+            "Step 7: Remain at bedside for the first 15 minutes of any new agent to monitor "
+            "for an acute hypersensitivity reaction.\n"
+            "Step 8: Monitor the IV site for pain, swelling, or blanching every 30 minutes "
+            "throughout a vesicant infusion.\n"
+            "Step 9: Document the lot number, start/stop times, total dose delivered, and "
+            "the name of both clinicians who performed the independent double-check.\n\n"
+            "5. THRESHOLDS AND TARGETS\n"
+            "- Minimum ANC to proceed: >=1500/mm3 (unless oncologist-approved exception)\n"
+            "- Minimum platelet count to proceed: >=100,000/mm3\n"
+            "- Bedside observation for new agents: first 15 minutes\n"
+            "- Vesicant IV-site monitoring interval: every 30 minutes\n\n"
+            "6. CONTRAINDICATIONS\n"
+            "- Do NOT administer without a completed independent double-check by two "
+            "chemotherapy-certified clinicians.\n"
+            "- Do NOT administer a vesicant through a peripheral line without a confirmed "
+            "blood return.\n"
+            "- Do NOT proceed with ANC <1500/mm3 or platelets <100,000/mm3 without a "
+            "documented oncologist exception.\n\n"
+            "7. ESCALATION CRITERIA\n"
+            "Stop the infusion immediately and activate the extravasation kit protocol for "
+            "any pain, swelling, or blanching at a vesicant IV site (Step 8) - do not "
+            "flush the line or attempt to resume through the same site. Stop the infusion "
+            "and activate the emergency response team for any sign of hypersensitivity "
+            "(wheezing, hypotension, facial swelling) during the Step 7 observation period "
+            "or at any point thereafter. Notify the oncologist immediately if same-day labs "
+            "fall below the Step 2 thresholds after the order was already released to "
+            "pharmacy.\n\n"
+            "8. RESPONSIBLE ROLES\n"
+            "Chemotherapy-certified RN (primary and independent double-check): dose "
+            "verification, administration, and site monitoring. Pharmacist: dose "
+            "calculation and verification against protocol. Oncologist/prescriber: order, "
+            "lab-threshold exceptions, and extravasation/hypersensitivity management "
+            "decisions.\n\n"
+            "9. DOCUMENTATION\n"
+            "Document consent confirmation, same-day lab values used for the Step 2 check, "
+            "both double-check clinicians' names, lot numbers, infusion times, and total "
+            "dose delivered. Document the time and reason for any escalation, and the "
+            "name/role of the person notified.\n"
+        ),
+        "structured_json": {
+            "steps": [
+                {"step": 1, "action": "Confirm active informed consent for current cycle."},
+                {"step": 2, "action": "Verify same-day ANC and platelet count before releasing order."},
+                {"step": 3, "action": "Pharmacy calculates BSA-based dose, confirms against order and dose cap."},
+                {"step": 4, "action": "Independent double-check with second certified clinician before administration."},
+                {"step": 5, "action": "Give antiemetic premedication before moderate/high-emetogenic regimens."},
+                {"step": 6, "action": "Confirm patent line with blood return before vesicant administration."},
+                {"step": 7, "action": "Bedside observation for first 15 minutes of any new agent."},
+                {"step": 8, "action": "Monitor vesicant IV site every 30 minutes throughout infusion."},
+                {"step": 9, "action": "Document lot numbers, times, total dose, and double-check clinicians."},
+            ],
+            "thresholds": [
+                {"parameter": "Minimum ANC", "value": ">=1500/mm3", "action": "Unless oncologist-approved exception"},
+                {"parameter": "Minimum platelet count", "value": ">=100,000/mm3", "action": "Unless oncologist-approved exception"},
+                {"parameter": "New-agent bedside observation", "value": "15 minutes", "action": "Monitor for hypersensitivity"},
+                {"parameter": "Vesicant IV-site monitoring", "value": "Every 30 minutes", "action": "Throughout infusion"},
+            ],
+            "contraindications": [
+                "Administering without a completed independent double-check by two chemotherapy-certified clinicians.",
+                "Administering a vesicant through a peripheral line without a confirmed blood return.",
+                "Proceeding with ANC <1500/mm3 or platelets <100,000/mm3 without a documented oncologist exception.",
+            ],
+        },
+    },
+    # ------------------------------------------------------------------ 21
+    {
+        "sop_id": "SOP-CARD-021",
+        "title": "Cardiogenic Shock and Vasopressor Management Protocol",
+        "department": "Cardiology",
+        "version": "1.0",
+        "effective_date": "2025-05-10",
+        "review_date": "2026-11-10",
+        "raw_text": (
+            "CARDIOGENIC SHOCK AND VASOPRESSOR MANAGEMENT PROTOCOL - CARDIOLOGY\n"
+            "Version 1.0 | Effective 2025-05-10\n"
+            "DISCLAIMER: This is a SYNTHETIC SOP for research demonstration only.\n\n"
+            "1. PURPOSE\n"
+            "This protocol standardizes recognition and hemodynamic management of "
+            "cardiogenic shock, distinct from septic shock - inotrope selection, "
+            "vasopressor escalation, and mechanical support triggers differ because the "
+            "underlying problem is pump failure, not vasodilation.\n\n"
+            "2. SCOPE\n"
+            "Applies to adult patients in the ICU or Cardiac Care Unit with suspected or "
+            "confirmed cardiogenic shock.\n\n"
+            "3. DEFINITIONS\n"
+            "Cardiogenic Shock: a cardiac index below 2.2 L/min/m2 with a pulmonary "
+            "capillary wedge pressure above 18 mmHg, in the setting of adequate or elevated "
+            "left-ventricular filling pressure and end-organ hypoperfusion.\n\n"
+            "4. PROCEDURE\n"
+            "Step 1: Confirm cardiogenic shock with a cardiac index <2.2 L/min/m2 and "
+            "pulmonary capillary wedge pressure >18 mmHg, or bedside echocardiographic "
+            "evidence of severe left-ventricular dysfunction with hypoperfusion signs.\n"
+            "Step 2: Obtain a 12-lead ECG and troponin immediately to identify an acute "
+            "coronary occlusion requiring emergent revascularization.\n"
+            "Step 3: Start dobutamine at 2.5 mcg/kg/min as the first-line inotrope, "
+            "titrate to a maximum of 20 mcg/kg/min based on cardiac index response.\n"
+            "Step 4: If systolic blood pressure remains below 90 mmHg despite dobutamine, "
+            "add norepinephrine, titrating to maintain MAP >=65 mmHg.\n"
+            "Step 5: Consider milrinone as an alternative or adjunct inotrope only if the "
+            "patient is not significantly hypotensive, since milrinone can worsen "
+            "hypotension.\n"
+            "Step 6: Reassess cardiac index and clinical perfusion signs (mentation, urine "
+            "output, capillary refill, lactate trend) every 1 hour during titration.\n"
+            "Step 7: Activate the mechanical circulatory support team (intra-aortic balloon "
+            "pump or percutaneous ventricular assist device) if cardiac index remains "
+            "<2.2 L/min/m2 despite dobutamine and norepinephrine at moderate-to-high doses.\n"
+            "Step 8: Avoid aggressive volume loading once filling pressures are adequate - "
+            "reassess volume status before any fluid bolus, unlike a primarily vasodilatory "
+            "shock state.\n\n"
+            "5. THRESHOLDS AND TARGETS\n"
+            "- Cardiogenic shock definition: cardiac index <2.2 L/min/m2, PCWP >18 mmHg\n"
+            "- Dobutamine starting dose: 2.5 mcg/kg/min, maximum 20 mcg/kg/min\n"
+            "- Norepinephrine trigger: added if SBP <90 mmHg despite dobutamine\n"
+            "- MAP target: >=65 mmHg\n"
+            "- Hemodynamic reassessment interval: every 1 hour during titration\n\n"
+            "6. CONTRAINDICATIONS\n"
+            "- Do NOT give an aggressive fluid bolus without reassessing volume status and "
+            "filling pressures first.\n"
+            "- Do NOT start milrinone in a patient who is significantly hypotensive.\n"
+            "- Do NOT delay 12-lead ECG and troponin evaluation for a reversible acute "
+            "coronary cause of shock.\n\n"
+            "7. ESCALATION CRITERIA\n"
+            "Activate the mechanical circulatory support team per Step 7 immediately if "
+            "cardiac index stays below 2.2 L/min/m2 despite dobutamine and norepinephrine "
+            "at moderate-to-high doses - do not wait for a scheduled reassessment. Notify "
+            "the interventional cardiology team immediately if the Step 2 ECG/troponin "
+            "identifies an acute coronary occlusion, since emergent revascularization takes "
+            "priority over further medical titration. Escalate to the attending "
+            "cardiologist for any new arrhythmia or hemodynamic deterioration during "
+            "hourly reassessment (Step 6).\n\n"
+            "8. RESPONSIBLE ROLES\n"
+            "Bedside RN: hourly hemodynamic reassessment and inotrope/vasopressor "
+            "titration per order. ICU/CCU attending: initial shock confirmation and "
+            "inotrope selection. Interventional cardiology: emergent revascularization "
+            "decisions. Mechanical circulatory support team: escalation to IABP/pVAD.\n\n"
+            "9. DOCUMENTATION\n"
+            "Document the cardiac index and PCWP (or echocardiographic findings) used to "
+            "confirm shock, all inotrope/vasopressor doses and titration times, hourly "
+            "perfusion reassessment findings, and the time and reason for any escalation "
+            "notification.\n"
+        ),
+        "structured_json": {
+            "steps": [
+                {"step": 1, "action": "Confirm cardiogenic shock: CI <2.2 L/min/m2, PCWP >18 mmHg."},
+                {"step": 2, "action": "Obtain 12-lead ECG and troponin immediately."},
+                {"step": 3, "action": "Start dobutamine 2.5 mcg/kg/min, titrate to max 20 mcg/kg/min."},
+                {"step": 4, "action": "Add norepinephrine if SBP <90 mmHg despite dobutamine, titrate to MAP >=65."},
+                {"step": 5, "action": "Consider milrinone only if not significantly hypotensive."},
+                {"step": 6, "action": "Reassess cardiac index and perfusion signs every 1 hour during titration."},
+                {"step": 7, "action": "Activate mechanical circulatory support if CI stays <2.2 despite therapy."},
+                {"step": 8, "action": "Avoid aggressive volume loading; reassess volume status before any bolus."},
+            ],
+            "thresholds": [
+                {"parameter": "Cardiogenic shock definition", "value": "CI <2.2 L/min/m2, PCWP >18 mmHg", "action": "Confirms diagnosis"},
+                {"parameter": "Dobutamine starting dose", "value": "2.5 mcg/kg/min", "action": "First-line inotrope, max 20 mcg/kg/min"},
+                {"parameter": "Norepinephrine trigger", "value": "SBP <90 mmHg", "action": "Add if hypotensive despite dobutamine"},
+                {"parameter": "MAP target", "value": ">=65 mmHg", "action": "Titrate vasopressor to this target"},
+            ],
+            "contraindications": [
+                "Giving an aggressive fluid bolus without reassessing volume status and filling pressures first.",
+                "Starting milrinone in a patient who is significantly hypotensive.",
+                "Delaying ECG/troponin evaluation for a reversible acute coronary cause of shock.",
+            ],
+        },
+    },
+    # ------------------------------------------------------------------ 22
+    {
+        "sop_id": "SOP-PHARM-022",
+        "title": "Opioid Analgesia and Overdose Prevention Protocol",
+        "department": "Pharmacy",
+        "version": "1.2",
+        "effective_date": "2025-05-20",
+        "review_date": "2026-11-20",
+        "raw_text": (
+            "OPIOID ANALGESIA AND OVERDOSE PREVENTION PROTOCOL - PHARMACY\n"
+            "Version 1.2 | Effective 2025-05-20\n"
+            "DISCLAIMER: This is a SYNTHETIC SOP for research demonstration only.\n\n"
+            "1. PURPOSE\n"
+            "This protocol standardizes safe opioid dosing, sedation/respiratory "
+            "monitoring, and overdose reversal to prevent opioid-induced respiratory "
+            "depression.\n\n"
+            "2. SCOPE\n"
+            "Applies to all inpatient administration of opioid analgesics, including "
+            "patient-controlled analgesia (PCA).\n\n"
+            "3. DEFINITIONS\n"
+            "Opioid-Naive: no regular opioid use in the prior 7 days. RASS (Richmond "
+            "Agitation-Sedation Scale): a standardized sedation scale from -5 (unarousable) "
+            "to +4 (combative); this protocol treats -2 or lower as clinically significant "
+            "sedation.\n\n"
+            "4. PROCEDURE\n"
+            "Step 1: Confirm opioid-naive versus opioid-tolerant status before selecting a "
+            "starting dose - opioid-naive patients require lower starting doses.\n"
+            "Step 2: Assess and document pain score, RASS sedation score, and respiratory "
+            "rate immediately before every opioid dose.\n"
+            "Step 3: Do not administer a scheduled or as-needed opioid dose if RASS is -2 "
+            "or lower or respiratory rate is below 10/min - hold the dose and reassess.\n"
+            "Step 4: For patient-controlled analgesia, verify pump settings (dose, lockout "
+            "interval, 4-hour limit) against the order with a second nurse at initiation "
+            "and at every bag/cartridge change.\n"
+            "Step 5: Monitor RASS and respiratory rate every 2 hours for the first 24 hours "
+            "of a new opioid or PCA, and every 1 hour for the first 2 hours after any dose "
+            "increase.\n"
+            "Step 6: Use continuous pulse oximetry (and capnography where available) for "
+            "opioid-naive patients on PCA or any patient also receiving a sedative.\n"
+            "Step 7: Keep naloxone immediately available at the bedside for any patient on "
+            "a PCA or scheduled opioid regimen.\n"
+            "Step 8: For suspected opioid-induced respiratory depression, administer "
+            "naloxone 0.04-0.4 mg IV, titrating and repeating every 2-3 minutes until "
+            "adequate respiratory rate and responsiveness return.\n"
+            "Step 9: After naloxone reversal, monitor for at least 2 hours for re-sedation, "
+            "since naloxone's duration is shorter than most opioids.\n\n"
+            "5. THRESHOLDS AND TARGETS\n"
+            "- Hold-dose trigger: RASS <=-2 or respiratory rate <10/min\n"
+            "- Routine monitoring interval (first 24 hours or new PCA): every 2 hours\n"
+            "- Post-dose-increase monitoring: every 1 hour for 2 hours\n"
+            "- Naloxone starting dose: 0.04-0.4 mg IV, repeat every 2-3 minutes as needed\n"
+            "- Post-naloxone observation: minimum 2 hours\n\n"
+            "6. CONTRAINDICATIONS\n"
+            "- Do NOT administer a scheduled or as-needed opioid dose when RASS is -2 or "
+            "lower or respiratory rate is below 10/min.\n"
+            "- Do NOT allow a PCA bag/cartridge change without independent second-nurse "
+            "verification of pump settings.\n"
+            "- Do NOT discharge a patient within 2 hours of naloxone administration without "
+            "confirming sustained respiratory and mental status recovery.\n\n"
+            "7. ESCALATION CRITERIA\n"
+            "Administer naloxone immediately per Step 8 and activate the rapid response "
+            "team for any RASS of -3 or lower or respiratory rate below 8/min - do not wait "
+            "for the next scheduled monitoring interval. Notify the prescriber immediately "
+            "if a dose is held twice in a row for sedation/respiratory concerns (Step 3) so "
+            "the regimen can be reassessed rather than repeatedly held without a plan. "
+            "Escalate to the pain service or anesthesia for any patient requiring more than "
+            "one naloxone dose within a 4-hour period.\n\n"
+            "8. RESPONSIBLE ROLES\n"
+            "Bedside RN: pre-dose assessment, hold-dose decisions, and naloxone "
+            "administration. Second verifying nurse: independent PCA pump-setting check. "
+            "Prescriber: regimen adjustment after repeated held doses. Pain "
+            "service/anesthesia: escalation for recurrent reversal events.\n\n"
+            "9. DOCUMENTATION\n"
+            "Document pain score, RASS, and respiratory rate before every dose, all PCA "
+            "pump-setting verifications with both nurses' names, and the time, dose, and "
+            "response for any naloxone administration. Document the time and reason for "
+            "any escalation notification, and the name/role of the person notified.\n"
+        ),
+        "structured_json": {
+            "steps": [
+                {"step": 1, "action": "Confirm opioid-naive vs opioid-tolerant status before dose selection."},
+                {"step": 2, "action": "Assess pain score, RASS, and respiratory rate before every dose."},
+                {"step": 3, "action": "Hold dose if RASS <=-2 or respiratory rate <10/min."},
+                {"step": 4, "action": "Second-nurse verification of PCA pump settings at initiation and changes."},
+                {"step": 5, "action": "Monitor RASS/RR every 2 hours (first 24h) or every 1 hour after dose increase."},
+                {"step": 6, "action": "Continuous pulse oximetry for opioid-naive PCA patients or co-administered sedatives."},
+                {"step": 7, "action": "Keep naloxone available at bedside for PCA/scheduled opioid patients."},
+                {"step": 8, "action": "Naloxone 0.04-0.4 mg IV, repeat every 2-3 minutes for respiratory depression."},
+                {"step": 9, "action": "Monitor at least 2 hours post-naloxone for re-sedation."},
+            ],
+            "thresholds": [
+                {"parameter": "Hold-dose trigger", "value": "RASS <=-2 or RR <10/min", "action": "Hold dose and reassess"},
+                {"parameter": "Naloxone starting dose", "value": "0.04-0.4 mg IV", "action": "Repeat every 2-3 minutes as needed"},
+                {"parameter": "Post-naloxone observation", "value": "2 hours minimum", "action": "Monitor for re-sedation"},
+                {"parameter": "Rapid response trigger", "value": "RASS <=-3 or RR <8/min", "action": "Naloxone plus rapid response activation"},
+            ],
+            "contraindications": [
+                "Administering a scheduled/PRN opioid dose when RASS <=-2 or respiratory rate <10/min.",
+                "Allowing a PCA bag/cartridge change without independent second-nurse verification.",
+                "Discharging a patient within 2 hours of naloxone without confirmed sustained recovery.",
             ],
         },
     },

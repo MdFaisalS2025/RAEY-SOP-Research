@@ -205,6 +205,28 @@ QUALITY_EVAL_CASES: list[QualityCase] = [
         require_citations=True,
     ),
 
+    QualityCase(
+        query="What ANC is required before giving chemotherapy?",
+        category="A", label="SOP-supported",
+        acceptable_routes=("sop_library",),
+        expected_sop_title="Chemotherapy Administration Safety Protocol",
+        require_citations=True,
+    ),
+    QualityCase(
+        query="What cardiac index defines cardiogenic shock?",
+        category="A", label="SOP-supported",
+        acceptable_routes=("sop_library",),
+        expected_sop_title="Cardiogenic Shock and Vasopressor Management Protocol",
+        require_citations=True,
+    ),
+    QualityCase(
+        query="What is the naloxone dose for opioid overdose reversal?",
+        category="A", label="SOP-supported",
+        acceptable_routes=("sop_library",),
+        expected_sop_title="Opioid Analgesia and Overdose Prevention Protocol",
+        require_citations=True,
+    ),
+
     # ---- Category B: partial SOP support ----
     # These ask for something adjacent to, but not squarely inside, what the
     # SOP states - the pipeline should still answer from the SOP (possibly

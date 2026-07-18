@@ -92,13 +92,15 @@ QUERY_PATTERNS = {
     },
     "role_responsibility": {
         "keywords": ["nurse", "physician", "doctor", "pharmacist", "who should",
-                     "whose responsibility", "who performs", "who administers"],
+                     "whose responsibility", "who performs", "who administers",
+                     "who must", "who verifies"],
         "weight": 0.8,
     },
     "medication": {
         "keywords": ["medication", "drug", "administer", "prescribe", "dose",
                      "norepinephrine", "epinephrine", "heparin", "warfarin",
-                     "insulin", "vasopressor", "antibiotic", "dextrose"],
+                     "insulin", "vasopressor", "antibiotic", "dextrose",
+                     "inotrope", "chemotherapy", "opioid", "naloxone"],
         "weight": 0.9,
     },
 }
@@ -200,6 +202,7 @@ class QueryUnderstandingAgent:
             "heparin", "warfarin", "enoxaparin", "insulin", "dextrose",
             "metformin", "glucagon", "hydrocortisone", "methylprednisolone",
             "diphenhydramine", "amiodarone", "lidocaine", "atropine",
+            "dobutamine", "milrinone", "naloxone",
         ]
         for drug in drug_patterns:
             # Word-boundary match - a plain substring check matched
@@ -214,6 +217,7 @@ class QueryUnderstandingAgent:
             "sepsis", "septic shock", "hypotension", "hypertension",
             "hypoglycemia", "hyperglycemia", "anaphylaxis", "cardiac arrest",
             "hemorrhage", "coagulopathy", "thrombocytopenia", "renal failure",
+            "cardiogenic shock", "chemotherapy", "opioid",
         ]
         for cond in condition_patterns:
             if re.search(r"\b" + re.escape(cond) + r"\b", q_lower):

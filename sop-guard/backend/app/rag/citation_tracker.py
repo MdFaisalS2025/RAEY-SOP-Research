@@ -274,7 +274,19 @@ def citation_coverage(answer: str) -> float:
     so both read the same definition of "substantive sentence" instead of
     two regexes silently drifting apart.
     """
-    raw = re.split(r"(?<=[.!?])\s+|\n+", answer.strip())
+    # Real bug found empirically (D6, corpus-expansion pass): the sentence
+    # split fires on the whitespace between a sentence-ending period and a
+    # trailing "[N]" marker - e.g. "...organism. [1]" splits into
+    # "...organism." and "[1]" as two separate fragments. The marker
+    # fragment is 3 characters, so the length filter below drops it, and
+    # the sentence it was marking is left looking uncited. This was already
+    # true for every mock-generated answer (every threshold/step line ends
+    # with ". [N]") - it just wasn't caught before because a live-LLM
+    # answer's different sentence shape occasionally kept the aggregate
+    # average above zero, masking a metric that was silently broken for
+    # the deterministic mock path the whole time. The negative lookahead
+    # keeps a trailing "[N]" attached to the sentence it belongs to.
+    raw = re.split(r"(?<=[.!?])\s+(?!\[\d+\])|\n+", answer.strip())
     sentences = [
         s.strip() for s in raw
         if len(s.strip()) > 20

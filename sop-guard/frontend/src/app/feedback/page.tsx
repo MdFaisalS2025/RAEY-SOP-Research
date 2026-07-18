@@ -10,6 +10,8 @@ import {
 import AppShell from "@/components/layout/app-shell"
 import { SafetyNote } from "@/components/ui/safety-note"
 import { Skeleton } from "@/components/ui/skeleton"
+import { AccessRestricted } from "@/components/ui/access-restricted"
+import { useRole } from "@/lib/role-context"
 
 /* ─── Demo / fallback data ─── */
 
@@ -83,6 +85,7 @@ function TypeBadge({ type }: { type: string }) {
 /* ─── Main Page ─── */
 
 export default function FeedbackPage() {
+  const { role } = useRole()
   const [loading, setLoading] = useState(true)
   const [isDemo, setIsDemo] = useState(false)
   const [analytics, setAnalytics] = useState<any>(null)
@@ -159,6 +162,10 @@ export default function FeedbackPage() {
     setReviewQueue(prev => prev.map(item =>
       item.id === id ? { ...item, status: "reviewed" } : item
     ))
+  }
+
+  if (role !== "governance_compliance" && role !== "system_admin") {
+    return <AccessRestricted label="Usage & Feedback" requirement="This area requires Governance & Compliance access." />
   }
 
   if (loading) {

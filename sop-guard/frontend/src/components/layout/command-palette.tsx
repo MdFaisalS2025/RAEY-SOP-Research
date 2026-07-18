@@ -39,6 +39,8 @@ const PAGES: { name: string; href: string; keywords: string }[] = [
   { name: "EMR Demo", href: "/cds-demo", keywords: "emr cds clinical decision support demo" },
   { name: "Clinician Eval", href: "/human-eval", keywords: "clinician human evaluation feedback" },
   { name: "AI Evaluation", href: "/evaluation", keywords: "evaluation metrics benchmark rag adversarial red team safety verifier" },
+  { name: "Usage & Feedback", href: "/feedback", keywords: "feedback usage analytics activity review queue flagged answers" },
+  { name: "Upload SOP", href: "/upload", keywords: "upload sop document new file" },
   { name: "Settings", href: "/settings", keywords: "settings preferences config" },
   { name: "Admin", href: "/admin", keywords: "admin system management" },
 ]

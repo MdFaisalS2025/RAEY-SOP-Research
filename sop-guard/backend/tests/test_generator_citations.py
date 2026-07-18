@@ -77,6 +77,49 @@ class TestMockGeneratorInlineCitations:
         assert result["inline_citations"] == []
         assert result["followup_questions"] == []
 
+    def test_max_dose_query_without_stated_max_gets_honest_caveat(self):
+        """Real gap found in a full-app audit: asking for the maximum
+        norepinephrine dose returned only a starting dose and an
+        escalation-to-vasopressin trigger - neither is a stated maximum -
+        with nothing telling the reader that. The answer must now flag
+        this instead of silently presenting the nearest related values."""
+        gen = MockGenerator()
+        chunk = {
+            "sop_id": "SOP-TEST-002",
+            "sop_title": "Vasopressor Protocol",
+            "section_title": "Thresholds",
+            "chunk_type": "threshold",
+            "chunk_text": (
+                "Start norepinephrine at 0.05 mcg/kg/min.\n"
+                "If >0.5 mcg/kg/min, add vasopressin."
+            ),
+            "relevance_score": 0.4,
+        }
+        result = gen.generate_answer(
+            "What is the maximum norepinephrine dose?", [chunk], "threshold"
+        )
+        assert "does not state an explicit maximum" in result["answer"].lower()
+
+    def test_non_bound_query_gets_no_caveat(self):
+        gen = MockGenerator()
+        result = gen.generate_answer("What is the MAP target?", [_THRESHOLD_CHUNK], "threshold")
+        assert "does not state an explicit" not in result["answer"].lower()
+
+    def test_max_query_with_stated_max_gets_no_caveat(self):
+        gen = MockGenerator()
+        chunk = {
+            "sop_id": "SOP-TEST-003",
+            "sop_title": "Test Protocol",
+            "section_title": "Thresholds",
+            "chunk_type": "threshold",
+            "chunk_text": "Maximum norepinephrine dose: 3 mcg/kg/min.",
+            "relevance_score": 0.4,
+        }
+        result = gen.generate_answer(
+            "What is the maximum norepinephrine dose?", [chunk], "threshold"
+        )
+        assert "does not state an explicit" not in result["answer"].lower()
+
 
 class TestLLMGeneratorMockFallbackPreservesCitations:
     async def test_mock_mode_preserves_mock_generator_citations(self):

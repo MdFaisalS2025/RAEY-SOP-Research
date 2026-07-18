@@ -116,7 +116,7 @@ class MockGenerator:
         if query_type in ("sequence", "procedure_steps", "monitoring"):
             answer = self._build_sequence_answer(sop_title, top_text, good_chunks, citation_map)
         elif query_type in ("threshold", "medication"):
-            answer = self._build_threshold_answer(sop_title, top_text, good_chunks, citation_map)
+            answer = self._build_threshold_answer(sop_title, top_text, good_chunks, citation_map, query=query)
         elif query_type == "contraindication":
             answer = self._build_contraindication_answer(sop_title, top_text, good_chunks, citation_map)
         else:
@@ -526,7 +526,8 @@ class MockGenerator:
         return raw
 
     def _build_threshold_answer(
-        self, sop_title: str, top_text: str, chunks: list[dict], citation_map: "dict[str, int] | None" = None
+        self, sop_title: str, top_text: str, chunks: list[dict], citation_map: "dict[str, int] | None" = None,
+        query: str = "",
     ) -> str:
         """Extract and present threshold values with clinical context."""
         primary_sop = chunks[0].get("sop_id", "") if chunks else ""
@@ -575,6 +576,27 @@ class MockGenerator:
             if action_triggers:
                 answer += "\n\nWhen to act:\n"
                 answer += "\n".join(f"- {a}" for a in action_triggers[:5])
+            # Real gap found in a full-app audit: "What is the maximum
+            # norepinephrine dose?" returned the starting dose and the
+            # vasopressin-escalation threshold - genuinely the closest
+            # values in the SOP - with nothing indicating that neither one
+            # is actually a stated maximum. A physician skimming the answer
+            # could read either number as "the max." If the query explicitly
+            # asks for a max/min/ceiling/upper limit and none of the
+            # extracted lines contain that same word, say so rather than
+            # silently substituting the nearest related value.
+            # Bare "min" is deliberately excluded: it collides with the
+            # per-minute rate unit ("mcg/kg/min") that appears in nearly
+            # every dose threshold, which caused false positives here.
+            _BOUND_WORD_RE = re.compile(r"\b(max|maximum|minimum|upper limit|ceiling)\b", re.IGNORECASE)
+            asks_for_bound = bool(_BOUND_WORD_RE.search(query))
+            if asks_for_bound and not any(
+                _BOUND_WORD_RE.search(t) for t, _ in threshold_lines
+            ):
+                answer += (
+                    "\n\nNote: This SOP does not state an explicit maximum/minimum for this value - "
+                    "the values above are the closest related thresholds found."
+                )
             return answer
 
         # Fallback: use key sentences (top_text is definitively from the

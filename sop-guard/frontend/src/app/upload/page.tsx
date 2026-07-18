@@ -8,10 +8,13 @@ import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { uploadSOP } from "@/lib/api"
 import { cn } from "@/lib/utils"
+import { AccessRestricted } from "@/components/ui/access-restricted"
+import { useRole } from "@/lib/role-context"
 
 type UploadState = "idle" | "selected" | "uploading" | "processing" | "done" | "error"
 
 export default function UploadPage() {
+  const { role } = useRole()
   const [state, setState] = useState<UploadState>("idle")
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [progress, setProgress] = useState(0)
@@ -84,6 +87,10 @@ export default function UploadPage() {
     if (bytes < 1024) return `${bytes} B`
     if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`
     return `${(bytes / 1048576).toFixed(1)} MB`
+  }
+
+  if (role !== "system_admin") {
+    return <AccessRestricted label="Upload SOP" requirement="This area requires System Administrator access." />
   }
 
   return (

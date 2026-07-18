@@ -9,6 +9,8 @@ import {
 import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { SafetyNote } from "@/components/ui/safety-note"
+import { AccessRestricted } from "@/components/ui/access-restricted"
+import { useRole } from "@/lib/role-context"
 import { cn } from "@/lib/utils"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
@@ -223,6 +225,7 @@ function daysUntil(dateStr: string | undefined): number | null {
 }
 
 export default function EvidenceWatchPage() {
+  const { role } = useRole()
   const [activeFilter, setActiveFilter] = useState<ItemFilter>("all")
   const [items, setItems] = useState<EvidenceItem[]>([])
   const [sopsScanned, setSopsScanned] = useState(0)
@@ -258,7 +261,15 @@ export default function EvidenceWatchPage() {
         for (const sop of sops) {
           if (cancelled) break
           try {
-            const res = await fetch(`${API_BASE}/api/evidence/pubmed?term=${encodeURIComponent(sop.title)}&max=1`)
+            // /api/evidence/search (not the bare /api/evidence/pubmed
+            // passthrough) so the same cross-encoder semantic relevance
+            // gate used everywhere else in the app applies here too -
+            // without it, a generic administrative SOP title like "Quality
+            // Improvement Review Cycle Protocol" or "Patient Safety
+            // Incident Reporting Protocol" matched PubMed articles on
+            // unrelated clinical topics purely on shared common words
+            // ("quality", "safety", "reporting").
+            const res = await fetch(`${API_BASE}/api/evidence/search?term=${encodeURIComponent(sop.title)}&sources=pubmed&max=1`)
             const data = res.ok ? await res.json() : { results: [] }
             litResults.push({ sop, record: (data?.results ?? [])[0] })
           } catch {
@@ -307,6 +318,15 @@ export default function EvidenceWatchPage() {
     { label: "High-Risk Items", value: highRiskCount, icon: AlertTriangle, color: "text-[#B91C1C] dark:text-red-400" },
     { label: "External Updates (live)", value: literatureCount, icon: TrendingUp, color: "text-[#15803D] dark:text-green-400" },
   ]
+
+  // Checked here (after every hook has already fired unconditionally, per
+  // the Rules of Hooks) rather than as an early return before the
+  // useEffect/useMemo calls above - this route is nav-gated to
+  // governance_compliance/system_admin, but previously nothing enforced
+  // that if reached directly by URL.
+  if (role !== "governance_compliance" && role !== "system_admin") {
+    return <AccessRestricted label="Evidence Watch" requirement="This area requires Governance & Compliance access." />
+  }
 
   return (
     <AppShell>

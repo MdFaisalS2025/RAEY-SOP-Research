@@ -205,6 +205,53 @@ def test_entity_graph_no_conflict_when_values_match():
     assert not any(c["entity"] == "norepinephrine" for c in conflicts)
 
 
+def test_entity_graph_no_false_positive_between_delta_and_absolute_threshold():
+    """Real bug found in a full-app audit: 'SBP drop >=30 mmHg' (a
+    transfusion-reaction trigger - a *change* in blood pressure) and
+    'SBP >200 mmHg' (an absolute hypertension contraindication) were
+    flagged as conflicting SBP values, even though they describe
+    different clinical facts that only share a parameter name and unit."""
+    chunks = [
+        {
+            "sop_id": "GEN-002",
+            "sop_title": "Blood Transfusion Protocol",
+            "chunk_type": "threshold",
+            "chunk_text": "Stop transfusion for fever, urticaria/anaphylaxis, SBP drop >=30 mmHg, HR increase >=20 bpm.",
+        },
+        {
+            "sop_id": "PHARM-005",
+            "sop_title": "Anticoagulation Safety Protocol",
+            "chunk_type": "contraindication",
+            "chunk_text": "Contraindicated: severe uncontrolled hypertension (SBP >200 mmHg or DBP >120 mmHg).",
+        },
+    ]
+    graph = build_graph(chunks)
+    conflicts = find_conflicts(graph)
+    assert not any(c["entity"] == "sbp" for c in conflicts)
+
+
+def test_entity_graph_still_detects_two_absolute_sbp_thresholds():
+    """The delta-vs-absolute distinction must not swallow real conflicts
+    between two genuinely absolute readings for the same parameter."""
+    chunks = [
+        {
+            "sop_id": "SOP-A",
+            "sop_title": "Protocol A",
+            "chunk_type": "threshold",
+            "chunk_text": "Hold medication if SBP <90 mmHg.",
+        },
+        {
+            "sop_id": "SOP-B",
+            "sop_title": "Protocol B",
+            "chunk_type": "threshold",
+            "chunk_text": "Hold medication if SBP <100 mmHg.",
+        },
+    ]
+    graph = build_graph(chunks)
+    conflicts = find_conflicts(graph)
+    assert any(c["entity"] == "sbp" for c in conflicts)
+
+
 # ── Notifications ────────────────────────────────────────────────
 
 

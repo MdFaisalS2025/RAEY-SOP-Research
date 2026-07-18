@@ -12,7 +12,8 @@ import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { SafetyNote } from "@/components/ui/safety-note"
 import { cn } from "@/lib/utils"
 import { useRole } from "@/lib/role-context"
-import { DEMO_USERS } from "@/lib/mock-data"
+import { COMMITTEE_ROSTER } from "@/lib/mock-data"
+import { AccessRestricted } from "@/components/ui/access-restricted"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
 
@@ -294,11 +295,10 @@ function CommitteeProposalCard({ proposal, index, onVoteCast }: {
   )
 }
 
-const committeeUsers = DEMO_USERS.filter(
-  (u) => u.role === "governance_compliance" || u.role === "clinical_staff"
-).slice(0, 5)
+const committeeUsers = COMMITTEE_ROSTER
 
 export default function CommitteePage() {
+  const { role } = useRole()
   const [proposals, setProposals] = useState<Proposal[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -327,6 +327,10 @@ export default function CommitteePage() {
     { label: "Decided Proposals", value: decidedProposals.length, color: "text-[#0B6BCB]", icon: Calendar },
     { label: "Quorum Threshold", value: `${quorumThreshold}/${committeeSize}`, color: "text-[#B45309] dark:text-amber-400", isText: true, icon: Users },
   ]
+
+  if (role !== "governance_compliance" && role !== "system_admin") {
+    return <AccessRestricted label="Committee" requirement="This area requires Governance & Compliance access." />
+  }
 
   return (
     <AppShell>

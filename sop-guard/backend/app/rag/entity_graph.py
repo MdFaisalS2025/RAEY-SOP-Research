@@ -44,15 +44,30 @@ _DOSE_RE = re.compile(
 )
 
 # Threshold pattern: comparator + number + unit (MAP <65 mmHg, lactate >2 mmol/L)
+# Group 2 (the text between the parameter name and the comparator) is kept
+# so callers can check it for delta/change language ("drop", "increase") -
+# see _is_delta_threshold below.
 _THRESHOLD_RE = re.compile(
     r"\b(map|lactate|glucose|blood glucose|inr|platelets?|hemoglobin|hgb|"
     r"systolic(?:\s+bp)?|sbp|heart rate|hr|spo2|temperature|creatinine|potassium)\b"
-    r"[^.\n<>]{0,20}?"
+    r"([^.\n<>]{0,20}?)"
     r"(<=|>=|<|>|below|above|less than|greater than|under|over)\s*"
     r"(\d+(?:\.\d+)?)\s*"
     r"(mmhg|mmol/l|mg/dl|g/dl|%|bpm|meq/l|c|f)?",
     re.IGNORECASE,
 )
+
+# A threshold phrased as a *change* ("SBP drop >=30 mmHg" - a transfusion-
+# reaction trigger) is not comparable to the same parameter phrased as an
+# *absolute* reading ("SBP >200 mmHg" - a hypertension contraindication) -
+# they describe different clinical facts that happen to share a parameter
+# name and unit. Without this, the conflict detector flagged exactly that
+# pair as "conflicting SBP values", which isn't a real conflict.
+_DELTA_WORDS_RE = re.compile(r"\b(drop|decrease|increase|rise|fall|change|delta|reduction|increment)\b", re.IGNORECASE)
+
+
+def _is_delta_threshold(between_text: str) -> bool:
+    return bool(_DELTA_WORDS_RE.search(between_text or ""))
 
 _UNIT_NORMALIZE = {
     "microgram": "mcg", "micrograms": "mcg", "ug": "mcg",
@@ -119,9 +134,10 @@ def extract_entities(text: str) -> list[dict[str, Any]]:
         entities.append({
             "type": "THRESHOLD",
             "name": param,
-            "value": float(m.group(3)),
-            "unit": _normalize_unit(m.group(4) or ""),
-            "comparator": m.group(2),
+            "value": float(m.group(4)),
+            "unit": _normalize_unit(m.group(5) or ""),
+            "comparator": m.group(3),
+            "is_delta": _is_delta_threshold(m.group(2)),
             "snippet": _snippet(text, m.start()),
         })
 
@@ -157,6 +173,7 @@ def build_graph(chunks: list[dict[str, Any]]) -> dict[str, list[dict]]:
                     "chunk_type": chunk_type,
                     "value": ent.get("value"),
                     "unit": ent.get("unit", ""),
+                    "is_delta": ent.get("is_delta", False),
                     "context_snippet": ent.get("snippet", ""),
                 })
         except Exception:
@@ -174,21 +191,31 @@ def find_conflicts(graph: dict[str, list[dict]]) -> list[dict]:
         if etype not in ("DRUG", "THRESHOLD"):
             continue
 
-        # Group by (sop, unit): keep one representative value per SOP+unit
-        by_sop: dict[tuple[str, str], dict] = {}
+        # Group by (sop, unit, is_delta): keep one representative value per
+        # SOP+unit+kind. is_delta is part of the key (not just a later
+        # filter) so a SOP mentioning both an absolute reading and a delta
+        # for the same parameter keeps both, rather than one silently
+        # overwriting the other as "the" value for that SOP.
+        by_sop: dict[tuple[str, str, bool], dict] = {}
         for e in edges:
             if e.get("value") is None or not e.get("unit"):
                 continue
-            k = (e.get("sop_id") or e.get("sop_title") or "", e["unit"])
+            k = (e.get("sop_id") or e.get("sop_title") or "", e["unit"], bool(e.get("is_delta")))
             if k not in by_sop:
                 by_sop[k] = e
 
         items = list(by_sop.items())
         for i in range(len(items)):
             for j in range(i + 1, len(items)):
-                (sop_a, unit_a), edge_a = items[i]
-                (sop_b, unit_b), edge_b = items[j]
+                (sop_a, unit_a, delta_a), edge_a = items[i]
+                (sop_b, unit_b, delta_b), edge_b = items[j]
                 if sop_a == sop_b or unit_a != unit_b:
+                    continue
+                # A delta/change threshold ("SBP drop >=30 mmHg") and an
+                # absolute reading ("SBP >200 mmHg") aren't the same fact
+                # even though they share a parameter name and unit -
+                # comparing them as "conflicting" would be a false positive.
+                if delta_a != delta_b:
                     continue
                 if edge_a["value"] == edge_b["value"]:
                     continue

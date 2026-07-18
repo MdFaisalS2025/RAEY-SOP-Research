@@ -462,9 +462,11 @@ function AcknowledgmentsTab() {
     setAttestations((prev) => [record, ...prev])
   }
 
+  const totalStaffOverdue = MOCK_COMPLIANCE.reduce((sum, c) => sum + c.overdue_acknowledgments, 0)
+
   const stats = [
     { label: "Overall Rate", value: `${MOCK_DASHBOARD_STATS.compliance_rate}%`, icon: TrendingUp, color: "text-[#15803D] dark:text-green-400", bg: "bg-[#DCFCE7] dark:bg-green-500/10" },
-    { label: "Staff Overdue", value: "149", icon: Clock, color: "text-[#B91C1C] dark:text-red-400", bg: "bg-[#FEE2E2] dark:bg-red-500/10" },
+    { label: "Staff Overdue", value: String(totalStaffOverdue), icon: Clock, color: "text-[#B91C1C] dark:text-red-400", bg: "bg-[#FEE2E2] dark:bg-red-500/10" },
     { label: "SOPs Needing Review", value: String(MOCK_DASHBOARD_STATS.sops_needs_review), icon: FileText, color: "text-[#B45309] dark:text-amber-400", bg: "bg-[#FEF3C7] dark:bg-amber-500/10" },
     { label: "Legal Flags", value: String(MOCK_DASHBOARD_STATS.legal_flags), icon: Flag, color: "text-[#B91C1C] dark:text-red-400", bg: "bg-[#FEE2E2] dark:bg-red-500/10" },
   ]
@@ -554,7 +556,7 @@ function AcknowledgmentsTab() {
                 </div>
                 <div className="rounded-lg bg-muted p-1.5 text-center">
                   <p className="font-semibold text-[#B91C1C] dark:text-red-400">{dept.overdue_acknowledgments}</p>
-                  <p className="text-muted-foreground">Overdue</p>
+                  <p className="text-muted-foreground">Acks Overdue</p>
                 </div>
                 <div className="rounded-lg bg-muted p-1.5 text-center">
                   <p className="font-semibold text-[#0B6BCB]">{dept.training_completion_rate}%</p>

@@ -49,16 +49,38 @@ interface Incident {
   open_capa_count: number
 }
 
-const PATTERN_ALERTS = [
-  {
-    id: "pa-001",
-    text: "3 incidents in 30 days linked to IC-PPE-001 - consider urgent SOP review",
-  },
-  {
-    id: "pa-002",
-    text: "2 critical incidents linked to medication double-check protocol - staffing gap pattern detected",
-  },
-]
+// Computed live from the real incident list below (see computePatternAlerts) -
+// previously a static array with canned counts/SOP IDs that didn't track
+// what incidents actually existed, so the message could (and did) cite a
+// count higher than the number of matching incidents actually on screen.
+function computePatternAlerts(incidents: Incident[]): { id: string; text: string }[] {
+  const alerts: { id: string; text: string }[] = []
+
+  const bySopId = new Map<string, number>()
+  for (const inc of incidents) {
+    for (const sopId of inc.linked_sop_ids) {
+      bySopId.set(sopId, (bySopId.get(sopId) ?? 0) + 1)
+    }
+  }
+  for (const [sopId, count] of Array.from(bySopId)) {
+    if (count >= 2) {
+      alerts.push({
+        id: `pa-sop-${sopId}`,
+        text: `${count} incidents linked to ${sopId} - consider urgent SOP review`,
+      })
+    }
+  }
+
+  const criticalCount = incidents.filter((i) => i.severity === "critical").length
+  if (criticalCount >= 2) {
+    alerts.push({
+      id: "pa-critical",
+      text: `${criticalCount} critical-severity incidents recorded - review for common contributing factors`,
+    })
+  }
+
+  return alerts
+}
 
 const INCIDENT_TYPE_META: Record<string, { label: string; className: string }> = {
   near_miss: {
@@ -498,6 +520,7 @@ function IncidentsTab() {
   const linkedCount = incidents.filter((i) => i.linked_sop_ids.length > 0).length
   const underReviewCount = incidents.filter((i) => i.open_capa_count > 0).length
   const closedLoopCount = incidents.filter((i) => i.capa_count > 0 && i.open_capa_count === 0).length
+  const patternAlerts = computePatternAlerts(incidents)
 
   const stats = [
     { label: "Total Incidents", value: String(incidents.length), color: "text-[#B91C1C] dark:text-red-400", bg: "bg-[#FEE2E2] dark:bg-red-500/10" },
@@ -669,7 +692,9 @@ function IncidentsTab() {
                 </p>
 
                 <div>
-                  <p className="text-xs text-subtle mb-1.5">Linked SOPs</p>
+                  <p className="text-xs text-subtle mb-1.5">
+                    {inc.linked_sop_ids.length > 0 ? "Linked SOPs" : "No SOP Match"}
+                  </p>
                   <div className="flex flex-wrap gap-1.5">
                     {inc.linked_sop_ids.map((sopId) => (
                       <span
@@ -719,10 +744,11 @@ function IncidentsTab() {
         </div>
       </section>
 
+      {patternAlerts.length > 0 && (
       <section>
         <h2 className="text-lg font-medium text-foreground mb-3">Pattern Detection</h2>
         <div className="space-y-3">
-          {PATTERN_ALERTS.map((alert, i) => (
+          {patternAlerts.map((alert, i) => (
             <motion.div
               key={alert.id}
               initial={{ opacity: 0, x: -8 }}
@@ -736,6 +762,7 @@ function IncidentsTab() {
           ))}
         </div>
       </section>
+      )}
     </div>
   )
 }

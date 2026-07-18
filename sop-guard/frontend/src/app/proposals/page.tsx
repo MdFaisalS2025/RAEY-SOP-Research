@@ -12,6 +12,7 @@ import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { SafetyNote } from "@/components/ui/safety-note"
 import { cn } from "@/lib/utils"
 import { useRole } from "@/lib/role-context"
+import { AccessRestricted } from "@/components/ui/access-restricted"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
 
@@ -293,7 +294,7 @@ function NewProposalModal({ onClose, onCreated, initial }: { onClose: () => void
 }
 
 export default function ProposalsPage() {
-  const { hasPermission } = useRole()
+  const { role, hasPermission } = useRole()
   const [activeFilter, setActiveFilter] = useState<ProposalFilter>("all")
   const [proposals, setProposals] = useState<Proposal[]>([])
   const [loading, setLoading] = useState(true)
@@ -339,6 +340,10 @@ export default function ProposalsPage() {
     { label: "Approved", value: proposals.filter((p) => p.status === "approved").length, color: "text-[#15803D] dark:text-green-400" },
     { label: "Rejected", value: proposals.filter((p) => p.status === "rejected").length, color: "text-[#B91C1C] dark:text-red-400" },
   ]
+
+  if (role !== "governance_compliance" && role !== "system_admin") {
+    return <AccessRestricted label="Proposals" requirement="This area requires Governance & Compliance access." />
+  }
 
   return (
     <AppShell>

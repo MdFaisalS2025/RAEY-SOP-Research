@@ -9,6 +9,8 @@ import {
 import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { SafetyNote } from "@/components/ui/safety-note"
+import { AccessRestricted } from "@/components/ui/access-restricted"
+import { useRole } from "@/lib/role-context"
 import { cn } from "@/lib/utils"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
@@ -387,6 +389,7 @@ function ImpactBySopTab({ conflicts, loading }: { conflicts: RealConflict[]; loa
 }
 
 export default function ConflictResolutionPage() {
+  const { role } = useRole()
   const [data, setData] = useState<ConflictGraphResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -421,6 +424,10 @@ export default function ConflictResolutionPage() {
     { key: "all" as const, label: "All Conflicts", icon: ShieldAlert },
     { key: "impact" as const, label: "Impact by SOP", icon: GitBranch },
   ]
+
+  if (role !== "governance_compliance" && role !== "system_admin") {
+    return <AccessRestricted label="SOP Conflicts & Impact" requirement="This area requires Governance & Compliance access." />
+  }
 
   return (
     <AppShell>

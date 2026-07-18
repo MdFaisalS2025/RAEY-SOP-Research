@@ -103,7 +103,16 @@ async def run_eval(pipeline: Optional[MeridianPipeline] = None) -> dict:
             per_query.append({"query": query, "category": case["category"], "error": str(e)})
             continue
 
-        faith = (result.faithfulness or {}).get("overall_faithfulness", 0.0) if result.faithfulness else 0.0
+        # None (not 0.0) when the answer never went through faithfulness
+        # scoring at all - e.g. Route B/external-evidence answers are built
+        # from external literature, not retrieved SOP chunks, so
+        # "faithfulness to source chunks" isn't a meaningful concept for
+        # them and the generator never computes it. Coercing that to 0.0
+        # previously counted every such answer as a total faithfulness
+        # failure, dragging the average down to ~0 even when every
+        # LLM-generated answer scored perfectly - directly contradicting
+        # this file's own faithfulness_note below about mock-mode scores.
+        faith = result.faithfulness.get("overall_faithfulness") if result.faithfulness else None
         coverage = _citation_coverage(result.answer)
         top_chunk_score = result.retrieved_chunks[0].relevance_score if result.retrieved_chunks else 0.0
 
@@ -118,7 +127,8 @@ async def run_eval(pipeline: Optional[MeridianPipeline] = None) -> dict:
             if did_abstain:
                 abstention_hits += 1
 
-        faith_scores.append(faith)
+        if faith is not None:
+            faith_scores.append(faith)
         coverage_scores.append(coverage)
         precision_scores.append(top_chunk_score)
 
@@ -137,7 +147,8 @@ async def run_eval(pipeline: Optional[MeridianPipeline] = None) -> dict:
             ),
         })
 
-    n = len(faith_scores)
+    n = len(coverage_scores)
+    n_faith = len(faith_scores)
     mode_counts = Counter(
         q.get("generation_mode", "unknown") for q in per_query if "generation_mode" in q
     )
@@ -146,7 +157,8 @@ async def run_eval(pipeline: Optional[MeridianPipeline] = None) -> dict:
     aggregate = {
         "total_queries": len(EVAL_QUERIES),
         "completed": n,
-        "avg_faithfulness": round(sum(faith_scores) / n, 3) if n else 0.0,
+        "avg_faithfulness": round(sum(faith_scores) / n_faith, 3) if n_faith else None,
+        "faithfulness_scored_count": n_faith,
         "avg_citation_coverage": round(sum(coverage_scores) / n, 3) if n else 0.0,
         "avg_top_chunk_relevance_score": round(sum(precision_scores) / n, 4) if n else 0.0,
         "abstention_accuracy": round(abstention_hits / abstention_total, 3) if abstention_total else None,
@@ -154,15 +166,25 @@ async def run_eval(pipeline: Optional[MeridianPipeline] = None) -> dict:
         "generation_mode": dominant_mode,
         "generation_mode_breakdown": dict(mode_counts),
         "faithfulness_note": (
-            "avg_faithfulness sits near its 1.0 ceiling in mock mode because "
-            "the mock generator is purely extractive (answers are built from "
-            "verbatim chunk phrases), so keyword-grounding checks trivially "
-            "pass. It only becomes a meaningful discriminator for LLM-"
-            "generated answers, which can paraphrase or add unsupported "
-            "content."
-            if dominant_mode in ("mock", "mock_fallback")
-            else "LLM-generated answers: faithfulness reflects real "
-                 "grounding checks, not an extractive-generation ceiling."
+            (
+                "avg_faithfulness sits near its 1.0 ceiling in mock mode because "
+                "the mock generator is purely extractive (answers are built from "
+                "verbatim chunk phrases), so keyword-grounding checks trivially "
+                "pass. It only becomes a meaningful discriminator for LLM-"
+                "generated answers, which can paraphrase or add unsupported "
+                "content."
+                if dominant_mode in ("mock", "mock_fallback")
+                else "LLM-generated answers: faithfulness reflects real "
+                     "grounding checks, not an extractive-generation ceiling."
+            )
+            + (
+                f" Faithfulness was scored for {n_faith} of {n} completed queries - "
+                "the rest routed to external evidence (no internal SOP chunks to "
+                "check faithfulness against) and are excluded from the average "
+                "rather than counted as failures."
+                if n_faith < n
+                else ""
+            )
         ),
     }
 

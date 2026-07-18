@@ -40,7 +40,10 @@ interface RagEvalResult {
 interface RagasPerQuery {
   query: string
   category: string
-  faithfulness: number
+  // null when this query never went through faithfulness scoring (e.g.
+  // routed to external evidence, with no internal SOP chunks to check
+  // faithfulness against) - see the backend's faithfulness_note.
+  faithfulness: number | null
   citation_coverage: number
   top_chunk_relevance_score: number
   abstained: boolean
@@ -49,7 +52,11 @@ interface RagasPerQuery {
 interface RagasSummary {
   aggregate: {
     total_queries: number
-    avg_faithfulness: number
+    // null when no completed query had a faithfulness score to average -
+    // e.g. every query in the run routed to external evidence, which has
+    // no internal SOP chunks to check faithfulness against.
+    avg_faithfulness: number | null
+    faithfulness_scored_count?: number
     avg_citation_coverage: number
     avg_top_chunk_relevance_score: number
     abstention_accuracy: number
@@ -237,17 +244,22 @@ export default function EvaluationPage() {
   // constants.
   const byCategory = (() => {
     if (!ragasSummary?.per_query) return []
-    const buckets: Record<string, { faithfulness: number[]; coverage: number[] }> = {}
+    const buckets: Record<string, { faithfulness: number[]; coverage: number[]; total: number }> = {}
     for (const q of ragasSummary.per_query) {
       if (!q.category) continue
-      buckets[q.category] ??= { faithfulness: [], coverage: [] }
-      buckets[q.category].faithfulness.push(q.faithfulness ?? 0)
+      buckets[q.category] ??= { faithfulness: [], coverage: [], total: 0 }
+      buckets[q.category].total += 1
+      // Excluded (not coalesced to 0) when null - a query that routed to
+      // external evidence was never faithfulness-scored at all, and
+      // counting that as "0 faithfulness" would misreport a real category
+      // average as a failure that never happened.
+      if (q.faithfulness != null) buckets[q.category].faithfulness.push(q.faithfulness)
       buckets[q.category].coverage.push(q.citation_coverage ?? 0)
     }
-    const avg = (arr: number[]) => (arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0)
+    const avg = (arr: number[]) => (arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null)
     return Object.entries(buckets)
-      .map(([type, v]) => ({ type, faithfulness: avg(v.faithfulness), coverage: avg(v.coverage), n: v.faithfulness.length }))
-      .sort((a, b) => b.faithfulness - a.faithfulness)
+      .map(([type, v]) => ({ type, faithfulness: avg(v.faithfulness), coverage: avg(v.coverage) ?? 0, n: v.total, nScored: v.faithfulness.length }))
+      .sort((a, b) => (b.faithfulness ?? -1) - (a.faithfulness ?? -1))
   })()
 
   return (
@@ -348,7 +360,7 @@ export default function EvaluationPage() {
                 />
                 <StatTile
                   i={1} icon={Brain}
-                  value={ragasSummary ? ragasSummary.aggregate.avg_faithfulness.toFixed(2) : "-"}
+                  value={ragasSummary?.aggregate.avg_faithfulness != null ? ragasSummary.aggregate.avg_faithfulness.toFixed(2) : "N/A"}
                   label="Answer Faithfulness"
                   description="Sentence-level grounding score vs retrieved chunks, last live run"
                 />
@@ -490,13 +502,13 @@ export default function EvaluationPage() {
                     <div className="flex items-center justify-between text-xs">
                       <span className="font-mono text-foreground w-40 shrink-0">{row.type} <span className="text-subtle">(n={row.n})</span></span>
                       <div className="flex gap-4 text-muted-foreground">
-                        <span className="text-[#0B6BCB] font-medium">{row.faithfulness.toFixed(2)}</span>
+                        <span className="text-[#0B6BCB] font-medium">{row.faithfulness != null ? row.faithfulness.toFixed(2) : "N/A"}</span>
                         <span className="text-muted-foreground font-medium">{row.coverage.toFixed(2)}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="flex-1 h-2 rounded-full bg-muted">
-                        <div className="h-full rounded-full bg-[#0B6BCB] transition-all duration-700" style={{ width: `${row.faithfulness * 100}%` }} />
+                        <div className="h-full rounded-full bg-[#0B6BCB] transition-all duration-700" style={{ width: `${(row.faithfulness ?? 0) * 100}%` }} />
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -531,8 +543,8 @@ export default function EvaluationPage() {
                 <span>
                   Sensitivity alone is a misleading headline metric - a verifier that flags every answer scores 100%
                   sensitivity while providing no signal. Specificity and pairwise separation show whether it can
-                  actually tell correct and wrong answers apart. See <code>/adversarial</code> for the full per-case
-                  benchmark, including the generated perturbation set and rule-based vs NLI-lite vs ensemble comparison.
+                  actually tell correct and wrong answers apart. See the Adversarial Testing tab above for the full
+                  per-case benchmark, including the generated perturbation set and rule-based vs NLI-lite vs ensemble comparison.
                 </span>
               </div>
             </motion.div>

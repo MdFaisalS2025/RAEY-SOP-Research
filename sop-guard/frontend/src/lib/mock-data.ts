@@ -20,6 +20,24 @@ export const DEMO_USERS: DemoUser[] = [
   { id: "u4", name: "Tariq Farooq", role: "system_admin", department: "IT & Health Informatics", title: "Meridian System Administrator", initials: "TF" },
 ]
 
+// The named committee roster (Governance Committee page) - not the same
+// list as DEMO_USERS, which is only the 4 accounts that can log in.
+// MOCK_PROPOSALS' approvers/committee_members already reference u1, u3,
+// u5, u6, u7 (see prop-001) implying a 5-person committee, but
+// committee/page.tsx was filtering DEMO_USERS down to just 2 matching
+// roles (u1, u3) - so the page displayed "2 members" while quorum math
+// used a 5-member/3-vote threshold, making quorum mathematically
+// unreachable from what was shown. This roster fills in the other named
+// reviewers already referenced elsewhere in the mock data (proposal
+// approvers, legal reviewers) rather than inventing new people.
+export const COMMITTEE_ROSTER: DemoUser[] = [
+  { id: "u1", name: "Dr. Sarah Mitchell", role: "clinical_staff", department: "ICU", title: "Physician Reviewer", initials: "SM" },
+  { id: "u3", name: "Dr. Linda Yeo", role: "governance_compliance", department: "Compliance & Quality", title: "Compliance Officer", initials: "LY" },
+  { id: "u5", name: "Dr. Khalid Al-Hassan", role: "governance_compliance", department: "Infection Control", title: "Committee Chair", initials: "KA" },
+  { id: "u6", name: "Patricia Walsh", role: "governance_compliance", department: "Legal & Risk", title: "Legal/Risk Reviewer", initials: "PW" },
+  { id: "u7", name: "Dr. Priya Nair", role: "governance_compliance", department: "Pediatrics", title: "Committee Member", initials: "PN" },
+]
+
 export const ROLE_CONFIG: Record<DemoUser["role"], { label: string; color: string; description: string }> = {
   clinical_staff: { label: "Clinical Staff", color: "blue", description: "Point-of-care SOP lookup, evidence comparison, and update suggestion (physicians and nurses)" },
   educator: { label: "Educator / Trainer", color: "pink", description: "Training modules, completion tracking, and micro-learning" },

@@ -36,6 +36,8 @@ import {
   Wrench,
   Info,
   ShieldOff,
+  UploadCloud,
+  Inbox,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { RoleSwitcher } from "@/components/layout/role-switcher"
@@ -108,6 +110,8 @@ const NAV_GROUPS: NavGroup[] = [
     label: "System",
     items: [
       { href: "/evaluation", label: "AI Evaluation", icon: Gauge, roles: ["system_admin"] },
+      { href: "/feedback", label: "Usage & Feedback", icon: Inbox, roles: ["governance_compliance", "system_admin"] },
+      { href: "/upload", label: "Upload SOP", icon: UploadCloud, roles: ["system_admin"] },
       { href: "/settings", label: "Settings", icon: Settings },
       { href: "/admin", label: "Admin", icon: Wrench, roles: ["system_admin"] },
     ],

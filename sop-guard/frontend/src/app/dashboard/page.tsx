@@ -36,6 +36,7 @@ import {
   MOCK_LEGAL,
   MOCK_PROPOSALS,
   MOCK_EVIDENCE_WATCH,
+  MOCK_DASHBOARD_STATS,
   DEMO_USERS,
 } from "@/lib/mock-data"
 import { cn } from "@/lib/utils"
@@ -127,6 +128,29 @@ const RISK_BADGE: Record<RiskLevel, string> = {
   high: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30",
   medium: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30",
   low: "bg-card text-muted-foreground border-input",
+}
+
+// ─── Shared mock-data aggregates ────────────────────────────────────────────
+// Every stat tile below is computed from the same underlying arrays the
+// detail views on this page (and /proposals, /committee, /legal, /training)
+// already render from - previously several tiles were bare hardcoded
+// literals that had drifted out of sync with each other (e.g. "Open
+// Proposals" showed 3 on the physician view and 2 on the dept-admin view,
+// neither matching MOCK_PROPOSALS's actual count). Deriving from source
+// data means every view agrees, and can't silently drift again.
+const OPEN_PROPOSAL_STATUSES: ProposalStatus[] = [
+  "draft", "submitted", "evidence_review", "department_review",
+  "committee_review", "legal_review", "training_review",
+]
+
+function openProposalsCount(): number {
+  return MOCK_PROPOSALS.filter((p) => OPEN_PROPOSAL_STATUSES.includes(p.status)).length
+}
+
+function avgComplianceScore(): number {
+  return Math.round(
+    MOCK_COMPLIANCE.reduce((sum, c) => sum + c.compliance_score, 0) / MOCK_COMPLIANCE.length
+  )
 }
 
 function SopCard({ sop }: { sop: typeof MOCK_SOPS[0] }) {
@@ -284,15 +308,17 @@ function PhysicianDashboard() {
   const recentSops = [...(specialtySops.length > 0 ? specialtySops : MOCK_SOPS)]
     .sort((a, b) => (b.last_updated || "").localeCompare(a.last_updated || ""))
     .slice(0, 2)
+  const deptEvidenceAlerts = MOCK_EVIDENCE_WATCH.filter((e) => e.departments_affected.includes(currentUser.department))
+  const deptTrainingDue = MOCK_TRAINING.filter((t) => t.department === currentUser.department && t.overdue > 0)
 
   return (
     <div className="space-y-6">
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatTile label="SOPs in Specialty" value={specialtySops.length} color="teal" icon={BookOpen} trend="neutral" />
-        <StatTile label="Evidence Alerts" value={2} color="amber" icon={AlertTriangle} />
-        <StatTile label="Open Proposals" value={3} color="gray" icon={FileText} />
-        <StatTile label="Training Due" value={1} color="red" icon={GraduationCap} />
+        <StatTile label="Evidence Alerts" value={deptEvidenceAlerts.length} color="amber" icon={AlertTriangle} />
+        <StatTile label="Open Proposals" value={openProposalsCount()} color="gray" icon={FileText} />
+        <StatTile label="Training Due" value={deptTrainingDue.length} color="red" icon={GraduationCap} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -384,6 +410,7 @@ function NurseDashboard() {
   // shared with the library page since both read the same backend records ──
   const [acknowledged, setAcknowledged] = useState<Set<string>>(new Set())
   const [toastMessage, setToastMessage] = useState<string | null>(null)
+  const [showAllAcks, setShowAllAcks] = useState(false)
 
   useEffect(() => {
     const base = process.env.NEXT_PUBLIC_API_URL || ""
@@ -442,7 +469,7 @@ function NurseDashboard() {
               </span>
             )}
           </h3>
-          {requiresAckSOPs.slice(0, 3).map((sop) => {
+          {(showAllAcks ? requiresAckSOPs : requiresAckSOPs.slice(0, 3)).map((sop) => {
             const isAcknowledged = acknowledged.has(sop.sop_id)
             return (
               <div
@@ -485,6 +512,14 @@ function NurseDashboard() {
               </div>
             )
           })}
+          {requiresAckSOPs.length > 3 && (
+            <button
+              onClick={() => setShowAllAcks((v) => !v)}
+              className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-[12px] font-medium text-[#0B6BCB] hover:bg-[#0B6BCB]/5 transition-colors"
+            >
+              {showAllAcks ? "Show fewer" : `Show all ${requiresAckSOPs.length}`}
+            </button>
+          )}
         </div>
 
         <div className="space-y-3">
@@ -541,14 +576,19 @@ function NurseDashboard() {
 
 function DeptAdminDashboard() {
   const overdueSops = MOCK_SOPS.filter((s) => s.status === "needs_update")
+  // This view's table below spans every department (MOCK_COMPLIANCE.slice(0,5)),
+  // so these tiles are org-wide aggregates over that same array, not scoped
+  // to one department - keeps the tiles and the table they sit above consistent.
+  const totalDeptSops = MOCK_COMPLIANCE.reduce((sum, c) => sum + c.total_sops, 0)
+  const totalOverdueReviews = MOCK_COMPLIANCE.reduce((sum, c) => sum + c.overdue_reviews, 0)
 
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatTile label="Dept SOPs" value={15} color="gray" icon={BookOpen} />
-        <StatTile label="Overdue Reviews" value={3} color="red" icon={Clock} trend="down" />
-        <StatTile label="Compliance Rate" value="84%" color="amber" icon={ShieldCheck} />
-        <StatTile label="Open Proposals" value={2} color="teal" icon={FileText} />
+        <StatTile label="Dept SOPs" value={totalDeptSops} color="gray" icon={BookOpen} />
+        <StatTile label="Overdue Reviews" value={totalOverdueReviews} color="red" icon={Clock} trend="down" />
+        <StatTile label="Compliance Rate" value={`${avgComplianceScore()}%`} color="amber" icon={ShieldCheck} />
+        <StatTile label="Open Proposals" value={openProposalsCount()} color="teal" icon={FileText} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -611,13 +651,15 @@ function DeptAdminDashboard() {
 }
 
 function ComplianceOfficerDashboard() {
+  const totalStaffOverdue = MOCK_COMPLIANCE.reduce((sum, c) => sum + c.overdue_acknowledgments, 0)
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatTile label="Overall Rate" value="84%" color="amber" icon={ShieldCheck} />
-        <StatTile label="Staff Overdue" value={149} color="red" icon={Users} trend="down" />
-        <StatTile label="Legal Flags" value={4} color="red" icon={Scale} />
-        <StatTile label="Audit Events Today" value={12} color="teal" icon={Activity} trend="up" />
+        <StatTile label="Overall Rate" value={`${avgComplianceScore()}%`} color="amber" icon={ShieldCheck} />
+        <StatTile label="Staff Overdue" value={totalStaffOverdue} color="red" icon={Users} trend="down" />
+        <StatTile label="Legal Flags" value={MOCK_LEGAL.length} color="red" icon={Scale} />
+        <StatTile label="Audit Events Today" value={MOCK_DASHBOARD_STATS.audit_events_today} color="teal" icon={Activity} trend="up" />
       </div>
 
       {/* Compliance Heatmap */}
@@ -674,13 +716,15 @@ function CommitteeDashboard() {
   const awaitingVote = MOCK_PROPOSALS.filter(
     (p) => p.status === "committee_review" || p.status === "legal_review"
   )
+  const approvedProposals = MOCK_PROPOSALS.filter((p) => p.status === "approved")
+  const actionRequiredEvidence = MOCK_EVIDENCE_WATCH.filter((e) => e.action_required)
 
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatTile label="Awaiting Vote" value={2} color="amber" icon={Vote} />
-        <StatTile label="Approved This Month" value={1} color="teal" icon={CheckCircle2} trend="up" />
-        <StatTile label="Evidence Alerts" value={2} color="gray" icon={AlertTriangle} />
+        <StatTile label="Awaiting Vote" value={awaitingVote.length} color="amber" icon={Vote} />
+        <StatTile label="Approved This Month" value={approvedProposals.length} color="teal" icon={CheckCircle2} trend="up" />
+        <StatTile label="Evidence Alerts" value={actionRequiredEvidence.length} color="gray" icon={AlertTriangle} />
         <StatTile label="Proposals Total" value={MOCK_PROPOSALS.length} color="teal" icon={FileText} />
       </div>
 

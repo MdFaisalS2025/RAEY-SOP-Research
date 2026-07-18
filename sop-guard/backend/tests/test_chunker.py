@@ -87,3 +87,67 @@ class TestSopLevelClinicalEntities:
         )
         for c in chunks:
             assert c.get("clinical_entities") == []
+
+
+class TestIndividualThresholdChunks:
+    """Real bug (P2.5): a single bucket chunk concatenating every threshold
+    for a SOP is topically diffuse - the cross-encoder reranker scores a
+    multi-fact passage far lower than a focused single-fact one, even when
+    the fact asked about is right there. Thresholds are now chunked
+    individually (mirroring the existing per-step chunking), as natural
+    sentences with the SOP title and abbreviation spelled out, both of
+    which measurably improved reranker relevance scores."""
+
+    _STRUCTURED = {
+        "thresholds": [
+            {"parameter": "MAP", "value": ">=65 mmHg", "action": "Initiate vasopressor if MAP <65 mmHg"},
+            {"parameter": "Lactate", "value": ">2 mmol/L", "action": "Repeat within 2-4 hours"},
+        ],
+    }
+
+    def test_one_chunk_per_threshold_entry(self):
+        chunks = create_sop_chunks(
+            raw_text="SEPSIS PROTOCOL", structured=self._STRUCTURED,
+            sop_id="SOP-X", sop_title="Sepsis Management Protocol",
+        )
+        individual = [c for c in chunks if c["chunk_type"] == "threshold"]
+        assert len(individual) == 2
+
+    def test_individual_chunk_is_a_natural_sentence_with_title_and_action(self):
+        chunks = create_sop_chunks(
+            raw_text="SEPSIS PROTOCOL", structured=self._STRUCTURED,
+            sop_id="SOP-X", sop_title="Sepsis Management Protocol",
+        )
+        map_chunk = next(c for c in chunks if c["chunk_type"] == "threshold" and "MAP" in c["text"])
+        assert map_chunk["text"].startswith("Sepsis Management Protocol.")
+        assert ">=65 mmHg" in map_chunk["text"]
+        assert "Initiate vasopressor" in map_chunk["text"]  # action not silently dropped
+
+    def test_known_abbreviation_is_spelled_out_inline(self):
+        chunks = create_sop_chunks(
+            raw_text="SEPSIS PROTOCOL", structured=self._STRUCTURED,
+            sop_id="SOP-X", sop_title="Sepsis Management Protocol",
+        )
+        map_chunk = next(c for c in chunks if c["chunk_type"] == "threshold" and "MAP" in c["text"])
+        assert "mean arterial pressure" in map_chunk["text"].lower()
+
+    def test_combined_chunk_still_exists_as_threshold_sequence(self):
+        """A broad 'what are all the thresholds' query still has one chunk
+        covering every threshold at once - retyped so it doesn't compete
+        with the individual chunks for the same boost weight."""
+        chunks = create_sop_chunks(
+            raw_text="SEPSIS PROTOCOL", structured=self._STRUCTURED,
+            sop_id="SOP-X", sop_title="Sepsis Management Protocol",
+        )
+        combined = [c for c in chunks if c["chunk_type"] == "threshold_sequence"]
+        assert len(combined) == 1
+        assert "MAP" in combined[0]["text"]
+        assert "Lactate" in combined[0]["text"]
+
+    def test_unknown_abbreviation_is_left_unexpanded(self):
+        structured = {"thresholds": [{"parameter": "XYZ", "value": "5 units", "action": ""}]}
+        chunks = create_sop_chunks(
+            raw_text="TEST", structured=structured, sop_id="SOP-X", sop_title="Test Protocol",
+        )
+        chunk = next(c for c in chunks if c["chunk_type"] == "threshold")
+        assert "(" not in chunk["text"]  # no fabricated expansion

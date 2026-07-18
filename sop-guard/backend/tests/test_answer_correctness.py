@@ -59,21 +59,33 @@ class TestHarness:
     #
     # The set was grown from 27 to 36 cases (P1.5), adding Code Blue,
     # Contrast Allergy, Fall Prevention, and Medication Reconciliation
-    # coverage. That growth surfaced one more open gap, left unfixed here:
-    # "What is the target mean arterial pressure in septic shock?" still
-    # retrieves Anticoagulation Safety Protocol's INR-target chunk ahead of
-    # Sepsis Management Protocol's own MAP threshold - a distinct retrieval-
-    # scoring issue from the two fixed in P1.1, not yet root-caused. Left
-    # for a future pass rather than a rushed fix in an already-large change.
+    # coverage. That growth surfaced one more gap (P2.5, now fixed): the
+    # single bucket "Clinical Thresholds and Values" chunk per SOP was
+    # topically diffuse - the cross-encoder reranker scores a multi-fact
+    # passage far lower than a focused single-fact one even when the fact
+    # asked for is right there, and a query naming no specific SOP fell
+    # back on raw TF-IDF, where a rival SOP's chunk could out-score the
+    # correct one purely by repeating a shared word ("target") more often.
+    # Fixed by chunking thresholds individually (chunker.py, mirrors the
+    # existing per-step chunking), as natural sentences with abbreviations
+    # spelled out (reusing the ABBREVIATIONS lexicon) instead of "value:
+    # parameter" bullet notation, which the reranker also scores poorly.
+    # That change also exposed a real pre-existing bug in the semantic-
+    # relevance dominance fallback (evidence_sufficiency.py): when every
+    # top-5 candidate came from one SOP (no rival present), an empty
+    # rival-score list defaulted the margin to infinity, trivially passing
+    # a mediocre score - fixed to require an actual rival to be dominant
+    # over.
     #
     # Mock-mode (fully reproducible, not rate-limit-dependent) is the floor
-    # basis: 0.44 pass-rate / 0.367 completeness on the current 36-case set.
-    # Floors sit just under that so an occasional rate-limit-induced mock
-    # fallback mid-run doesn't flake CI. Ratchet up as retrieval improves
-    # further - not an aspirational bar to hit by hiding a real deficiency,
-    # an honest floor at the measured baseline.
-    _PASS_RATE_FLOOR = 0.40
-    _COMPLETENESS_FLOOR = 0.30
+    # basis: 0.64 pass-rate / 0.6 completeness on the current 36-case set,
+    # up from 0.44 / 0.367 before this fix. Floors sit just under that so
+    # an occasional rate-limit-induced mock fallback mid-run doesn't flake
+    # CI. Ratchet up as retrieval improves further - not an aspirational
+    # bar to hit by hiding a real deficiency, an honest floor at the
+    # measured baseline.
+    _PASS_RATE_FLOOR = 0.55
+    _COMPLETENESS_FLOOR = 0.50
 
     @pytest.mark.asyncio
     async def test_harness_produces_valid_scored_report(self):

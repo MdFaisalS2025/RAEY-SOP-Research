@@ -567,7 +567,21 @@ class MockGenerator:
                     action_triggers.append(stripped)
 
         if threshold_lines:
-            formatted = [self._mark(self._format_threshold_line(t), n) for t, n in threshold_lines[:10]]
+            # Individual threshold chunks are prefixed "{sop_title}. " in
+            # their raw text (see chunker.py) - that repetition helps the
+            # cross-encoder relevance judge, which scores an isolated
+            # abbreviation-only fact much lower than one with its SOP
+            # context attached, but it reads as redundant noise in the
+            # displayed answer (which already opens with "Based on the
+            # {sop_title}..."). Strip it here, right before display.
+            title_prefix = f"{sop_title}. "
+            formatted = [
+                self._mark(
+                    self._format_threshold_line(t[len(title_prefix):] if t.startswith(title_prefix) else t),
+                    n,
+                )
+                for t, n in threshold_lines[:10]
+            ]
             items = "\n".join(f"- {t}" for t in formatted)
             answer = (
                 f"Based on the {sop_title}, the relevant clinical values are:\n\n"

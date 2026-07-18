@@ -9,6 +9,7 @@ from typing import Any
 from datetime import datetime
 
 from app.rag.entity_graph import DRUG_LEXICON, CONDITION_LEXICON
+from app.rag.clinical_terms import ABBREVIATIONS
 
 
 def _sop_level_entities(raw_text: str) -> list[str]:
@@ -129,9 +130,60 @@ def create_sop_chunks(
             "tokens": _estimate_tokens(all_steps_text),
         })
 
-    # 3. Threshold chunks
+    # 3. Threshold chunks - one per entry (mirrors step chunking below),
+    # plus one combined chunk for "what are all the thresholds" queries.
+    #
+    # Individual chunks matter for retrieval quality in a way steps don't:
+    # a single bucket chunk concatenating every threshold for a SOP is
+    # topically diffuse, and the cross-encoder reranker (see
+    # evidence_sufficiency.py's semantic_relevance check) scores diffuse
+    # multi-fact passages far lower than a focused single-fact one even
+    # when the fact is exactly what was asked - measured on this corpus,
+    # the same MAP-target fact scored -10.9 bundled with four other
+    # thresholds vs +0.8 alone. Real bug this fixes: "What is the target
+    # mean arterial pressure in septic shock?" hard-failed the semantic
+    # gate because the retrieved evidence was the whole bundled chunk.
+    #
+    # Each line is a natural sentence (not "value: parameter" notation,
+    # which the reranker also scores poorly - it wants prose, not a
+    # bullet dump) and spells out the parameter's abbreviation inline
+    # when known (ABBREVIATIONS, the same lexicon query expansion uses) -
+    # "MAP" alone scored far worse than "MAP (mean arterial pressure)"
+    # against a query that spelled the term out.
     thresholds = structured.get("thresholds", [])
     if thresholds:
+        for i, t in enumerate(thresholds):
+            if isinstance(t, str):
+                text = f"{sop_title}. {t}"
+                param_key = ""
+            else:
+                val = t.get("value", "")
+                param = t.get("parameter", t.get("context", ""))
+                action = t.get("action", "")
+                if not val:
+                    continue
+                param_key = param.lower().strip()
+                expansion = ABBREVIATIONS.get(param_key, "")
+                param_label = f"{param} ({expansion})" if expansion else param
+                text = f"{sop_title}. {param_label}: {val}."
+                if action:
+                    text += f" {action}."
+            chunks.append({
+                **base_meta,
+                "chunk_id": f"{sop_id}_threshold_{i}",
+                "chunk_type": "threshold",
+                "section_id": "thresholds",
+                "section_title": "Clinical Thresholds",
+                "text": text,
+                "step_order": None,
+                "tokens": _estimate_tokens(text),
+            })
+
+        # Combined chunk (parent) - same backwards-compatible "value:
+        # parameter" bullet format as before, since nothing needs this one
+        # to score well on its own; it exists so a broad "what are all the
+        # thresholds for this SOP" query still has one chunk covering all
+        # of them at once.
         threshold_text = f"{sop_title} - Clinical Thresholds and Values:\n\n"
         for t in thresholds:
             if isinstance(t, str):
@@ -144,7 +196,7 @@ def create_sop_chunks(
         chunks.append({
             **base_meta,
             "chunk_id": f"{sop_id}_thresholds",
-            "chunk_type": "threshold",
+            "chunk_type": "threshold_sequence",
             "section_id": "thresholds",
             "section_title": "Clinical Thresholds",
             "text": threshold_text.strip(),

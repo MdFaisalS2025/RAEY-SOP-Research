@@ -271,13 +271,24 @@ class EvidenceSufficiencyChecker:
             semantic_ok = top_semantic >= self.min_semantic_relevance
             if not semantic_ok:
                 # Dominance fallback: does the best-scoring SOP clearly
-                # beat every *other* SOP among the top candidates?
+                # beat every *other* SOP among the top candidates? Requires
+                # an actual rival to be dominant over - real bug found
+                # calibrating this: when every one of the top-5 candidates
+                # comes from the SAME single SOP (no rival present at all),
+                # `rival_scores` was empty and margin defaulted to
+                # float("inf"), trivially satisfying the margin check
+                # regardless of how weak the absolute score was. That let a
+                # -3.0 score (well inside the -6.0..-2.0 gray zone, on a
+                # genuinely off-topic query where nothing else was even
+                # retrieved) sail through as "dominant" when there was
+                # nothing to be dominant over - the opposite of what the
+                # fallback is supposed to mean. No rivals now means the
+                # fallback doesn't apply at all.
                 top_sop = max(scored, key=lambda c: c["rerank_score"]).get("sop_id")
                 rival_scores = [c["rerank_score"] for c in scored if c.get("sop_id") != top_sop]
-                margin = (top_semantic - max(rival_scores)) if rival_scores else float("inf")
-                semantic_ok = (
+                semantic_ok = bool(rival_scores) and (
                     top_semantic >= self.semantic_dominance_floor
-                    and margin >= self.semantic_dominance_margin
+                    and (top_semantic - max(rival_scores)) >= self.semantic_dominance_margin
                 )
             checks.append(("semantic_relevance", semantic_ok, round(top_semantic, 3)))
             if not semantic_ok:

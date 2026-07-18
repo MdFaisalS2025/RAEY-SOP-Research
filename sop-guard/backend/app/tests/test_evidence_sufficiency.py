@@ -252,6 +252,25 @@ class TestSemanticRelevanceGate:
         check = next(c for c in result["checks"] if c["name"] == "semantic_relevance")
         assert check["passed"] is False
 
+    def test_gray_zone_score_with_no_rivals_is_not_trivially_dominant(self, checker):
+        """Real regression (P2.5): 'What is the protocol for heat stroke?'
+        retrieved 5 candidates that were ALL from Code Stroke Response
+        Protocol (no rival SOP represented at all in the top-5), with a
+        best score of -3.0 - inside the -6.0..-2.0 gray zone, below the
+        absolute floor but above the dominance floor. Because rival_scores
+        was empty, margin defaulted to infinity and trivially passed,
+        letting an off-topic query (heat stroke != cerebrovascular stroke)
+        confidently match the wrong SOP. No rivals present must mean the
+        dominance fallback does not apply, not that it auto-passes."""
+        chunk = _chunk(0.3, "code stroke door-to-ct door-to-needle thrombolysis")
+        chunk["rerank_score"] = -3.0
+        chunk["sop_id"] = "code-stroke"
+        result = checker.check(
+            "What is the protocol for heat stroke?", [chunk], "general",
+        )
+        check = next(c for c in result["checks"] if c["name"] == "semantic_relevance")
+        assert check["passed"] is False
+
 
 class TestCorpusVocabularyCoverage:
     """

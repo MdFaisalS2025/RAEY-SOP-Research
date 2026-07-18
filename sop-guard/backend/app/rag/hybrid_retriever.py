@@ -39,14 +39,14 @@ _SPARSE_WEIGHT = 0.45
 
 # Chunk type boost factors based on query type
 CHUNK_TYPE_BOOSTS = {
-    "procedure_steps": {"step_sequence": 4.0, "step": 2.5, "section": 0.8, "summary": 0.5, "threshold": 0.6, "contraindication": 0.6},
-    "sequence": {"step_sequence": 4.0, "step": 2.5, "section": 0.8, "summary": 0.5, "threshold": 0.6, "contraindication": 0.6},
-    "threshold": {"threshold": 4.0, "step": 1.0, "section": 0.8, "summary": 0.5, "step_sequence": 0.8},
-    "contraindication": {"contraindication": 4.0, "step": 0.8, "section": 0.8, "summary": 0.5, "threshold": 0.6},
-    "monitoring": {"step": 2.0, "step_sequence": 2.5, "section": 1.5, "threshold": 1.5, "summary": 0.5, "contraindication": 0.8},
-    "medication": {"threshold": 3.0, "contraindication": 2.5, "step": 1.5, "section": 1.0, "summary": 0.5},
+    "procedure_steps": {"step_sequence": 4.0, "step": 2.5, "section": 0.8, "summary": 0.5, "threshold": 0.6, "threshold_sequence": 0.5, "contraindication": 0.6},
+    "sequence": {"step_sequence": 4.0, "step": 2.5, "section": 0.8, "summary": 0.5, "threshold": 0.6, "threshold_sequence": 0.5, "contraindication": 0.6},
+    "threshold": {"threshold": 4.0, "threshold_sequence": 0.9, "step": 1.0, "section": 0.8, "summary": 0.5, "step_sequence": 0.8},
+    "contraindication": {"contraindication": 4.0, "step": 0.8, "section": 0.8, "summary": 0.5, "threshold": 0.6, "threshold_sequence": 0.5},
+    "monitoring": {"step": 2.0, "step_sequence": 2.5, "section": 1.5, "threshold": 1.5, "threshold_sequence": 0.8, "summary": 0.5, "contraindication": 0.8},
+    "medication": {"threshold": 3.0, "threshold_sequence": 0.8, "contraindication": 2.5, "step": 1.5, "section": 1.0, "summary": 0.5},
     "role_responsibility": {"section": 2.0, "step": 1.5, "step_sequence": 1.0, "summary": 0.8},
-    "general": {"summary": 1.5, "section": 1.2, "step_sequence": 1.0, "step": 0.8},
+    "general": {"summary": 1.5, "section": 1.2, "step_sequence": 1.0, "threshold_sequence": 0.8, "step": 0.8},
 }
 
 
@@ -186,8 +186,29 @@ class HybridRetriever:
                     boosted_score = base_score * type_boost
 
                     if query_entities:
+                        # Checked two ways: literal substring in this
+                        # specific chunk's own text, OR membership in the
+                        # chunk's SOP-level clinical_entities (attached at
+                        # index time - see chunker.py's _sop_level_entities).
+                        # The literal-only check systematically disadvantaged
+                        # a SOP's own threshold/summary chunks when the
+                        # chunk's condition name lives in a different section
+                        # (e.g. the Sepsis SOP's "Definitions" section says
+                        # "septic shock", but its Thresholds chunk just
+                        # lists ">=65 mmHg: MAP" - no condition name at all)
+                        # while a rival SOP's chunk happened to repeat a
+                        # shared word like "target" more often, letting a
+                        # less-relevant SOP win on raw TF-IDF. Real bug this
+                        # fixes: "target mean arterial pressure in septic
+                        # shock" ranked Anticoagulation Safety Protocol's
+                        # INR-target chunk above the Sepsis SOP's own MAP
+                        # threshold.
                         text_low = text.lower()
-                        if any(re.search(r"\b" + re.escape(e) + r"\b", text_low) for e in query_entities):
+                        chunk_entities = set(chunk.get("clinical_entities", []))
+                        if (
+                            any(re.search(r"\b" + re.escape(e) + r"\b", text_low) for e in query_entities)
+                            or any(e in chunk_entities for e in query_entities)
+                        ):
                             boosted_score *= _ENTITY_MATCH_BOOST
 
                     # Keep best score across variants

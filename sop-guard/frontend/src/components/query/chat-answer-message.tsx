@@ -365,6 +365,24 @@ export function ChatAnswerMessage({
         </motion.div>
       )}
 
+      {/* Numeric redaction caution - a dose/threshold value the model stated
+          wasn't found in the cited SOP, so it was removed from the answer
+          text rather than shown as fact. The redaction marker is already
+          inline in the answer; this banner just makes sure it isn't missed. */}
+      {data.numericRedactionApplied && (
+        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+          className="p-3.5 rounded-2xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-[#B45309] dark:text-amber-400 shrink-0 mt-0.5" />
+          <div>
+            <p className="font-semibold text-[#B45309] dark:text-amber-400 text-sm">Value removed for accuracy</p>
+            <p className="text-[13px] text-muted-foreground mt-0.5">
+              A specific dose or threshold in this answer could not be confirmed against the cited SOP
+              and was removed rather than shown as fact. Verify the exact value directly with the source SOP.
+            </p>
+          </div>
+        </motion.div>
+      )}
+
       {/* Conflict details */}
       <AnimatePresence>
         {showConflictDetails && hasConflict && (

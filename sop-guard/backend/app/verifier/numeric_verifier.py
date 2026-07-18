@@ -100,3 +100,39 @@ def verify_numeric_claims(answer: str, chunks: list[dict[str, Any]]) -> dict[str
         "unsupported": unsupported,
         "all_grounded": not unsupported,
     }
+
+
+_REDACTION_MARKER = "[value not confirmed in the cited SOP - verify directly]"
+
+
+def redact_unsupported_claims(answer: str, unsupported: list[dict[str, str]]) -> tuple[str, int]:
+    """Replace every unsupported (value, unit) claim's literal text in `answer`
+    with an honest placeholder, so a hallucinated dose/threshold can never
+    reach the reader as if it were a confirmed fact.
+
+    This is deliberately a redaction, not a "corrected" substitution: picking
+    a different grounded number to show in its place would just be a second
+    guess dressed up as a fix (e.g. is a wrong "0.5 mcg/kg/min" a typo for the
+    SOP's starting dose 0.05, or for some other value entirely?). Removing the
+    unverified claim and saying so plainly is the only response that can't
+    itself introduce a wrong number. Confidence is still capped separately
+    (see agents/pipeline.py) - this is belt-and-suspenders, not a replacement
+    for that gate.
+
+    Matches case/spacing-insensitively against the original answer text (the
+    `value`/`unit` pair is normalized when extracted), and replaces every
+    occurrence of that exact claim, not just the first.
+    """
+    if not unsupported:
+        return answer, 0
+
+    redacted_count = 0
+    for claim in unsupported:
+        pattern = re.compile(
+            rf"{re.escape(claim['value'])}\s*{re.escape(claim['unit'])}(?![a-z])",
+            re.IGNORECASE,
+        )
+        answer, n = pattern.subn(_REDACTION_MARKER, answer)
+        redacted_count += n
+
+    return answer, redacted_count

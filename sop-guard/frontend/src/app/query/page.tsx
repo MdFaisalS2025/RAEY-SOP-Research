@@ -71,6 +71,13 @@ export type AssistantData = {
    * Reliable Match" | "" (not computed, e.g. clarification/gap routes) -
    * see backend evidence_sufficiency.py's confidence_tier(). */
   confidenceTier: string
+  /** True when the pipeline found a dose/threshold value in the generated
+   * answer that wasn't grounded in the cited SOP and removed it from the
+   * displayed text rather than show an unverified number as fact (see
+   * verifier/numeric_verifier.py's redact_unsupported_claims). The answer
+   * text itself already contains the "[value not confirmed...]" marker;
+   * this flag is only used to surface a visible caution banner alongside it. */
+  numericRedactionApplied: boolean
 }
 
 /** Pulls "Evidence: sufficient (score: 0.83)" out of the joined reasoning trace. */
@@ -206,6 +213,10 @@ function mapResponse(query: string, response: any, startedAt: number): Assistant
     clarificationQuestion: typeof ext.clarification_question === "string" ? ext.clarification_question : "",
     clarificationOptions: Array.isArray(ext.clarification_options) ? (ext.clarification_options as string[]).filter((o) => typeof o === "string") : [],
     confidenceTier: typeof ext.confidence_tier === "string" ? ext.confidence_tier : "",
+    numericRedactionApplied: Boolean(
+      ext.numeric_verification && typeof ext.numeric_verification === "object" &&
+      (ext.numeric_verification as any).redacted
+    ),
     answeredAt: Date.now(),
   }
 }
@@ -507,6 +518,7 @@ export default function QueryPage() {
         clarificationQuestion: "",
         clarificationOptions: [],
         confidenceTier: "",
+        numericRedactionApplied: false,
         answeredAt: Date.now(),
         error: true,
       }

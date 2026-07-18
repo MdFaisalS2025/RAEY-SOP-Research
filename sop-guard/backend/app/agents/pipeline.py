@@ -19,7 +19,7 @@ from app.rag.reranker import get_shared_reranker, CrossEncoderReranker
 from app.rag.evidence_sufficiency import EvidenceSufficiencyChecker, build_corpus_vocabulary, confidence_tier
 from app.rag.hyde import generate_hypothetical_doc
 from app.verifier.verifier import ProceduralFaithfulnessVerifier
-from app.verifier.numeric_verifier import verify_numeric_claims
+from app.verifier.numeric_verifier import verify_numeric_claims, redact_unsupported_claims
 from app.agents.query_agent import QueryUnderstandingAgent
 from app.rag.citation_tracker import citation_coverage
 from app.agents.routing import classify_intent, build_external_evidence_answer, build_no_evidence_answer
@@ -47,6 +47,18 @@ _CLINICAL_VOCAB = {w.lower() for w in DRUG_LEXICON} | {w.lower() for w in CONDIT
 #: caution", paired with the numeric_verification flag naming the exact
 #: unverified value - not "no SOP matched at all".
 _NUMERIC_UNGROUNDED_CONFIDENCE_CAP = 0.64
+
+#: Query types where a wrong number is the highest-stakes possible error - a
+#: dose or threshold read straight off the answer and acted on. For these,
+#: an ungrounded numeric claim isn't just confidence-capped (a signal a
+#: hurried reader can miss) - it's redacted from the displayed text outright
+#: (see redact_unsupported_claims below), so the specific unverified value
+#: can never be presented as fact regardless of whether anyone notices the
+#: confidence badge. Not applied to every query type: a general/procedural
+#: answer mentioning an unrelated number (e.g. "Step 7") in passing shouldn't
+#: have prose mangled by redaction for a claim that was never the point of
+#: the question.
+_NUMERIC_REDACTION_QUERY_TYPES = {"threshold", "medication"}
 
 
 def _looks_clinical(query: str) -> bool:
@@ -460,8 +472,21 @@ class MeridianPipeline:
             bad = ", ".join(c["text"] for c in numeric_verification["unsupported"])
             reasoning.append(f"Numeric verification: {len(numeric_verification['unsupported'])} ungrounded value(s) [{bad}] - capping confidence")
             final_confidence = min(final_confidence, _NUMERIC_UNGROUNDED_CONFIDENCE_CAP)
+            if query_type in _NUMERIC_REDACTION_QUERY_TYPES:
+                answer, redacted_count = redact_unsupported_claims(
+                    answer, numeric_verification["unsupported"]
+                )
+                numeric_verification["redacted"] = True
+                reasoning.append(
+                    f"Redacted {redacted_count} unverified value occurrence(s) from the "
+                    f"displayed answer (query type '{query_type}' - dose/threshold errors "
+                    "are never shown as fact, even at reduced confidence)"
+                )
+            else:
+                numeric_verification["redacted"] = False
         else:
             reasoning.append(f"Numeric verification: {numeric_verification['supported']}/{numeric_verification['claims_total']} values grounded")
+            numeric_verification["redacted"] = False
 
         t_total = round((time.perf_counter() - t_start) * 1000)
         reasoning.append(f"Final confidence after gating: {final_confidence}")

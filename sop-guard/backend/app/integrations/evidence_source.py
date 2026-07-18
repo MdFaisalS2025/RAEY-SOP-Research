@@ -101,6 +101,55 @@ def _significant_words(text: str) -> set[str]:
     return {w for w in words if w not in _RELEVANCE_STOPWORDS}
 
 
+#: Extra function words to drop when building an API *search* term (not when
+#: judging relevance). These carry no lookup value for a literature/label
+#: search and, left in, actively break some providers: openFDA builds a
+#: Lucene phrase query from the term, so a raw question like
+#: 'What is the protocol for jellyfish sting treatment?' becomes
+#: openfda.*:"what is the protocol for jellyfish sting treatment?" - the
+#: '?' and stopword soup make openFDA return 400 Bad Request instead of a
+#: clean no-results 404. Stripping to the clinical content words
+#: ('jellyfish sting treatment') fixes the 400 and improves relevance on
+#: every source, not just openFDA.
+_SEARCH_TERM_DROP = _RELEVANCE_STOPWORDS | {
+    "protocol", "protocols", "procedure", "procedures", "policy",
+    "step", "steps", "guideline", "guidelines", "manage", "managing",
+    "give", "given", "use", "used", "using", "need", "needed", "require",
+    "required", "there", "here", "our", "your", "their", "its", "some",
+    "any", "all", "each", "every", "please", "tell", "show", "explain",
+}
+
+#: Characters that break the query parsers of one or more providers
+#: (openFDA Lucene, Europe PMC, WHO IRIS). Removed before the term is sent.
+_QUERY_BREAKING = re.compile(r'[?"\'\\:()\[\]{}^~*!/<>=&|]+')
+
+
+def clean_search_term(term: str, max_words: int = 8) -> str:
+    """Turn a raw user question into a compact keyword search term for the
+    external provider APIs. Strips question phrasing, function words, and
+    query-parser-breaking punctuation, preserving clinical content words in
+    order. Falls back to the punctuation-stripped original if nothing
+    distinctive survives, so a source is never handed an empty term.
+
+    Only for building the API request - relevance gating (is_title_relevant,
+    the cross-encoder) still runs against the user's original question,
+    which those judges handle better than a stripped keyword bag.
+    """
+    if not term:
+        return ""
+    cleaned = _QUERY_BREAKING.sub(" ", term.lower())
+    words = re.findall(r"[a-z0-9][a-z0-9\-]*", cleaned)
+    kept = [w for w in words if len(w) >= 3 and w not in _SEARCH_TERM_DROP]
+    # de-dup preserving order
+    seen: set[str] = set()
+    deduped = [w for w in kept if not (w in seen or seen.add(w))]
+    if not deduped:
+        # nothing distinctive survived - fall back to the original with only
+        # the parser-breaking characters removed, collapsed to single spaces
+        return re.sub(r"\s+", " ", _QUERY_BREAKING.sub(" ", term)).strip()
+    return " ".join(deduped[:max_words])
+
+
 def is_title_relevant(term: str, title: str) -> bool:
     """Cheap relevance gate applied after fetching: does this record's
     title share at least one distinctive word with the search term?

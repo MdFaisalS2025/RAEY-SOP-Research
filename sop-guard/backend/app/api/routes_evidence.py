@@ -10,6 +10,7 @@ from fastapi import APIRouter, Query
 
 from app.integrations.pubmed import search_pubmed
 from app.integrations.evidence_registry import search_all, source_names
+from app.integrations.evidence_source import clean_search_term
 from app.integrations.openevidence import provider_status as openevidence_status
 
 router = APIRouter(tags=["Evidence"])
@@ -34,7 +35,7 @@ async def evidence_pubmed(
     Kept as a dedicated route for backward compatibility; prefer
     /api/evidence/search for multi-source, recency-sorted results.
     """
-    records = await search_pubmed(term, max_results=max)
+    records = await search_pubmed(clean_search_term(term), max_results=max)
     return {
         "term": term,
         "count": len(records),

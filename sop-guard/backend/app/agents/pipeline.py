@@ -19,6 +19,7 @@ from app.rag.reranker import get_shared_reranker, CrossEncoderReranker
 from app.rag.evidence_sufficiency import EvidenceSufficiencyChecker, build_corpus_vocabulary, confidence_tier
 from app.rag.hyde import generate_hypothetical_doc
 from app.verifier.verifier import ProceduralFaithfulnessVerifier
+from app.verifier.numeric_verifier import verify_numeric_claims
 from app.agents.query_agent import QueryUnderstandingAgent
 from app.rag.citation_tracker import citation_coverage
 from app.agents.routing import classify_intent, build_external_evidence_answer, build_no_evidence_answer
@@ -37,6 +38,15 @@ from app.services.query_decomposition import split_multi_part_query
 #: no clinical vocabulary and no literature-seeking phrasing should abstain
 #: outright (Route D) rather than search external literature (Route B).
 _CLINICAL_VOCAB = {w.lower() for w in DRUG_LEXICON} | {w.lower() for w in CONDITION_LEXICON}
+
+#: When the answer states a dose/threshold not found in the cited evidence,
+#: confidence is capped to this value - just below the "Moderate Confidence"
+#: boundary (0.65, see evidence_sufficiency.confidence_tier), landing the
+#: answer in "Weak Match". Deliberately not below 0.40 ("No Reliable Match"):
+#: a relevant SOP *was* found, so the honest signal is "treat this value with
+#: caution", paired with the numeric_verification flag naming the exact
+#: unverified value - not "no SOP matched at all".
+_NUMERIC_UNGROUNDED_CONFIDENCE_CAP = 0.64
 
 
 def _looks_clinical(query: str) -> bool:
@@ -438,6 +448,21 @@ class MeridianPipeline:
             query_type=query_type,
             citation_coverage_score=coverage,
         )
+
+        # Numeric-claim grounding: a dose/threshold in the answer that isn't
+        # in the cited evidence is the highest-stakes hallucination there is.
+        # When one is found, cap confidence below the "Moderate" tier so a
+        # possibly-wrong value can never be presented as a confident answer,
+        # and attach the structured result so the UI can flag exactly which
+        # value could not be verified.
+        numeric_verification = verify_numeric_claims(answer, retrieved)
+        if not numeric_verification["all_grounded"]:
+            bad = ", ".join(c["text"] for c in numeric_verification["unsupported"])
+            reasoning.append(f"Numeric verification: {len(numeric_verification['unsupported'])} ungrounded value(s) [{bad}] - capping confidence")
+            final_confidence = min(final_confidence, _NUMERIC_UNGROUNDED_CONFIDENCE_CAP)
+        else:
+            reasoning.append(f"Numeric verification: {numeric_verification['supported']}/{numeric_verification['claims_total']} values grounded")
+
         t_total = round((time.perf_counter() - t_start) * 1000)
         reasoning.append(f"Final confidence after gating: {final_confidence}")
         reasoning.append(f"Timing - Total pipeline: {t_total}ms")
@@ -470,6 +495,8 @@ class MeridianPipeline:
             route=route,
             external_evidence=external_evidence or [],
             confidence_tier=confidence_tier(final_confidence),
+            generation_mode=gen_result.get("generation_mode", ""),
+            numeric_verification=numeric_verification,
         )
 
     async def run_streaming(

@@ -59,15 +59,36 @@ _OLLAMA_SEMAPHORE = asyncio.Semaphore(max(1, settings.LLM_MAX_CONCURRENT_REQUEST
 
 
 def _is_retryable(exc: Exception) -> bool:
-    """Network/timeout failures and 5xx responses are worth a retry - a
-    busy or momentarily-restarting Ollama process often recovers within a
-    second or two. 4xx responses (bad request, model not found, etc.)
-    won't fix themselves on retry."""
+    """Network/timeout failures, 5xx responses, and 429 rate-limits are
+    worth a retry - a busy or momentarily-restarting Ollama process, or a
+    hosted provider's per-minute rate limit, often recovers within a second
+    or two. Other 4xx responses (bad request, model not found, etc.) won't
+    fix themselves on retry.
+
+    429 specifically was previously treated as non-retryable (all 4xx were),
+    so a rate-limited hosted model fell straight to the template generator
+    mid-answer instead of backing off and retrying - the single biggest
+    cause of inconsistent demo answer quality."""
     if isinstance(exc, (httpx.TransportError, httpx.TimeoutException)):
         return True
     if isinstance(exc, httpx.HTTPStatusError):
-        return exc.response.status_code >= 500
+        code = exc.response.status_code
+        return code >= 500 or code == 429
     return False
+
+
+def _retry_after_seconds(exc: Exception, default: float) -> float:
+    """Honor a provider's Retry-After header on a 429 when present, so we
+    wait exactly as long as the provider asks rather than guessing. Falls
+    back to the caller's computed exponential backoff otherwise."""
+    if isinstance(exc, httpx.HTTPStatusError):
+        header = exc.response.headers.get("retry-after")
+        if header:
+            try:
+                return max(0.0, min(float(header), 30.0))  # cap so a hostile header can't hang us
+            except (TypeError, ValueError):
+                return default
+    return default
 
 SYSTEM_PROMPT = """You are Meridian, a clinical SOP assistant for hospital staff. Answer questions based ONLY on the provided SOP content.
 
@@ -435,7 +456,24 @@ Answer:"""
             return await self._call_groq(prompt)
         raise ValueError(f"Unsupported provider: {self.provider} (only 'ollama', 'groq', and 'mock' are supported)")
 
-    async def _call_groq(self, prompt: str) -> str:
+    async def complete(self, user_prompt: str, system_prompt: str) -> Optional[str]:
+        """General-purpose single-turn completion with an arbitrary system
+        prompt - for uses other than SOP answering (LLM-as-judge scoring,
+        evidence summarization). Returns the text, or None if no model is
+        available or the call fails, so callers can degrade gracefully
+        instead of handling exceptions. Never used on the answer path."""
+        if not await self._check_available():
+            return None
+        try:
+            if self.provider == "ollama":
+                return await self._call_ollama(user_prompt, system_prompt=system_prompt)
+            if self.provider == "groq":
+                return await self._call_groq(user_prompt, system_prompt=system_prompt)
+        except Exception as e:  # noqa: BLE001 - judge/util path degrades to None
+            logger.warning(f"complete() failed: {e}")
+        return None
+
+    async def _call_groq(self, prompt: str, system_prompt: str = SYSTEM_PROMPT) -> str:
         """Call Groq's OpenAI-compatible chat completions API (non-streaming).
         Retried with the same backoff/classification as Ollama - no
         semaphore, since this is a hosted API rather than a single local
@@ -450,7 +488,7 @@ Answer:"""
                         json={
                             "model": self.model,
                             "messages": [
-                                {"role": "system", "content": SYSTEM_PROMPT},
+                                {"role": "system", "content": system_prompt},
                                 {"role": "user", "content": prompt},
                             ],
                             "temperature": 0.1,
@@ -464,7 +502,7 @@ Answer:"""
             except Exception as e:  # noqa: BLE001 - classified by _is_retryable below
                 last_exc = e
                 if attempt < settings.LLM_MAX_RETRIES and _is_retryable(e):
-                    backoff = 0.5 * (3 ** attempt)
+                    backoff = _retry_after_seconds(e, 0.5 * (3 ** attempt))
                     logger.warning(f"Groq call failed (attempt {attempt + 1}/{settings.LLM_MAX_RETRIES + 1}): {e}. Retrying in {backoff}s.")
                     await asyncio.sleep(backoff)
                     continue
@@ -515,14 +553,14 @@ Answer:"""
                 if started or attempt >= settings.LLM_MAX_RETRIES or not _is_retryable(e):
                     raise
                 last_exc = e
-                backoff = 0.5 * (3 ** attempt)
+                backoff = _retry_after_seconds(e, 0.5 * (3 ** attempt))
                 logger.warning(f"Groq stream failed before any tokens (attempt {attempt + 1}/{settings.LLM_MAX_RETRIES + 1}): {e}. Retrying in {backoff}s.")
                 await asyncio.sleep(backoff)
                 continue
         if last_exc:
             raise last_exc  # pragma: no cover - loop always returns or raises above
 
-    async def _call_ollama(self, prompt: str) -> str:
+    async def _call_ollama(self, prompt: str, system_prompt: str = SYSTEM_PROMPT) -> str:
         """Call Ollama API (non-streaming). Serialized via a shared
         semaphore and retried with backoff on transient failures - see
         _OLLAMA_SEMAPHORE and _is_retryable above."""
@@ -536,7 +574,7 @@ Answer:"""
                             json={
                                 "model": self.model,
                                 "prompt": prompt,
-                                "system": SYSTEM_PROMPT,
+                                "system": system_prompt,
                                 "stream": False,
                                 "options": {
                                     "temperature": 0.1,

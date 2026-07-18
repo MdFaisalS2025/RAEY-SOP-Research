@@ -10,13 +10,14 @@ import httpx
 import pytest
 
 from app.rag import llm_generator as llm_generator_module
-from app.rag.llm_generator import LLMGenerator, _is_retryable
+from app.rag.llm_generator import LLMGenerator, _is_retryable, _retry_after_seconds
 
 
 class _FakeResponse:
-    def __init__(self, status_code=200, payload=None):
+    def __init__(self, status_code=200, payload=None, headers=None):
         self.status_code = status_code
         self._payload = payload or {}
+        self.headers = headers or {}
 
     def raise_for_status(self):
         if self.status_code >= 400:
@@ -65,13 +66,51 @@ class _AlwaysBadRequestClient(_FlakyThenSucceedsClient):
         return _FakeResponse(400)
 
 
-def test_is_retryable_classifies_5xx_and_network_errors_only():
+def test_is_retryable_classifies_5xx_network_errors_and_429():
     assert _is_retryable(httpx.ConnectError("down")) is True
     assert _is_retryable(httpx.ReadTimeout("slow")) is True
     server_err = httpx.HTTPStatusError("x", request=None, response=_FakeResponse(500))
     assert _is_retryable(server_err) is True
+    # 429 (rate limit) is retryable even though it's a 4xx - this is the fix
+    # that stops a rate-limited hosted model falling straight to templates.
+    rate_limited = httpx.HTTPStatusError("x", request=None, response=_FakeResponse(429))
+    assert _is_retryable(rate_limited) is True
+    # other 4xx still won't fix themselves on retry
     client_err = httpx.HTTPStatusError("x", request=None, response=_FakeResponse(404))
     assert _is_retryable(client_err) is False
+
+
+def test_retry_after_header_is_honored_and_capped():
+    exc = httpx.HTTPStatusError("x", request=None, response=_FakeResponse(429, headers={"retry-after": "2"}))
+    assert _retry_after_seconds(exc, default=0.5) == 2.0
+    # a hostile/huge Retry-After can't hang us - capped at 30s
+    big = httpx.HTTPStatusError("x", request=None, response=_FakeResponse(429, headers={"retry-after": "9999"}))
+    assert _retry_after_seconds(big, default=0.5) == 30.0
+    # no header -> caller's computed backoff is used
+    no_header = httpx.HTTPStatusError("x", request=None, response=_FakeResponse(429))
+    assert _retry_after_seconds(no_header, default=0.5) == 0.5
+
+
+class _RateLimitedThenSucceedsGroq(_FlakyThenSucceedsClient):
+    """First POST 429s (rate limit), second succeeds - the Groq demo path."""
+    calls = 0
+
+    async def post(self, url, json=None, headers=None):
+        type(self).calls += 1
+        if type(self).calls == 1:
+            return _FakeResponse(429, headers={"retry-after": "1"})
+        return _FakeResponse(200, {"choices": [{"message": {"content": "Norepinephrine 0.05 mcg/kg/min."}}]})
+
+
+async def test_groq_retries_429_instead_of_falling_to_template(monkeypatch):
+    monkeypatch.setattr(llm_generator_module.httpx, "AsyncClient", _RateLimitedThenSucceedsGroq)
+    monkeypatch.setattr(llm_generator_module.asyncio, "sleep", _no_sleep)
+    _RateLimitedThenSucceedsGroq.calls = 0
+
+    gen = LLMGenerator(provider="groq", model="llama-3.3-70b-versatile")
+    result = await gen._call_groq("prompt")
+    assert result == "Norepinephrine 0.05 mcg/kg/min."
+    assert _RateLimitedThenSucceedsGroq.calls == 2  # retried, did not give up
 
 
 async def test_call_ollama_retries_transient_failure_and_succeeds(monkeypatch):

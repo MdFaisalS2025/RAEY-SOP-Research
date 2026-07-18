@@ -94,6 +94,21 @@ class QueryResponse(BaseModel):
     # Moderate / Weak / No Reliable Match - see evidence_sufficiency.py's
     # confidence_tier()) - calibrated honesty instead of a bare percentage.
     confidence_tier: str = ""
+    # How the answer text was produced: "llm" (the configured model),
+    # "mock" (no model configured - template generator), or "mock_fallback"
+    # (a configured model was tried but failed/rate-limited and we fell back
+    # to the template generator). Surfaced as a first-class field - not just
+    # buried in reasoning_trace - so the UI can flag a degraded answer and
+    # the eval harness can detect a silent quality drop instead of scoring a
+    # template answer as if the real model produced it.
+    generation_mode: str = ""
+    # Result of the numeric-claim grounding check (verifier/numeric_verifier):
+    # every dose/threshold stated in the answer must appear verbatim in the
+    # cited evidence. Shape: {claims_total, supported, unsupported:[...],
+    # all_grounded}. When a value is ungrounded, confidence is capped so a
+    # possibly-hallucinated dose can never render as a high-confidence answer,
+    # and the UI can surface which value could not be verified.
+    numeric_verification: Optional[dict] = None
 
 
 # ── SOP ────────────────────────────────────────────────────────

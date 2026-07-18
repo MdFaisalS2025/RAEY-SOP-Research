@@ -11,7 +11,7 @@ Research prototype. Not for clinical use.
 
 from typing import Any, Optional
 
-from app.integrations.evidence_source import EvidenceSource, classify_stance, is_title_relevant, grade_evidence, evidence_grade_rank, _significant_words
+from app.integrations.evidence_source import EvidenceSource, classify_stance, is_title_relevant, grade_evidence, evidence_grade_rank, _significant_words, clean_search_term
 
 # Real bug this guards against: is_title_relevant is pure lexical overlap
 # (any shared significant word), so "heat stroke" matched a WHO paper
@@ -121,11 +121,15 @@ async def search_all(
     # recency) ranking happened to return first.
     fetch_n = min(max_results * 4, 30)
     combined: list[dict[str, Any]] = []
+    # Clean, keyword-only term for the provider APIs (fixes openFDA 400s and
+    # improves relevance on every source); the original question is kept for
+    # the relevance gates below, which judge natural questions better.
+    api_term = clean_search_term(term)
     for name in names:
         src = _REGISTRY.get(name)
         if src is None:
             continue
-        records = await src.search(term, max_results=fetch_n)
+        records = await src.search(api_term, max_results=fetch_n)
         for r in records:
             r["stance"] = classify_stance(r.get("title", ""))
             r["evidence_grade"] = grade_evidence(r)

@@ -211,3 +211,60 @@ async def test_registry_merges_and_sorts_by_recency(monkeypatch):
 
     records = await search_all("sepsis", sources=["pubmed", "europepmc", "cdc", "who", "clinicaltrials"])
     assert [r["title"] for r in records] == ["New", "Old"]
+
+
+class TestCleanSearchTerm:
+    def test_strips_question_phrasing_and_punctuation(self):
+        from app.integrations.evidence_source import clean_search_term
+        assert clean_search_term("What is the protocol for jellyfish sting treatment?") == "jellyfish sting treatment"
+
+    def test_no_query_breaking_characters_survive(self):
+        """The openFDA 400 bug: a '?' inside a Lucene phrase query is
+        rejected. The cleaned term must never contain query-parser-breaking
+        characters."""
+        from app.integrations.evidence_source import clean_search_term
+        out = clean_search_term('Compare "our SOP" vs. the guideline: (2024)?')
+        for ch in '?":()[]{}^~*\\/<>=&|':
+            assert ch not in out
+
+    def test_falls_back_to_stripped_original_when_all_stopwords(self):
+        from app.integrations.evidence_source import clean_search_term
+        # every token is a dropped function word - must not return empty
+        out = clean_search_term("what is the?")
+        assert out and "?" not in out
+
+    def test_preserves_drug_name_unchanged(self):
+        from app.integrations.evidence_source import clean_search_term
+        assert clean_search_term("norepinephrine") == "norepinephrine"
+
+    async def test_registry_sends_cleaned_term_to_sources(self, monkeypatch):
+        """Regression: the raw question used to be handed to each provider,
+        breaking openFDA and hurting relevance. search_all must clean it
+        first."""
+        from app.integrations import pubmed as pubmed_mod
+        seen_terms: list[str] = []
+
+        class _CaptureClient:
+            def __init__(self, *a, **k):
+                pass
+
+            async def __aenter__(self):
+                return self
+
+            async def __aexit__(self, *exc):
+                return False
+
+            async def get(self, url, params=None):
+                # PubMed puts the term in `term`, most others in a query param
+                term = (params or {}).get("term") or (params or {}).get("query.term") or ""
+                if term:
+                    seen_terms.append(term)
+                return _FakeResponse({"esearchresult": {"idlist": []}})
+
+        monkeypatch.setattr(pubmed_mod.httpx, "AsyncClient", _CaptureClient)
+        pubmed_mod._cache.clear()
+
+        await search_all("What is the protocol for heat stroke management?", sources=["pubmed"])
+        assert seen_terms, "expected the source to be queried"
+        assert seen_terms[0] == "heat stroke management"
+        assert "?" not in seen_terms[0]

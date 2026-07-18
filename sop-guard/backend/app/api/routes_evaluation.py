@@ -6,12 +6,14 @@ Research prototype  - NOT for clinical use.
 
 from typing import Any
 
+from datetime import datetime, timedelta, timezone
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func
 
 from app.database.db import get_db
-from app.models.models import SOP, SOPChunk
+from app.models.models import SOP, SOPChunk, EvalSnapshotRecord
 from app.schemas.schemas import EvaluationResult
 from app.agents.pipeline import MeridianPipeline
 from app.evaluation.evaluator import Evaluator
@@ -497,3 +499,126 @@ async def project_summary():
             "check_llm_status": "GET /api/llm/status",
         },
     }
+
+
+def _serialize_snapshot(r: EvalSnapshotRecord) -> dict:
+    return {
+        "id": r.id,
+        "metrics": r.metrics or {},
+        "corpus_sop_count": r.corpus_sop_count,
+        "generation_mode": r.generation_mode,
+        "label": r.label,
+        "created_at": r.created_at,
+    }
+
+
+@router.post("/api/evaluation/snapshot")
+async def record_eval_snapshot(label: str = "", db: AsyncSession = Depends(get_db)):
+    """
+    Run the full evaluation suite once against the current corpus and
+    persist the result as a snapshot, so metrics can be tracked release
+    over release instead of only ever showing the last ad-hoc run (see
+    EvalSnapshotRecord and GET /api/evaluation/snapshots).
+
+    Runs in mock-mode-equivalent settings (use_judge=False for the
+    correctness harness) for the same reason the CI regression-floor tests
+    do: fast, deterministic, and not dependent on a live LLM provider being
+    reachable. A snapshot recorded here is directly comparable to the
+    committed test-suite floors in tests/test_answer_correctness.py and
+    tests/test_quality_eval.py.
+    """
+    from app.evaluation.ragas_lite import run_eval
+    from app.evaluation.quality_eval import run_quality_eval
+    from app.evaluation.answer_correctness import run_correctness_eval
+    from app.verifier.verifier import ProceduralFaithfulnessVerifier
+    from app.services.sop_structurer import structure_sop
+    from app.demo_data.adversarial_tests import ADVERSARIAL_TESTS
+    from app.demo_data.demo_sops import DEMO_SOPS
+
+    rows = (await db.execute(
+        select(SOPChunk, SOP.sop_id.label("sop_sop_id"), SOP.title.label("sop_title"), SOP.structured_json)
+        .join(SOP, SOPChunk.sop_id == SOP.id)
+    )).all()
+    pipeline = _pipeline_from_rows(rows)
+
+    metrics: dict[str, Any] = {}
+    generation_mode = "mock"
+
+    if pipeline is not None:
+        chunks = []
+        structured_sops: dict[str, dict] = {}
+        for row in rows:
+            chunk = row[0]
+            chunks.append({
+                "chunk_text": chunk.chunk_text,
+                "text": chunk.chunk_text,
+                "section_title": chunk.section_title,
+                "sop_title": row.sop_title,
+                "sop_id": row.sop_sop_id,
+                "chunk_type": getattr(chunk, "chunk_type", "section") or "section",
+                "chunk_index": chunk.chunk_index,
+            })
+            if row.sop_sop_id not in structured_sops and row.structured_json:
+                structured_sops[row.sop_sop_id] = row.structured_json
+
+        faith_result = await run_eval(pipeline)
+        metrics["faithfulness"] = faith_result["aggregate"]["avg_faithfulness"]
+        metrics["citation_coverage"] = faith_result["aggregate"]["avg_citation_coverage"]
+        generation_mode = faith_result["aggregate"]["generation_mode"]
+
+        retriever = HybridRetriever(chunks)
+        rag_result = evaluate_retrieval(retriever, pipeline)
+        metrics["retrieval_precision"] = rag_result["retrieval_precision"]
+
+        quality_result = await run_quality_eval(pipeline)
+        metrics["route_accuracy"] = quality_result["pass_rate"]
+
+        correctness_result = await run_correctness_eval(pipeline, use_judge=False)
+        metrics["correctness_pass_rate"] = correctness_result["aggregate"]["pass_rate"]
+        metrics["correctness_completeness"] = correctness_result["aggregate"]["avg_completeness_sop"]
+
+    # Adversarial verifier metrics don't need the live corpus/pipeline at
+    # all - they run the verifier directly against fixed adversarial cases
+    # (see routes_evaluation.py's own /api/evaluate/adversarial), so this
+    # runs regardless of whether any SOPs are currently loaded.
+    verifier = ProceduralFaithfulnessVerifier()
+    structured_lookup: dict[str, dict] = {}
+    for sop in DEMO_SOPS:
+        sid = sop["sop_id"]
+        structured_lookup[sid] = sop.get("structured_json") or structure_sop(
+            sop["raw_text"], sop["title"]
+        )
+    adv_metrics = _run_verifier_over_cases(verifier, list(ADVERSARIAL_TESTS), structured_lookup)
+    metrics["adversarial_sensitivity"] = adv_metrics["sensitivity"]
+    metrics["adversarial_specificity"] = adv_metrics["specificity"]
+    metrics["adversarial_pairwise_separation"] = adv_metrics["pairwise_separation"]
+
+    sop_count = (await db.execute(select(func.count(SOP.id)))).scalar() or 0
+
+    record = EvalSnapshotRecord(
+        metrics=metrics,
+        corpus_sop_count=sop_count,
+        generation_mode=generation_mode,
+        label=label,
+    )
+    db.add(record)
+    await db.commit()
+    await db.refresh(record)
+    return _serialize_snapshot(record)
+
+
+@router.get("/api/evaluation/snapshots")
+async def list_eval_snapshots(limit: int = 30, db: AsyncSession = Depends(get_db)):
+    """History of recorded eval snapshots, newest first, for the trend view
+    on the frontend Evaluation page. Empty until at least one snapshot has
+    been recorded via POST /api/evaluation/snapshot."""
+    rows = (await db.execute(
+        select(EvalSnapshotRecord)
+        .order_by(EvalSnapshotRecord.created_at.desc())
+        .limit(max(1, min(limit, 200)))
+    )).scalars().all()
+    snapshots = [_serialize_snapshot(r) for r in rows]
+    # Chronological order for charting (oldest first), while the query
+    # itself stays newest-first so `limit` keeps the most recent runs.
+    snapshots.reverse()
+    return {"snapshots": snapshots, "total": len(snapshots)}

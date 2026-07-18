@@ -20,6 +20,7 @@ import { SafetyNote } from "@/components/ui/safety-note"
 import { cn } from "@/lib/utils"
 import { useRole } from "@/lib/role-context"
 import { AdversarialContent } from "@/components/evaluation/adversarial-content"
+import { TrendsContent } from "@/components/evaluation/trends-content"
 
 // "" (not an absolute localhost URL) so requests go through the Next.js
 // rewrite proxy same-origin, like every other page - an absolute
@@ -173,9 +174,10 @@ function StatTile({
 export default function EvaluationPage() {
   useRole()
   const [showMethodology, setShowMethodology] = useState(false)
-  const [tab, setTab] = useState<"metrics" | "adversarial">(() => {
+  const [tab, setTab] = useState<"metrics" | "adversarial" | "trends">(() => {
     if (typeof window === "undefined") return "metrics"
-    return new URLSearchParams(window.location.search).get("tab") === "adversarial" ? "adversarial" : "metrics"
+    const t = new URLSearchParams(window.location.search).get("tab")
+    return t === "adversarial" ? "adversarial" : t === "trends" ? "trends" : "metrics"
   })
 
   const [ragResult, setRagResult] = useState<RagEvalResult | null>(null)
@@ -313,6 +315,7 @@ export default function EvaluationPage() {
           {[
             { key: "metrics" as const, label: "Standard Evals", icon: Activity },
             { key: "adversarial" as const, label: "Adversarial Testing", icon: ShieldAlert },
+            { key: "trends" as const, label: "Trends", icon: BarChart3 },
           ].map((t) => (
             <button
               key={t.key}
@@ -329,6 +332,8 @@ export default function EvaluationPage() {
         </div>
 
         {tab === "adversarial" && <AdversarialContent />}
+
+        {tab === "trends" && <TrendsContent />}
 
         {tab === "metrics" && loading && (
           <div className="flex items-center justify-center py-24 text-muted-foreground gap-2">

@@ -76,6 +76,7 @@ async def init_db() -> None:
             OverrideRecord, CreditRecord,
             IncidentRecord, CAPARecord,
             SOPVersionRecord, SOPGapReportRecord,
+            EvalSnapshotRecord,
         )
         await conn.run_sync(Base.metadata.create_all)
 

@@ -232,6 +232,26 @@ class QueryLogRecord(Base):
     created_at = Column(DateTime, default=_utcnow)
 
 
+class EvalSnapshotRecord(Base):
+    """One point-in-time run of the evaluation suite, so metrics can be
+    tracked release over release instead of only ever showing "the last
+    time someone happened to run it" (see routes_evaluation.py's
+    /api/evaluation/snapshot and /api/evaluation/snapshots)."""
+    __tablename__ = "eval_snapshot_records"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    # {"faithfulness": 0.83, "route_accuracy": 0.9, "retrieval_precision":
+    # 0.87, "correctness_pass_rate": 0.67, "correctness_completeness": 0.65,
+    # "adversarial_sensitivity": 0.9, "adversarial_specificity": 0.5} -
+    # metric names deliberately match the roadmap's "how we'll know it
+    # worked" table (see routes_evaluation.py for what computes each one).
+    metrics = Column(JSON, default=dict)
+    corpus_sop_count = Column(Integer, default=0)
+    generation_mode = Column(String(16), default="mock")  # mock | live
+    label = Column(String(120), default="")
+    created_at = Column(DateTime, default=_utcnow)
+
+
 # ── Chat models ────────────────────────────────────────────────
 
 

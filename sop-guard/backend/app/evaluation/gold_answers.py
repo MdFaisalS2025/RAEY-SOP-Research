@@ -298,6 +298,176 @@ GOLD_CASES: list[GoldCase] = [
         acceptable_routes=("sop_library",),
     ),
 
+    # ── Code Stroke Response Protocol ──
+    GoldCase(
+        id="stroke-door-to-needle", category="sop",
+        query="What is the door-to-needle target for stroke thrombolysis?",
+        expected_sop="Code Stroke Response Protocol",
+        reference_answer="Door-to-needle should be 60 minutes or less from ED arrival to IV alteplase administration.",
+        must_include=("60 minutes",),
+        acceptable_routes=("sop_library",),
+    ),
+    GoldCase(
+        id="stroke-alteplase-dose", category="sop",
+        query="What is the alteplase dose for acute ischemic stroke?",
+        expected_sop="Code Stroke Response Protocol",
+        reference_answer="IV alteplase 0.9 mg/kg, maximum 90 mg, with 10% given as a bolus over 1 minute and the remainder infused over 60 minutes.",
+        must_include=("0.9 mg/kg",),
+        acceptable_routes=("sop_library",),
+    ),
+    GoldCase(
+        id="stroke-thrombolysis-window", category="sop",
+        query="What is the treatment window for IV thrombolysis in stroke?",
+        expected_sop="Code Stroke Response Protocol",
+        reference_answer="IV alteplase eligibility is evaluated within 4.5 hours of last known well, provided no hemorrhage is seen on CT.",
+        must_include=("4.5 hours",),
+        acceptable_routes=("sop_library",),
+    ),
+
+    # ── Patient Flow and Bed Management Protocol ──
+    GoldCase(
+        id="flow-bed-assignment-target", category="sop",
+        query="How quickly should a bed be assigned after an admission order?",
+        expected_sop="Patient Flow and Bed Management Protocol",
+        reference_answer="A bed should be assigned within 60 minutes of the admission order.",
+        must_include=("60 minutes",),
+        acceptable_routes=("sop_library",),
+    ),
+    GoldCase(
+        id="flow-red-surge", category="sop",
+        query="What occupancy level triggers Red surge status?",
+        expected_sop="Patient Flow and Bed Management Protocol",
+        reference_answer="Red surge is triggered at 98% or higher occupancy, activating the Capacity Command Center and pausing elective admissions.",
+        must_include=("98%",),
+        acceptable_routes=("sop_library",),
+    ),
+
+    # ── Discharge Planning Protocol ──
+    GoldCase(
+        id="discharge-edd-window", category="sop",
+        query="How soon must the expected date of discharge be set after admission?",
+        expected_sop="Discharge Planning Protocol",
+        reference_answer="The Expected Date of Discharge (EDD) must be set within 24 hours of admission.",
+        must_include=("24 hours",),
+        acceptable_routes=("sop_library",),
+    ),
+    GoldCase(
+        id="discharge-followup-highrisk", category="sop",
+        query="How soon must a follow-up appointment be scheduled for a high-risk discharge patient?",
+        expected_sop="Discharge Planning Protocol",
+        reference_answer="High-risk patients need a follow-up appointment confirmed within 7 days, before the discharge order is written.",
+        must_include=("7 days",),
+        acceptable_routes=("sop_library",),
+    ),
+
+    # ── Clinical Documentation Standards Policy ──
+    GoldCase(
+        id="docstd-hp-window", category="sop",
+        query="How soon must the admission history and physical be completed?",
+        expected_sop="Clinical Documentation Standards Policy",
+        reference_answer="The admission history and physical must be completed within 24 hours of admission, or before any surgical procedure if sooner.",
+        must_include=("24 hours",),
+        acceptable_routes=("sop_library",),
+    ),
+    GoldCase(
+        id="docstd-cosign-window", category="sop",
+        query="How quickly must trainee notes be co-signed by the supervising attending?",
+        expected_sop="Clinical Documentation Standards Policy",
+        reference_answer="Trainee and resident notes must be co-signed within 24 hours.",
+        must_include=("24 hours",),
+        acceptable_routes=("sop_library",),
+    ),
+
+    # ── Internal Compliance Audit Procedure ──
+    GoldCase(
+        id="audit-sample-size", category="sop",
+        query="What is the minimum chart sample size for a compliance audit?",
+        expected_sop="Internal Compliance Audit Procedure",
+        reference_answer="The sample must be a minimum of 30 charts or 10% of monthly volume, whichever is greater.",
+        must_include=("30 charts",),
+        acceptable_routes=("sop_library",),
+    ),
+    GoldCase(
+        id="audit-capa-window", category="sop",
+        query="How quickly must a department submit a corrective action plan after a critical audit finding?",
+        expected_sop="Internal Compliance Audit Procedure",
+        reference_answer="Department leadership must submit a CAPA within 10 business days of receiving a Critical or Major finding.",
+        must_include=("10 business days",),
+        acceptable_routes=("sop_library",),
+    ),
+
+    # ── Staff Onboarding and Credentialing Protocol ──
+    GoldCase(
+        id="onboard-psv-window", category="sop",
+        query="How soon must primary source verification be initiated for a new hire?",
+        expected_sop="Staff Onboarding and Credentialing Protocol",
+        reference_answer="Primary source verification must be initiated within 5 business days of offer acceptance.",
+        must_include=("5 business days",),
+        acceptable_routes=("sop_library",),
+    ),
+    GoldCase(
+        id="onboard-preceptor-period", category="sop",
+        query="What is the minimum preceptor period before independent practice?",
+        expected_sop="Staff Onboarding and Credentialing Protocol",
+        reference_answer="A minimum 4-week supervised preceptor period is required for clinical staff before independent practice.",
+        must_include=("4-week",),
+        acceptable_routes=("sop_library",),
+    ),
+
+    # ── Mandatory Training Compliance Protocol ──
+    GoldCase(
+        id="training-newhire-deadline", category="sop",
+        query="How soon after hire must core competency training be completed?",
+        expected_sop="Mandatory Training Compliance Protocol",
+        reference_answer="Core competency modules are due within 30 days of hire.",
+        must_include=("30 days",),
+        acceptable_routes=("sop_library",),
+    ),
+    GoldCase(
+        id="training-ehr-suspension", category="sop",
+        query="When is EHR access suspended for overdue training?",
+        expected_sop="Mandatory Training Compliance Protocol",
+        reference_answer="EHR access is suspended when core competency training becomes more than 15 days overdue.",
+        must_include=("15 days",),
+        acceptable_routes=("sop_library",),
+    ),
+
+    # ── Patient Safety Incident Reporting Protocol ──
+    GoldCase(
+        id="incident-sentinel-notify", category="sop",
+        query="How quickly must a sentinel event be reported to Risk Management?",
+        expected_sop="Patient Safety Incident Reporting Protocol",
+        reference_answer="For a Sentinel Event, notify the House Supervisor and Risk Management immediately, within 1 hour, by phone in addition to the electronic report.",
+        must_include=("1 hour",),
+        acceptable_routes=("sop_library",),
+    ),
+    GoldCase(
+        id="incident-rca-window", category="sop",
+        query="How soon must a root cause analysis be completed after a sentinel event?",
+        expected_sop="Patient Safety Incident Reporting Protocol",
+        reference_answer="The RCA must be completed and submitted to the Patient Safety Committee within 45 days of the event.",
+        must_include=("45 days",),
+        acceptable_routes=("sop_library",),
+    ),
+
+    # ── Quality Improvement Review Cycle Protocol ──
+    GoldCase(
+        id="qi-baseline-period", category="sop",
+        query="How long must baseline measurement run before a quality improvement intervention?",
+        expected_sop="Quality Improvement Review Cycle Protocol",
+        reference_answer="Baseline measurement must run for a minimum of 4 weeks before any intervention begins.",
+        must_include=("4 weeks",),
+        acceptable_routes=("sop_library",),
+    ),
+    GoldCase(
+        id="qi-sustainment-check", category="sop",
+        query="How long after adoption is a quality improvement sustainment check performed?",
+        expected_sop="Quality Improvement Review Cycle Protocol",
+        reference_answer="A 6-month sustainment check follows successful house-wide adoption.",
+        must_include=("6-month",),
+        acceptable_routes=("sop_library",),
+    ),
+
     # ── External-fallback (no internal SOP) ──
     GoldCase(
         id="ext-jellyfish", category="external",

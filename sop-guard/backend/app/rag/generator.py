@@ -81,7 +81,7 @@ class MockGenerator:
         top_chunk = good_chunks[0]
         sop_title = top_chunk.get("sop_title", "Unknown SOP")
         section = top_chunk.get("section_title", "")
-        top_text = top_chunk.get("chunk_text", "")
+        top_text = top_chunk.get("text", top_chunk.get("chunk_text", ""))
 
         source_label = f"Source: {sop_title}"
         if section:
@@ -715,10 +715,17 @@ class MockGenerator:
         if contra_chunks:
             return self._build_contraindication_answer(sop_title, top_text, chunks, citation_map)
 
-        # General: extract key sentences from all same-SOP chunks (multiple
-        # chunks combined - ambiguous origin, so no citation marker here)
-        all_text = "\n".join(c.get("text", c.get("chunk_text", "")) for c in same_sop[:4])
-        sentences = self._extract_key_sentences(all_text, max_sentences=6)
+        # General: extract key sentences per chunk (not a blind text join,
+        # so each sentence keeps a real [N] marker back to its own chunk
+        # instead of being unattributable) and cap the combined total.
+        sentences: list[str] = []
+        for chunk in same_sop[:4]:
+            chunk_text = chunk.get("text", chunk.get("chunk_text", ""))
+            num_cite = (citation_map or {}).get(_chunk_id(chunk))
+            sentences.extend(
+                self._extract_key_sentences(chunk_text, max_sentences=2, citation_number=num_cite)
+            )
+        sentences = sentences[:6]
 
         if sentences:
             points = "\n".join(f"- {s}" for s in sentences)

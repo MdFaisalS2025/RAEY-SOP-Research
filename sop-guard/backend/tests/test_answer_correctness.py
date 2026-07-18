@@ -77,15 +77,27 @@ class TestHarness:
     # a mediocre score - fixed to require an actual rival to be dominant
     # over.
     #
+    # The set was grown again (P2.3) from 36 to 55 cases, adding coverage
+    # for the 9 SOPs the harness previously never asked about (Code Stroke
+    # plus all 8 administrative/compliance/quality SOPs), closing the "only
+    # sepsis gets tested" gap. That pass also found and fixed two real bugs
+    # it exposed: generator.py's MockGenerator read a chunk's text under the
+    # key "chunk_text" in one spot while every other accessor in the file
+    # fell back to "text" first - chunks that only carried "text" silently
+    # produced an empty answer body - and query_agent.py's contraindication
+    # keyword list included the bare word "risk", which matched as a
+    # substring of "Risk Management" and misclassified any query mentioning
+    # that department, starving the real threshold chunk.
+    #
     # Mock-mode (fully reproducible, not rate-limit-dependent) is the floor
-    # basis: 0.64 pass-rate / 0.6 completeness on the current 36-case set,
-    # up from 0.44 / 0.367 before this fix. Floors sit just under that so
-    # an occasional rate-limit-induced mock fallback mid-run doesn't flake
-    # CI. Ratchet up as retrieval improves further - not an aspirational
-    # bar to hit by hiding a real deficiency, an honest floor at the
-    # measured baseline.
-    _PASS_RATE_FLOOR = 0.55
-    _COMPLETENESS_FLOOR = 0.50
+    # basis: 0.673 pass-rate / 0.653 completeness on the current 55-case
+    # set, up from 0.64 / 0.6 on the prior 36-case set. Floors sit just
+    # under that so an occasional rate-limit-induced mock fallback mid-run
+    # doesn't flake CI. Ratchet up as retrieval improves further - not an
+    # aspirational bar to hit by hiding a real deficiency, an honest floor
+    # at the measured baseline.
+    _PASS_RATE_FLOOR = 0.60
+    _COMPLETENESS_FLOOR = 0.55
 
     @pytest.mark.asyncio
     async def test_harness_produces_valid_scored_report(self):

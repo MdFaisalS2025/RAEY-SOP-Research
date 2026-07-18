@@ -74,8 +74,14 @@ QUERY_PATTERNS = {
         "weight": 1.0,
     },
     "contraindication": {
+        # Bare "risk" was removed: it's a substring of "Risk Management" (a
+        # department/process name in several admin SOPs), so any query
+        # mentioning that department - e.g. "How quickly must a sentinel
+        # event be reported to Risk Management?" - false-matched
+        # contraindication and starved the actual threshold chunk.
+        # "at risk"/"risk of" still signal genuine contraindication intent.
         "keywords": ["contraindication", "avoid", "should not", "cannot", "must not",
-                     "warning", "danger", "risk", "allergy", "when not to",
+                     "warning", "danger", "at risk", "risk of", "allergy", "when not to",
                      "do not", "never", "hold", "stop", "discontinue"],
         "weight": 1.0,
     },

@@ -130,6 +130,7 @@ async def init_db() -> None:
         "ALTER TABLE attestation_records ADD COLUMN second_factor_confirmation VARCHAR(256) DEFAULT ''",
         "ALTER TABLE attestation_records ADD COLUMN content_hash VARCHAR(64) DEFAULT ''",
         "ALTER TABLE attestation_records ADD COLUMN prev_hash VARCHAR(64) DEFAULT ''",
+        "ALTER TABLE query_log_records ADD COLUMN route VARCHAR(32) DEFAULT 'sop_library'",
     ):
         try:
             from sqlalchemy import text

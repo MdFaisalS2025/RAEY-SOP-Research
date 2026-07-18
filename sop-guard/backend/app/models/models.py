@@ -222,6 +222,13 @@ class QueryLogRecord(Base):
     news2_score = Column(Integer, nullable=True)
     user_id = Column(String(128), default="")
     citations_json = Column(JSON, default=list)
+    # Answer-routing transparency (see agents/routing.py): "sop_library" |
+    # "external_evidence" | "hybrid" | "no_evidence" | "clarification".
+    # Powers the unanswered-question analytics in routes_gap_reports.py's
+    # /api/sop-gap-reports/auto-detected - a coverage gap the pipeline
+    # itself routed away from an SOP, whether or not a user bothered to
+    # manually flag it via the gap-report panel.
+    route = Column(String(32), default="sop_library")
     created_at = Column(DateTime, default=_utcnow)
 
 

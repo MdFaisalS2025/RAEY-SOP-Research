@@ -18,6 +18,7 @@ from app.schemas.schemas import QueryRequest, QueryResponse
 from app.agents.pipeline import MeridianPipeline
 from app.services.sop_structurer import structure_sop
 from app.services.activity import log_activity
+from app.services.query_log import log_query_result
 
 router = APIRouter(tags=["Query"])
 
@@ -87,34 +88,7 @@ async def _persist_query_result(req: QueryRequest, result: QueryResponse, db: As
         await db.rollback()
         print(f"[Meridian] Warning: failed to store query record: {e}")
 
-    try:
-        from app.models.models import QueryLogRecord
-        faith = result.faithfulness or {}
-        faith_score = float(faith.get("overall_faithfulness", 0.0)) if isinstance(faith, dict) else 0.0
-        cited = sum(1 for c in (result.inline_citations or []) if c.get("cited_in_answer"))
-        log = QueryLogRecord(
-            query_text=req.query,
-            answer_text=result.answer,
-            query_type=result.query_type,
-            generation_mode=next(
-                (t.split(": ", 1)[1] for t in result.reasoning_trace if t.startswith("Generation mode:")),
-                "",
-            ),
-            confidence=result.confidence,
-            faithfulness_score=round(faith_score, 3),
-            citation_count=cited,
-            abstained="true" if result.abstained else "false",
-            news2_score=req.news2_score,
-            user_id=req.user_role or "",
-            citations_json=result.inline_citations or [],
-        )
-        db.add(log)
-        await db.flush()
-        result.answer_id = log.id
-        await db.commit()
-    except Exception as e:
-        await db.rollback()
-        print(f"[Meridian] Warning: failed to write query audit log: {e}")
+    result.answer_id = await log_query_result(db, req.query, result, user_id=req.user_role or "")
 
 
 @router.post("/api/query", response_model=QueryResponse)

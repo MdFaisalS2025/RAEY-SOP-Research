@@ -104,6 +104,97 @@ function RecurringGapsWidget() {
   )
 }
 
+interface AutoGapCluster {
+  representative_question: string
+  count: number
+  routes: Record<string, number>
+  most_common_route: string
+  first_asked: string
+  last_asked: string
+}
+
+const ROUTE_LABEL: Record<string, string> = {
+  no_evidence: "No evidence found",
+  external_evidence: "External evidence only",
+  clarification: "Needed clarification",
+  unknown_prior_to_tracking: "Unanswered (older log)",
+}
+
+// Complements RecurringGapsWidget (manually flagged gap reports) with a
+// signal that doesn't depend on a user noticing and clicking "flag to
+// committee": every logged query the pipeline itself routed away from an
+// SOP (no_evidence/external_evidence/clarification, or an outright
+// abstention) is a real coverage-gap data point on its own. Manual
+// flagging alone under-counts real gaps for exactly that reason.
+function AutoDetectedGapsWidget() {
+  const [clusters, setClusters] = useState<AutoGapCluster[]>([])
+  const [totals, setTotals] = useState<{ unanswered: number; logged: number; days: number } | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/sop-gap-reports/auto-detected?days=30`)
+      .then((r) => r.json())
+      .then((data) => {
+        setClusters(Array.isArray(data?.clusters) ? data.clusters : [])
+        setTotals({
+          unanswered: data?.total_unanswered ?? 0,
+          logged: data?.total_logged_queries ?? 0,
+          days: data?.window_days ?? 30,
+        })
+      })
+      .catch(() => { setClusters([]); setTotals(null) })
+      .finally(() => setLoading(false))
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-8 text-muted-foreground gap-2 text-sm">
+        <Loader2 className="w-4 h-4 animate-spin" /> Loading auto-detected gaps...
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-3">
+      {totals && (
+        <p className="text-xs text-muted-foreground">
+          {totals.unanswered} of {totals.logged} logged questions in the last {totals.days} days landed
+          outside the SOP library, whether or not anyone flagged them.
+        </p>
+      )}
+      {clusters.length === 0 ? (
+        <div className="rounded-2xl bg-card border border-border p-8 text-center">
+          <HelpCircle className="w-8 h-8 mx-auto mb-3 text-muted-foreground opacity-40" />
+          <p className="text-sm text-muted-foreground">No auto-detected gaps in this window.</p>
+        </div>
+      ) : (
+        clusters.slice(0, 6).map((c, i) => (
+          <div key={i} className="rounded-2xl bg-card border border-border p-4 space-y-2.5">
+            <div className="flex items-start justify-between gap-3">
+              <p className="text-sm font-medium text-foreground leading-snug">{c.representative_question}</p>
+              {c.count > 1 && (
+                <span className="shrink-0 px-2 py-0.5 rounded-full bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30 text-[11px] font-semibold whitespace-nowrap">
+                  Asked {c.count}x
+                </span>
+              )}
+            </div>
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted border border-border text-muted-foreground">
+                {ROUTE_LABEL[c.most_common_route] ?? c.most_common_route}
+              </span>
+              <span className="text-muted-foreground">Last asked {new Date(c.last_asked).toLocaleDateString()}</span>
+            </div>
+            <Link href={`/proposals?new=1&query=${encodeURIComponent(c.representative_question)}`}
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-[#0B6BCB] hover:underline pt-1">
+              <PlusCircle className="w-3.5 h-3.5" /> Draft a new SOP for this
+            </Link>
+          </div>
+        ))
+      )}
+    </div>
+  )
+}
+
 interface Proposal {
   id: number
   title: string
@@ -402,6 +493,17 @@ export default function CommitteePage() {
                   Sourced from SOP Gap Reports (created when Ask Meridian finds no matching internal SOP) - clustered by question similarity.
                 </p>
                 <RecurringGapsWidget />
+              </section>
+
+              <section className="space-y-4">
+                <h2 className="font-display text-lg font-bold text-foreground flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-[#0B6BCB]" /> Auto-Detected Coverage Gaps
+                </h2>
+                <p className="text-xs text-muted-foreground -mt-2">
+                  Sourced automatically from every logged question the pipeline routed away from the SOP
+                  library - independent of whether anyone manually flagged it.
+                </p>
+                <AutoDetectedGapsWidget />
               </section>
 
               <section className="space-y-4">

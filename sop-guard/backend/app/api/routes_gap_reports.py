@@ -10,7 +10,7 @@ Research prototype - NOT for clinical use.
 
 import re
 from collections import Counter
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -19,7 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.database.db import get_db
-from app.models.models import SOPGapReportRecord
+from app.models.models import SOPGapReportRecord, QueryLogRecord
 from app.services.activity import log_activity
 
 try:
@@ -161,6 +161,92 @@ async def gap_report_summary(db: AsyncSession = Depends(get_db), min_count: int 
 
     summary.sort(key=lambda s: s["count"], reverse=True)
     return {"clusters": summary, "total_reports": len(rows), "total_clusters": len(clusters)}
+
+
+# Routes the pipeline itself treats as "no approved SOP actually answered
+# this" (see agents/routing.py) - the automatic signal, independent of
+# whether any user bothered to click "flag to committee" on that answer.
+_UNANSWERED_ROUTES = ("no_evidence", "external_evidence", "clarification")
+
+
+def _effective_route(r: QueryLogRecord) -> str:
+    """The route column was added after this table already had rows (see
+    db.py's migration shim), so pre-existing logs backfilled to the column
+    default "sop_library" even when they were actually abstained - that
+    combination should never occur going forward (the pipeline always sets
+    both together), so it only shows up on logs written before route
+    tracking existed. Label those honestly rather than passing through a
+    default that would misleadingly claim an SOP answered the question."""
+    route = r.route or ""
+    if route in _UNANSWERED_ROUTES:
+        return route
+    if r.abstained == "true":
+        return "unknown_prior_to_tracking"
+    return route or "sop_library"
+
+
+@router.get("/api/sop-gap-reports/auto-detected")
+async def auto_detected_gaps(db: AsyncSession = Depends(get_db), days: int = 30, min_count: int = 1):
+    """Coverage-gap signal derived automatically from every logged query,
+    not just the ones a user manually flagged via the gap-report panel.
+    Every question routed away from an SOP (no_evidence/external_evidence/
+    clarification) or that the pipeline abstained on is a real "the corpus
+    didn't cover this" data point whether or not anyone flagged it -
+    manual flagging under-counts real gaps because it depends on a user
+    noticing and bothering to click a button. Clustered with the same
+    word-overlap approach as the manual gap-report summary above, so a
+    governance reviewer sees one consistent shape for both signals.
+    """
+    since = datetime.now(timezone.utc) - timedelta(days=days)
+    rows = (await db.execute(
+        select(QueryLogRecord)
+        .where(QueryLogRecord.created_at >= since)
+        .order_by(QueryLogRecord.created_at.asc())
+    )).scalars().all()
+
+    total_logged = len(rows)
+    unanswered = [
+        r for r in rows
+        if r.abstained == "true" or (r.route or "") in _UNANSWERED_ROUTES
+    ]
+
+    clusters: list[dict] = []  # each: {words, rows: [...]}
+    for r in unanswered:
+        words = _significant_words(r.query_text)
+        best_cluster, best_score = None, 0.0
+        for cluster in clusters:
+            score = _jaccard(words, cluster["words"])
+            if score > best_score:
+                best_score, best_cluster = score, cluster
+        if best_cluster is not None and best_score >= 0.5:
+            best_cluster["rows"].append(r)
+            best_cluster["words"] |= words
+        else:
+            clusters.append({"words": words, "rows": [r]})
+
+    summary = []
+    for cluster in clusters:
+        cluster_rows = cluster["rows"]
+        if len(cluster_rows) < min_count:
+            continue
+        routes = Counter(_effective_route(r) for r in cluster_rows)
+        summary.append({
+            "representative_question": cluster_rows[0].query_text,
+            "count": len(cluster_rows),
+            "routes": dict(routes),
+            "most_common_route": routes.most_common(1)[0][0],
+            "first_asked": min(r.created_at for r in cluster_rows),
+            "last_asked": max(r.created_at for r in cluster_rows),
+        })
+
+    summary.sort(key=lambda s: s["count"], reverse=True)
+    return {
+        "clusters": summary,
+        "total_unanswered": len(unanswered),
+        "total_logged_queries": total_logged,
+        "total_clusters": len(clusters),
+        "window_days": days,
+    }
 
 
 @router.post("/api/sop-gap-reports/{report_id}/send-to-committee")

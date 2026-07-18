@@ -19,6 +19,7 @@ from app.models.models import ChatSessionRecord, ChatMessageRecord
 from app.agents.pipeline import MeridianPipeline
 from app.services.chunk_loader import load_chunks
 from app.services.activity import log_activity
+from app.services.query_log import log_query_result
 from app.privacy.phi_guard import get_phi_provider
 
 router = APIRouter(tags=["Chat"])
@@ -199,6 +200,7 @@ async def post_message(
     user_msg_id, assistant_msg_id = await _persist_chat_messages(
         session, session_id, req, history, result.answer, result.inline_citations, db
     )
+    result.answer_id = await log_query_result(db, req.content, result)
 
     payload = result.model_dump()
     payload["session_id"] = session_id
@@ -249,6 +251,7 @@ async def post_message_stream(
                 user_msg_id, assistant_msg_id = await _persist_chat_messages(
                     session, session_id, req, history, result.answer, result.inline_citations, db
                 )
+                result.answer_id = await log_query_result(db, req.content, result)
                 payload = json.loads(result.model_dump_json())
                 payload["session_id"] = session_id
                 payload["message_id"] = assistant_msg_id

@@ -126,6 +126,26 @@ async def test_chat_session_flow(client_with_sop):
     assert data["messages"][0]["role"] == "user"
 
 
+async def test_chat_message_logs_query_with_route(client_with_sop):
+    """Real gap this closes (P2.4): the chat endpoints - the actual "Ask
+    Meridian" UI most users hit - never wrote a QueryLogRecord at all, only
+    the separate one-shot /api/query endpoint did. That silently blinded
+    any route-based coverage-gap analytics to the primary usage path."""
+    client = client_with_sop
+    created = await client.post("/api/chat/sessions", json={"title": "Sepsis question"})
+    session_id = created.json()["id"]
+
+    resp = await client.post(
+        f"/api/chat/sessions/{session_id}/messages",
+        json={"content": "What is the maximum norepinephrine dose?"},
+    )
+    assert resp.status_code == 200, resp.text
+
+    gaps = await client.get("/api/sop-gap-reports/auto-detected")
+    assert gaps.status_code == 200
+    assert gaps.json()["total_logged_queries"] >= 1
+
+
 async def test_chat_session_not_found(client):
     resp = await client.get("/api/chat/sessions/999999")
     assert resp.status_code == 404

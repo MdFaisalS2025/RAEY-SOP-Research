@@ -46,6 +46,28 @@ def _looks_clinical(query: str) -> bool:
     return classify_intent(query) != "internal"
 
 
+#: Pronouns/short references a follow-up uses to point back at the SOP
+#: already under discussion ("does IT say...", "what about THIS protocol").
+_REFERENTIAL_TERMS = {"it", "this", "that", "the sop", "the protocol", "the policy"}
+
+
+def _is_referential_followup(query: str, entities: dict[str, list], context_query: str) -> bool:
+    """True for a short follow-up that names no drug/condition of its own
+    and leans on a pronoun to refer back to the prior turn - e.g. "Does it
+    say when to escalate?" after asking about sepsis management. Such a
+    query's own retrieval signal is often generic operational language
+    ("escalate", "monitor") that matches several unrelated SOPs just as
+    well as the one actually under discussion, so the discounted context
+    pass needs to weigh more heavily than it does for a normal follow-up
+    that supplies its own clinical entity."""
+    if not context_query:
+        return False
+    if entities.get("drugs") or entities.get("conditions"):
+        return False
+    low = f" {query.lower()} "
+    return any(f" {term} " in low for term in _REFERENTIAL_TERMS)
+
+
 class MeridianPipeline:
     """
     Agentic RAG pipeline for clinical SOP question-answering
@@ -120,7 +142,14 @@ class MeridianPipeline:
 
         # 2. Retrieve (with query-type boosting and synonym expansion)
         t0 = time.perf_counter()
-        retrieved = self.retriever.search(retrieval_query, top_k=8, query_type=query_type, context_query=context_query)
+        context_weight = 0.25
+        if _is_referential_followup(query, analysis.get("entities", {}), context_query):
+            context_weight = 0.9
+            reasoning.append("Referential follow-up detected: weighting conversation context more heavily")
+        retrieved = self.retriever.search(
+            retrieval_query, top_k=8, query_type=query_type,
+            context_query=context_query, context_weight=context_weight,
+        )
         t_retrieve = round((time.perf_counter() - t0) * 1000)
         reasoning.append(f"Retrieved {len(retrieved)} chunks")
         reasoning.append(f"Timing - Retrieval: {t_retrieve}ms")
@@ -180,7 +209,23 @@ class MeridianPipeline:
         # scale, so skip attaching it rather than mislabel it - see
         # evidence_sufficiency.py's semantic_relevance check for the
         # corresponding read side of this.
-        if retrieved and isinstance(self.reranker, CrossEncoderReranker):
+        # A referential follow-up ("does IT say when to escalate?") has no
+        # topic of its own for the cross-encoder to judge - scored alone
+        # against a chunk, it correctly (but unhelpfully) finds no semantic
+        # relevance, since nothing in the bare query names sepsis/
+        # norepinephrine/anything else the chunk is actually about.
+        # Prepending conversation context changes the score distribution
+        # enough that the fixed floor/margin thresholds (calibrated for
+        # bare single-turn queries) no longer apply cleanly. Simplest
+        # correct answer: skip attaching rerank_score entirely for these
+        # queries, the same escape hatch evidence_sufficiency.py's
+        # entity_grounding check already uses for queries that name no
+        # lexicon term - "sits out" rather than penalizing a query with no
+        # standalone semantic content of its own. Retrieval quality is
+        # still handled upstream by the context-weighted HybridRetriever
+        # pass, which chose the right SOP correctly.
+        is_referential = context_weight > 0.25
+        if retrieved and not is_referential and isinstance(self.reranker, CrossEncoderReranker):
             try:
                 # CrossEncoder.predict() is synchronous, CPU-bound model
                 # inference - calling it directly here would block the
@@ -240,12 +285,20 @@ class MeridianPipeline:
 
             # Route B/D: no sufficient internal SOP evidence. Before
             # abstaining, check external literature - this is the seam
-            # that used to not exist (see routing.py docstring).
+            # that used to not exist (see routing.py docstring). Gated on
+            # _looks_clinical() first: without it, an off-domain question
+            # (cafeteria menu, laptop password) with no clinical vocabulary
+            # would still hit every external provider, and a broad
+            # full-text search can surface a loosely-matching paper purely
+            # on a shared common word - producing a "Based on external
+            # literature" answer to a non-clinical question. Route D
+            # (explicit no-evidence) is the honest response instead.
             external_results: list[dict] = []
-            try:
-                external_results = await search_external_evidence(query, max_results=5)
-            except Exception:
-                external_results = []
+            if _looks_clinical(query):
+                try:
+                    external_results = await search_external_evidence(query, max_results=5)
+                except Exception:
+                    external_results = []
 
             if external_results:
                 # Route B

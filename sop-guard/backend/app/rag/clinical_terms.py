@@ -73,6 +73,33 @@ ABBREVIATIONS: dict[str, str] = {
     "vtach": "ventricular tachycardia",
     "pea": "pulseless electrical activity",
     "rosc": "return of spontaneous circulation",
+    # Brand names for drugs named in the demo corpus. Unlike SYNONYM_GROUPS
+    # (below), abbreviation expansion always contributes its one variant
+    # regardless of how many synonym-group variants a query already
+    # generated, so a brand-name query reliably retrieves the generic-name
+    # SOP content even for a query that also triggers several unrelated
+    # synonym groups and would otherwise exhaust expand_query's variant
+    # budget before reaching the drug-name entries in SYNONYM_GROUPS.
+    "levophed": "norepinephrine",
+    "adrenalin": "epinephrine",
+    "pitressin": "vasopressin",
+    "intropin": "dopamine",
+    "dobutrex": "dobutamine",
+    "jantoven": "warfarin",
+    "lovenox": "enoxaparin",
+    "eliquis": "apixaban",
+    "xarelto": "rivaroxaban",
+    "glucophage": "metformin",
+    "zosyn": "piperacillin-tazobactam",
+    "merrem": "meropenem",
+    "rocephin": "ceftriaxone",
+    "dilaudid": "hydromorphone",
+    "tylenol": "acetaminophen",
+    "diprivan": "propofol",
+    "versed": "midazolam",
+    "ketalar": "ketamine",
+    "benadryl": "diphenhydramine",
+    "pepcid": "famotidine",
 }
 
 # Bidirectional clinical synonym groups
@@ -125,6 +152,39 @@ SYNONYM_GROUPS: list[set[str]] = [
     {"starting dose", "initial dose", "how much to give", "how much should be given"},
     {"titrate", "titration", "dose adjustment", "up-titrate", "escalate dose"},
     {"dose", "dosage", "dosing"},
+    # Brand-name <-> generic pairs for drugs named in the demo corpus - a
+    # clinician asking about "levophed" (norepinephrine's brand name, still
+    # common in verbal/bedside use) should retrieve the same SOP content as
+    # asking about norepinephrine by its generic name.
+    {"norepinephrine", "levophed"},
+    {"epinephrine", "adrenalin"},
+    {"vasopressin", "pitressin"},
+    {"dopamine", "intropin"},
+    {"dobutamine", "dobutrex"},
+    {"heparin", "unfractionated heparin"},
+    {"warfarin", "jantoven"},
+    {"enoxaparin", "lovenox"},
+    {"apixaban", "eliquis"},
+    {"rivaroxaban", "xarelto"},
+    {"metformin", "glucophage"},
+    {"hydrocortisone", "solu-cortef"},
+    {"methylprednisolone", "solu-medrol", "medrol"},
+    {"diphenhydramine", "benadryl"},
+    {"famotidine", "pepcid"},
+    {"amiodarone", "cordarone", "pacerone"},
+    {"vancomycin", "vancocin"},
+    {"piperacillin-tazobactam", "zosyn"},
+    {"meropenem", "merrem"},
+    {"ceftriaxone", "rocephin"},
+    {"morphine", "morphine sulfate", "ms contin"},
+    {"fentanyl", "sublimaze", "duragesic"},
+    {"hydromorphone", "dilaudid"},
+    {"acetaminophen", "tylenol", "paracetamol"},
+    {"ibuprofen", "advil", "motrin"},
+    {"propofol", "diprivan"},
+    {"midazolam", "versed"},
+    {"ketamine", "ketalar"},
+    {"insulin regular", "humulin r", "novolin r"},
 ]
 
 

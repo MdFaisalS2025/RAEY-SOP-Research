@@ -10,6 +10,7 @@ Research prototype. Not for clinical use.
 """
 
 import logging
+import re
 from typing import Any
 
 import httpx
@@ -21,6 +22,20 @@ logger = logging.getLogger(__name__)
 _BASE = "https://www.ebi.ac.uk/europepmc/webservices/rest/search"
 _TIMEOUT = 6.0
 _cache = TTLCache(ttl_seconds=3600)
+
+
+_HTML_TAG_RE = re.compile(r"<[^>]+>")
+
+
+def _clean_abstract(text: str) -> str:
+    """Europe PMC's resultType=core abstractText comes as structured HTML
+    ('<h4>Background</h4>...<h4>Methods</h4>...') - strip the tags to plain
+    prose and collapse the resulting whitespace so an evidence card never
+    shows raw markup."""
+    if not text:
+        return ""
+    stripped = _HTML_TAG_RE.sub(" ", text)
+    return re.sub(r"\s+", " ", stripped).strip()
 
 
 def _parse_result(doc: dict[str, Any]) -> dict[str, Any]:
@@ -41,6 +56,11 @@ def _parse_result(doc: dict[str, Any]) -> dict[str, Any]:
         "source_type": "europepmc",
         "pub_types": pub_types_flat,
         "study_type": "Preprint" if doc.get("pubType") == "preprint" else "Journal Article",
+        # Only present when resultType=core is requested (see search_europepmc)
+        # - the default "lite" result type doesn't include it. Europe PMC is
+        # the one source where this comes back in the same request, no
+        # second call needed (contrast pubmed.py's separate efetch).
+        "abstract": _clean_abstract(doc.get("abstractText") or ""),
     }
 
 
@@ -64,6 +84,11 @@ async def search_europepmc(term: str, max_results: int = 5) -> list[dict[str, An
                     "query": term,
                     "format": "json",
                     "pageSize": max_results,
+                    # "core" includes abstractText in the same response (vs.
+                    # the default "lite" shape) - lets evidence cards show a
+                    # real supporting excerpt instead of a bare title, with
+                    # no second network call.
+                    "resultType": "core",
                     # No sort override - see pubmed.py's comment on the same
                     # change. Europe PMC's default is relevance-ranked;
                     # forcing date-descending on a small page size surfaced

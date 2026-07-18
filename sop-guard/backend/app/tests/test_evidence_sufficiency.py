@@ -89,6 +89,30 @@ class TestEvidenceSufficiencyChecker:
         names = [c["name"] for c in result["checks"]]
         assert "entity_grounding" not in names
 
+    def test_entity_present_via_chunk_level_clinical_entities_not_literal_text(self, checker):
+        """Real bug (P1.1): a bucket-style 'Clinical Thresholds' chunk lists
+        '2.0-3.0: INR target (DVT/PE/AFib)' without repeating the drug name
+        'warfarin' anywhere in that chunk's own text - even though the chunk
+        indisputably belongs to the Anticoagulation SOP, which chunker.py
+        now tags with SOP-level clinical_entities at index time. The
+        entity-grounding check must accept that as grounding, not just a
+        literal substring match in the chunk text."""
+        chunk = _chunk(0.5, "INR target (DVT/PE/AFib): 2.0-3.0")
+        chunk["clinical_entities"] = ["warfarin", "heparin"]
+        result = checker.check("What is the target INR for warfarin?", [chunk], "threshold")
+        entity_check = next(c for c in result["checks"] if c["name"] == "entity_grounding")
+        assert entity_check["passed"] is True
+
+    def test_chunk_level_entities_do_not_ground_an_unlisted_drug(self):
+        """The chunk-level entity list only grounds drugs it actually
+        contains - it isn't a wildcard that grounds anything."""
+        chunk = _chunk(0.5, "INR target (DVT/PE/AFib): 2.0-3.0")
+        chunk["clinical_entities"] = ["warfarin"]
+        checker = EvidenceSufficiencyChecker()
+        result = checker.check("What is the vancomycin dose?", [chunk], "threshold")
+        entity_check = next(c for c in result["checks"] if c["name"] == "entity_grounding")
+        assert entity_check["passed"] is False
+
 
 class TestMockGeneratorAbstention:
     def test_abstains_and_flags_when_no_chunk_clears_relevance_floor(self):

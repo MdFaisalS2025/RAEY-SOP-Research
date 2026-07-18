@@ -205,7 +205,20 @@ class EvidenceSufficiencyChecker:
         query_entities = _extract_lexicon_entities(query)
         entity_grounded = True
         if query_entities:
-            ungrounded = [e for e in query_entities if e not in combined_text]
+            # Chunk-level clinical_entities (attached at index time from the
+            # SOP's *full* text - see chunker.py's _sop_level_entities) as a
+            # second check alongside literal substring match. A bucket-style
+            # chunk ("Clinical Thresholds and Values" concatenating every
+            # threshold for the SOP) often doesn't repeat the drug name on
+            # every line even when the SOP is unambiguously about that drug
+            # - e.g. the Anticoagulation SOP's threshold chunk states "INR
+            # target (DVT/PE/AFib): 2.0-3.0" without the word "warfarin",
+            # which previously failed this gate and caused a false
+            # abstention despite the correct SOP being the clear top match.
+            chunk_entities = {
+                e for c in retrieved_chunks[:5] for e in c.get("clinical_entities", [])
+            }
+            ungrounded = [e for e in query_entities if e not in combined_text and e not in chunk_entities]
             entity_grounded = len(ungrounded) == 0
             checks.append(("entity_grounding", entity_grounded, query_entities))
             if not entity_grounded:

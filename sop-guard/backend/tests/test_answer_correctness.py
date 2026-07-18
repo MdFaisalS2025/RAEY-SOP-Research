@@ -47,17 +47,33 @@ class TestHarness:
     # NOTE ON THE BASELINE: this harness deliberately uses *reworded* clinical
     # questions ("What temperature rise requires stopping a transfusion?")
     # rather than the canonical phrasings the routing eval (test_quality_eval)
-    # uses. On the current pipeline it surfaces a real, known gap: the
-    # evidence-sufficiency gate over-abstains on paraphrased-but-answerable
-    # questions (~0.44 pass rate, ~0.29 completeness), even though the exact
-    # fact sits in the top-retrieved SOP. That is the P1 retrieval/sufficiency
-    # target. The assertions below are therefore *regression floors* at the
-    # measured baseline - they guard against getting worse, and should be
-    # ratcheted UP as P1 improves retrieval. They are intentionally not an
-    # aspirational bar, because passing a test by hiding a real deficiency
-    # would defeat the entire point of building a gold-answer set.
+    # uses. It originally surfaced a real gap (P1.1): query-type
+    # misclassification (delta-threshold phrasing like "temperature RISE"
+    # scored zero threshold-keyword hits, so "stop" in "stopping" won a
+    # false contraindication classification) and an over-narrow entity-
+    # grounding check (a bucket-style "Clinical Thresholds" chunk doesn't
+    # repeat the SOP's drug name on every line) were causing correct
+    # SOP-library answers to abstain instead. Both are now fixed
+    # (query_agent.py's delta-word keywords, query_clarification.py's
+    # dominance check, chunker.py's SOP-level clinical_entities).
+    #
+    # The set was grown from 27 to 36 cases (P1.5), adding Code Blue,
+    # Contrast Allergy, Fall Prevention, and Medication Reconciliation
+    # coverage. That growth surfaced one more open gap, left unfixed here:
+    # "What is the target mean arterial pressure in septic shock?" still
+    # retrieves Anticoagulation Safety Protocol's INR-target chunk ahead of
+    # Sepsis Management Protocol's own MAP threshold - a distinct retrieval-
+    # scoring issue from the two fixed in P1.1, not yet root-caused. Left
+    # for a future pass rather than a rushed fix in an already-large change.
+    #
+    # Mock-mode (fully reproducible, not rate-limit-dependent) is the floor
+    # basis: 0.44 pass-rate / 0.367 completeness on the current 36-case set.
+    # Floors sit just under that so an occasional rate-limit-induced mock
+    # fallback mid-run doesn't flake CI. Ratchet up as retrieval improves
+    # further - not an aspirational bar to hit by hiding a real deficiency,
+    # an honest floor at the measured baseline.
     _PASS_RATE_FLOOR = 0.40
-    _COMPLETENESS_FLOOR = 0.25
+    _COMPLETENESS_FLOOR = 0.30
 
     @pytest.mark.asyncio
     async def test_harness_produces_valid_scored_report(self):

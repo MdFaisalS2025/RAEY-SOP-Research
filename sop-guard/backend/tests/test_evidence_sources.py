@@ -268,3 +268,115 @@ class TestCleanSearchTerm:
         assert seen_terms, "expected the source to be queried"
         assert seen_terms[0] == "heat stroke management"
         assert "?" not in seen_terms[0]
+
+
+class TestPickSupportingExcerpt:
+    def test_picks_sentence_with_most_term_overlap(self):
+        from app.integrations.evidence_source import pick_supporting_excerpt
+        abstract = (
+            "Background: sepsis is common. "
+            "Norepinephrine at doses above 0.5 mcg/kg/min was associated with increased mortality. "
+            "Conclusion: caution advised."
+        )
+        excerpt = pick_supporting_excerpt(abstract, "norepinephrine dose mortality")
+        assert "0.5 mcg/kg/min" in excerpt
+
+    def test_empty_abstract_returns_empty_string(self):
+        from app.integrations.evidence_source import pick_supporting_excerpt
+        assert pick_supporting_excerpt("", "anything") == ""
+
+    def test_falls_back_to_first_sentence_when_no_term_overlap(self):
+        from app.integrations.evidence_source import pick_supporting_excerpt
+        excerpt = pick_supporting_excerpt("First sentence here. Second sentence here.", "zzz nomatch")
+        assert excerpt == "First sentence here."
+
+    def test_long_sentence_truncated_on_word_boundary(self):
+        from app.integrations.evidence_source import pick_supporting_excerpt
+        long_sentence = "The dose was studied extensively in a large cohort of patients over many years."
+        excerpt = pick_supporting_excerpt(long_sentence, "dose", max_chars=30)
+        assert excerpt.endswith("...")
+        assert len(excerpt) <= 33  # 30 + "..."
+        # truncated on a word boundary - no partial word before "..."
+        body = excerpt[:-3]
+        assert long_sentence.startswith(body)
+        assert not long_sentence[len(body):len(body) + 1].isalpha()
+
+
+class TestEuropePMCAbstractCleaning:
+    async def test_strips_structured_html_tags(self, monkeypatch):
+        from app.integrations import europepmc as epmc_mod
+        payload = {"resultList": {"result": [
+            {"id": "1", "title": "Heat stroke study",
+             "abstractText": "<h4>Background</h4>Heat stroke is dangerous.<h4>Methods</h4>We reviewed cases."},
+        ]}}
+        monkeypatch.setattr(epmc_mod.httpx, "AsyncClient", _fake_client(payload))
+        epmc_mod._cache.clear()
+        records = await epmc_mod.search_europepmc("heat stroke", max_results=1)
+        assert "<h4>" not in records[0]["abstract"]
+        assert "<" not in records[0]["abstract"] and ">" not in records[0]["abstract"]
+        assert "Heat stroke is dangerous." in records[0]["abstract"]
+
+    async def test_search_all_drops_excerpt_that_duplicates_the_title(self, monkeypatch):
+        """Real bug (P1.4): a short case report with no true abstract can
+        have an efetch abstract body that's just the citation's title line
+        repeated - showing that back as a 'supporting excerpt' is redundant
+        and misleading (it looks like real supporting prose but isn't).
+        search_all must drop it, not just the title-only fallback case."""
+        from app.integrations import pubmed as pubmed_mod
+
+        class _TextResponse:
+            def __init__(self, text):
+                self.text = text
+
+            def raise_for_status(self):
+                return None
+
+        class _DispatchClient:
+            def __init__(self, *a, **k):
+                pass
+
+            async def __aenter__(self):
+                return self
+
+            async def __aexit__(self, *exc):
+                return False
+
+            async def get(self, url, params=None):
+                if "esearch" in url:
+                    return _FakeResponse({"esearchresult": {"idlist": ["1"]}})
+                if "esummary" in url:
+                    return _FakeResponse({"result": {"uids": ["1"], "1": {
+                        "uid": "1", "title": "Heat stroke case report in a teenager",
+                        "fulljournalname": "Acta Medica", "pubdate": "2024",
+                    }}})
+                # efetch: abstract text is literally just the title again
+                return _TextResponse("1. Heat stroke case report in a teenager.\nActa Medica. 2024.\nPMID: 1")
+
+        monkeypatch.setattr(pubmed_mod.httpx, "AsyncClient", _DispatchClient)
+        pubmed_mod._cache.clear()
+        records = await search_all("heat stroke", sources=["pubmed"], max_results=1)
+        assert records
+        assert records[0]["supporting_excerpt"] == ""
+
+    async def test_requests_core_result_type_for_abstracts(self, monkeypatch):
+        from app.integrations import europepmc as epmc_mod
+        seen_params = {}
+
+        class _CaptureClient:
+            def __init__(self, *a, **k):
+                pass
+
+            async def __aenter__(self):
+                return self
+
+            async def __aexit__(self, *exc):
+                return False
+
+            async def get(self, url, params=None):
+                seen_params.update(params or {})
+                return _FakeResponse({"resultList": {"result": []}})
+
+        monkeypatch.setattr(epmc_mod.httpx, "AsyncClient", _CaptureClient)
+        epmc_mod._cache.clear()
+        await epmc_mod.search_europepmc("sepsis", max_results=1)
+        assert seen_params.get("resultType") == "core"

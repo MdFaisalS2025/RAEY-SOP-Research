@@ -56,7 +56,21 @@ QUERY_PATTERNS = {
     "threshold": {
         "keywords": ["dose", "dosage", "maximum", "minimum", "threshold", "limit",
                      "how much", "how many", "target", "range", "value", "level",
-                     "rate", "mmhg", "mg", "ml", "units", "mmol", "bpm", "mcg"],
+                     "rate", "mmhg", "mg", "ml", "units", "mmol", "bpm", "mcg",
+                     # Delta-threshold phrasing ("what temperature RISE
+                     # requires stopping a transfusion?", "SBP DROP",
+                     # "HR INCREASE") - the same vocabulary entity_graph.py
+                     # uses to recognize a delta reading vs. an absolute one.
+                     # Real bug this fixes: without these, a query like the
+                     # one above scored 0 for "threshold" (no other keyword
+                     # matched) but 1.0 for "contraindication" purely because
+                     # "stop" is a substring of "stopping" - so a question
+                     # asking for a specific numeric value got routed to
+                     # retrieve the wrong section (Contraindications instead
+                     # of Thresholds), starving the chunk that actually has
+                     # the answer and causing a false abstention.
+                     "rise", "drop", "increase", "decrease", "fall", "change",
+                     "how high", "how low", "at what point", "what point"],
         "weight": 1.0,
     },
     "contraindication": {

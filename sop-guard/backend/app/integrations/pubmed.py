@@ -14,6 +14,7 @@ Design rules:
 Research prototype. Not for clinical use.
 """
 
+import re
 import time
 import logging
 from typing import Any
@@ -147,6 +148,7 @@ def _parse_summary(uid: str, doc: dict[str, Any]) -> dict[str, Any]:
         "source_type": "pubmed",
         "pub_types": pub_types,
         "study_type": _classify_study_type(pub_types),
+        "abstract": "",  # populated after esummary by the efetch step below
     }
 
 
@@ -225,11 +227,64 @@ async def search_pubmed(term: str, max_results: int = 5) -> list[dict[str, Any]]
             esummary.raise_for_status()
             records = parse_esummary(esummary.json())
 
+            # 3. efetch: same PMIDs -> abstracts, one batched call (not one
+            # per result) so an evidence card can show a real supporting
+            # excerpt instead of a bare title. Best-effort: if this call
+            # fails, the records above are still returned with abstract="" -
+            # a missing excerpt is a degraded evidence card, not a failed
+            # search.
+            try:
+                efetch = await client.get(
+                    f"{_EUTILS_BASE}/efetch.fcgi",
+                    params={"db": "pubmed", "id": ",".join(id_list), "rettype": "abstract", "retmode": "text"},
+                )
+                efetch.raise_for_status()
+                abstracts = _parse_efetch_abstracts(efetch.text, id_list)
+                for r in records:
+                    r["abstract"] = abstracts.get(r["pmid"], "")
+            except Exception as e:  # noqa: BLE001 - abstracts are best-effort
+                logger.warning(f"PubMed abstract fetch failed for term '{term}': {e}")
+                for r in records:
+                    r["abstract"] = ""
+
         _cache_set(term, max_results, records)
         return records
     except Exception as e:  # noqa: BLE001 - deliberately swallow all failures
         logger.warning(f"PubMed lookup failed for term '{term}': {e}")
         return []
+
+
+def _parse_efetch_abstracts(text: str, id_list: list[str]) -> dict[str, str]:
+    """NCBI's rettype=abstract&retmode=text response is plain text, records
+    separated by blank lines, with no PMID markers - the ONLY reliable way
+    to associate an abstract with its PMID from this format is positional
+    order, which efetch preserves relative to the `id` param's order. Each
+    record's last non-empty line is typically "PMID: <id>", used as a
+    cross-check when present rather than trusted alone."""
+    if not text.strip():
+        return {}
+    blocks = [b.strip() for b in re.split(r"\n\s*\n\s*\n", text) if b.strip()]
+    result: dict[str, str] = {}
+    for i, block in enumerate(blocks):
+        if i >= len(id_list):
+            break
+        # Strip a trailing "PMID: 12345678" line if present - it's citation
+        # metadata NCBI appends, not part of the abstract prose.
+        cleaned = re.sub(r"\n?PMID:\s*\d+\s*$", "", block, flags=re.IGNORECASE).strip()
+        # Drop a leading numbered title/citation line (efetch abstract text
+        # starts with "1. Title...\nAuthor list.\n" before the abstract body)
+        # - keep only from the first blank-line-free paragraph that reads as
+        # prose. Heuristic: skip lines until one is long enough to be
+        # abstract body text.
+        lines = cleaned.split("\n")
+        body_start = 0
+        for j, line in enumerate(lines):
+            if len(line.strip()) > 80:
+                body_start = j
+                break
+        abstract = " ".join(l.strip() for l in lines[body_start:] if l.strip())
+        result[id_list[i]] = abstract
+    return result
 
 
 class PubMedSource(EvidenceSource):

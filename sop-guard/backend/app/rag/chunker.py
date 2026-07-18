@@ -8,6 +8,35 @@ import re
 from typing import Any
 from datetime import datetime
 
+from app.rag.entity_graph import DRUG_LEXICON, CONDITION_LEXICON
+
+
+def _sop_level_entities(raw_text: str) -> list[str]:
+    """Drug/condition entities present anywhere in the SOP's full text, not
+    just in the specific chunk being built. Attached to every chunk of this
+    SOP so a bucket-style chunk (e.g. "Clinical Thresholds and Values" -
+    every threshold for the SOP concatenated into one chunk without
+    per-line drug-name context, see chunker below) still carries its SOP's
+    defining entity.
+
+    Real bug this fixes: "What is the target INR for warfarin?" correctly
+    retrieved the Anticoagulation SOP's threshold chunk ("2.0-3.0: INR
+    target (DVT/PE/AFib)") as the clear top match, but the entity-grounding
+    sufficiency check (evidence_sufficiency.py) only ever looked for
+    "warfarin" as a literal substring in that chunk's own text - which
+    never repeats the drug name, only the SOP's separate procedure-step
+    chunk does. The check failed even though the correct SOP was already
+    found, causing a false abstention. Chunk-level clinical_entities lets
+    that check ask "does the retrieved SOP cover this drug" instead of
+    "does this exact 200-character snippet happen to repeat the word."
+    """
+    low = raw_text.lower()
+    found = []
+    for term in DRUG_LEXICON + CONDITION_LEXICON:
+        if re.search(r"\b" + re.escape(term) + r"\b", low):
+            found.append(term)
+    return found
+
 
 def create_sop_chunks(
     raw_text: str,
@@ -35,6 +64,7 @@ def create_sop_chunks(
         "effective_date": effective_date,
         "review_date": review_date,
         "created_at": datetime.utcnow().isoformat(),
+        "clinical_entities": _sop_level_entities(raw_text),
     }
 
     # 1. Summary chunk - first ~300 chars + title + department

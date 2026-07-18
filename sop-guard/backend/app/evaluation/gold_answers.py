@@ -218,6 +218,86 @@ GOLD_CASES: list[GoldCase] = [
         acceptable_routes=("sop_library",),
     ),
 
+    # ── Code Blue Response Protocol ──
+    GoldCase(
+        id="codeblue-compression-rate", category="sop",
+        query="What is the correct chest compression rate during CPR?",
+        expected_sop="Code Blue Response Protocol",
+        reference_answer="Maintain a compression rate of 100-120 per minute throughout CPR.",
+        must_include=("100-120",),
+        acceptable_routes=("sop_library",),
+    ),
+    GoldCase(
+        id="codeblue-epinephrine-dose", category="sop",
+        query="What is the epinephrine dose during a code blue?",
+        expected_sop="Code Blue Response Protocol",
+        reference_answer="Give epinephrine 1 mg, repeated every 3-5 minutes.",
+        must_include=("1 mg",),
+        acceptable_routes=("sop_library",),
+    ),
+    GoldCase(
+        id="codeblue-amiodarone", category="sop",
+        query="What is the first dose of amiodarone for refractory VF?",
+        expected_sop="Code Blue Response Protocol",
+        reference_answer="Amiodarone first dose is 300 mg for refractory VF/pVT.",
+        must_include=("300 mg",),
+        acceptable_routes=("sop_library",),
+    ),
+
+    # ── Contrast Allergy and Reaction Protocol ──
+    GoldCase(
+        id="contrast-epi-dose", category="sop",
+        query="What is the epinephrine dose for a moderate contrast reaction?",
+        expected_sop="Contrast Allergy and Reaction Protocol",
+        reference_answer="Give epinephrine 0.3 mg IM (1:1000) into the anterolateral thigh for a moderate reaction.",
+        must_include=("0.3 mg",),
+        acceptable_routes=("sop_library",),
+    ),
+    GoldCase(
+        id="contrast-egfr-threshold", category="sop",
+        query="What eGFR level requires extra caution before contrast administration?",
+        expected_sop="Contrast Allergy and Reaction Protocol",
+        reference_answer="An eGFR below 30 mL/min/1.73m2 requires the lowest contrast volume and ensured hydration.",
+        must_include=("30 ml/min",),
+        acceptable_routes=("sop_library",),
+    ),
+
+    # ── Fall Prevention Protocol ──
+    GoldCase(
+        id="fallrisk-high-score", category="sop",
+        query="What Morse Fall Scale score indicates high fall risk?",
+        expected_sop="Fall Prevention Protocol",
+        reference_answer="A Morse Fall Scale score of 51 or higher indicates high risk, requiring interventions including a bed alarm and hourly rounding.",
+        must_include=("51",),
+        acceptable_routes=("sop_library",),
+    ),
+    GoldCase(
+        id="fallrisk-post-fall-huddle", category="sop",
+        query="How soon must a post-fall huddle occur after a patient fall?",
+        expected_sop="Fall Prevention Protocol",
+        reference_answer="A team huddle must occur within 1 hour of any fall.",
+        must_include=("1 hour",),
+        acceptable_routes=("sop_library",),
+    ),
+
+    # ── Medication Reconciliation Protocol ──
+    GoldCase(
+        id="medrec-bpmh-window", category="sop",
+        query="How soon after admission must the best possible medication history be completed?",
+        expected_sop="Medication Reconciliation Protocol",
+        reference_answer="The best possible medication history (BPMH) must be completed within 24 hours of admission, obtained from at least 2 sources.",
+        must_include=("24 hours",),
+        acceptable_routes=("sop_library",),
+    ),
+    GoldCase(
+        id="medrec-discrepancy-report", category="sop",
+        query="How quickly must unresolved medication discrepancies be reported to the attending?",
+        expected_sop="Medication Reconciliation Protocol",
+        reference_answer="Unresolved discrepancies must be reported to the attending within 2 hours.",
+        must_include=("2 hours",),
+        acceptable_routes=("sop_library",),
+    ),
+
     # ── External-fallback (no internal SOP) ──
     GoldCase(
         id="ext-jellyfish", category="external",

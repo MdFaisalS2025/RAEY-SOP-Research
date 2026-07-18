@@ -124,6 +124,39 @@ _SEARCH_TERM_DROP = _RELEVANCE_STOPWORDS | {
 _QUERY_BREAKING = re.compile(r'[?"\'\\:()\[\]{}^~*!/<>=&|]+')
 
 
+_SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?])\s+")
+
+
+def pick_supporting_excerpt(abstract: str, term: str, max_chars: int = 240) -> str:
+    """Pick the single most relevant sentence from an abstract, so an
+    evidence card can show *why* a source supports an answer instead of
+    just a title. Scored by shared significant-word overlap with the search
+    term (same vocabulary the relevance gates already use), falling back to
+    the first sentence when nothing scores above zero (still better than no
+    excerpt) or when the abstract is too short to split meaningfully.
+    Truncated to max_chars on a word boundary."""
+    abstract = (abstract or "").strip()
+    if not abstract:
+        return ""
+    sentences = [s.strip() for s in _SENTENCE_SPLIT_RE.split(abstract) if s.strip()]
+    if not sentences:
+        return ""
+
+    term_words = _significant_words(term)
+    best = sentences[0]
+    if term_words:
+        best_score = -1
+        for s in sentences:
+            score = len(term_words & _significant_words(s))
+            if score > best_score:
+                best_score, best = score, s
+
+    if len(best) <= max_chars:
+        return best
+    truncated = best[:max_chars].rsplit(" ", 1)[0]
+    return truncated + "..."
+
+
 def clean_search_term(term: str, max_words: int = 8) -> str:
     """Turn a raw user question into a compact keyword search term for the
     external provider APIs. Strips question phrasing, function words, and

@@ -68,6 +68,15 @@ def build_external_evidence_answer(query: str, external_results: list[dict]) -> 
         journal = r.get("journal_display_name") or r.get("journal") or r.get("source_type", "")
         date = r.get("pub_date") or ""
         lines.append(f"[{i}] {r.get('title', '(untitled)')} - {journal}{f' ({date})' if date else ''}")
+        # The supporting excerpt (pick_supporting_excerpt, computed and
+        # de-duplicated against the title in evidence_registry.search_all)
+        # is what actually shows *why* this source is cited, not just its
+        # title - empty when no real abstract excerpt was available, so
+        # nothing is fabricated or redundantly repeated.
+        excerpt = r.get("supporting_excerpt", "")
+        title = r.get("title", "")
+        if excerpt:
+            lines.append(f"    \"{excerpt}\"")
         citations.append(f"[{i}] {journal}")
         # Same shape the frontend's CitationChip already renders for internal
         # SOP citations (see citation-chip.tsx) - reusing it here, rather
@@ -81,7 +90,7 @@ def build_external_evidence_answer(query: str, external_results: list[dict]) -> 
             "sop_title": r.get("title", "(untitled)"),
             "section_title": journal,
             "chunk_type": r.get("study_type", "") or r.get("source_type", ""),
-            "snippet": r.get("title", ""),
+            "snippet": excerpt or title,
             "relevance_score": 0.0,
             "cited_in_answer": True,
             "version": "",

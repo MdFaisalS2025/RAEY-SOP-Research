@@ -11,7 +11,7 @@ Research prototype. Not for clinical use.
 
 from typing import Any, Optional
 
-from app.integrations.evidence_source import EvidenceSource, classify_stance, is_title_relevant, grade_evidence, evidence_grade_rank, _significant_words, clean_search_term
+from app.integrations.evidence_source import EvidenceSource, classify_stance, is_title_relevant, grade_evidence, evidence_grade_rank, _significant_words, clean_search_term, pick_supporting_excerpt
 
 # Real bug this guards against: is_title_relevant is pure lexical overlap
 # (any shared significant word), so "heat stroke" matched a WHO paper
@@ -161,4 +161,24 @@ async def search_all(
         combined.sort(key=lambda r: (evidence_grade_rank(r), r.get("pub_date_parsed") or "0000-00-00"), reverse=True)
     else:
         combined.sort(key=lambda r: r.get("pub_date_parsed") or "0000-00-00", reverse=True)
+
+    # Supporting excerpt: computed only on the final set actually returned
+    # (not every over-fetched candidate) - the sentence from the abstract
+    # most relevant to the query, so an evidence card can show *why* a
+    # source supports the answer instead of just a title. Empty when no
+    # abstract was fetched for this record (e.g. a source that doesn't
+    # provide one, or the abstract fetch itself failed) - a missing excerpt
+    # degrades the card gracefully rather than showing something fabricated.
+    for r in combined:
+        excerpt = pick_supporting_excerpt(r.get("abstract", ""), term)
+        # Some records (short case reports, non-English titles) have no real
+        # abstract body; a source's raw abstract text for those can still
+        # contain a citation block whose only long line is the title itself,
+        # which the excerpt picker can mistake for body text. Never surface
+        # the title back as if it were a supporting excerpt - every
+        # consumer (the Route B answer text, the standalone Evidence Panel,
+        # the citation popover) gets this for free from one place.
+        title = (r.get("title") or "").strip().rstrip(".")
+        r["supporting_excerpt"] = "" if excerpt.strip().rstrip(".") == title else excerpt
+
     return combined

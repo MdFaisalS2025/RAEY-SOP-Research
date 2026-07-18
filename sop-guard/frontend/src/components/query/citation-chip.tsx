@@ -101,6 +101,16 @@ export function CitationChip({
                   {citation.chunk_type}
                 </span>
               )}
+              {/* The excerpt from the source's own abstract (see
+                  pick_supporting_excerpt) that actually supports this claim -
+                  falls back to the title itself when no abstract was
+                  available (routing.py's snippet = excerpt or title), so
+                  this is never empty for an external citation. */}
+              {citation.snippet && citation.snippet !== citation.sop_title && (
+                <span className="block text-[11px] text-foreground/80 italic leading-relaxed mt-1.5 line-clamp-3">
+                  &ldquo;{citation.snippet}&rdquo;
+                </span>
+              )}
               {citation.url && (
                 <span className="flex items-center gap-1 mt-2 text-[11px] font-medium text-[#0B6BCB]">
                   <ExternalLink className="w-3 h-3" /> Opens source in a new tab

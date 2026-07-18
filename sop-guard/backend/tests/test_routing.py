@@ -31,3 +31,23 @@ def test_build_external_evidence_answer_cites_sources():
 def test_build_no_evidence_answer_leads_with_required_phrase():
     msg = build_no_evidence_answer(["Try rephrasing your question."])
     assert msg.startswith("No validated evidence found.")
+
+
+def test_build_external_evidence_answer_includes_supporting_excerpt_when_present():
+    """P1.3: a record with a fetched abstract should show the sentence that
+    actually supports the claim, not just the title - so external evidence
+    reads as verifiable rather than asserted."""
+    records = [{
+        "title": "A Study", "journal_display_name": "NEJM", "pub_date": "2025",
+        "supporting_excerpt": "Norepinephrine above 0.5 mcg/kg/min was associated with increased mortality.",
+    }]
+    result = build_external_evidence_answer("norepinephrine mortality", records)
+    assert "Norepinephrine above 0.5 mcg/kg/min" in result["answer"]
+
+
+def test_build_external_evidence_answer_omits_excerpt_when_absent():
+    """No fabricated excerpt when no abstract was fetched - degrades to
+    title-only, exactly the pre-P1.3 behavior."""
+    records = [{"title": "A Study", "journal_display_name": "NEJM", "pub_date": "2025"}]
+    result = build_external_evidence_answer("sepsis", records)
+    assert '"' not in result["answer"]

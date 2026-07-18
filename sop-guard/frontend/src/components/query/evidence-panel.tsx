@@ -20,6 +20,11 @@ interface EvidenceRecord {
   study_type?: string
   stance?: "yes" | "no" | "unclear"
   evidence_grade?: "Strong" | "Moderate" | "Limited" | "Research Only" | "Outdated" | "Unknown"
+  // The sentence from the source's abstract that actually supports the
+  // answer (see pick_supporting_excerpt in the backend) - empty when no
+  // abstract was available, in which case the card falls back to
+  // title-only, exactly the pre-P1.3 behavior.
+  supporting_excerpt?: string
 }
 
 const TRUST_TIER_LABEL: Record<number, string> = {
@@ -317,7 +322,14 @@ export function EvidencePanel({ entities, queryText, variant = "card" }: { entit
                     )}
                   </div>
                   <p className="text-[13px] font-medium text-foreground leading-snug line-clamp-2">{r.title || "(untitled)"}</p>
-                  <p className="text-[11px] text-muted-foreground">{r.journal}{r.authors ? ` · ${r.authors}` : ""}</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {r.journal}{r.authors ? ` · ${r.authors}` : ""}{r.study_type ? ` · ${r.study_type}` : ""}
+                  </p>
+                  {r.supporting_excerpt && (
+                    <p className="text-[11px] text-foreground/80 italic leading-snug line-clamp-2 border-l-2 border-border pl-2">
+                      &ldquo;{r.supporting_excerpt}&rdquo;
+                    </p>
+                  )}
                   <div className="flex items-center justify-between pt-1">
                     <span className="text-[11px] text-muted-foreground">{r.pub_date}</span>
                     {hasUrl ? (

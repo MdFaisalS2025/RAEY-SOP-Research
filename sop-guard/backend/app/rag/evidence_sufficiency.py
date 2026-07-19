@@ -190,6 +190,24 @@ class EvidenceSufficiencyChecker:
         elif query_type in ("procedure_steps", "sequence") and not chunk_types & {"step", "step_sequence"}:
             type_match = False
             missing.append("procedure step content")
+        elif query_type == "medication" and not chunk_types & {
+            "threshold", "threshold_sequence", "step", "contraindication"
+        }:
+            # Real gap this closes (Phase B.2): dose/drug questions
+            # ("what is the maximum norepinephrine dose?") had no
+            # chunk-type requirement at all - the other three branches
+            # above cover threshold/contraindication/procedure_steps, but
+            # "medication" fell through unchecked. There's no dedicated
+            # "medication" chunk_type in chunker.py; dosing content lives
+            # in threshold chunks (dose values), step chunks (administration
+            # instructions), or contraindication chunks (when-not-to-give) -
+            # mirrors query_agent.py's _plan_retrieval mapping for this
+            # query type. A medication question whose top-5 evidence is
+            # only summary/section/full_text chunks is a real sufficiency
+            # gap: generic overview text, not the specific dosing/admin
+            # detail the question asked for.
+            type_match = False
+            missing.append("medication-specific content (dose, administration, or contraindication)")
         checks.append(("chunk_type_match", type_match, str(chunk_types)))
 
         # 5. Entity-lexicon grounding (CRAG-style additional signal). If the

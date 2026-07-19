@@ -320,4 +320,48 @@ class TestCorpusVocabularyCoverage:
         # query's shared words ("chemotherapy staging protocol" isn't fully
         # disjoint) - this test only asserts the mechanism (soft vote),
         # not a specific sufficient/insufficient outcome.
+
+
+class TestMedicationChunkTypeMatch:
+    """
+    Phase B.2: chunk_type_match (check 4) already required threshold/
+    contraindication/step chunks for those three query types, but never
+    checked "medication" at all - a real gap, since dose/drug questions
+    are exactly the case the plan calls out ("dose question -> require a
+    threshold/medication chunk"). There's no dedicated chunk_type for
+    medication content; dosing/admin/contraindication chunks all count.
+    """
+
+    def test_medication_query_with_only_summary_chunks_fails_type_match(self, checker):
+        chunks = [{
+            "chunk_text": "Sepsis Management Protocol overview: recognize, resuscitate, reassess.",
+            "text": "Sepsis Management Protocol overview: recognize, resuscitate, reassess.",
+            "relevance_score": 0.3, "chunk_type": "summary",
+        }]
+        result = checker.check("What norepinephrine dose is used?", chunks, "medication")
+        check = next(c for c in result["checks"] if c["name"] == "chunk_type_match")
+        assert check["passed"] is False
+
+    def test_medication_query_with_threshold_chunk_passes_type_match(self, checker):
+        chunks = [_chunk(0.3, "norepinephrine 0.05 mcg/kg/min titrate to 3 mcg/kg/min")]
+        result = checker.check("What norepinephrine dose is used?", chunks, "medication")
+        check = next(c for c in result["checks"] if c["name"] == "chunk_type_match")
+        assert check["passed"] is True
+
+    def test_medication_query_with_contraindication_chunk_passes_type_match(self, checker):
+        chunks = [{
+            "chunk_text": "Hold warfarin if INR exceeds 4.0 or active bleeding is present.",
+            "text": "Hold warfarin if INR exceeds 4.0 or active bleeding is present.",
+            "relevance_score": 0.3, "chunk_type": "contraindication",
+        }]
+        result = checker.check("When should warfarin be held?", chunks, "medication")
+        check = next(c for c in result["checks"] if c["name"] == "chunk_type_match")
+        assert check["passed"] is True
+
+    def test_other_query_types_unaffected_by_medication_branch(self, checker):
+        """The new elif must not change behavior for query types it doesn't apply to."""
+        chunks = [_chunk(0.3, "sepsis lactate threshold monitoring")]
+        result = checker.check("What lactate level indicates severe sepsis?", chunks, "general")
+        check = next(c for c in result["checks"] if c["name"] == "chunk_type_match")
+        assert check["passed"] is True
         assert "checks" in result

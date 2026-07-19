@@ -109,6 +109,16 @@ class QueryResponse(BaseModel):
     # possibly-hallucinated dose can never render as a high-confidence answer,
     # and the UI can surface which value could not be verified.
     numeric_verification: Optional[dict] = None
+    # Token counts from the underlying provider call, when it reports them:
+    # {prompt_tokens, completion_tokens, total_tokens}. None whenever no
+    # generation happened (no_evidence/clarification routes, mock mode) or
+    # the provider's response didn't include usage data - see
+    # LLMGenerator._call_groq/_call_ollama for what each provider reports.
+    # Not populated on the streaming answer path (see _last_token_usage's
+    # docstring for why). Feeds QueryLogRecord for per-request cost
+    # observability (Phase E) - not billing-accurate, since Ollama has no
+    # per-token cost, but real usage data rather than an estimate.
+    token_usage: Optional[dict] = None
 
 
 # ── SOP ────────────────────────────────────────────────────────

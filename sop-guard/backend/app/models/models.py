@@ -229,6 +229,16 @@ class QueryLogRecord(Base):
     # itself routed away from an SOP, whether or not a user bothered to
     # manually flag it via the gap-report panel.
     route = Column(String(32), default="sop_library")
+    # Token counts from the underlying LLM provider call, when it reports
+    # them (see QueryResponse.token_usage / LLMGenerator._call_groq/
+    # _call_ollama). Nullable, not defaulted to 0 - a row with no
+    # generation (no_evidence/clarification route, mock mode) or a
+    # provider response with no usage data should read as "not measured",
+    # not "measured at zero", so a per-model cost/usage report doesn't
+    # silently undercount by averaging in false zeros.
+    prompt_tokens = Column(Integer, nullable=True)
+    completion_tokens = Column(Integer, nullable=True)
+    total_tokens = Column(Integer, nullable=True)
     created_at = Column(DateTime, default=_utcnow)
 
 

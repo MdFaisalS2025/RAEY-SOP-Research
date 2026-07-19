@@ -174,6 +174,16 @@ class LLMGenerator:
         self.base_url = base_url or settings.LLM_BASE_URL
         self._mock = MockGenerator()
         self._available: Optional[bool] = None
+        # Token counts from the most recent non-streaming _call_groq/
+        # _call_ollama call, read by generate_answer() right after - an
+        # instance attribute rather than widening _call_llm's return type,
+        # since complete() (LLM-as-judge/evidence summarization) also calls
+        # those methods and doesn't care about usage. None whenever the
+        # provider's response didn't include usage data, or on the
+        # streaming path (Groq/Ollama only report usage in their final
+        # non-streamed response shape; not chased here to avoid a second,
+        # more fragile SSE-payload parse for a nice-to-have).
+        self._last_token_usage: Optional[dict[str, int]] = None
 
         # Default Ollama settings
         if self.provider == "ollama":
@@ -271,6 +281,7 @@ Answer:"""
         citation_records: list,
         query_type: str,
         context_len: int,
+        token_usage: Optional[dict[str, int]] = None,
     ) -> dict[str, Any]:
         """Everything that happens once the full answer text exists,
         regardless of whether it arrived as one response or was assembled
@@ -342,6 +353,7 @@ Answer:"""
             "inline_citations": citation_records,
             "followup_questions": followup_questions,
             "abstained": abstained,
+            "token_usage": token_usage,
         }
 
     async def generate_answer(
@@ -363,8 +375,12 @@ Answer:"""
         )
 
         try:
+            self._last_token_usage = None
             raw_answer_text = await self._call_llm(user_prompt)
-            return self._postprocess(raw_answer_text, retrieved_chunks, citation_records, query_type, len(context))
+            return self._postprocess(
+                raw_answer_text, retrieved_chunks, citation_records, query_type, len(context),
+                token_usage=self._last_token_usage,
+            )
         except Exception as e:
             logger.warning(f"LLM generation failed: {e}. Falling back to mock.")
             result = self._mock_with_checks(query, retrieved_chunks, query_type, "mock_fallback")
@@ -397,6 +413,7 @@ Answer:"""
         result.setdefault("inline_citations", [])
         result.setdefault("followup_questions", [])
         result["abstained"] = result.get("abstained", False)
+        result.setdefault("token_usage", None)
         return result
 
     async def stream_answer(
@@ -498,6 +515,15 @@ Answer:"""
                     )
                     response.raise_for_status()
                     data = response.json()
+                    # OpenAI-compatible usage block - Groq returns this on
+                    # every non-streamed chat completion.
+                    usage = data.get("usage") or {}
+                    if usage:
+                        self._last_token_usage = {
+                            "prompt_tokens": usage.get("prompt_tokens", 0),
+                            "completion_tokens": usage.get("completion_tokens", 0),
+                            "total_tokens": usage.get("total_tokens", 0),
+                        }
                     return data["choices"][0]["message"]["content"].strip()
             except Exception as e:  # noqa: BLE001 - classified by _is_retryable below
                 last_exc = e
@@ -584,6 +610,18 @@ Answer:"""
                         )
                         response.raise_for_status()
                         data = response.json()
+                        # Ollama's non-streamed /api/generate response
+                        # includes prompt_eval_count/eval_count (its own
+                        # names for prompt/completion tokens) when the
+                        # model finishes normally.
+                        if "prompt_eval_count" in data or "eval_count" in data:
+                            prompt_tokens = data.get("prompt_eval_count", 0)
+                            completion_tokens = data.get("eval_count", 0)
+                            self._last_token_usage = {
+                                "prompt_tokens": prompt_tokens,
+                                "completion_tokens": completion_tokens,
+                                "total_tokens": prompt_tokens + completion_tokens,
+                            }
                         return data.get("response", "").strip()
             except Exception as e:  # noqa: BLE001 - classified by _is_retryable below
                 last_exc = e

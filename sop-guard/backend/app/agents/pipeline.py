@@ -522,6 +522,7 @@ class MeridianPipeline:
             confidence_tier=confidence_tier(final_confidence),
             generation_mode=gen_result.get("generation_mode", ""),
             numeric_verification=numeric_verification,
+            token_usage=gen_result.get("token_usage"),
         )
 
     async def run_streaming(

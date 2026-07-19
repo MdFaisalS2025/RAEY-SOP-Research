@@ -251,6 +251,42 @@
   .dark [class*="border-\[\#0B6BCB\]\/"] { border-color: hsl(var(--primary) / var(--tw-border-opacity, 1)); }
   .dark [class*="bg-\[\#0B6BCB\]\/"] { background-color: hsl(var(--primary) / var(--tw-bg-opacity, 1)); }
   .dark [class*="ring-\[\#0B6BCB\]\/"] { --tw-ring-color: hsl(var(--primary)); }
+
+  /* Same remap, extended to the other three semantic status colors that
+     get hardcoded as literal hex utilities the same way #0B6BCB does:
+     #B45309 (warning/amber), #15803D (success/green), #B91C1C
+     (destructive/red). Most call sites that use these already pair them
+     with a manual dark:text-amber-400-style Tailwind-palette color (an
+     approximation of the token, not a bug) - those already-paired
+     instances are untouched here (Tailwind's utilities layer outranks
+     this base-layer rule, so an explicit dark: utility still wins).
+     This only closes the real gap: literal hex usages with no dark
+     treatment at all, which this catches automatically - present ones
+     and any added later - without hand-editing every call site. */
+  .dark .text-\[\#B45309\] { color: hsl(var(--warning)); }
+  .dark .border-\[\#B45309\] { border-color: hsl(var(--warning)); }
+  .dark .bg-\[\#B45309\] { background-color: hsl(var(--warning)); }
+  .dark .fill-\[\#B45309\] { fill: hsl(var(--warning)); }
+  .dark [class*="text-\[\#B45309\]\/"] { color: hsl(var(--warning) / var(--tw-text-opacity, 1)); }
+  .dark [class*="border-\[\#B45309\]\/"] { border-color: hsl(var(--warning) / var(--tw-border-opacity, 1)); }
+  .dark [class*="bg-\[\#B45309\]\/"] { background-color: hsl(var(--warning) / var(--tw-bg-opacity, 1)); }
+
+  .dark .text-\[\#15803D\] { color: hsl(var(--success)); }
+  .dark .border-\[\#15803D\] { border-color: hsl(var(--success)); }
+  .dark .bg-\[\#15803D\] { background-color: hsl(var(--success)); }
+  .dark .fill-\[\#15803D\] { fill: hsl(var(--success)); }
+  .dark [class*="text-\[\#15803D\]\/"] { color: hsl(var(--success) / var(--tw-text-opacity, 1)); }
+  .dark [class*="border-\[\#15803D\]\/"] { border-color: hsl(var(--success) / var(--tw-border-opacity, 1)); }
+  .dark [class*="bg-\[\#15803D\]\/"] { background-color: hsl(var(--success) / var(--tw-bg-opacity, 1)); }
+
+  .dark .text-\[\#B91C1C\] { color: hsl(var(--destructive)); }
+  .dark .border-\[\#B91C1C\] { border-color: hsl(var(--destructive)); }
+  .dark .bg-\[\#B91C1C\] { background-color: hsl(var(--destructive)); }
+  .dark .fill-\[\#B91C1C\] { fill: hsl(var(--destructive)); }
+  .dark [class*="text-\[\#B91C1C\]\/"] { color: hsl(var(--destructive) / var(--tw-text-opacity, 1)); }
+  .dark [class*="border-\[\#B91C1C\]\/"] { border-color: hsl(var(--destructive) / var(--tw-border-opacity, 1)); }
+  .dark [class*="bg-\[\#B91C1C\]\/"] { background-color: hsl(var(--destructive) / var(--tw-bg-opacity, 1)); }
+
   .bg-muted-foreground\/20 {
     background-color: hsl(var(--muted-foreground) / 0.2);
   }

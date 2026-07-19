@@ -291,7 +291,7 @@ export function VoiceRecorder({ onTranscript }: VoiceRecorderProps) {
             <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl bg-card border border-red-500/30 shadow-lg text-xs text-red-400">
               <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
               <span className="flex-1">{error}</span>
-              <button onClick={() => setError(null)} className="p-0.5 hover:bg-muted rounded shrink-0"><X className="w-3 h-3" /></button>
+              <button onClick={() => setError(null)} aria-label="Dismiss error" className="p-0.5 hover:bg-muted rounded shrink-0"><X className="w-3 h-3" /></button>
             </div>
           </motion.div>
         )}

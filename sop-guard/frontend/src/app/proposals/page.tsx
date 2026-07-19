@@ -222,7 +222,7 @@ function NewProposalModal({ onClose, onCreated, initial }: { onClose: () => void
       >
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-foreground">New Proposal</h2>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted"><X className="w-4 h-4" /></button>
+          <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-lg hover:bg-muted"><X className="w-4 h-4" /></button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>

@@ -162,6 +162,22 @@ async def _persist_chat_messages(
     return user_msg_id, assistant_msg_id
 
 
+async def _try_special_intent(pipeline, db: AsyncSession, query: str):
+    """Version-history/comparison questions have real DB-backed answers
+    (SOPVersionRecord, sop_comparison.py) that normal RAG retrieval can't
+    reach - classify first and special-case those two query types before
+    falling through to pipeline.run(). See app/services/chat_intents.py."""
+    from app.agents.query_agent import QueryUnderstandingAgent
+    from app.services.chat_intents import try_version_history_answer, try_comparison_answer
+
+    query_type = QueryUnderstandingAgent().analyze(query)["query_type"]
+    if query_type == "version_history":
+        return await try_version_history_answer(db, pipeline.retriever, query)
+    if query_type == "comparison":
+        return await try_comparison_answer(db, pipeline.retriever, query)
+    return None
+
+
 @router.post("/api/chat/sessions/{session_id}/messages")
 async def post_message(
     session_id: int, req: ChatMessageCreate, db: AsyncSession = Depends(get_db)
@@ -190,12 +206,14 @@ async def post_message(
 
     _audit_phi(req.content)
     pipeline = MeridianPipeline(chunks, structured_sops)
-    result = await pipeline.run(
-        query=req.content,
-        news2_score=req.news2_score,
-        context_query=context_query,
-        history_context=history_context,
-    )
+    result = await _try_special_intent(pipeline, db, req.content)
+    if result is None:
+        result = await pipeline.run(
+            query=req.content,
+            news2_score=req.news2_score,
+            context_query=context_query,
+            history_context=history_context,
+        )
 
     user_msg_id, assistant_msg_id = await _persist_chat_messages(
         session, session_id, req, history, result.answer, result.inline_citations, db
@@ -237,7 +255,29 @@ async def post_message_stream(
     _audit_phi(req.content)
     pipeline = MeridianPipeline(chunks, structured_sops)
 
+    async def _finalize(result):
+        user_msg_id, assistant_msg_id = await _persist_chat_messages(
+            session, session_id, req, history, result.answer, result.inline_citations, db
+        )
+        result.answer_id = await log_query_result(db, req.content, result)
+        payload = json.loads(result.model_dump_json())
+        payload["session_id"] = session_id
+        payload["message_id"] = assistant_msg_id
+        payload["user_message_id"] = user_msg_id
+        return payload
+
     async def event_stream():
+        special_result = await _try_special_intent(pipeline, db, req.content)
+        if special_result is not None:
+            # No generation model involved - emit the whole answer as one
+            # token event so the frontend's token-accumulation UI still
+            # works, then the final event as usual.
+            yield f"data: {json.dumps({'type': 'token', 'text': special_result.answer})}\n\n"
+            payload = await _finalize(special_result)
+            yield f"data: {json.dumps({'type': 'final', 'response': payload})}\n\n"
+            yield "data: [DONE]\n\n"
+            return
+
         async for event in pipeline.run_streaming(
             query=req.content,
             news2_score=req.news2_score,
@@ -247,15 +287,7 @@ async def post_message_stream(
             if event["type"] == "token":
                 yield f"data: {json.dumps({'type': 'token', 'text': event['text']})}\n\n"
             elif event["type"] == "final":
-                result = event["response"]
-                user_msg_id, assistant_msg_id = await _persist_chat_messages(
-                    session, session_id, req, history, result.answer, result.inline_citations, db
-                )
-                result.answer_id = await log_query_result(db, req.content, result)
-                payload = json.loads(result.model_dump_json())
-                payload["session_id"] = session_id
-                payload["message_id"] = assistant_msg_id
-                payload["user_message_id"] = user_msg_id
+                payload = await _finalize(event["response"])
                 yield f"data: {json.dumps({'type': 'final', 'response': payload})}\n\n"
         yield "data: [DONE]\n\n"
 

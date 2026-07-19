@@ -7,6 +7,15 @@ Research prototype. Not for clinical use.
 import re
 from typing import Any
 
+# Single source of truth for the clinical entity vocabulary. Previously this
+# module kept its own smaller drug_patterns/condition_patterns lists that
+# silently drifted from entity_graph.py's canonical lexicons - every new SOP
+# drug/condition had to be added in BOTH places (the D6 corpus expansion hit
+# exactly this: dobutamine/naloxone/etc. needed adding twice). Importing the
+# canonical lexicons here means the retriever's entity boost and this agent's
+# entity extraction can never disagree again.
+from app.rag.entity_graph import DRUG_LEXICON, CONDITION_LEXICON
+
 
 # Clinical abbreviations and their expansions
 ABBREVIATIONS = {
@@ -103,6 +112,23 @@ QUERY_PATTERNS = {
                      "inotrope", "chemotherapy", "opioid", "naloxone"],
         "weight": 0.9,
     },
+    # Phase B.1: two intents with real backend data behind them
+    # (SOPVersionRecord, sop_comparison.py) that previously fell straight
+    # into normal RAG retrieval/generation with no way to answer correctly -
+    # see app/services/chat_intents.py for how these route once classified.
+    "version_history": {
+        "keywords": ["what changed", "version history", "previous version",
+                     "prior version", "changelog", "revision history",
+                     "what's new in", "updated since", "change history"],
+        "weight": 1.0,
+    },
+    "comparison": {
+        "keywords": ["compare", "comparison", "versus", "vs current evidence",
+                     "vs current guidelines", "how does it compare",
+                     "differs from current evidence", "against current guidelines",
+                     "align with current evidence", "align with guidelines"],
+        "weight": 1.0,
+    },
 }
 
 # Role detection
@@ -196,15 +222,9 @@ class QueryUnderstandingAgent:
             "departments": [],
         }
 
-        # Extract drug names
-        drug_patterns = [
-            "norepinephrine", "epinephrine", "vasopressin", "dopamine",
-            "heparin", "warfarin", "enoxaparin", "insulin", "dextrose",
-            "metformin", "glucagon", "hydrocortisone", "methylprednisolone",
-            "diphenhydramine", "amiodarone", "lidocaine", "atropine",
-            "dobutamine", "milrinone", "naloxone",
-        ]
-        for drug in drug_patterns:
+        # Extract drug names from the canonical DRUG_LEXICON (shared with the
+        # retriever's entity boost - see the import note at the top).
+        for drug in DRUG_LEXICON:
             # Word-boundary match - a plain substring check matched
             # "epinephrine" inside "norepinephrine", polluting downstream
             # consumers (e.g. the PubMed evidence search term) with an
@@ -212,16 +232,18 @@ class QueryUnderstandingAgent:
             if re.search(r"\b" + re.escape(drug) + r"\b", q_lower):
                 entities["drugs"].append(drug)
 
-        # Extract conditions
-        condition_patterns = [
-            "sepsis", "septic shock", "hypotension", "hypertension",
-            "hypoglycemia", "hyperglycemia", "anaphylaxis", "cardiac arrest",
-            "hemorrhage", "coagulopathy", "thrombocytopenia", "renal failure",
-            "cardiogenic shock", "chemotherapy", "opioid",
-        ]
-        for cond in condition_patterns:
+        # Extract conditions from the canonical CONDITION_LEXICON. Longest-
+        # first so a multi-word condition ("septic shock", "cardiogenic
+        # shock") is preferred over the bare word ("shock") it contains, and
+        # the bare word is then skipped if already covered - otherwise a
+        # "septic shock" query would list both "shock" and "septic shock".
+        matched_conditions: list[str] = []
+        for cond in sorted(CONDITION_LEXICON, key=len, reverse=True):
             if re.search(r"\b" + re.escape(cond) + r"\b", q_lower):
-                entities["conditions"].append(cond)
+                if any(cond in longer and cond != longer for longer in matched_conditions):
+                    continue
+                matched_conditions.append(cond)
+        entities["conditions"] = matched_conditions
 
         # Extract numbers
         numbers = re.findall(r"\d+\.?\d*", query)

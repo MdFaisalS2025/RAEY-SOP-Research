@@ -141,10 +141,21 @@ async def run_eval(pipeline: Optional[MeridianPipeline] = None) -> dict:
             "abstained": did_abstain,
             "abstention_correct": abstention_correct,
             "confidence": result.confidence,
-            "generation_mode": next(
-                (t.split(": ", 1)[1] for t in result.reasoning_trace if t.startswith("Generation mode:")),
-                "unknown",
-            ),
+            # Real bug this fixes: this used to parse reasoning_trace text
+            # for a "Generation mode: X" line, but that line is only ever
+            # appended when the generator actually ran (pipeline.py:443) -
+            # routes that short-circuit before generation (no_evidence,
+            # clarification, and some external_evidence answers) legitimately
+            # never call the generator, so result.generation_mode is "" for
+            # them - a known, expected state, not missing data. The old
+            # trace-parsing fallback mapped that (and any other parsing miss)
+            # to "unknown", which reads as "we don't know the mode" rather
+            # than "no generation happened" - the Trends chip labeling
+            # quirk. Reading the structured field directly and labeling its
+            # empty state "no_generation" makes both cases honest: real
+            # gaps in the data stay visibly wrong, while "no answer was
+            # generated for this query" is labeled as exactly that.
+            "generation_mode": result.generation_mode or "no_generation",
         })
 
     n = len(coverage_scores)

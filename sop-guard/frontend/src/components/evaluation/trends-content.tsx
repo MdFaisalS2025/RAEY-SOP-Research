@@ -212,7 +212,7 @@ export function TrendsContent() {
                     <td className="px-4 py-2.5">
                       <span className={cn(
                         "px-2 py-0.5 rounded-full text-[11px] font-medium border",
-                        s.generation_mode === "mock" || s.generation_mode === "mock_fallback"
+                        s.generation_mode === "mock" || s.generation_mode === "mock_fallback" || s.generation_mode === "no_generation"
                           ? "bg-muted text-muted-foreground border-border"
                           : "bg-[#0B6BCB]/10 text-[#0B6BCB] border-[#0B6BCB]/30"
                       )}>

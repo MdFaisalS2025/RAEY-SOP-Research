@@ -125,11 +125,18 @@ async def search_all(
     # improves relevance on every source); the original question is kept for
     # the relevance gates below, which judge natural questions better.
     api_term = clean_search_term(term)
+    from app.services import evidence_cache
+
     for name in names:
         src = _REGISTRY.get(name)
         if src is None:
             continue
-        records = await src.search(api_term, max_results=fetch_n)
+        cached = evidence_cache.get(name, api_term, fetch_n)
+        if cached is not None:
+            records = cached
+        else:
+            records = await src.search(api_term, max_results=fetch_n)
+            evidence_cache.set(name, api_term, fetch_n, records)
         for r in records:
             r["stance"] = classify_stance(r.get("title", ""))
             r["evidence_grade"] = grade_evidence(r)

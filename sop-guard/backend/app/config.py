@@ -75,6 +75,23 @@ class Settings(BaseSettings):
     RAG_RERANKER_MODEL: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
     RAG_MAX_CHUNKS: int = 8
     RAG_MIN_CONFIDENCE: float = 0.3
+    # Sparse (lexical) scoring backend for HybridRetriever. "tfidf" (default)
+    # is the original hand-rolled TF-IDF scorer; "bm25" uses rank-bm25's
+    # BM25Okapi, a real ranking-function upgrade (saturating term frequency,
+    # document-length normalization) over the plain TF-IDF weighted sum.
+    # Falls back to "tfidf" with a logged warning if rank_bm25 isn't
+    # installed - same graceful-degradation pattern as RAG_RERANKER_BACKEND.
+    RAG_SPARSE_BACKEND: str = "tfidf"  # tfidf | bm25
+    # How sparse and dense (embedding) scores are combined. "weighted"
+    # (default, current behavior) sums _SPARSE_WEIGHT*sparse +
+    # _DENSE_WEIGHT*dense - a raw-score blend that implicitly assumes both
+    # scores live on comparable scales, which TF-IDF/BM25 and cosine
+    # similarity don't really share. "rrf" (reciprocal rank fusion) instead
+    # combines each signal's RANK within the filtered candidate pool -
+    # 1/(k+rank) per signal - which needs no score normalization and is
+    # the standard production choice for hybrid retrieval. Chunk-type and
+    # entity-match boosts still apply as multipliers AFTER fusion either way.
+    RAG_FUSION: str = "weighted"  # weighted | rrf
 
     # --- Privacy / PHI guard (see app/privacy/phi_guard.py) ---
     # "rule" = fast, dependency-free regex/heuristic PHI detector (default,

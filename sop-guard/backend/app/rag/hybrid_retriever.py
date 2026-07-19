@@ -5,15 +5,26 @@ and clinical synonym expansion.
 Research prototype. Not for clinical use.
 """
 
+import logging
 import re
 import math
 from collections import Counter
 from typing import Any, Optional
 
+from app.config import settings
 from app.rag.clinical_terms import expand_query as clinical_expand_query, SYNONYM_GROUPS
 from app.rag.reranker import NoOpReranker
 from app.rag.embedding_cache import is_dense_backend_active, dense_similarity, get_shared_embedding_provider
 from app.rag.entity_graph import DRUG_LEXICON, CONDITION_LEXICON
+
+logger = logging.getLogger(__name__)
+
+# Standard RRF constant (Cormack/Clarke/Buettcher 2009's original paper,
+# widely reused since): dampens the influence of rank 1 vs rank 2 so a
+# single signal's top pick doesn't dominate fusion as strongly as it would
+# with a smaller k. Not tuned against this corpus specifically - it's the
+# well-established default, not a free parameter worth ablating at 22 SOPs.
+_RRF_K = 60
 
 # Same lexicon entity_sufficiency.py's entity_grounding check reads at the
 # other end of this pipeline. Reused here (not duplicated) so a query
@@ -56,10 +67,27 @@ class HybridRetriever:
     query expansion, and metadata filtering.
     """
 
-    def __init__(self, chunks: list[dict[str, Any]], reranker=None):
+    def __init__(
+        self,
+        chunks: list[dict[str, Any]],
+        reranker=None,
+        sparse_backend: Optional[str] = None,
+        fusion: Optional[str] = None,
+    ):
         self.chunks = chunks
         self._idf: dict[str, float] = {}
         self._build_idf()
+
+        self._sparse_backend = sparse_backend or settings.RAG_SPARSE_BACKEND
+        self._fusion = fusion or settings.RAG_FUSION
+        self._bm25 = None
+        if self._sparse_backend == "bm25":
+            self._bm25 = self._build_bm25()
+            if self._bm25 is None:
+                # rank_bm25 not installed, or nothing to index - degrade to
+                # the always-available scorer rather than fail retrieval.
+                self._sparse_backend = "tfidf"
+
         # Defaults to no-op: the ablation endpoint (GET /api/evaluation/ablation)
         # measured HeuristicReranker actively making retrieval worse - average
         # top-1 relevance 0.305 with it enabled vs 0.334 disabled, reordering
@@ -105,6 +133,72 @@ class HybridRetriever:
                 idf = self._idf.get(qt, 1.0)
                 score += tf * idf
         return score / len(query_tokens)
+
+    def _build_bm25(self):
+        """Build a BM25Okapi index over every chunk's tokenized text.
+        Returns None (caller falls back to tfidf) if rank_bm25 isn't
+        installed or there are no chunks to index - same graceful-
+        degradation pattern as the embedding/reranker backends."""
+        if not self.chunks:
+            return None
+        try:
+            from rank_bm25 import BM25Okapi
+        except ImportError:
+            logger.warning("RAG_SPARSE_BACKEND=bm25 requested but rank_bm25 is not installed - falling back to tfidf.")
+            return None
+        corpus_tokens = [
+            self._tokenize(c.get("text", c.get("chunk_text", ""))) for c in self.chunks
+        ]
+        return BM25Okapi(corpus_tokens)
+
+    def _sparse_scores_all(self, query_tokens: list[str]) -> dict[int, float]:
+        """Sparse score for every chunk in the corpus, via whichever
+        backend is configured. Computing the full array (rather than only
+        for pre-filtered chunks, as the single-chunk _tfidf_score caller
+        does inline) is required for bm25 (BM25Okapi scores the whole
+        corpus in one call) and is numerically identical to the per-chunk
+        tfidf path since _tfidf_score doesn't depend on any other chunk -
+        filtering afterward gives the same result either way."""
+        if self._sparse_backend == "bm25" and self._bm25 is not None:
+            if not query_tokens:
+                return {}
+            scores = self._bm25.get_scores(query_tokens)
+            return {i: float(s) for i, s in enumerate(scores)}
+        return {
+            i: self._tfidf_score(query_tokens, c.get("text", c.get("chunk_text", "")))
+            for i, c in enumerate(self.chunks)
+        }
+
+    def _fuse_scores(
+        self,
+        sparse_scores: dict[int, float],
+        dense_scores: Optional[dict[int, float]],
+        candidate_indices: set[int],
+    ) -> dict[int, float]:
+        """Combine sparse + dense signals into one base score per
+        candidate chunk index. "weighted" reproduces the original raw-
+        score blend exactly; "rrf" fuses by each signal's rank within
+        `candidate_indices` instead, so no score-scale assumption is
+        needed. Chunk-type/entity boosts are applied by the caller
+        afterward, on top of whichever base score this returns."""
+        if dense_scores is None:
+            return {i: sparse_scores.get(i, 0.0) for i in candidate_indices}
+
+        if self._fusion == "rrf":
+            sparse_ranked = sorted(candidate_indices, key=lambda i: sparse_scores.get(i, 0.0), reverse=True)
+            dense_ranked = sorted(candidate_indices, key=lambda i: dense_scores.get(i, 0.0), reverse=True)
+            sparse_rank = {idx: r for r, idx in enumerate(sparse_ranked)}
+            dense_rank = {idx: r for r, idx in enumerate(dense_ranked)}
+            return {
+                i: 1.0 / (_RRF_K + sparse_rank[i] + 1) + 1.0 / (_RRF_K + dense_rank[i] + 1)
+                for i in candidate_indices
+            }
+
+        # "weighted" (default): identical formula to the pre-BM25/RRF code.
+        return {
+            i: (_DENSE_WEIGHT * dense_scores.get(i, 0.0)) + (_SPARSE_WEIGHT * sparse_scores.get(i, 0.0))
+            for i in candidate_indices
+        }
 
     def _expand_query(self, query: str) -> list[str]:
         """Expand query with clinical synonyms and abbreviations."""
@@ -154,28 +248,34 @@ class HybridRetriever:
         # can express.
         query_entities = _query_entities(query)
 
+        # Metadata-filtered candidate pool - shared across every variant,
+        # since department/sop_id/status don't depend on query text. Also
+        # exactly what RRF needs to rank *within*: fusing by rank over the
+        # full unfiltered corpus would let excluded chunks' ranks distort
+        # the ranks of the chunks actually eligible to be returned.
+        candidate_indices = {
+            i for i, chunk in enumerate(self.chunks)
+            if not (department and chunk.get("department", "").lower() != department.lower())
+            and not (sop_id and chunk.get("sop_id", "") != sop_id)
+            and not (status_filter and chunk.get("status", "active") == "archived")
+        }
+
         for variant in query_variants:
             variant_tokens = self._tokenize(variant)
             if not variant_tokens:
                 continue
 
-            for i, chunk in enumerate(self.chunks):
-                # Metadata filtering
-                if department and chunk.get("department", "").lower() != department.lower():
-                    continue
-                if sop_id and chunk.get("sop_id", "") != sop_id:
-                    continue
-                if status_filter and chunk.get("status", "active") == "archived":
-                    continue
+            sparse_scores = self._sparse_scores_all(variant_tokens)
+            dense_scores = (
+                {i: dense_similarity(variant, self.chunks[i].get("text", self.chunks[i].get("chunk_text", "")))
+                 for i in candidate_indices}
+                if use_dense else None
+            )
+            base_scores = self._fuse_scores(sparse_scores, dense_scores, candidate_indices)
 
-                text = chunk.get("text", chunk.get("chunk_text", ""))
-                sparse_score = self._tfidf_score(variant_tokens, text)
-
-                if use_dense:
-                    dense_score = dense_similarity(variant, text)
-                    base_score = (_DENSE_WEIGHT * dense_score) + (_SPARSE_WEIGHT * sparse_score)
-                else:
-                    base_score = sparse_score
+            for i in candidate_indices:
+                chunk = self.chunks[i]
+                base_score = base_scores.get(i, 0.0)
 
                 if base_score > 0:
                     # Apply chunk-type boost
@@ -203,7 +303,7 @@ class HybridRetriever:
                         # shock" ranked Anticoagulation Safety Protocol's
                         # INR-target chunk above the Sepsis SOP's own MAP
                         # threshold.
-                        text_low = text.lower()
+                        text_low = chunk.get("text", chunk.get("chunk_text", "")).lower()
                         chunk_entities = set(chunk.get("clinical_entities", []))
                         if (
                             any(re.search(r"\b" + re.escape(e) + r"\b", text_low) for e in query_entities)
@@ -280,4 +380,6 @@ class HybridRetriever:
             "embedding_backend": embedding_backend,
             "synonym_expansion": len(variants) > 1,
             "reranker_backend": self._reranker.backend_name,
+            "sparse_backend": self._sparse_backend,
+            "fusion": self._fusion,
         }

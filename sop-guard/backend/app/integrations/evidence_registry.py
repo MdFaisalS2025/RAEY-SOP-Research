@@ -71,6 +71,17 @@ _REGISTRY: dict[str, EvidenceSource] = {
     "openevidence": OpenEvidenceSource(),
 }
 
+# Deliberate non-goal, not a missing integration: guideline societies
+# (Surviving Sepsis Campaign/SCCM, IDSA, AHA/ACC, NICE, etc.) have no
+# clean public search API to integrate against the way PubMed/CDC/WHO/
+# ClinicalTrials.gov/openFDA do - their guidance is published as PDFs/HTML
+# behind normal web pages, not a queryable endpoint. Building a scraper for
+# each society is real integration work for sources that change rarely,
+# not a source-registry gap like the ones above. The curated
+# REFERENCE_PROTOCOLS bundles in app/services/sop_comparison.py (e.g. the
+# Surviving Sepsis Hour-1 Bundle) are the honest, hand-maintained substitute
+# for the handful of societies worth that curation effort.
+
 
 def get_source(name: str) -> Optional[EvidenceSource]:
     return _REGISTRY.get(name)

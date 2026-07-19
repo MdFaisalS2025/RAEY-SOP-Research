@@ -70,6 +70,14 @@ class Settings(BaseSettings):
 
     # --- RAG ---
     RAG_EMBEDDING_BACKEND: str = "auto"  # auto | sentence_transformers | tfidf
+    # Default is the small, offline-friendly general model every eval floor
+    # in this repo is calibrated against. For better clinical-synonymy
+    # matching (e.g. "levophed" <-> "norepinephrine", abbreviation-heavy
+    # phrasing), set this to a domain-specific model - verified working
+    # against this codebase: "FremyCompany/BioLORD-2023" (768-dim, loads
+    # via plain sentence-transformers, no code change needed). A bad or
+    # unreachable model name here degrades to the default above, not
+    # straight to TF-IDF - see embeddings.py's tiered fallback.
     RAG_EMBEDDING_MODEL: str = "BAAI/bge-small-en-v1.5"
     RAG_RERANKER_BACKEND: str = "auto"  # auto | cross_encoder | heuristic
     RAG_RERANKER_MODEL: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"

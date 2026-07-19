@@ -114,13 +114,30 @@ class TfidfFallbackProvider:
         return dot / (q_norm * d_norm)
 
 
+#: The verified-safe default model - small (~130MB), no network dependency
+#: once cached, and the one every eval floor/regression test in this repo
+#: is calibrated against. Swapping RAG_EMBEDDING_MODEL to a domain-specific
+#: model (e.g. clinical embeddings) is meant to be a config-only upgrade,
+#: not a risk of losing dense retrieval entirely - see the tiered fallback
+#: below for why that distinction matters.
+_DEFAULT_MODEL = "BAAI/bge-small-en-v1.5"
+
+
 def get_embedding_provider(
     backend: str = "auto",
-    model_name: str = "BAAI/bge-small-en-v1.5",
+    model_name: str = _DEFAULT_MODEL,
 ) -> TfidfFallbackProvider | SentenceTransformerProvider:
     """
     Get the best available embedding provider.
     backend: 'auto' | 'sentence_transformers' | 'tfidf'
+
+    Real gap this closes: a custom RAG_EMBEDDING_MODEL (e.g. a clinical
+    embedding model) that fails to load - wrong model id, no network
+    access to Hugging Face, out-of-memory on a large model - used to fall
+    straight through to the TF-IDF stub, silently losing dense retrieval
+    entirely even though the known-good default model would likely have
+    loaded fine. Now a custom model gets one extra attempt at the default
+    before giving up on dense retrieval altogether.
     """
     if backend == "tfidf":
         logger.info("Using TF-IDF fallback embedding provider")
@@ -135,6 +152,16 @@ def get_embedding_provider(
             if backend == "sentence_transformers":
                 logger.error(f"sentence-transformers required but failed: {e}")
                 raise
-            logger.info(f"sentence-transformers not available ({e}), using TF-IDF fallback")
+            logger.warning(f"Embedding model '{model_name}' failed to load ({e}).")
+
+            if model_name != _DEFAULT_MODEL:
+                try:
+                    provider = SentenceTransformerProvider(_DEFAULT_MODEL)
+                    logger.info(f"Falling back to default embedding model: {_DEFAULT_MODEL}")
+                    return provider
+                except Exception as fallback_e:
+                    logger.info(f"Default embedding model also failed ({fallback_e}), using TF-IDF fallback")
+            else:
+                logger.info("sentence-transformers not available, using TF-IDF fallback")
 
     return TfidfFallbackProvider()

@@ -250,6 +250,39 @@ QUALITY_EVAL_CASES: list[QualityCase] = [
         acceptable_routes=("hybrid", "sop_library"),
         expected_sop_title="Sepsis Management Protocol",
     ),
+    # Phase A (post B.1): these four phrasings exercise the version_history/
+    # comparison query-type classification added in query_agent.py. Note
+    # this harness calls pipeline.run() directly, not the chat routes, so
+    # it measures the *underlying RAG retrieval/routing* for this phrasing
+    # style (still correct/expected to work as generic SOP retrieval) -
+    # it does NOT exercise app/services/chat_intents.py's DB-backed
+    # version-history/comparison answers (that's covered by
+    # tests/test_chat_intents.py, which does have DB access). Routes below
+    # are the measured baseline, locked in as a regression floor.
+    QualityCase(
+        query="Show me the version history of the sepsis SOP.",
+        category="B", label="Version-history phrasing coverage",
+        acceptable_routes=("sop_library", "hybrid", "no_evidence"),
+        expected_sop_title="Sepsis Management Protocol",
+    ),
+    QualityCase(
+        query="What changed in the anticoagulation SOP over time?",
+        category="B", label="Version-history phrasing coverage",
+        acceptable_routes=("no_evidence", "sop_library", "hybrid"),
+        expected_sop_title="Anticoagulation Safety Protocol",
+    ),
+    QualityCase(
+        query="Compare the anticoagulation SOP with current clinical evidence.",
+        category="B", label="Comparison phrasing coverage",
+        acceptable_routes=("hybrid", "sop_library"),
+        expected_sop_title="Anticoagulation Safety Protocol",
+    ),
+    QualityCase(
+        query="How has the code blue protocol changed?",
+        category="B", label="Version-history phrasing coverage",
+        acceptable_routes=("sop_library", "hybrid", "no_evidence"),
+        expected_sop_title="Code Blue Response Protocol",
+    ),
 
     # ---- Category C: no internal SOP, external fallback ----
     # Real clinical topics with no matching internal SOP. Must not

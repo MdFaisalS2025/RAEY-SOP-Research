@@ -1,9 +1,84 @@
 "use client"
 
+import { useState } from "react"
 import { motion } from "framer-motion"
-import { AlertTriangle } from "lucide-react"
+import { AlertTriangle, Check, XCircle } from "lucide-react"
 import { CitationChip, type InlineCitation } from "@/components/query/citation-chip"
 import { cn } from "@/lib/utils"
+
+// "Generative UI" answer components: real retrieved SOP content (steps,
+// thresholds, contraindications) rendered as small interactive/typed
+// components instead of flat prose - the same idea behind the Vercel AI
+// SDK's generative UI, applied to this app's own streaming/renderer stack
+// rather than adopting that SDK. Every one of these is a presentation
+// upgrade over data parseAnswer already extracted from the real answer
+// text; none of them introduce content that wasn't in the grounded answer,
+// and citation markers ([n]) are preserved through renderInline exactly as
+// in the plain-prose path.
+
+// A bullet list where most items read as a prohibition ("Do NOT...",
+// "Avoid...", "Contraindicated...") is almost always a contraindications
+// section - rendered as a dedicated warning card instead of generic bullets.
+const CONTRA_ITEM_RE = /^(do not|don't|avoid|never|contraindicated|must not)\b/i
+
+function isContraindicationList(items: string[]): boolean {
+  if (items.length === 0) return false
+  const matches = items.filter((it) => CONTRA_ITEM_RE.test(it.trim())).length
+  return matches >= 2 && matches >= items.length / 2
+}
+
+// Flags a threshold-table row as a danger value worth calling out in red -
+// deliberately narrow (keyword-gated on the row's own label/value text, not
+// a numeric judgment this component has no clinical basis to make).
+const DANGER_ROW_RE = /\b(max(imum)?|do not exceed|critical|toxic|overdose|lethal|danger(ous)?)\b/i
+
+function isDangerRow(label: string, value: string): boolean {
+  return DANGER_ROW_RE.test(label) || DANGER_ROW_RE.test(value)
+}
+
+/** Numbered procedure steps rendered as a checklist a clinician can tick
+ * through while working the protocol. Local component (not inlined in
+ * renderBlock) so its checked-state hook attaches correctly - renderBlock
+ * itself is a plain function called during render, not a component. */
+function StepChecklist({ items, ctx }: { items: { num: string; text: string }[]; ctx: CitationCtx }) {
+  const [done, setDone] = useState<Set<string>>(new Set())
+  const toggle = (num: string) => {
+    setDone((prev) => {
+      const next = new Set(prev)
+      if (next.has(num)) next.delete(num)
+      else next.add(num)
+      return next
+    })
+  }
+  return (
+    <ol className="space-y-2.5">
+      {items.map((s) => {
+        const isDone = done.has(s.num)
+        return (
+          <li key={s.num} className="flex gap-3 items-start">
+            <button
+              type="button"
+              onClick={() => toggle(s.num)}
+              aria-pressed={isDone}
+              aria-label={isDone ? `Mark step ${s.num} as not done` : `Mark step ${s.num} as done`}
+              className={cn(
+                "shrink-0 mt-0.5 w-7 h-7 rounded-full text-[13px] font-bold flex items-center justify-center border transition-colors",
+                isDone
+                  ? "bg-[#15803D] dark:bg-green-600 border-[#15803D] dark:border-green-600 text-white"
+                  : "bg-[#0B6BCB]/10 border-transparent text-[#0B6BCB] hover:bg-[#0B6BCB]/20"
+              )}
+            >
+              {isDone ? <Check className="w-3.5 h-3.5" /> : s.num}
+            </button>
+            <span className={cn("text-[16px] leading-[1.6] pt-0.5 transition-colors", isDone ? "text-muted-foreground line-through" : "text-foreground")}>
+              {renderInline(s.text, ctx)}
+            </span>
+          </li>
+        )
+      })}
+    </ol>
+  )
+}
 
 // Threshold answers come through as a bullet list of mostly "Parameter:
 // value" lines (see generator.py's _build_threshold_answer) - though the
@@ -226,28 +301,42 @@ function renderBlock(block: AnswerBlock, i: number, ctx: CitationCtx): React.Rea
   if (block.type === "kv") {
     return (
       <dl key={i} className="rounded-xl border border-border divide-y divide-border overflow-hidden">
-        {block.pairs.map((p, j) => (
-          <div key={j} className="flex flex-col sm:flex-row sm:items-baseline gap-0.5 sm:gap-4 px-4 py-3 odd:bg-muted even:bg-transparent">
-            <dt className="text-[13px] font-semibold uppercase tracking-wide text-muted-foreground sm:w-36 shrink-0">{p.label}</dt>
-            <dd className="text-[16px] leading-snug text-foreground font-medium">{renderInline(p.value, ctx)}</dd>
-          </div>
-        ))}
+        {block.pairs.map((p, j) => {
+          const danger = isDangerRow(p.label, p.value)
+          return (
+            <div key={j} className="flex flex-col sm:flex-row sm:items-baseline gap-0.5 sm:gap-4 px-4 py-3 odd:bg-muted even:bg-transparent">
+              <dt className="text-[13px] font-semibold uppercase tracking-wide text-muted-foreground sm:w-36 shrink-0">{p.label}</dt>
+              <dd className={cn("text-[16px] leading-snug font-medium", danger ? "text-[#B91C1C] dark:text-red-400" : "text-foreground")}>
+                {renderInline(p.value, ctx)}
+              </dd>
+            </div>
+          )
+        })}
       </dl>
     )
   }
   if (block.type === "steps") {
-    return (
-      <ol key={i} className="space-y-2.5">
-        {block.items.map((s, j) => (
-          <li key={j} className="flex gap-3 items-start">
-            <span className="shrink-0 mt-0.5 w-7 h-7 rounded-full bg-[#0B6BCB]/10 text-[#0B6BCB] text-[13px] font-bold flex items-center justify-center">{s.num}</span>
-            <span className="text-[16px] leading-[1.6] text-foreground pt-0.5">{renderInline(s.text, ctx)}</span>
-          </li>
-        ))}
-      </ol>
-    )
+    return <StepChecklist key={i} items={block.items} ctx={ctx} />
   }
   if (block.type === "bullets") {
+    if (isContraindicationList(block.items)) {
+      return (
+        <div key={i} className="rounded-xl border border-[#FECACA] dark:border-red-500/30 bg-[#FEE2E2] dark:bg-red-500/10 p-4">
+          <div className="flex items-center gap-2 mb-2.5">
+            <XCircle className="w-4 h-4 text-[#B91C1C] dark:text-red-400" />
+            <span className="text-[13px] font-bold uppercase tracking-wide text-[#B91C1C] dark:text-red-400">Contraindications</span>
+          </div>
+          <ul className="space-y-2">
+            {block.items.map((b, j) => (
+              <li key={j} className="flex gap-2.5 items-start">
+                <XCircle className="shrink-0 mt-0.5 w-4 h-4 text-[#B91C1C] dark:text-red-400" />
+                <span className="text-[16px] leading-[1.6] font-medium text-[#B91C1C] dark:text-red-400">{renderInline(b, ctx)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )
+    }
     const thresholdTable = tryParseThresholdTable(block.items)
     if (thresholdTable) {
       return (
@@ -255,14 +344,19 @@ function renderBlock(block: AnswerBlock, i: number, ctx: CitationCtx): React.Rea
           <div className="overflow-x-auto rounded-xl border border-border">
             <table className="w-full min-w-[360px] text-[15px] border-collapse">
               <tbody>
-                {thresholdTable.rows.map((row, j) => (
-                  <tr key={j} className="border-b border-border last:border-b-0">
-                    <td className="py-2 px-3 font-semibold text-foreground w-2/5 align-top">
-                      {row.label}
-                    </td>
-                    <td className="py-2 px-3 text-foreground align-top">{renderInline(row.value, ctx)}</td>
-                  </tr>
-                ))}
+                {thresholdTable.rows.map((row, j) => {
+                  const danger = isDangerRow(row.label, row.value)
+                  return (
+                    <tr key={j} className="border-b border-border last:border-b-0">
+                      <td className="py-2 px-3 font-semibold text-foreground w-2/5 align-top">
+                        {row.label}
+                      </td>
+                      <td className={cn("py-2 px-3 align-top", danger ? "text-[#B91C1C] dark:text-red-400 font-semibold" : "text-foreground")}>
+                        {renderInline(row.value, ctx)}
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>

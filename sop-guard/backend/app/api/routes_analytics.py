@@ -8,6 +8,7 @@ data where possible; fields that would require production usage logs
 Research prototype  - NOT for clinical use.
 """
 
+from collections import Counter
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends
@@ -25,6 +26,8 @@ from app.models.models import (
 )
 
 router = APIRouter(tags=["Analytics"])
+
+_WINDOW_DAYS = {"day": 1, "week": 7, "month": 30}
 
 MINUTES_SAVED_PER_QUERY = 12
 # Illustrative estimate for a research prototype; not derived from real usage logs.
@@ -87,3 +90,58 @@ async def adoption_analytics(db: AsyncSession = Depends(get_db)):
             "from real usage logs."
         ),
     }
+
+
+@router.get("/api/analytics/top-sops")
+async def top_sops(
+    window: str = "week",
+    limit: int = 10,
+    db: AsyncSession = Depends(get_db),
+):
+    """Most-cited SOPs over a rolling window, derived from real logged
+    queries (QueryLogRecord.citations_json) - no separate aggregation
+    table, same "unpack JSON in Python" approach as the auto-detected-gaps
+    endpoint, since SQLite's JSON aggregation support is limited.
+    """
+    window_days = _WINDOW_DAYS.get(window, 7)
+    since = datetime.now(timezone.utc) - timedelta(days=window_days)
+
+    rows = (await db.execute(
+        select(QueryLogRecord.citations_json, QueryLogRecord.created_at)
+        .where(QueryLogRecord.created_at >= since)
+    )).all()
+
+    counts: Counter[str] = Counter()
+    titles: dict[str, str] = {}
+    last_queried: dict[str, datetime] = {}
+
+    for citations_json, created_at in rows:
+        if not citations_json:
+            continue
+        # Prefer citations the answer actually used; if a row has none
+        # marked cited_in_answer (older rows / routes that don't set it),
+        # fall back to every internal citation the query retrieved rather
+        # than silently dropping that row from the count.
+        internal = [
+            c for c in citations_json
+            if isinstance(c, dict) and c.get("sop_id") and not c.get("is_external")
+        ]
+        cited = [c for c in internal if c.get("cited_in_answer")] or internal
+        for c in cited:
+            sop_id = c["sop_id"]
+            counts[sop_id] += 1
+            titles.setdefault(sop_id, c.get("sop_title") or sop_id)
+            if sop_id not in last_queried or created_at > last_queried[sop_id]:
+                last_queried[sop_id] = created_at
+
+    ranked = [
+        {
+            "sop_id": sop_id,
+            "sop_title": titles.get(sop_id, sop_id),
+            "count": count,
+            "last_queried": last_queried[sop_id].isoformat() if last_queried.get(sop_id) else None,
+        }
+        for sop_id, count in counts.most_common(limit)
+    ]
+
+    return {"window": window, "window_days": window_days, "since": since.isoformat(), "sops": ranked}

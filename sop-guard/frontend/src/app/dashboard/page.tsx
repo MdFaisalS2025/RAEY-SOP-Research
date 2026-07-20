@@ -281,6 +281,88 @@ function WinsStat() {
   )
 }
 
+// ─── Most-Searched SOPs ────────────────────────────────────────────────────
+
+interface TopSop {
+  sop_id: string
+  sop_title: string
+  count: number
+  last_queried: string | null
+}
+
+type SearchWindow = "day" | "week" | "month"
+
+const SEARCH_WINDOWS: { key: SearchWindow; label: string }[] = [
+  { key: "day", label: "Today" },
+  { key: "week", label: "This Week" },
+  { key: "month", label: "This Month" },
+]
+
+function MostSearchedSops() {
+  const [win, setWin] = useState<SearchWindow>("week")
+  const [sops, setSops] = useState<TopSop[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    const base = process.env.NEXT_PUBLIC_API_URL || ""
+    fetch(`${base}/api/analytics/top-sops?window=${win}&limit=5`)
+      .then((r) => r.json())
+      .then((d) => { if (!cancelled) setSops(Array.isArray(d?.sops) ? d.sops : []) })
+      .catch(() => { if (!cancelled) setSops([]) })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [win])
+
+  return (
+    <div className="bg-card border border-border shadow-sm rounded-xl p-4">
+      <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+        <div className="flex items-center gap-2">
+          <BarChart3 className="w-4 h-4 text-[#0B6BCB]" />
+          <h3 className="text-[13px] font-semibold text-foreground">Most-Searched SOPs</h3>
+        </div>
+        <div className="flex gap-1 p-0.5 rounded-lg bg-muted border border-border">
+          {SEARCH_WINDOWS.map((w) => (
+            <button
+              key={w.key}
+              onClick={() => setWin(w.key)}
+              className={cn(
+                "px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors",
+                win === w.key ? "bg-card text-[#0B6BCB] shadow-sm" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {w.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      {loading ? (
+        <p className="text-[12px] text-muted-foreground py-2">Loading...</p>
+      ) : sops.length === 0 ? (
+        <p className="text-[12px] text-muted-foreground py-2">No queries logged in this window yet.</p>
+      ) : (
+        <ol className="space-y-1.5">
+          {sops.map((s, i) => (
+            <li key={s.sop_id}>
+              <Link
+                href={`/library?sopId=${encodeURIComponent(s.sop_id)}`}
+                className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-muted transition-colors group"
+              >
+                <span className="text-[11px] font-semibold text-subtle w-4 shrink-0">{i + 1}</span>
+                <span className="flex-1 min-w-0 text-[12px] font-medium text-foreground group-hover:text-[#0B6BCB] transition-colors truncate">
+                  {s.sop_title}
+                </span>
+                <span className="text-[11px] font-mono text-muted-foreground shrink-0">{s.count}×</span>
+              </Link>
+            </li>
+          ))}
+        </ol>
+      )}
+    </div>
+  )
+}
+
 // ─── Role Views ───────────────────────────────────────────────────────────────
 
 function PhysicianDashboard() {
@@ -1275,6 +1357,7 @@ export default function DashboardPage() {
             </div>
           </div>
           <WinsStat />
+          <MostSearchedSops />
         </div>
 
         {/* Leadership Overview shortcut */}

@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { AlertTriangle, FileText } from "lucide-react"
+import { AlertTriangle } from "lucide-react"
 import { CitationChip, type InlineCitation } from "@/components/query/citation-chip"
 import { cn } from "@/lib/utils"
 
@@ -95,8 +95,13 @@ export function parseAnswer(raw: string): AnswerBlock[] {
       i++; continue
     }
     if (/^-{2,}$/.test(line)) { i++; continue }
-    if (/research prototype/i.test(line)) {
-      blocks.push({ type: "note", text: line.replace(/^[⚠️\s]+/, "") })
+    if (/research prototype/i.test(line) || /^(\*\*)?note:?(\*\*)?\s/i.test(line)) {
+      // Covers both the "research prototype" aside and generic backend
+      // "Note: ..." asides (e.g. "This SOP does not state an explicit
+      // maximum/minimum..."). Both are backend-internal caveats, not part
+      // of the clinical answer body - suppressed at render time (see
+      // renderBlock's "note" case) rather than shown as a stray paragraph.
+      blocks.push({ type: "note", text: line.replace(/^[⚠️\s]+/, "").replace(/^(\*\*)?note:?(\*\*)?\s*/i, "") })
       i++; continue
     }
     if (/^(\*\*)?source:?(\*\*)?/i.test(line)) {
@@ -126,7 +131,22 @@ export function parseAnswer(raw: string): AnswerBlock[] {
     }
     if (/^[A-Z][A-Za-z /]{1,28}:\s+\S/.test(line)) {
       const pairs: { label: string; value: string }[] = []
-      while (i < lines.length && /^[A-Z][A-Za-z /]{1,28}:\s+\S/.test(lines[i])) {
+      // Real bug this fixes: a trailing "Source: ..."/"Note: ..." line
+      // right after a run of genuine "Label: value" pairs (e.g. a
+      // threshold answer's "Norepinephrine starting dose: ..." row) also
+      // matches this same generic KV shape, so it got silently swallowed
+      // into the pairs table as just another row instead of ever reaching
+      // the dedicated source/note handling above - which is why answers
+      // still showed a "NOTE"/"SOURCE" table row even after that handling
+      // was told to render nothing. Stop consuming as soon as a line looks
+      // like a source/note line so the outer loop re-processes it through
+      // the dedicated (and now render-suppressed) path instead.
+      while (
+        i < lines.length &&
+        /^[A-Z][A-Za-z /]{1,28}:\s+\S/.test(lines[i]) &&
+        !/^(\*\*)?source:?(\*\*)?/i.test(lines[i]) &&
+        !/^(\*\*)?note:?(\*\*)?\s/i.test(lines[i])
+      ) {
         const m = lines[i].match(/^([A-Z][A-Za-z /]{1,28}):\s+(.*)$/)
         if (m) pairs.push({ label: m[1], value: m[2] })
         i++
@@ -270,21 +290,16 @@ function renderBlock(block: AnswerBlock, i: number, ctx: CitationCtx): React.Rea
       </ul>
     )
   }
-  if (block.type === "source") {
-    return (
-      <div key={i} className="flex items-start gap-2 text-[13px] text-muted-foreground pt-2 border-t border-border">
-        <FileText className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-        <span><span className="font-semibold">Source:</span> {block.text}</span>
-      </div>
-    )
-  }
-  if (block.type === "note") {
-    return (
-      <div key={i} className="flex items-start gap-2 text-[12px] text-amber-700">
-        <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-        <span>{block.text}</span>
-      </div>
-    )
+  // "source" and "note" blocks are intentionally not rendered here. The
+  // backend generator still appends a trailing "Source: ..." line (and
+  // occasionally a "research prototype" aside) to raw answer text - real
+  // backend behavior we're not changing - but the caller (ChatAnswerMessage)
+  // already renders every cited source once via SourceStrip, and a
+  // research-prototype note has no place in a clinical answer body. Parsing
+  // still recognizes these blocks (parseAnswer) so they're cleanly excluded
+  // rather than falling through to a generic paragraph.
+  if (block.type === "source" || block.type === "note") {
+    return null
   }
   return null
 }

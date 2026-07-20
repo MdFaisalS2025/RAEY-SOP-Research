@@ -219,10 +219,10 @@ export default function UploadPage() {
           )}
         </AnimatePresence>
 
-        {/* Research Disclaimer */}
+        {/* PHI safety notice */}
         <div className="mt-8 p-4 rounded-xl bg-amber-500/5 border border-amber-500/10 text-xs text-muted-foreground">
-          <p className="font-medium text-amber-400 mb-1">Research Use Only</p>
-          <p>This system is a research prototype. Uploaded SOPs are processed for demonstration purposes only. Do not upload documents containing protected health information (PHI) or other sensitive data. This tool is not intended for clinical decision-making.</p>
+          <p className="font-medium text-amber-400 mb-1">Before you upload</p>
+          <p>Do not upload documents containing protected health information (PHI) or other sensitive data. This tool is not intended for clinical decision-making.</p>
         </div>
       </div>
     </AppShell>

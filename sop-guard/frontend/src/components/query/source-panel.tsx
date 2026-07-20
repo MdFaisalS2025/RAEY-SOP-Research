@@ -5,6 +5,18 @@ import { ChevronDown, ChevronRight, ExternalLink, FileText } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { reviewStaleness, type InlineCitation } from "./citation-chip"
 
+/** Builds the deep-link target for "cite to exact line": the Library's
+ * Full Text tab, with enough context (source snippet + section heading)
+ * for a view-time text match to locate and highlight the exact passage.
+ * Uses `sectionTitle` (not `section`) since the Library page already uses
+ * `section` to mean which tab to open. */
+function libraryDeepLink(citation: InlineCitation): string {
+  const params = new URLSearchParams({ sopId: citation.sop_id })
+  if (citation.snippet) params.set("highlight", citation.snippet)
+  if (citation.section_title) params.set("sectionTitle", citation.section_title)
+  return `/library?${params.toString()}`
+}
+
 function SourceRow({
   citation,
   highlighted,
@@ -89,7 +101,7 @@ function SourceRow({
               </div>
             )}
             <a
-              href={citation.is_external ? (citation.url || "#") : "/library"}
+              href={citation.is_external ? (citation.url || "#") : libraryDeepLink(citation)}
               target={citation.is_external ? "_blank" : undefined}
               rel={citation.is_external ? "noopener noreferrer" : undefined}
               onClick={(e) => e.stopPropagation()}

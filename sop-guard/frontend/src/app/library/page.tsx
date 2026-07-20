@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback, Suspense } from "react"
+import { useState, useEffect, useCallback, useMemo, useRef, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { Search, BookOpen, Clock, Hash, FileText, AlertTriangle, Loader2, X, ExternalLink, ListOrdered, ShieldAlert, Gauge, LayoutGrid, List, FileCheck, CheckCircle2, Printer, Filter, CheckCircle, History } from "lucide-react"
@@ -239,12 +239,19 @@ function LibraryPageInner() {
         if (list.length > 0) {
           setSOPs(list)
           setIsDemo(false)
-          // Auto-open SOP from URL params
+          // Auto-open SOP from URL params. `sopId` is the citation's real
+          // sop_id string (e.g. "SOP-ICU-001"), not the numeric row id -
+          // matching on String(s.id) here was a bug that meant no citation
+          // deep-link could ever find its SOP.
           const sopId = searchParams.get("sopId")
           const section = searchParams.get("section") as TabId | null
+          const hasHighlight = !!searchParams.get("highlight")
           if (sopId) {
-            const match = list.find((s: SOP) => String(s.id) === sopId)
-            if (match) openSOP(match, section || "overview")
+            const match = list.find((s: SOP) => s.sop_id === sopId)
+            // A citation deep-link always means "show me the exact passage",
+            // so it forces the Full Text tab even if no `section` tab param
+            // was given.
+            if (match) openSOP(match, section || (hasHighlight ? "fulltext" : "overview"))
           }
         } else {
           setIsDemo(true)
@@ -269,6 +276,48 @@ function LibraryPageInner() {
         .finally(() => setLoadingFullText(false))
     }
   }, [activeTab, selectedSOP, fullText])
+
+  // ── "Cite to exact line": locate the citation's snippet inside the
+  // rendered full text at view-time (no stored offsets - see
+  // citation_tracker.py) and scroll + highlight the matching paragraph.
+  const highlightSnippet = searchParams.get("highlight") || ""
+  const highlightSectionTitle = searchParams.get("sectionTitle") || ""
+
+  const fullTextParagraphs = useMemo(
+    () => (fullText ? fullText.split(/\n\s*\n/).filter((p) => p.trim()) : []),
+    [fullText]
+  )
+
+  const highlightedParaIndex = useMemo(() => {
+    if (fullTextParagraphs.length === 0) return null
+    const normalize = (s: string) => s.replace(/\s+/g, " ").trim().toLowerCase()
+    if (highlightSnippet) {
+      // The stored citation snippet is truncated to ~200 chars and can cut
+      // off mid-word - match on a shorter prefix so a trailing partial word
+      // doesn't prevent an otherwise-good match.
+      const needle = normalize(highlightSnippet).slice(0, 80)
+      if (needle.length >= 15) {
+        const idx = fullTextParagraphs.findIndex((p) => normalize(p).includes(needle))
+        if (idx !== -1) return idx
+      }
+    }
+    // Fall back to the section heading if the snippet itself wasn't found
+    // (e.g. the SOP was re-edited since the answer was generated).
+    if (highlightSectionTitle) {
+      const needle = normalize(highlightSectionTitle)
+      const idx = fullTextParagraphs.findIndex((p) => normalize(p).includes(needle))
+      if (idx !== -1) return idx
+    }
+    return null
+  }, [fullTextParagraphs, highlightSnippet, highlightSectionTitle])
+
+  const highlightedParaRef = useRef<HTMLParagraphElement | null>(null)
+
+  useEffect(() => {
+    if (highlightedParaIndex !== null) {
+      highlightedParaRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })
+    }
+  }, [highlightedParaIndex])
 
   const filtered = sops.filter((s) => {
     const matchSearch = s.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -804,8 +853,20 @@ function LibraryPageInner() {
                       </div>
                     ) : fullText ? (
                       <div className="p-4 rounded-xl bg-muted border border-border max-h-[55vh] overflow-y-auto">
-                        {fullText.split(/\n\s*\n/).filter((p) => p.trim()).map((para, i) => (
-                          <p key={i} className="text-[15px] leading-[1.7] text-foreground whitespace-pre-wrap mb-3 last:mb-0">
+                        {highlightSnippet && highlightedParaIndex === null && (
+                          <div className="mb-3 px-3 py-2 rounded-lg bg-card border border-border text-xs text-muted-foreground">
+                            The cited passage may have changed since this answer was generated - showing the full document instead.
+                          </div>
+                        )}
+                        {fullTextParagraphs.map((para, i) => (
+                          <p
+                            key={i}
+                            ref={i === highlightedParaIndex ? highlightedParaRef : undefined}
+                            className={cn(
+                              "text-[15px] leading-[1.7] text-foreground whitespace-pre-wrap mb-3 last:mb-0 rounded-lg transition-colors",
+                              i === highlightedParaIndex && "bg-[#FEF3C7] dark:bg-amber-500/20 -mx-2 px-2 py-1.5 ring-1 ring-[#FDE68A] dark:ring-amber-500/30"
+                            )}
+                          >
                             {para.trim()}
                           </p>
                         ))}

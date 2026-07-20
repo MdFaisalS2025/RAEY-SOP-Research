@@ -17,7 +17,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import {
   ShieldCheck, AlertTriangle, FileText, ExternalLink, GitCompare, History,
   BookOpen, Download, Printer, Flag, PlusCircle, HelpCircle, ChevronDown, ChevronUp,
-  Link2, Check, Loader2, CheckCircle2, ClipboardEdit,
+  Link2, Check, Loader2, CheckCircle2, ClipboardEdit, Search, Building2,
 } from "lucide-react"
 import { type InlineCitation } from "@/components/query/citation-chip"
 import { cn } from "@/lib/utils"
@@ -40,7 +40,41 @@ import type { AssistantData } from "@/app/query/page"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
 
-type SourceData = { id: string; sop_title: string; section: string; content: string; score: number }
+type SourceData = { id: string; sop_id: string; sop_title: string; section: string; content: string; score: number }
+
+/** Builds the deep-link target for "cite to exact line": the Library's
+ * Full Text tab, with enough context (source snippet + section heading)
+ * for a view-time text match to locate and highlight the exact passage.
+ * Uses `sectionTitle` (not `section`) since the Library page already uses
+ * `section` to mean which tab to open. */
+function libraryDeepLink(sopId: string, snippet?: string, sectionTitle?: string): string {
+  const params = new URLSearchParams({ sopId })
+  if (snippet) params.set("highlight", snippet)
+  if (sectionTitle) params.set("sectionTitle", sectionTitle)
+  return `/library?${params.toString()}`
+}
+
+// ── Honest external out-links ──────────────────────────────────────────
+// No data ingestion from any of these - OpenEvidence has no public API
+// (closed, NPI-verified-clinician platform) and UpToDate/PolicyTech are
+// licensed institutional subscriptions Meridian doesn't have access to.
+// These are clearly-labeled referral links to separate tools a clinician
+// already has their own access to, not an in-app data source.
+
+/** UpToDate search deep-link (their public search UI takes a plain query
+ * param - no API access, no license required to land on the search page). */
+function uptodateSearchUrl(term: string): string {
+  return `https://www.uptodate.com/contents/search?search=${encodeURIComponent(term)}`
+}
+
+const OPENEVIDENCE_URL = "https://www.openevidence.com/"
+
+/** Only rendered if an institution has actually configured its PolicyTech
+ * tenant URL - absent by default, so no link is shown (honest
+ * not-configured) rather than a fabricated/guessed deep-link path, since
+ * PolicyTech's per-document URL scheme isn't something we can know without
+ * a real tenant to test against. */
+const POLICYTECH_BASE_URL = process.env.NEXT_PUBLIC_POLICYTECH_BASE_URL || ""
 
 // ─── Compact source strip ─────────────────────────────────────────────────
 // Perplexity/modern-AI-chat pattern: sources shown as a scrollable row of
@@ -189,6 +223,26 @@ export function ChatAnswerMessage({
   const displayAnswer = plain ? plain.text : data.answer
 
   const handleCitationClick = (n: number) => {
+    const citation = data.inlineCitations.find((c) => c.number === n)
+
+    // External literature - open the source directly (mirrors CitationChip's
+    // own handling, needed here too since SourceStrip doesn't special-case
+    // external citations before calling this handler).
+    if (citation?.is_external && citation.url) {
+      window.open(citation.url, "_blank", "noopener,noreferrer")
+      return
+    }
+
+    // Internal SOP citation - jump straight to the exact cited passage in
+    // the source document instead of just scrolling to its row in the
+    // Trust drawer.
+    if (citation?.sop_id) {
+      router.push(libraryDeepLink(citation.sop_id, citation.snippet, citation.section_title))
+      return
+    }
+
+    // Fallback (no sop_id on the citation record, e.g. legacy data) - keep
+    // the old behavior of surfacing it in the Trust drawer.
     setActiveDrawer("trust")
     setHighlightedSource(n)
     setTimeout(() => {
@@ -510,6 +564,24 @@ export function ChatAnswerMessage({
                 { key: "print", label: "Print Report", icon: Printer, onClick: handlePrintReport },
                 { key: "flag", label: "Flag Issue", icon: Flag, onClick: () => setShowFeedbackModal(true) },
                 { key: "copy", label: copiedLink === "link" ? "Link copied" : copiedLink === "answer" ? "Copied" : "Copy Link", icon: copiedLink ? Check : Link2, onClick: handleCopyLink },
+                {
+                  key: "uptodate",
+                  label: "Look up in UpToDate (external)",
+                  icon: Search,
+                  onClick: () => window.open(uptodateSearchUrl(data.query), "_blank", "noopener,noreferrer"),
+                },
+                {
+                  key: "openevidence",
+                  label: "Ask on OpenEvidence (external)",
+                  icon: ExternalLink,
+                  onClick: () => window.open(OPENEVIDENCE_URL, "_blank", "noopener,noreferrer"),
+                },
+                ...(POLICYTECH_BASE_URL ? [{
+                  key: "policytech",
+                  label: "Open PolicyTech Portal (external)",
+                  icon: Building2,
+                  onClick: () => window.open(POLICYTECH_BASE_URL, "_blank", "noopener,noreferrer"),
+                }] : []),
               ]}
             />
           )}
@@ -540,7 +612,7 @@ export function ChatAnswerMessage({
           primaryVersion={primaryVersion}
           primarySopId={primarySopId}
           primaryReviewDate={primaryReviewDate}
-          onSelectSource={(c) => setSelectedSource({ id: String(c.number), sop_title: c.sop_title, section: c.section_title, content: c.snippet, score: c.relevance_score })}
+          onSelectSource={(c) => setSelectedSource({ id: String(c.number), sop_id: c.sop_id, sop_title: c.sop_title, section: c.section_title, content: c.snippet, score: c.relevance_score })}
         />
       </SlideOver>
 
@@ -574,7 +646,10 @@ export function ChatAnswerMessage({
                 {selectedSource.content}
               </p>
             </div>
-            <a href="/library" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0B6BCB] hover:bg-[#0959AC] text-white text-sm font-medium transition-colors mt-4">
+            <a
+              href={selectedSource.sop_id ? libraryDeepLink(selectedSource.sop_id, selectedSource.content, selectedSource.section) : "/library"}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0B6BCB] hover:bg-[#0959AC] text-white text-sm font-medium transition-colors mt-4"
+            >
               <ExternalLink className="w-4 h-4" />
               Open Full SOP in Library
             </a>

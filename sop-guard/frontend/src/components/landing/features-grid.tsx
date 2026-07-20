@@ -2,19 +2,20 @@
 
 import { motion } from "framer-motion"
 import {
-  Search, FileText, Share2, Brain, ShieldCheck, GraduationCap, Quote, Radio,
+  MessageSquare, ShieldCheck, GitCompare, TrendingUp,
 } from "lucide-react"
 import { GlassCard, SectionKicker, fadeUp, stagger, viewportOnce } from "./shared"
 
+// Reduced from 8 capability cards to the 4 that map to the actual
+// workflow (Ask -> Verify -> Compare -> Improve) - the other capabilities
+// (multi-hop reasoning, CAPA workflows, sentence-level citations, ranked
+// external evidence) are real and still live in the product, just not
+// front-loaded on the landing page as a feature-dump.
 const FEATURES = [
-  { icon: Search, title: "Multi-stage retrieval", desc: "A query-understanding pass expands intent before search runs, so it retrieves the exact protocol section - not a keyword match." },
-  { icon: FileText, title: "Hybrid SOP search", desc: "Dense and sparse retrieval are combined to rank every indexed SOP chunk by clinical relevance, not just word overlap." },
-  { icon: Share2, title: "Cross-SOP conflict detection", desc: "An entity graph links drugs, thresholds, and conditions across SOPs, surfacing conflicts between documents automatically." },
-  { icon: Brain, title: "Multi-hop reasoning", desc: "Cross-references between protocols are followed automatically, so answers that span multiple SOPs stay complete." },
-  { icon: ShieldCheck, title: "Compliance workflows", desc: "Attestations, CAPA workflows, and proposal scheduling keep governance evidence in one auditable trail." },
-  { icon: GraduationCap, title: "Consistent training answers", desc: "New staff get the same verified answers as veterans, grounded in the current version of every protocol." },
-  { icon: Quote, title: "Sentence-level citations", desc: "Every claim links back to the exact SOP section it came from - down to the sentence, not just the document." },
-  { icon: Radio, title: "External evidence, ranked", desc: "Literature from PubMed, FDA, CDC, and 5 other sources is tiered by authority and shown alongside internal SOPs." },
+  { icon: MessageSquare, title: "Ask", desc: "Ask a clinical procedure question in plain language and get an answer grounded in your hospital's own approved SOPs." },
+  { icon: ShieldCheck, title: "Verify", desc: "Every claim is checked against its source before it's shown, with citations down to the exact SOP section." },
+  { icon: GitCompare, title: "Compare", desc: "Guidance can be compared against current external clinical evidence to check whether it's still aligned." },
+  { icon: TrendingUp, title: "Improve", desc: "Gaps and outdated guidance are flagged and routed to committee review, closing the loop back into governance." },
 ]
 
 export function FeaturesGrid() {

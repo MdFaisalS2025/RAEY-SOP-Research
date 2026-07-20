@@ -3,7 +3,7 @@
 import { useState, useEffect, FormEvent, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
-import { CheckCircle2, LogIn, ChevronRight, ShieldCheck, Lock, FileCheck } from "lucide-react"
+import { CheckCircle2, LogIn } from "lucide-react"
 import { SafetyNote } from "@/components/ui/safety-note"
 import { useAuth } from "@/lib/auth-context"
 import { DEMO_USERS } from "@/lib/mock-data"
@@ -25,28 +25,15 @@ const ROLE_LABELS: Record<UserRole, string> = {
   clinical_staff:        "Clinical Staff",
 }
 
-// Sorted highest to lowest for the hierarchy ladder. Level numbers are
-// derived from this array's length, not hardcoded, so the ladder and the
-// demo-user cards below can never drift out of sync again.
-const HIERARCHY_LADDER: { role: UserRole; label: string; title: string }[] = [
-  { role: "system_admin",          label: "System Admin",              title: "CMIO / IT Director" },
-  { role: "governance_compliance", label: "Governance & Compliance",   title: "Compliance, Legal, Committee & Dept. Admin" },
-  { role: "educator",              label: "Educator / Trainer",        title: "Clinical Education" },
-  { role: "clinical_staff",        label: "Clinical Staff",            title: "Physician / Nurse" },
-]
-const MAX_LEVEL = HIERARCHY_LADDER.length
-
 const FEATURES = [
-  "Retrieval-grounded SOP answers with source citations",
-  "Evidence-based governance workflow",
-  "Real-time compliance monitoring",
+  "Ask about any approved protocol and get a cited answer",
+  "Compare guidance against current clinical evidence",
+  "Flag gaps and route them to committee review",
 ]
 
-const TRUST_BADGES = [
-  { icon: ShieldCheck, label: "HIPAA-Aware Architecture" },
-  { icon: FileCheck, label: "Audit Trail Ready" },
-  { icon: Lock, label: "SOC 2 Track" },
-]
+// Still needed for each demo-user card's "Level X of Y" access label below
+// (the ladder visualization that used to also read this was removed).
+const MAX_LEVEL = Math.max(...Object.values(ROLE_HIERARCHY))
 
 // Sort demo users by hierarchy level (highest first) for display
 const SORTED_DEMO_USERS = [...DEMO_USERS].sort(
@@ -128,10 +115,10 @@ function LoginPageInner() {
           {/* Tagline */}
           <div className="mb-8">
             <h1 className="font-display text-2xl font-semibold text-foreground leading-tight mb-2">
-              Clinical SOP Governance Platform
+              Clinical SOP Intelligence Platform
             </h1>
             <p className="text-sm text-[#0B6BCB] dark:text-[#00E5FF] font-medium tracking-wide">
-              Retrieval-grounded · Verified before every answer
+              Ask. Verify. Improve.
             </p>
           </div>
 
@@ -145,54 +132,7 @@ function LoginPageInner() {
             ))}
           </ul>
 
-          {/* Role hierarchy ladder */}
-          <div className="flex-1">
-            <p className="text-[10px] text-subtle uppercase tracking-widest font-semibold mb-3">
-              Role Hierarchy - Highest to Lowest Access
-            </p>
-            <div className="flex flex-col gap-1">
-              {HIERARCHY_LADDER.map((item, i) => {
-                const colors = ROLE_COLORS[item.role]
-                const isTop = i === 0
-                const isBottom = i === HIERARCHY_LADDER.length - 1
-                return (
-                  <div key={item.role} className="flex items-center gap-2.5">
-                    {/* Level number */}
-                    <span className="text-[10px] font-mono text-subtle w-3 shrink-0 text-right">
-                      {MAX_LEVEL - i}
-                    </span>
-                    {/* Connector line */}
-                    <div className="flex flex-col items-center w-3 shrink-0">
-                      {!isTop && <div className="w-px flex-1 bg-border min-h-[6px]" />}
-                      <div className={cn("w-2 h-2 rounded-full shrink-0", colors.bg, "border", colors.border)} />
-                      {!isBottom && <div className="w-px flex-1 bg-border min-h-[6px]" />}
-                    </div>
-                    {/* Role info */}
-                    <div className="flex items-center gap-2 py-0.5">
-                      <span className={cn("text-[11px] font-semibold", colors.text)}>
-                        {item.label}
-                      </span>
-                      <ChevronRight className="w-3 h-3 text-subtle" />
-                      <span className="text-[10px] text-muted-foreground">{item.title}</span>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* Trust / compliance-posture badges */}
-          <div className="flex flex-wrap gap-2 mt-8">
-            {TRUST_BADGES.map(({ icon: Icon, label }) => (
-              <span
-                key={label}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-card border border-border text-[10px] font-semibold text-muted-foreground"
-              >
-                <Icon className="w-3 h-3 text-[#0B6BCB] dark:text-[#00E5FF]" />
-                {label}
-              </span>
-            ))}
-          </div>
+          <div className="flex-1" />
 
           <SafetyNote className="mt-4" />
         </div>
@@ -294,7 +234,7 @@ function LoginPageInner() {
           {/* Divider */}
           <div className="flex items-center gap-3 mb-5">
             <div className="flex-1 h-px bg-border" />
-            <span className="text-xs text-muted-foreground whitespace-nowrap">or continue as demo user</span>
+            <span className="text-xs text-muted-foreground whitespace-nowrap">Quick access</span>
             <div className="flex-1 h-px bg-border" />
           </div>
 
@@ -349,12 +289,6 @@ function LoginPageInner() {
               )
             })}
           </div>
-
-          {/* Demo password hint */}
-          <p className="text-center text-[11px] text-subtle">
-            Demo password:{" "}
-            <span className="font-mono text-muted-foreground">demo1234</span>
-          </p>
         </div>
       </div>
     </div>

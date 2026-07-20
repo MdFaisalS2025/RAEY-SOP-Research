@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useState } from "react"
 import { motion } from "framer-motion"
 import {
-  BookOpen, Users, TrendingUp, ArrowRight, Zap,
-  Loader2, ShieldCheck, Trophy,
+  BookOpen, Users, TrendingUp,
+  Loader2,
 } from "lucide-react"
 import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
@@ -26,12 +26,6 @@ interface CreditRecord {
   created_at: string | null
 }
 
-interface LeaderboardEntry {
-  user_id: string
-  user_name: string
-  total_credits: number
-}
-
 const ACTIVITY_CONFIG: Record<ActivityType, { label: string; className: string }> = {
   scenario_completed: { label: "Scenario Training", className: "bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30" },
   sop_reviewed: { label: "SOP Reviewed", className: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30" },
@@ -41,21 +35,17 @@ const ACTIVITY_CONFIG: Record<ActivityType, { label: string; className: string }
 export default function TrainingPage() {
   const { role } = useRole()
   const [records, setRecords] = useState<CreditRecord[]>([])
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let cancelled = false
-    Promise.all([
-      fetch(`${API_BASE}/api/credits?limit=500`).then((r) => r.json()),
-      fetch(`${API_BASE}/api/credits/leaderboard`).then((r) => r.json()),
-    ])
-      .then(([creditsData, leaderboardData]) => {
+    fetch(`${API_BASE}/api/credits?limit=500`)
+      .then((r) => r.json())
+      .then((creditsData) => {
         if (cancelled) return
         setRecords(Array.isArray(creditsData?.credits) ? creditsData.credits : [])
-        setLeaderboard(Array.isArray(leaderboardData?.leaderboard) ? leaderboardData.leaderboard : [])
       })
-      .catch(() => { if (!cancelled) { setRecords([]); setLeaderboard([]) } })
+      .catch(() => { if (!cancelled) setRecords([]) })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
   }, [])
@@ -75,7 +65,6 @@ export default function TrainingPage() {
   }).length
 
   const distinctContributors = new Set(records.map((r) => r.user_id || r.user_name)).size
-  const totalCreditsAwarded = records.reduce((sum, r) => sum + (r.credits || 0), 0)
 
   const countByType = useMemo(() => {
     const counts: Record<ActivityType, number> = { scenario_completed: 0, sop_reviewed: 0, committee_participation: 0 }
@@ -87,7 +76,6 @@ export default function TrainingPage() {
     { label: "Activities This Month", value: completedThisMonth, icon: TrendingUp, color: "text-[#15803D] dark:text-green-400", bg: "bg-[#DCFCE7] dark:bg-green-500/10" },
     { label: "Total Activities Logged", value: records.length, icon: BookOpen, color: "text-[#0B6BCB]", bg: "bg-[#0B6BCB]/10" },
     { label: "Contributing Staff", value: distinctContributors, icon: Users, color: "text-muted-foreground", bg: "bg-muted" },
-    { label: "Total Credits Awarded", value: totalCreditsAwarded.toFixed(1), icon: Trophy, color: "text-[#B45309] dark:text-amber-400", bg: "bg-[#FEF3C7] dark:bg-amber-500/10" },
   ]
 
   const recentActivity = [...records]
@@ -109,8 +97,7 @@ export default function TrainingPage() {
           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-2 flex-wrap">
-          <span className="text-xs text-muted-foreground">Credit totals are illustrative, not accredited CE/CPD hours.</span>
+        <div className="flex items-center justify-end">
           <SafetyNote />
         </div>
 
@@ -122,44 +109,13 @@ export default function TrainingPage() {
           <span className="text-[#0B6BCB]/80">{roleBannerSubtitle.split(":").slice(1).join(":").trim()}</span>
         </div>
 
-        <section className="rounded-2xl bg-card border border-border p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <Zap className="w-4 h-4 text-[#0B6BCB]" />
-            <h2 className="text-base font-semibold">How Training Credit Works</h2>
-          </div>
-          <div className="grid md:grid-cols-3 gap-4">
-            {[
-              { step: 1, title: "Complete an Activity", desc: "Finish a training scenario, review a SOP, or participate in a governance committee", color: "bg-[#0B6BCB]/10 border-[#0B6BCB]/30 text-[#0B6BCB]", dot: "bg-[#0B6BCB]" },
-              { step: 2, title: "Credit Logged", desc: "The activity and credit value are recorded to your account in real time", color: "bg-[#FEF3C7] dark:bg-amber-500/10 border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400", dot: "bg-[#F59E0B]" },
-              { step: 3, title: "Reflected Here", desc: "Totals, the leaderboard, and recent activity update immediately - no manual sync", color: "bg-[#DCFCE7] dark:bg-green-500/10 border-[#BBF7D0] dark:border-green-500/30 text-[#15803D] dark:text-green-400", dot: "bg-[#16A34A]" },
-            ].map((item, i) => (
-              <div key={item.step} className="relative flex gap-3">
-                {i < 2 && (
-                  <div className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-10">
-                    <ArrowRight className="w-4 h-4 text-muted-foreground" />
-                  </div>
-                )}
-                <div className={cn("flex-1 p-4 rounded-xl border", item.color.split(" ").slice(0, 2).join(" "))}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className={cn("w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white", item.dot)}>
-                      {item.step}
-                    </div>
-                    <p className={cn("text-sm font-semibold", item.color.split(" ")[2])}>{item.title}</p>
-                  </div>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
         {loading ? (
           <div className="flex items-center justify-center py-16 text-muted-foreground gap-2">
             <Loader2 className="w-5 h-5 animate-spin" /> Loading training activity...
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {stats.map((s, i) => (
                 <motion.div
                   key={s.label}
@@ -206,7 +162,6 @@ export default function TrainingPage() {
                           <th className="p-3 text-left">Staff</th>
                           <th className="p-3 text-left">Activity</th>
                           <th className="p-3 text-left">Type</th>
-                          <th className="p-3 text-left">Credits</th>
                           <th className="p-3 text-left">Date</th>
                         </tr>
                       </thead>
@@ -220,7 +175,6 @@ export default function TrainingPage() {
                                 {ACTIVITY_CONFIG[r.activity_type]?.label ?? r.activity_type}
                               </span>
                             </td>
-                            <td className="p-3 font-semibold text-[#0B6BCB]">{r.credits}</td>
                             <td className="p-3 text-xs text-muted-foreground">{r.created_at ? new Date(r.created_at).toLocaleDateString("en-US") : "-"}</td>
                           </tr>
                         ))}
@@ -230,32 +184,8 @@ export default function TrainingPage() {
                 </div>
               )}
             </section>
-
-            <section className="space-y-3">
-              <h2 className="text-lg font-semibold font-display flex items-center gap-2">
-                <Trophy className="w-4 h-4 text-[#B45309] dark:text-amber-400" /> Leaderboard
-              </h2>
-              {leaderboard.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No credit activity recorded yet.</p>
-              ) : (
-                <div className="rounded-2xl bg-card border border-border divide-y divide-border">
-                  {leaderboard.map((entry, i) => (
-                    <div key={entry.user_id} className="flex items-center gap-3 p-4">
-                      <span className="w-6 text-sm font-bold text-muted-foreground">#{i + 1}</span>
-                      <span className="flex-1 text-sm font-medium text-foreground">{entry.user_name || entry.user_id}</span>
-                      <span className="text-sm font-bold text-[#0B6BCB]">{entry.total_credits.toFixed(1)} credits</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
           </>
         )}
-
-        <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-muted border border-border text-foreground text-sm">
-          <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5" />
-          <span>Connect to a hospital LMS (HealthStream, Relias) for accredited CE/CPD tracking and formal module rosters in production.</span>
-        </div>
       </div>
     </AppShell>
   )

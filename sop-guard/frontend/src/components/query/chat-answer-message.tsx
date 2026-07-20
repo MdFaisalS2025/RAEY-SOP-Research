@@ -105,17 +105,16 @@ function AlignmentStatusLine({
   }
   if (!comparison.available || !comparison.summary) return null
   const meta = ALIGNMENT_META[comparison.summary.overall_alignment] ?? ALIGNMENT_META["Needs Review"]
-  const { match_count, partial_count, overall_alignment, recommended_action } = comparison.summary
+  const { overall_alignment } = comparison.summary
+  // Kept deliberately short - match counts and the full recommended-action
+  // sentence are one click away in the Compare with Clinical Evidence
+  // drawer (onOpenComparison) rather than crowding this quiet inline cue.
   return (
     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 px-1 text-xs">
-      <button onClick={onOpenComparison} className={cn("inline-flex items-center gap-1.5 font-semibold hover:underline", meta.className)}>
+      <button onClick={onOpenComparison} className={cn("inline-flex items-center gap-1.5 font-medium hover:underline", meta.className)}>
         <meta.icon className="w-3.5 h-3.5 shrink-0" />
         {overall_alignment} with external evidence
       </button>
-      <span className="text-muted-foreground">
-        ({match_count} match{match_count === 1 ? "" : "es"}{partial_count > 0 ? `, ${partial_count} partial` : ""})
-      </span>
-      <span className="text-muted-foreground">· {recommended_action}</span>
       {overall_alignment !== "Aligned" && (
         <button onClick={onCreateRecommendation}
           className="inline-flex items-center gap-1 text-[#0B6BCB] font-medium hover:underline">
@@ -124,36 +123,6 @@ function AlignmentStatusLine({
         </button>
       )}
     </div>
-  )
-}
-
-function CopyLinkButton({ data }: { data: AssistantData }) {
-  const [copied, setCopied] = useState<"link" | "answer" | null>(null)
-  const handleCopy = async () => {
-    try {
-      if (data.answerId) {
-        await navigator.clipboard.writeText(`${window.location.origin}/answers/${data.answerId}`)
-        setCopied("link")
-        toast({ description: "Link copied to clipboard", variant: "success" })
-      } else {
-        await navigator.clipboard.writeText(data.answer)
-        setCopied("answer")
-        toast({ description: "Answer copied to clipboard", variant: "success" })
-      }
-      setTimeout(() => setCopied(null), 2000)
-    } catch {
-      toast({ description: "Couldn't copy to clipboard", variant: "error" })
-    }
-  }
-  return (
-    <button onClick={handleCopy}
-      title={copied === "link" ? "Link copied" : copied === "answer" ? "Answer copied" : "Copy link"}
-      aria-label="Copy link"
-      className={cn("inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-[13px] font-medium border border-transparent transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0B6BCB]/40",
-        copied ? "text-[#15803D] dark:text-green-400" : "text-muted-foreground hover:text-foreground hover:bg-muted")}>
-      {copied ? <Check className="w-4 h-4 shrink-0" /> : <Link2 className="w-4 h-4 shrink-0" />}
-      {copied === "link" ? "Link copied" : copied === "answer" ? "Copied" : "Copy Link"}
-    </button>
   )
 }
 
@@ -183,6 +152,7 @@ export function ChatAnswerMessage({
   // just asked for.
   const [collapsed, setCollapsed] = useState(false)
   const [comparison, setComparison] = useState<ComparisonResponse | "loading" | null>(null)
+  const [copiedLink, setCopiedLink] = useState<"link" | "answer" | null>(null)
 
   const hasConflict = data.sopConflicts.length > 0
   const firstCitation = data.sources[0]?.sop_title ?? ""
@@ -234,6 +204,23 @@ export function ChatAnswerMessage({
     const title = sopTitle ? `Align ${sopTitle} with ${refName}` : `SOP update recommendation`
     const summary = comparison.summary?.recommended_action || ""
     router.push(`/proposals?new=1&sop=${encodeURIComponent(primarySopId)}&title=${encodeURIComponent(title)}&summary=${encodeURIComponent(summary)}`)
+  }
+
+  const handleCopyLink = async () => {
+    try {
+      if (data.answerId) {
+        await navigator.clipboard.writeText(`${window.location.origin}/answers/${data.answerId}`)
+        setCopiedLink("link")
+        toast({ description: "Link copied to clipboard", variant: "success" })
+      } else {
+        await navigator.clipboard.writeText(data.answer)
+        setCopiedLink("answer")
+        toast({ description: "Answer copied to clipboard", variant: "success" })
+      }
+      setTimeout(() => setCopiedLink(null), 2000)
+    } catch {
+      toast({ description: "Couldn't copy to clipboard", variant: "error" })
+    }
   }
 
   const handleFlagFeedback = async (key: string, note: string) => {
@@ -522,10 +509,10 @@ export function ChatAnswerMessage({
                 { key: "export", label: "Export Answer", icon: Download, onClick: handleExportJson },
                 { key: "print", label: "Print Report", icon: Printer, onClick: handlePrintReport },
                 { key: "flag", label: "Flag Issue", icon: Flag, onClick: () => setShowFeedbackModal(true) },
+                { key: "copy", label: copiedLink === "link" ? "Link copied" : copiedLink === "answer" ? "Copied" : "Copy Link", icon: copiedLink ? Check : Link2, onClick: handleCopyLink },
               ]}
             />
           )}
-          <CopyLinkButton data={data} />
         </>
       )}
 

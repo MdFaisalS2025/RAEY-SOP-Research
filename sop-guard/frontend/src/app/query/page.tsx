@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from "framer-motion"
 import {
   Send,
   Search,
-  Sparkles,
   History,
   User,
   RotateCcw,
@@ -29,7 +28,6 @@ const suggestedQueries = [
 "What is the maximum norepinephrine dose?",
 "What contraindications apply before blood transfusion?",
 "What should a nurse monitor after central line insertion?",
-"When should insulin be held for hypoglycemia?",
 ]
 
 const CHAT_SESSION_KEY = "meridian-chat-session"
@@ -538,7 +536,7 @@ export default function QueryPage() {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSubmit() } }}
-        placeholder={submitted ? "Ask a follow-up..." : "Ask a clinical SOP question..."}
+        placeholder={submitted ? "Ask a follow-up..." : "Ask about a protocol or procedure..."}
         rows={3}
         className="w-full p-4 sm:pr-28 rounded-2xl bg-muted border border-border text-foreground placeholder:text-subtle caret-[#0B6BCB] resize-none focus:outline-none focus:ring-2 focus:ring-[#0B6BCB]/40 text-base"
       />
@@ -652,17 +650,14 @@ export default function QueryPage() {
           )}
         </AnimatePresence>
 
-        {/* Empty State */}
+        {/* Empty state: the composer + suggested-query chips above already
+            carry the "what do I do here" guidance, so this only needs to
+            establish the page identity - no oversized icon or repeated
+            instructions. */}
         {!submitted && !loading && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-            className="flex flex-col items-center justify-center py-24 text-center">
-            <div className="w-20 h-20 rounded-2xl bg-[#0B6BCB]/10 flex items-center justify-center mb-6">
-              <Sparkles className="w-10 h-10 text-[#0B6BCB]" />
-            </div>
-            <h2 className="text-xl font-semibold mb-2">Ask a Clinical SOP Question</h2>
-            <p className="text-muted-foreground text-sm max-w-md">
-              Type or speak your question. Answers stay in one conversation so you can ask follow-ups.
-            </p>
+            className="flex flex-col items-center justify-center py-12 text-center">
+            <h2 className="text-lg font-semibold text-muted-foreground">Ask Meridian</h2>
           </motion.div>
         )}
 

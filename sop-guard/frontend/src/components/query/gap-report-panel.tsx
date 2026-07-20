@@ -1,9 +1,10 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { FileWarning, Gavel, PlusCircle, Eye, Users, CheckCircle2, Loader2 } from "lucide-react"
-import { cn } from "@/lib/utils"
 import { toast } from "@/components/ui/use-toast"
+import { AnswerActionToolbar } from "@/components/query/answer-action-toolbar"
 import type { InlineCitation } from "@/components/query/citation-chip"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
@@ -33,6 +34,7 @@ export function GapReportPanel({
   externalCitations: InlineCitation[]
   department?: string
 }) {
+  const router = useRouter()
   const [report, setReport] = useState<GapReport | null>(null)
   const [creating, setCreating] = useState(false)
   const [sending, setSending] = useState(false)
@@ -118,46 +120,25 @@ export function GapReportPanel({
         </div>
       )}
 
-      <div className="rounded-2xl bg-card border border-border p-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">What you can do next:</p>
-        <div className="flex flex-wrap gap-2">
-          {!report ? (
-            <button onClick={createGapReport} disabled={creating}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30 hover:bg-[#0B6BCB]/15 transition-colors disabled:opacity-60">
-              {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileWarning className="w-4 h-4" />}
-              Create SOP Gap Report
-            </button>
-          ) : (
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30">
-              <CheckCircle2 className="w-4 h-4" /> Gap Report #{report.id} created
-            </span>
-          )}
-          {report && report.status === "open" && (
-            <button onClick={sendToCommittee} disabled={sending}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium border border-border text-foreground hover:bg-muted transition-colors disabled:opacity-60">
-              {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Gavel className="w-4 h-4" />}
-              Send to Committee
-            </button>
-          )}
-          {report && report.status === "sent_to_committee" && (
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30">
-              <Gavel className="w-4 h-4" /> Sent to {report.recommended_committee}
-            </span>
-          )}
-          <a href={`/proposals?new=1&title=${encodeURIComponent(`New SOP: ${queryText}`)}&summary=${encodeURIComponent(`SOP gap identified - no approved procedure currently covers: "${queryText}". ${outline.length > 0 ? "Draft outline available from retrieved external evidence." : ""}`)}&query=${encodeURIComponent(queryText)}`}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium border border-border text-foreground hover:bg-muted transition-colors">
-            <PlusCircle className="w-4 h-4" /> Create Draft SOP Proposal
-          </a>
-          <button onClick={() => logClientAction("evidence_watchlist_added", "Added to Evidence Watch")}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium border border-border text-foreground hover:bg-muted transition-colors">
-            <Eye className="w-4 h-4" /> Add to Evidence Watch
-          </button>
-          <button onClick={() => logClientAction("department_review_requested", "Department review requested")}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium border border-border text-foreground hover:bg-muted transition-colors">
-            <Users className="w-4 h-4" /> Request Department Review
-          </button>
-        </div>
-      </div>
+      {/* Two primary actions - review the evidence gap, or start drafting a
+          proposal to close it. The rest (Evidence Watch, Department Review)
+          are administrative follow-ups, not what most people need first -
+          moved to the toolbar's secondary row instead of competing equally
+          with the two actions that actually matter here. */}
+      <AnswerActionToolbar
+        primary={[
+          report
+            ? report.status === "open"
+              ? { key: "send", label: sending ? "Sending..." : "Send to Committee", icon: sending ? Loader2 : Gavel, onClick: sendToCommittee, disabled: sending }
+              : { key: "sent", label: `Sent to ${report.recommended_committee}`, icon: CheckCircle2, onClick: () => {}, disabled: true }
+            : { key: "create", label: creating ? "Creating..." : "Create SOP Gap Report", icon: creating ? Loader2 : FileWarning, onClick: createGapReport, disabled: creating },
+          { key: "proposal", label: "Create SOP Proposal", icon: PlusCircle, onClick: () => router.push(`/proposals?new=1&title=${encodeURIComponent(`New SOP: ${queryText}`)}&summary=${encodeURIComponent(`SOP gap identified - no approved procedure currently covers: "${queryText}". ${outline.length > 0 ? "Draft outline available from retrieved external evidence." : ""}`)}&query=${encodeURIComponent(queryText)}`) },
+        ]}
+        secondary={[
+          { key: "evidence-watch", label: "Add to Evidence Watch", icon: Eye, onClick: () => logClientAction("evidence_watchlist_added", "Added to Evidence Watch") },
+          { key: "dept-review", label: "Request Department Review", icon: Users, onClick: () => logClientAction("department_review_requested", "Department review requested") },
+        ]}
+      />
     </div>
   )
 }

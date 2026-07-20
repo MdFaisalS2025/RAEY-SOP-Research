@@ -428,4 +428,51 @@ class CAPAResponse(BaseModel):
     updated_at: Optional[datetime] = None
     closed_at: Optional[datetime] = None
 
+
+# ── Exceptions (in-the-moment SOP deviations) ───────────────────
+
+class ExceptionCreate(BaseModel):
+    sop_id: str = ""
+    sop_title: str = ""
+    reported_by: str = ""
+    reporter_role: str = ""
+    department: str = ""
+    date_of_deviation: Optional[datetime] = None
+    deviation_type: str = "other"
+    description: str = ""
+    immediate_action_taken: str = ""
+    patient_harm: bool = False
+    severity: str = "medium"  # low | medium | high | critical
+
+
+class ExceptionUpdate(BaseModel):
+    status: Optional[str] = None  # open | under_review | resolved | escalated
+    reviewed_by: Optional[str] = None
+    resolution: Optional[str] = None
+    sop_update_required: Optional[bool] = None
+    follow_up_required: Optional[str] = None
+
+
+class ExceptionResponse(BaseModel):
+    id: int
+    sop_id: str = ""
+    sop_title: str = ""
+    reported_by: str = ""
+    reporter_role: str = ""
+    department: str = ""
+    date_reported: Optional[datetime] = None
+    date_of_deviation: Optional[datetime] = None
+    deviation_type: str = "other"
+    description: str = ""
+    immediate_action_taken: str = ""
+    patient_harm: bool = False
+    severity: str = "medium"
+    status: str = "open"
+    reviewed_by: Optional[str] = None
+    resolution: Optional[str] = None
+    sop_update_required: bool = False
+    follow_up_required: Optional[str] = None
+
+    model_config = {"from_attributes": True}
+
     model_config = {"from_attributes": True}

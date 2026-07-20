@@ -74,7 +74,7 @@ async def init_db() -> None:
             AcknowledgmentRecord, QueryLogRecord,
             ChatSessionRecord, ChatMessageRecord, NotificationRecord,
             OverrideRecord, CreditRecord,
-            IncidentRecord, CAPARecord,
+            IncidentRecord, CAPARecord, ExceptionRecord,
             SOPVersionRecord, SOPGapReportRecord,
             EvalSnapshotRecord,
         )

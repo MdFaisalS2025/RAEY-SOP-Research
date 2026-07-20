@@ -402,6 +402,33 @@ class CAPARecord(Base):
     incident = relationship("IncidentRecord", back_populates="capas")
 
 
+class ExceptionRecord(Base):
+    """A documented, in-the-moment deviation from an approved SOP (as
+    opposed to an Incident, which is reported after the fact) - e.g. a
+    protocol step skipped for a patient-specific or equipment-availability
+    reason, logged for compliance review."""
+    __tablename__ = "exception_records"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    sop_id = Column(String(64), default="")
+    sop_title = Column(String(512), default="")
+    reported_by = Column(String(256), default="")
+    reporter_role = Column(String(64), default="")
+    department = Column(String(128), default="")
+    date_reported = Column(DateTime, default=_utcnow)
+    date_of_deviation = Column(DateTime, nullable=True)
+    deviation_type = Column(String(64), default="other")
+    description = Column(Text, default="")
+    immediate_action_taken = Column(Text, default="")
+    patient_harm = Column(Boolean, default=False)
+    severity = Column(String(32), default="medium")  # low | medium | high | critical
+    status = Column(String(32), default="open")  # open | under_review | resolved | escalated
+    reviewed_by = Column(String(256), nullable=True)
+    resolution = Column(Text, nullable=True)
+    sop_update_required = Column(Boolean, default=False)
+    follow_up_required = Column(Text, nullable=True)
+
+
 # ── SOP version history & gap reporting ────────────────────────
 
 

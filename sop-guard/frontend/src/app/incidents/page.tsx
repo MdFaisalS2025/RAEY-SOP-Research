@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, type FormEvent } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   AlertTriangle, CheckCircle, XCircle, Clock, Shield, User, Calendar, ClipboardList,
@@ -12,7 +12,6 @@ import { SafetyNote } from "@/components/ui/safety-note"
 import { cn } from "@/lib/utils"
 import { MOCK_SOPS } from "@/lib/mock-data"
 import { useRole } from "@/lib/role-context"
-import type { ExceptionReport } from "@/lib/governance-types"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
 
@@ -767,79 +766,34 @@ function IncidentsTab() {
   )
 }
 
-// ─── Exceptions: inline data ──────────────────────────────────────────────────
+// ─── Exceptions: real backend shape (app/api/routes_exceptions.py) ───────────
 
-const MOCK_EXCEPTIONS: ExceptionReport[] = [
-  {
-    id: "exc-001",
-    sop_id: "IC-PPE-001",
-    sop_title: "High-Risk Respiratory Isolation + PPE Protocol",
-    reported_by: "James O'Brien RN",
-    reporter_role: "clinical_staff",
-    department: "ICU",
-    date_reported: "2026-06-28T09:15:00",
-    date_of_deviation: "2026-06-28T08:30:00",
-    deviation_type: "equipment_unavailable",
-    description:
-      "N95 respirators were out of stock in the ICU supply room. Surgical mask used instead for isolation patient pending restock.",
-    immediate_action_taken:
-      "Notified charge nurse, patient placed in negative pressure room, surgical mask + face shield used as interim measure",
-    patient_harm: false,
-    severity: "high",
-    status: "under_review",
-    reviewed_by: null,
-    resolution: null,
-    sop_update_required: true,
-    follow_up_required:
-      "Review PPE stockpiling protocol. Consider minimum reorder triggers.",
-  },
-  {
-    id: "exc-002",
-    sop_id: "ICU-SEP-002",
-    sop_title: "Sepsis Early Recognition and 1-Hour Bundle",
-    reported_by: "Dr. Sarah Mitchell",
-    reporter_role: "clinical_staff",
-    department: "Emergency",
-    date_reported: "2026-06-25T14:30:00",
-    date_of_deviation: "2026-06-25T13:45:00",
-    deviation_type: "patient_specific_contraindication",
-    description:
-      "Blood cultures could not be drawn within 1 hour due to patient having active bleeding and coagulopathy. Antibiotics given per protocol but culture timing deviated.",
-    immediate_action_taken:
-      "Documented in chart. Hematology consulted. Cultures obtained after bleeding controlled at 2h 15min.",
-    patient_harm: false,
-    severity: "medium",
-    status: "resolved",
-    reviewed_by: "Dr. Ahmed Al-Rashid",
-    resolution:
-      "Accepted clinical deviation. No SOP update required - existing exceptions clause covers coagulopathy patients.",
-    sop_update_required: false,
-    follow_up_required: null,
-  },
-  {
-    id: "exc-003",
-    sop_id: "PHARM-MED-007",
-    sop_title: "High-Alert Medication Double-Check Protocol",
-    reported_by: "Emily Chen RN",
-    reporter_role: "clinical_staff",
-    department: "Oncology",
-    date_reported: "2026-06-20T10:00:00",
-    date_of_deviation: "2026-06-20T09:30:00",
-    deviation_type: "staffing_constraint",
-    description:
-      "Double-check for insulin drip not performed due to single-nurse coverage during night shift. Second nurse called but in emergency with another patient.",
-    immediate_action_taken:
-      "Dose verified by charge nurse telephonically. Patient monitored q30min. No adverse event.",
-    patient_harm: false,
-    severity: "critical",
-    status: "open",
-    reviewed_by: null,
-    resolution: null,
-    sop_update_required: true,
-    follow_up_required:
-      "Staffing review required. Consider minimum 2-RN coverage for high-alert medication units.",
-  },
-]
+interface ExceptionReport {
+  id: number
+  sop_id: string
+  sop_title: string
+  reported_by: string
+  reporter_role: string
+  department: string
+  date_reported: string | null
+  date_of_deviation: string | null
+  deviation_type:
+    | "equipment_unavailable"
+    | "patient_specific_contraindication"
+    | "staffing_constraint"
+    | "emergency_circumstance"
+    | "system_failure"
+    | "other"
+  description: string
+  immediate_action_taken: string
+  patient_harm: boolean
+  severity: string
+  status: "open" | "under_review" | "resolved" | "escalated"
+  reviewed_by: string | null
+  resolution: string | null
+  sop_update_required: boolean
+  follow_up_required: string | null
+}
 
 const EXC_SEVERITY_META: Record<string, { label: string; cls: string }> = {
   critical: { label: "Critical", cls: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30" },
@@ -864,7 +818,8 @@ const DEVIATION_LABELS: Record<string, string> = {
   other: "Other",
 }
 
-function fmt(dateStr: string) {
+function fmt(dateStr: string | null) {
+  if (!dateStr) return "-"
   return new Date(dateStr).toLocaleString("en-US", {
     month: "short",
     day: "numeric",
@@ -874,10 +829,36 @@ function fmt(dateStr: string) {
   })
 }
 
-function ExceptionCard({ exc }: { exc: ExceptionReport }) {
+function ExceptionCard({
+  exc,
+  onUpdate,
+}: {
+  exc: ExceptionReport
+  onUpdate: (id: number, patch: Partial<ExceptionReport>) => void
+}) {
   const [expanded, setExpanded] = useState(false)
-  const { role } = useRole()
+  const [saving, setSaving] = useState<"review" | "resolve" | "flag" | null>(null)
+  const { role, currentUser } = useRole()
   const canReview = role === "governance_compliance" || role === "system_admin"
+
+  async function putUpdate(action: "review" | "resolve" | "flag", body: Record<string, unknown>) {
+    setSaving(action)
+    try {
+      const res = await fetch(`${API_BASE}/api/exceptions/${exc.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      })
+      if (res.ok) {
+        const updated = await res.json()
+        onUpdate(exc.id, updated)
+      }
+    } catch {
+      // network error - leave state unchanged, button re-enables
+    } finally {
+      setSaving(null)
+    }
+  }
 
   const sev = EXC_SEVERITY_META[exc.severity] ?? EXC_SEVERITY_META.medium
   const st = EXC_STATUS_META[exc.status] ?? EXC_STATUS_META.open
@@ -979,19 +960,31 @@ function ExceptionCard({ exc }: { exc: ExceptionReport }) {
                 </div>
               )}
               <div className="flex flex-wrap gap-2 pt-1">
-                {canReview && exc.status !== "resolved" && (
-                  <button className="text-xs px-3 py-1.5 rounded-lg bg-[#0B6BCB]/10 text-[#0B6BCB] hover:bg-[#0B6BCB]/20 transition-colors font-medium border border-[#0B6BCB]/30">
-                    Review
+                {canReview && exc.status === "open" && (
+                  <button
+                    disabled={saving !== null}
+                    onClick={() => putUpdate("review", { status: "under_review", reviewed_by: currentUser.name })}
+                    className="text-xs px-3 py-1.5 rounded-lg bg-[#0B6BCB]/10 text-[#0B6BCB] hover:bg-[#0B6BCB]/20 transition-colors font-medium border border-[#0B6BCB]/30 disabled:opacity-50"
+                  >
+                    {saving === "review" ? "Saving..." : "Review"}
                   </button>
                 )}
                 {exc.status !== "resolved" && (
-                  <button className="text-xs px-3 py-1.5 rounded-lg bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 hover:bg-[#DCFCE7] dark:bg-green-500/10 transition-colors font-medium border border-[#BBF7D0] dark:border-green-500/30">
-                    Mark Resolved
+                  <button
+                    disabled={saving !== null}
+                    onClick={() => putUpdate("resolve", { status: "resolved", reviewed_by: currentUser.name })}
+                    className="text-xs px-3 py-1.5 rounded-lg bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 hover:bg-[#DCFCE7] dark:bg-green-500/10 transition-colors font-medium border border-[#BBF7D0] dark:border-green-500/30 disabled:opacity-50"
+                  >
+                    {saving === "resolve" ? "Saving..." : "Mark Resolved"}
                   </button>
                 )}
                 {!exc.sop_update_required && exc.status !== "resolved" && (
-                  <button className="text-xs px-3 py-1.5 rounded-lg bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 hover:bg-[#FDE68A] transition-colors font-medium border border-[#FDE68A] dark:border-amber-500/30">
-                    Flag for SOP Update
+                  <button
+                    disabled={saving !== null}
+                    onClick={() => putUpdate("flag", { sop_update_required: true })}
+                    className="text-xs px-3 py-1.5 rounded-lg bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 hover:bg-[#FDE68A] transition-colors font-medium border border-[#FDE68A] dark:border-amber-500/30 disabled:opacity-50"
+                  >
+                    {saving === "flag" ? "Saving..." : "Flag for SOP Update"}
                   </button>
                 )}
               </div>
@@ -1003,8 +996,25 @@ function ExceptionCard({ exc }: { exc: ExceptionReport }) {
   )
 }
 
-function SubmitForm({ onClose }: { onClose: () => void }) {
+function SubmitForm({ onClose, onCreated }: { onClose: () => void; onCreated: (exc: ExceptionReport) => void }) {
+  const { currentUser } = useRole()
   const [submitted, setSubmitted] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [form, setForm] = useState({
+    sop_id: "",
+    department: "",
+    date_of_deviation: "",
+    deviation_type: "",
+    patient_harm: "",
+    severity: "",
+    description: "",
+    immediate_action_taken: "",
+  })
+
+  function set<K extends keyof typeof form>(key: K, value: string) {
+    setForm((prev) => ({ ...prev, [key]: value }))
+  }
 
   if (submitted) {
     return (
@@ -1019,17 +1029,58 @@ function SubmitForm({ onClose }: { onClose: () => void }) {
     )
   }
 
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault()
+    setSubmitting(true)
+    setError(null)
+    try {
+      const res = await fetch(`${API_BASE}/api/exceptions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sop_id: form.sop_id,
+          reported_by: currentUser.name,
+          reporter_role: currentUser.role,
+          department: form.department,
+          date_of_deviation: form.date_of_deviation ? new Date(form.date_of_deviation).toISOString() : null,
+          deviation_type: form.deviation_type || "other",
+          description: form.description,
+          immediate_action_taken: form.immediate_action_taken,
+          patient_harm: form.patient_harm === "yes",
+          severity: form.severity || "medium",
+        }),
+      })
+      if (!res.ok) throw new Error("Submission failed")
+      const created = await res.json()
+      onCreated(created)
+      setSubmitted(true)
+    } catch {
+      setError("Could not submit the report - check your connection and try again.")
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   return (
-    <form
-      className="space-y-4"
-      onSubmit={(e) => { e.preventDefault(); setSubmitted(true) }}
-    >
+    <form className="space-y-4" onSubmit={handleSubmit}>
       <div className="grid md:grid-cols-2 gap-4">
         <div>
           <label className="text-xs text-muted-foreground block mb-1">SOP Affected</label>
           <input
             required
+            value={form.sop_id}
+            onChange={(e) => set("sop_id", e.target.value)}
             placeholder="e.g. IC-PPE-001"
+            className="w-full rounded-lg bg-muted border border-border px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/60"
+          />
+        </div>
+        <div>
+          <label className="text-xs text-muted-foreground block mb-1">Department</label>
+          <input
+            required
+            value={form.department}
+            onChange={(e) => set("department", e.target.value)}
+            placeholder="e.g. ICU"
             className="w-full rounded-lg bg-muted border border-border px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/60"
           />
         </div>
@@ -1038,13 +1089,32 @@ function SubmitForm({ onClose }: { onClose: () => void }) {
           <input
             required
             type="datetime-local"
+            value={form.date_of_deviation}
+            onChange={(e) => set("date_of_deviation", e.target.value)}
             className="w-full rounded-lg bg-muted border border-border px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/60"
           />
+        </div>
+        <div>
+          <label className="text-xs text-muted-foreground block mb-1">Severity</label>
+          <select
+            required
+            value={form.severity}
+            onChange={(e) => set("severity", e.target.value)}
+            className="w-full rounded-lg bg-card border border-border px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/60"
+          >
+            <option value="">Select severity...</option>
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+            <option value="critical">Critical</option>
+          </select>
         </div>
         <div>
           <label className="text-xs text-muted-foreground block mb-1">Deviation Type</label>
           <select
             required
+            value={form.deviation_type}
+            onChange={(e) => set("deviation_type", e.target.value)}
             className="w-full rounded-lg bg-card border border-border px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/60"
           >
             <option value="">Select type...</option>
@@ -1060,6 +1130,8 @@ function SubmitForm({ onClose }: { onClose: () => void }) {
           <label className="text-xs text-muted-foreground block mb-1">Patient Harm?</label>
           <select
             required
+            value={form.patient_harm}
+            onChange={(e) => set("patient_harm", e.target.value)}
             className="w-full rounded-lg bg-card border border-border px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/60"
           >
             <option value="">Select...</option>
@@ -1073,6 +1145,8 @@ function SubmitForm({ onClose }: { onClose: () => void }) {
         <textarea
           required
           rows={3}
+          value={form.description}
+          onChange={(e) => set("description", e.target.value)}
           placeholder="Describe what happened and why the SOP could not be followed..."
           className="w-full rounded-lg bg-muted border border-border px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/60 resize-none"
         />
@@ -1082,16 +1156,20 @@ function SubmitForm({ onClose }: { onClose: () => void }) {
         <textarea
           required
           rows={2}
+          value={form.immediate_action_taken}
+          onChange={(e) => set("immediate_action_taken", e.target.value)}
           placeholder="Describe what was done to mitigate risk..."
           className="w-full rounded-lg bg-muted border border-border px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/60 resize-none"
         />
       </div>
+      {error && <p className="text-xs text-[#B91C1C] dark:text-red-400">{error}</p>}
       <div className="flex gap-3 pt-1">
         <button
           type="submit"
-          className="flex-1 py-2.5 rounded-xl bg-[#0B6BCB] hover:bg-[#0959AC] text-white text-sm font-semibold transition-colors"
+          disabled={submitting}
+          className="flex-1 py-2.5 rounded-xl bg-[#0B6BCB] hover:bg-[#0959AC] text-white text-sm font-semibold transition-colors disabled:opacity-50"
         >
-          Submit Exception Report
+          {submitting ? "Submitting..." : "Submit Exception Report"}
         </button>
         <button
           type="button"
@@ -1107,11 +1185,28 @@ function SubmitForm({ onClose }: { onClose: () => void }) {
 
 function ExceptionsTab() {
   const [showForm, setShowForm] = useState(false)
+  const [exceptions, setExceptions] = useState<ExceptionReport[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const open = MOCK_EXCEPTIONS.filter((e) => e.status === "open").length
-  const resolved = MOCK_EXCEPTIONS.filter((e) => e.status === "resolved").length
-  const critical = MOCK_EXCEPTIONS.filter((e) => e.severity === "critical").length
-  const underReview = MOCK_EXCEPTIONS.filter((e) => e.status === "under_review").length
+  function loadExceptions() {
+    setLoading(true)
+    fetch(`${API_BASE}/api/exceptions`)
+      .then((r) => r.json())
+      .then((data) => setExceptions(Array.isArray(data?.exceptions) ? data.exceptions : []))
+      .catch(() => setExceptions([]))
+      .finally(() => setLoading(false))
+  }
+
+  useEffect(() => { loadExceptions() }, [])
+
+  function handleUpdate(id: number, patch: Partial<ExceptionReport>) {
+    setExceptions((prev) => prev.map((e) => (e.id === id ? { ...e, ...patch } : e)))
+  }
+
+  const open = exceptions.filter((e) => e.status === "open").length
+  const resolved = exceptions.filter((e) => e.status === "resolved").length
+  const critical = exceptions.filter((e) => e.severity === "critical").length
+  const underReview = exceptions.filter((e) => e.status === "under_review").length
 
   const stats = [
     { label: "Open Reports", value: open, icon: XCircle, color: "text-[#B91C1C] dark:text-red-400", bg: "bg-[#FEE2E2] dark:bg-red-500/10" },
@@ -1151,18 +1246,28 @@ function ExceptionsTab() {
 
       <section>
         <h2 className="text-lg font-medium mb-3">Exception Reports</h2>
-        <div className="space-y-3">
-          {MOCK_EXCEPTIONS.map((exc, i) => (
-            <motion.div
-              key={exc.id}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.06 }}
-            >
-              <ExceptionCard exc={exc} />
-            </motion.div>
-          ))}
-        </div>
+        {loading ? (
+          <div className="flex items-center justify-center py-12 text-muted-foreground gap-2 text-sm">
+            <Loader2 className="w-4 h-4 animate-spin" /> Loading exception reports...
+          </div>
+        ) : exceptions.length === 0 ? (
+          <div className="rounded-2xl bg-card border border-border p-10 text-center text-sm text-muted-foreground">
+            No exception reports filed yet.
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {exceptions.map((exc, i) => (
+              <motion.div
+                key={exc.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.06 }}
+              >
+                <ExceptionCard exc={exc} onUpdate={handleUpdate} />
+              </motion.div>
+            ))}
+          </div>
+        )}
       </section>
 
       <div className="rounded-2xl bg-card border border-border p-5">
@@ -1190,7 +1295,10 @@ function ExceptionsTab() {
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <SubmitForm onClose={() => setShowForm(false)} />
+            <SubmitForm
+              onClose={() => setShowForm(false)}
+              onCreated={(exc) => setExceptions((prev) => [exc, ...prev])}
+            />
           </div>
         )}
       </div>

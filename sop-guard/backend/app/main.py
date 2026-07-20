@@ -15,7 +15,7 @@ from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.database.db import init_db, async_session
-from app.api import routes_query, routes_sops, routes_feedback, routes_voice, routes_evaluation, routes_activity, routes_evidence, routes_governance, routes_chat, routes_cds, routes_overrides, routes_credits, routes_analytics, routes_smart, routes_capa, routes_settings, routes_sop_versions, routes_comparison, routes_gap_reports, routes_privacy
+from app.api import routes_query, routes_sops, routes_feedback, routes_voice, routes_evaluation, routes_activity, routes_evidence, routes_governance, routes_chat, routes_cds, routes_overrides, routes_credits, routes_analytics, routes_smart, routes_capa, routes_exceptions, routes_settings, routes_sop_versions, routes_comparison, routes_gap_reports, routes_privacy
 
 
 async def _load_demo_data() -> None:
@@ -236,6 +236,59 @@ async def _seed_demo_incidents_if_empty(session) -> None:
     print(f"[Meridian] Seeded {len(demo_incidents)} demo incidents with CAPA records.")
 
 
+async def _seed_demo_exceptions_if_empty(session) -> None:
+    """Seed demo exception reports once, mirroring the exceptions the
+    frontend previously hardcoded as mock data - so /incidents (Exceptions
+    tab) shows the same illustrative scenarios, now backed by real
+    persisted rows instead of static JSON."""
+    from sqlalchemy import select, func
+    from app.models.models import ExceptionRecord
+
+    count = (await session.execute(select(func.count(ExceptionRecord.id)))).scalar() or 0
+    if count > 0:
+        return
+
+    demo_exceptions = [
+        {
+            "sop_id": "IC-PPE-001", "sop_title": "High-Risk Respiratory Isolation + PPE Protocol",
+            "reported_by": "James O'Brien RN", "reporter_role": "clinical_staff", "department": "ICU",
+            "deviation_type": "equipment_unavailable",
+            "description": "N95 respirators were out of stock in the ICU supply room. Surgical mask used instead for isolation patient pending restock.",
+            "immediate_action_taken": "Notified charge nurse, patient placed in negative pressure room, surgical mask + face shield used as interim measure.",
+            "patient_harm": False, "severity": "high", "status": "under_review",
+            "sop_update_required": True,
+            "follow_up_required": "Review PPE stockpiling protocol. Consider minimum reorder triggers.",
+        },
+        {
+            "sop_id": "ICU-SEP-002", "sop_title": "Sepsis Early Recognition and 1-Hour Bundle",
+            "reported_by": "Dr. Sarah Mitchell", "reporter_role": "clinical_staff", "department": "Emergency",
+            "deviation_type": "patient_specific_contraindication",
+            "description": "Blood cultures could not be drawn within 1 hour due to patient having active bleeding and coagulopathy. Antibiotics given per protocol but culture timing deviated.",
+            "immediate_action_taken": "Documented in chart. Hematology consulted. Cultures obtained after bleeding controlled at 2h 15min.",
+            "patient_harm": False, "severity": "medium", "status": "resolved",
+            "reviewed_by": "Dr. Ahmed Al-Rashid",
+            "resolution": "Accepted clinical deviation. No SOP update required - existing exceptions clause covers coagulopathy patients.",
+            "sop_update_required": False,
+        },
+        {
+            "sop_id": "PHARM-MED-007", "sop_title": "High-Alert Medication Double-Check Protocol",
+            "reported_by": "Emily Chen RN", "reporter_role": "clinical_staff", "department": "Oncology",
+            "deviation_type": "staffing_constraint",
+            "description": "Double-check for insulin drip not performed due to single-nurse coverage during night shift. Second nurse called but in emergency with another patient.",
+            "immediate_action_taken": "Dose verified by charge nurse telephonically. Patient monitored q30min. No adverse event.",
+            "patient_harm": False, "severity": "critical", "status": "open",
+            "sop_update_required": True,
+            "follow_up_required": "Staffing review required. Consider minimum 2-RN coverage for high-alert medication units.",
+        },
+    ]
+
+    for data in demo_exceptions:
+        session.add(ExceptionRecord(**data))
+
+    await session.commit()
+    print(f"[Meridian] Seeded {len(demo_exceptions)} demo exception reports.")
+
+
 async def _seed_sop_versions_if_empty(session) -> None:
     """Seed the Sepsis Management Protocol's 4-version history once. Also
     backfills SOP-ICU-001.version to "2.1" on already-populated dev
@@ -276,6 +329,11 @@ async def lifespan(app: FastAPI):
             await _seed_demo_incidents_if_empty(session)
     except Exception as e:
         print(f"[Meridian] Warning: incident seed skipped: {e}")
+    try:
+        async with async_session() as session:
+            await _seed_demo_exceptions_if_empty(session)
+    except Exception as e:
+        print(f"[Meridian] Warning: exception seed skipped: {e}")
     try:
         async with async_session() as session:
             await _seed_sop_versions_if_empty(session)
@@ -333,6 +391,7 @@ app.include_router(routes_credits.router)
 app.include_router(routes_analytics.router)
 app.include_router(routes_smart.router)
 app.include_router(routes_capa.router)
+app.include_router(routes_exceptions.router)
 app.include_router(routes_settings.router)
 app.include_router(routes_sop_versions.router)
 app.include_router(routes_comparison.router)

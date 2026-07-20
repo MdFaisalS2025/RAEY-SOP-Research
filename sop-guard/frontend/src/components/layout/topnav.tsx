@@ -60,38 +60,40 @@ type NavGroup = {
   items: NavItem[]
 }
 
-// Direct links always visible on desktop
+// Direct links always visible on desktop. Ask Meridian leads (it's the
+// primary clinical workflow this whole product exists for) and gets a
+// persistent filled treatment below, not just an active-state highlight -
+// Dashboard stays a normal nav item.
 const DIRECT_LINKS: NavItem[] = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/query", label: "Ask Meridian", icon: MessageSquare },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
 ]
 
+// Reorganized from 5 heavy enterprise-sounding groups down to 4 calmer
+// ones - every route below already existed and stays role-gated exactly
+// as before; this only changes how they're grouped/labeled, nothing is
+// removed or made unreachable.
 const NAV_GROUPS: NavGroup[] = [
   {
-    label: "Clinical",
+    label: "Protocols",
     items: [
       { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
       { href: "/query", label: "Ask Meridian", icon: MessageSquare },
       { href: "/library", label: "SOP Library", icon: BookOpen },
       { href: "/quick-ref", label: "Quick Reference", icon: BookMarked },
+      { href: "/evidence-watch", label: "Evidence Watch", icon: FlaskConical, roles: ["governance_compliance", "system_admin"] },
+      { href: "/training", label: "Training", icon: GraduationCap },
     ],
   },
   {
     label: "Governance",
     items: [
-      { href: "/evidence-watch", label: "Evidence Watch", icon: FlaskConical, roles: ["governance_compliance", "system_admin"] },
       { href: "/proposals", label: "Proposals", icon: GitBranch, roles: ["governance_compliance", "system_admin"] },
       { href: "/committee", label: "Committee", icon: Users, roles: ["governance_compliance", "system_admin"] },
       { href: "/conflict-resolution", label: "Conflicts & Impact", icon: AlertTriangle, roles: ["governance_compliance", "system_admin"] },
-    ],
-  },
-  {
-    label: "Compliance",
-    items: [
       { href: "/compliance", label: "Compliance", icon: ShieldCheck, roles: ["educator", "governance_compliance", "system_admin"] },
-      { href: "/training", label: "Training", icon: GraduationCap },
-      { href: "/legal", label: "Legal & Risk", icon: Scale, roles: ["governance_compliance", "system_admin"] },
       { href: "/audit", label: "Audit", icon: ClipboardList, roles: ["governance_compliance", "system_admin"] },
+      { href: "/legal", label: "Legal & Risk", icon: Scale, roles: ["governance_compliance", "system_admin"] },
       { href: "/regulatory", label: "Regulatory & Accreditation", icon: Landmark, roles: ["governance_compliance", "system_admin"] },
     ],
   },
@@ -107,7 +109,7 @@ const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    label: "System",
+    label: "Admin",
     items: [
       { href: "/evaluation", label: "AI Evaluation", icon: Gauge, roles: ["system_admin"] },
       { href: "/feedback", label: "Usage & Feedback", icon: Inbox, roles: ["governance_compliance", "system_admin"] },
@@ -451,6 +453,7 @@ export function TopNav() {
             <div ref={groupNavRef} className="flex items-center gap-0.5">
               {DIRECT_LINKS.map((item) => {
                 const active = isActiveLink(item.href)
+                const isPrimary = item.href === "/query"
                 return (
                   <Link
                     key={item.href}
@@ -460,14 +463,16 @@ export function TopNav() {
                     className={cn(
                       "relative flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-[13px] font-medium whitespace-nowrap transition-all duration-200",
                       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0B6BCB]/50 dark:focus-visible:ring-[#00E5FF]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                      active
+                      isPrimary
+                        ? "bg-[#0B6BCB] dark:bg-[#00E5FF] text-white dark:text-[#0A0C10] hover:bg-[#0959AC] dark:hover:bg-[#00c4d9]"
+                        : active
                         ? "bg-[#0B6BCB]/10 text-[#0B6BCB] dark:text-[#00E5FF] dark:glow-cyan"
                         : "text-[#64748B] dark:text-slate-400 hover:text-foreground dark:hover:text-white hover:bg-muted dark:hover:bg-white/5"
                     )}
                   >
                     <item.icon className="w-4 h-4 shrink-0" />
                     <span className="hidden xl:inline">{item.label}</span>
-                    {active && (
+                    {active && !isPrimary && (
                       <div className="absolute left-2 right-2 -bottom-[1px] h-[2px] rounded-full bg-[#0B6BCB] dark:bg-[#00E5FF]" />
                     )}
                   </Link>

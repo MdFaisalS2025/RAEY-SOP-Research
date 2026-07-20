@@ -9,6 +9,7 @@ import {
 import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { cn } from "@/lib/utils"
+import { useRole } from "@/lib/role-context"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -396,14 +397,14 @@ function compareFreeText(freeText: string, correctLabel: string): { matched: str
 }
 
 // Best-effort, fire-and-forget credit award. Never blocks the UI and ignores failures.
-function awardScenarioCredits(activityTitle: string) {
+function awardScenarioCredits(userId: string, userName: string, activityTitle: string) {
   try {
     fetch("/api/credits", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        user_id: "demo-user",
-        user_name: "Demo User",
+        user_id: userId,
+        user_name: userName,
         activity_type: "scenario_completed",
         activity_title: activityTitle,
         credits: 0.5,
@@ -417,6 +418,7 @@ function awardScenarioCredits(activityTitle: string) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ScenariosPage() {
+  const { currentUser } = useRole()
   const [active, setActive] = useState<Scenario | null>(null)
   const [stepIdx, setStepIdx] = useState(0)
   const [picks, setPicks] = useState<number[]>([])
@@ -476,7 +478,7 @@ export default function ScenariosPage() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
       setBestScores(updated)
       setFinished(true)
-      awardScenarioCredits(active.title)
+      awardScenarioCredits(currentUser.id, currentUser.name, active.title)
     } else {
       setStepIdx(stepIdx + 1)
       setRevealed(practiceMode !== "blind" ? true : false)

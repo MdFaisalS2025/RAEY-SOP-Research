@@ -92,6 +92,11 @@ export default function LegalPage() {
           </span>
         </div>
 
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 text-sm">
+          <AlertTriangle className="w-4 h-4 shrink-0" />
+          <span>Showing illustrative legal-review data; not wired to a live case-tracking system.</span>
+        </div>
+
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {stats.map((s, i) => (

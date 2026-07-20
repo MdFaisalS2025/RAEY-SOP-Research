@@ -9,7 +9,6 @@ import Link from "next/link"
 import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { SafetyNote } from "@/components/ui/safety-note"
-import { cn } from "@/lib/utils"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
 
@@ -35,21 +34,6 @@ interface RealSOP {
   structured_json?: StructuredJson
 }
 
-// ─── QR placeholder ──────────────────────────────────────────────────────────
-
-function QRPlaceholder({ sopId }: { sopId: string }) {
-  return (
-    <div className="w-14 h-14 rounded-lg bg-muted border border-border flex flex-col items-center justify-center shrink-0">
-      <div className="grid grid-cols-3 gap-0.5">
-        {Array.from({ length: 9 }).map((_, i) => (
-          <div key={i} className={cn("w-2.5 h-2.5 rounded-[1px]", Math.random() > 0.4 ? "bg-[#94A3B8]" : "bg-transparent")} />
-        ))}
-      </div>
-      <p className="text-[8px] text-muted-foreground mt-1">QR</p>
-    </div>
-  )
-}
-
 // ─── Quick ref card ───────────────────────────────────────────────────────────
 
 function QuickRefCard({ sop, index }: { sop: RealSOP; index: number }) {
@@ -70,13 +54,10 @@ function QuickRefCard({ sop, index }: { sop: RealSOP; index: number }) {
       transition={{ delay: index * 0.05 }}
       className="rounded-2xl bg-card border border-border shadow-sm p-5 flex flex-col gap-3 print:break-inside-avoid print:shadow-none"
     >
-      <div className="flex items-start gap-3">
-        <QRPlaceholder sopId={sop.sop_id} />
-        <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-mono text-muted-foreground">{sop.sop_id} - v{sop.version}</p>
-          <h3 className="text-sm font-semibold leading-tight mt-0.5">{sop.title}</h3>
-          <p className="text-[10px] text-muted-foreground mt-0.5">{sop.department} - Effective {sop.effective_date}</p>
-        </div>
+      <div>
+        <p className="text-[10px] font-mono text-muted-foreground">{sop.sop_id} - v{sop.version}</p>
+        <h3 className="text-sm font-semibold leading-tight mt-0.5">{sop.title}</h3>
+        <p className="text-[10px] text-muted-foreground mt-0.5">{sop.department} - Effective {sop.effective_date}</p>
       </div>
 
       <ul className="space-y-1.5">
@@ -235,9 +216,7 @@ export default function QuickRefPage() {
 
         <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-muted border border-border text-xs text-muted-foreground print:hidden">
           <Printer className="w-3.5 h-3.5 shrink-0" />
-          <span>
-            Print All exports index-card format. Production: QR codes link to the full SOP.
-          </span>
+          <span>Print All exports index-card format.</span>
         </div>
       </div>
 

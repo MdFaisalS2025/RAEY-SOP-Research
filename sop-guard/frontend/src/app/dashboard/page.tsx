@@ -40,6 +40,7 @@ import {
   DEMO_USERS,
 } from "@/lib/mock-data"
 import { cn } from "@/lib/utils"
+import { downloadCSV } from "@/lib/csv-export"
 import type { RiskLevel, SOPStatus, ProposalStatus } from "@/lib/governance-types"
 import Link from "next/link"
 
@@ -651,9 +652,27 @@ function ComplianceOfficerDashboard() {
 
       {/* Compliance Heatmap */}
       <div className="space-y-3">
-        <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
-          Compliance Heatmap
-        </h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
+            Compliance Heatmap
+          </h3>
+          <button
+            onClick={() => downloadCSV(`compliance-heatmap-${new Date().toISOString().slice(0, 10)}.csv`, MOCK_COMPLIANCE.map((c) => ({
+              department: c.department,
+              total_sops: c.total_sops,
+              acknowledged: c.acknowledged,
+              overdue_acknowledgments: c.overdue_acknowledgments,
+              overdue_reviews: c.overdue_reviews,
+              training_completion_rate: c.training_completion_rate,
+              compliance_score: c.compliance_score,
+              risk_flags: c.risk_flags,
+            })))}
+            className="flex items-center gap-2 px-3 py-1.5 bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 text-[#0B6BCB] rounded-lg text-[12px] font-semibold hover:bg-[#0B6BCB]/25 transition-colors"
+          >
+            <Download className="w-3.5 h-3.5" />
+            Export Report
+          </button>
+        </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {MOCK_COMPLIANCE.map((c) => (
             <div
@@ -689,12 +708,6 @@ function ComplianceOfficerDashboard() {
         </div>
       </div>
 
-      <div className="flex">
-        <button className="flex items-center gap-2 px-4 py-2 bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 text-[#0B6BCB] rounded-lg text-[13px] font-semibold hover:bg-[#0B6BCB]/25 transition-colors">
-          <Download className="w-4 h-4" />
-          Export Report
-        </button>
-      </div>
     </div>
   )
 }

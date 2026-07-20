@@ -129,7 +129,7 @@ const demoTrace = [
 function MetricCard({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="p-4 rounded-xl bg-muted/30 dark:bg-white/[0.03] border border-border dark:border-white/[0.06] text-center">
-      <p className="text-2xl font-bold text-[#0B6BCB] dark:text-[0B6BCB]">{value}</p>
+      <p className="text-2xl font-bold text-[#0B6BCB] dark:text-[#0B6BCB]">{value}</p>
       <p className="text-xs text-muted-foreground mt-1">{label}</p>
     </div>
   )
@@ -177,10 +177,9 @@ export default function ArchitecturePage() {
     <AppShell>
       <div className="p-6 max-w-5xl mx-auto space-y-8">
         {metrics && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
             <MetricCard label="SOPs Indexed" value={metrics.dataset?.total_sops || 0} />
             <MetricCard label="Chunk Types" value={metrics.capabilities?.typed_chunks?.length || 7} />
-            <MetricCard label="Synonym Groups" value="28" />
             <MetricCard label="Adversarial Tests" value={metrics.dataset?.adversarial_tests || 17} />
           </div>
         )}

@@ -107,7 +107,7 @@ export default function CDSDemoPage() {
   return (
     <AppShell>
       <div className="p-6 max-w-6xl mx-auto space-y-6">
-        <Breadcrumb items={[{ label: "EMR Integration" }]} />
+        <Breadcrumb items={[{ label: "EMR Integration (Demo)" }]} />
 
         {/* Header */}
         <div className="flex items-center gap-3">

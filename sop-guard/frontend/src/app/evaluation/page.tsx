@@ -271,8 +271,8 @@ export default function EvaluationPage() {
         {/* ── Header ── */}
         <motion.div {...fade(0)}>
           <div className="flex flex-wrap items-start gap-3 mb-2">
-            <div className="w-11 h-11 rounded-2xl bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 flex items-center justify-center shrink-0">
-              <FlaskConical className="w-5 h-5 text-[#0B6BCB]" />
+            <div className="w-12 h-12 rounded-2xl bg-[#0B6BCB]/10 flex items-center justify-center shrink-0">
+              <FlaskConical className="w-6 h-6 text-[#0B6BCB]" />
             </div>
             <div className="flex-1 min-w-0">
               <h1 className="text-2xl font-bold font-display text-foreground">Research Evaluation Dashboard</h1>

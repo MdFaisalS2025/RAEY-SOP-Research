@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils"
 import { useRole } from "@/lib/role-context"
 import { COMMITTEE_ROSTER } from "@/lib/mock-data"
 import { AccessRestricted } from "@/components/ui/access-restricted"
+import { priorityBadge, statusBadge } from "@/components/proposals/badges"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
 
@@ -209,25 +210,6 @@ interface Proposal {
   tally: { approve: number; reject: number; abstain: number; request_changes: number; total: number }
   quorum: { threshold: number; committee_size: number; votes_cast: number; reached: boolean; decision: string }
   votes: { id: number; user_id: string; user_name: string; vote: string; notes: string; created_at: string }[]
-}
-
-function priorityBadge(priority: string) {
-  const map: Record<string, string> = {
-    urgent: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30",
-    high: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30",
-    normal: "bg-card text-muted-foreground border border-input",
-    low: "bg-card text-muted-foreground border border-input",
-  }
-  return map[priority] ?? map.normal
-}
-
-function statusBadge(status: Proposal["status"]) {
-  const map: Record<string, { cls: string; label: string }> = {
-    open: { cls: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30", label: "Open" },
-    approved: { cls: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30", label: "Approved" },
-    rejected: { cls: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30", label: "Rejected" },
-  }
-  return map[status] ?? { cls: "bg-muted text-muted-foreground", label: status }
 }
 
 function QuorumIndicator({ proposal }: { proposal: Proposal }) {

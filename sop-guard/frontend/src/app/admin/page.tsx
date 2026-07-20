@@ -89,8 +89,8 @@ export default function AdminPage() {
 
         {/* Header */}
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-card flex items-center justify-center">
-            <Settings className="w-6 h-6 text-muted-foreground" />
+          <div className="w-12 h-12 rounded-2xl bg-[#0B6BCB]/10 flex items-center justify-center">
+            <Settings className="w-6 h-6 text-[#0B6BCB]" />
           </div>
           <div>
             <h1 className="text-2xl font-bold font-display">System Administration</h1>

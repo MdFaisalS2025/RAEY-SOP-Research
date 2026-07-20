@@ -13,6 +13,7 @@ import { SafetyNote } from "@/components/ui/safety-note"
 import { cn } from "@/lib/utils"
 import { useRole } from "@/lib/role-context"
 import { AccessRestricted } from "@/components/ui/access-restricted"
+import { priorityBadge, statusBadge as statusBadgeInfo } from "@/components/proposals/badges"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
 
@@ -36,25 +37,6 @@ interface Proposal {
 }
 
 type ProposalFilter = "all" | "open" | "approved" | "rejected"
-
-function priorityBadge(priority: string) {
-  const map: Record<string, string> = {
-    urgent: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30",
-    high: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30",
-    normal: "bg-card text-muted-foreground border border-input",
-    low: "bg-card text-muted-foreground border border-input",
-  }
-  return map[priority] ?? map.normal
-}
-
-function statusBadgeInfo(status: Proposal["status"]) {
-  const map: Record<string, { cls: string; label: string }> = {
-    open: { cls: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30", label: "Open - Awaiting Votes" },
-    approved: { cls: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30", label: "Approved" },
-    rejected: { cls: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30", label: "Rejected" },
-  }
-  return map[status] ?? { cls: "bg-muted text-muted-foreground", label: status }
-}
 
 const FILTER_TABS: { value: ProposalFilter; label: string }[] = [
   { value: "all", label: "All" },

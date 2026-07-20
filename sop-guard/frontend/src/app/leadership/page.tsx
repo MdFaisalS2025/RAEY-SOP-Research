@@ -144,8 +144,8 @@ export default function LeadershipPage() {
       <AppShell>
       <div className="px-4 md:px-6 lg:px-8 py-6">
         <div className="max-w-2xl mx-auto mt-16">
-          <div className="bg-card border border-border shadow-sm rounded-xl p-8 text-center space-y-3">
-            <div className="w-12 h-12 rounded-xl bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 flex items-center justify-center mx-auto">
+          <div className="bg-card border border-border rounded-2xl p-8 text-center space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-[#0B6BCB]/10 flex items-center justify-center mx-auto">
               <ShieldCheck className="w-6 h-6 text-[#0B6BCB]" />
             </div>
             <h1 className="text-xl font-semibold font-display text-foreground">Leadership Overview</h1>
@@ -176,9 +176,14 @@ export default function LeadershipPage() {
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
         <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div>
-            <h1 className="text-2xl font-semibold font-display text-foreground mb-1">Leadership Overview</h1>
-            <p className="text-[13px] text-subtle">Governance and safety posture for executive review</p>
+          <div className="flex items-start gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-[#0B6BCB]/10 flex items-center justify-center shrink-0">
+              <ShieldCheck className="w-6 h-6 text-[#0B6BCB]" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-semibold font-display text-foreground mb-1">Leadership Overview</h1>
+              <p className="text-[13px] text-subtle">Governance and safety posture for executive review</p>
+            </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-[11px] text-subtle">{today}</span>
@@ -192,7 +197,7 @@ export default function LeadershipPage() {
         {/* Section 1: Board Scorecard */}
         <section className="space-y-3">
           <SectionHeading title="Board Scorecard" subtitle="Seven key indicators tracked against target for the current quarter" />
-          <div className="bg-card border border-border shadow-sm rounded-xl overflow-hidden">
+          <div className="bg-card border border-border rounded-2xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-[12px] min-w-[760px]">
                 <thead>
@@ -256,7 +261,7 @@ export default function LeadershipPage() {
                 key={item.title}
                 href={item.href}
                 className={cn(
-                  "block bg-card border border-border shadow-sm rounded-xl p-4 border-l-4 hover:bg-[#F8FAFC] transition-colors group",
+                  "block bg-card border border-border rounded-2xl p-4 border-l-4 hover:bg-[#F8FAFC] transition-colors group",
                   item.severity === "red" ? "border-l-[#B91C1C]" : "border-l-[#B45309]"
                 )}
               >
@@ -283,7 +288,7 @@ export default function LeadershipPage() {
         <section className="space-y-3">
           <SectionHeading title="Evidence Freshness" subtitle="How current is the guidance underpinning active SOPs" />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            <div className="bg-card border border-border shadow-sm rounded-xl p-5 space-y-4">
+            <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 flex items-center justify-center shrink-0">
                   <FlaskConical className="w-5 h-5 text-[#0B6BCB]" />
@@ -338,7 +343,7 @@ export default function LeadershipPage() {
         {/* Section 4: Deviation and Exception Summary */}
         <section className="space-y-3">
           <SectionHeading title="Deviation and Exception Summary" subtitle="5 exception reports filed this quarter, 2 pattern alerts active" />
-          <div className="bg-card border border-border shadow-sm rounded-xl overflow-hidden">
+          <div className="bg-card border border-border rounded-2xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-[12px]">
               <thead>
@@ -388,7 +393,7 @@ export default function LeadershipPage() {
           <SectionHeading title="Quarterly Governance Activity" subtitle="Formal governance actions recorded this quarter" />
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {GOVERNANCE_TILES.map(({ label, value, icon: Icon }) => (
-              <div key={label} className="bg-card border border-border shadow-sm rounded-xl p-4">
+              <div key={label} className="bg-card border border-border rounded-2xl p-4">
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <p className="text-[11px] text-subtle uppercase tracking-widest font-semibold mb-1">{label}</p>

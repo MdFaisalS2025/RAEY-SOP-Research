@@ -12,6 +12,7 @@ import { SafetyNote } from "@/components/ui/safety-note"
 import { cn } from "@/lib/utils"
 import type { AuditEntry, AuditEventType } from "@/lib/governance-types"
 import { useRole } from "@/lib/role-context"
+import { downloadCSV } from "@/lib/csv-export"
 
 interface RawActivityEntry {
   id: number
@@ -105,7 +106,7 @@ export default function AuditPage() {
   const [dateRange, setDateRange] = useState<"7d" | "30d" | "all">("all")
   const [roleFilter, setRoleFilter] = useState<string>("all")
   const [exportState, setExportState] = useState<"idle" | "loading" | "success">("idle")
-  const [exportFormat, setExportFormat] = useState<"csv" | "pdf" | "json">("csv")
+  const [exportFormat, setExportFormat] = useState<"csv" | "json">("csv")
   const [showExportMenu, setShowExportMenu] = useState(false)
   const [auditEntries, setAuditEntries] = useState<AuditEntry[]>([])
   const [loading, setLoading] = useState(true)
@@ -146,11 +147,33 @@ export default function AuditPage() {
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
   }, [auditEntries, search, eventTypeFilter, roleFilter])
 
-  const handleExport = (format: "csv" | "pdf" | "json") => {
+  const handleExport = (format: "csv" | "json") => {
     setExportFormat(format)
     setShowExportMenu(false)
     setExportState("loading")
-    setTimeout(() => setExportState("success"), 1200)
+    const stamp = new Date().toISOString().slice(0, 10)
+    if (format === "csv") {
+      downloadCSV(`audit-log-${stamp}.csv`, filteredAudit.map((e) => ({
+        timestamp: e.timestamp,
+        event_type: e.event_type,
+        user: e.user,
+        user_role: e.user_role,
+        affected_resource: e.affected_resource,
+        affected_resource_id: e.affected_resource_id,
+        summary: e.action_summary,
+      })))
+    } else {
+      const blob = new Blob([JSON.stringify(filteredAudit, null, 2)], { type: "application/json" })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `audit-log-${stamp}.json`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    }
+    setExportState("success")
     setTimeout(() => setExportState("idle"), 3500)
   }
 
@@ -408,7 +431,7 @@ export default function AuditPage() {
                   exit={{ opacity: 0, y: -8 }}
                   className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 rounded-xl bg-card border border-border overflow-hidden shadow-md"
                 >
-                  {(["csv", "pdf", "json"] as const).map((fmt) => (
+                  {(["csv", "json"] as const).map((fmt) => (
                     <button
                       key={fmt}
                       onClick={() => handleExport(fmt)}

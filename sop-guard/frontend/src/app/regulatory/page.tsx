@@ -11,6 +11,7 @@ import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { SafetyNote } from "@/components/ui/safety-note"
 import { cn } from "@/lib/utils"
+import { downloadCSV } from "@/lib/csv-export"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
 
@@ -168,7 +169,16 @@ function StandardsMappingTab({ sops, loading }: { sops: RealSOP[]; loading: bool
 
   const handleExport = () => {
     setExportState("loading")
-    setTimeout(() => setExportState("success"), 1200)
+    downloadCSV(`regulatory-compliance-map-${new Date().toISOString().slice(0, 10)}.csv`, filtered.map((s) => ({
+      framework: s.framework,
+      standard: s.title,
+      code: s.standard_code,
+      department: s.department,
+      sops_mapped: s.mapped.length,
+      sops_overdue: s.overdue.length,
+      status: s.status,
+    })))
+    setExportState("success")
     setTimeout(() => setExportState("idle"), 3500)
   }
 
@@ -389,7 +399,15 @@ function SurveyReadinessTab({ sops, loading }: { sops: RealSOP[]; loading: boole
 
   const handleExport = () => {
     setExportState("loading")
-    setTimeout(() => setExportState("success"), 1400)
+    downloadCSV(`survey-readiness-${new Date().toISOString().slice(0, 10)}.csv`, enrichedChapters.map((c) => ({
+      chapter: c.code,
+      title: c.title,
+      department: c.department,
+      readiness_pct: c.readiness_pct,
+      status: c.status,
+      gaps: c.gaps.join("; "),
+    })))
+    setExportState("success")
     setTimeout(() => setExportState("idle"), 3500)
   }
 

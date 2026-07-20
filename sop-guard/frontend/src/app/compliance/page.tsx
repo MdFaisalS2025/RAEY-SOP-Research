@@ -15,6 +15,7 @@ import { SafetyNote } from "@/components/ui/safety-note"
 import { cn } from "@/lib/utils"
 import { MOCK_COMPLIANCE, MOCK_SOPS, MOCK_DASHBOARD_STATS } from "@/lib/mock-data"
 import { useRole } from "@/lib/role-context"
+import { downloadCSV } from "@/lib/csv-export"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
 const LEGAL_TEXT = "By clicking Attest, I confirm I have read, understood, and will comply with this policy in my clinical practice. This attestation is timestamped and may be used as evidence in regulatory audits or litigation."
@@ -454,7 +455,18 @@ function AcknowledgmentsTab() {
 
   const handleExport = () => {
     setExportState("loading")
-    setTimeout(() => setExportState("success"), 1200)
+    downloadCSV(`compliance-attestations-${new Date().toISOString().slice(0, 10)}.csv`, attestations.map((a) => ({
+      sop_id: a.sop_id,
+      sop_title: sopTitleById[a.sop_id] ?? a.sop_id,
+      sop_version: a.sop_version,
+      user_name: a.user_name,
+      user_role: a.user_role,
+      department: a.department,
+      ip_address: a.ip_address,
+      attested_at: a.attested_at ?? "",
+      content_hash: a.content_hash,
+    })))
+    setExportState("success")
     setTimeout(() => setExportState("idle"), 3500)
   }
 
@@ -499,6 +511,11 @@ function AcknowledgmentsTab() {
           />
         )}
       </AnimatePresence>
+
+      <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 text-sm">
+        <AlertTriangle className="w-4 h-4 shrink-0" />
+        <span>Showing illustrative department-compliance data, not wired to a live tracking system. The Staff Attestation Records below are real.</span>
+      </div>
 
       {/* Stats row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -646,6 +663,21 @@ function AcknowledgmentsTab() {
             >
               <Plus className="w-3.5 h-3.5" /> Attest to a SOP
             </button>
+            <button
+              onClick={handleExport}
+              disabled={exportState === "loading"}
+              className={cn(
+                "flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-colors border font-medium",
+                exportState === "success"
+                  ? "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30"
+                  : "bg-[#0B6BCB] hover:bg-[#0959AC] text-white border-transparent"
+              )}
+            >
+              {exportState === "loading" && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              {exportState === "success" && <Check className="w-3.5 h-3.5" />}
+              {exportState === "idle" && <Download className="w-3.5 h-3.5" />}
+              {exportState === "loading" ? "Generating..." : exportState === "success" ? "Report Generated" : "Export Compliance Report"}
+            </button>
           </div>
         </div>
 
@@ -761,24 +793,6 @@ function AcknowledgmentsTab() {
         </div>
       </section>
 
-      {/* Export Report */}
-      <div className="flex justify-center pt-2">
-        <button
-          onClick={handleExport}
-          disabled={exportState === "loading"}
-          className={cn(
-            "flex items-center gap-2 px-8 py-3 rounded-xl text-sm font-semibold transition-all",
-            exportState === "success"
-              ? "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30"
-              : "bg-[#0B6BCB] hover:bg-[#0959AC] text-white"
-          )}
-        >
-          {exportState === "loading" && <Loader2 className="w-4 h-4 animate-spin" />}
-          {exportState === "success" && <Check className="w-4 h-4" />}
-          {exportState === "idle" && <Download className="w-4 h-4" />}
-          {exportState === "loading" ? "Generating..." : exportState === "success" ? "Report Generated" : "Export Compliance Report"}
-        </button>
-      </div>
     </div>
   )
 }

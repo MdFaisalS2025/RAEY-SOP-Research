@@ -216,17 +216,6 @@ function QuickLookup() {
   )
 }
 
-function AiBanner() {
-  return (
-    <div className="flex items-start gap-2 px-3 py-2.5 bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 rounded-lg">
-      <AlertTriangle className="w-4 h-4 text-[#B45309] dark:text-amber-400 shrink-0 mt-0.5" />
-      <p className="text-[11px] text-[#B45309] dark:text-amber-400/90 leading-relaxed">
-        Verify against the current approved hospital policy before acting.
-      </p>
-    </div>
-  )
-}
-
 // ─── Wins Stat ─────────────────────────────────────────────────────────────
 
 interface AdoptionStats {
@@ -568,8 +557,6 @@ function NurseDashboard() {
           ))}
         </div>
       </div>
-
-      <QuickLookup />
     </div>
   )
 }
@@ -1274,7 +1261,6 @@ export default function DashboardPage() {
               </span>
             </div>
           </div>
-          <AiBanner />
           <WinsStat />
         </div>
 

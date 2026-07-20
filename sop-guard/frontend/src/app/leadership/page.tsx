@@ -243,7 +243,7 @@ export default function LeadershipPage() {
             </div>
           </div>
           <p className="text-[11px] text-subtle">
-            Trend arrows show direction relative to target. Simulated data for research demonstration.
+            Trend arrows show direction relative to target. Figures are placeholder values, not a live reporting feed.
           </p>
         </section>
 

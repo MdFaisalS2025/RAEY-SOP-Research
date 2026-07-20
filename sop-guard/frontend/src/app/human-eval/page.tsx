@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import {
-  ClipboardCheck, AlertTriangle, Download, ArrowRight, CheckCircle2,
+  ClipboardCheck, Download, ArrowRight, CheckCircle2,
 } from "lucide-react"
 import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
@@ -197,12 +197,6 @@ export default function HumanEvalPage() {
             <h1 className="text-2xl font-bold font-display">Clinician Evaluation</h1>
             <p className="text-sm text-muted-foreground">Rate AI answers for the Meridian research study.</p>
           </div>
-        </div>
-
-        {/* Disclaimer */}
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 text-sm">
-          <AlertTriangle className="w-4 h-4 shrink-0" />
-          <span>Simulated evaluation instrument for research methodology demonstration.</span>
         </div>
 
         {!done && (

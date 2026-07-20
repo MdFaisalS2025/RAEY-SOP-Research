@@ -33,6 +33,9 @@ CLEAN_QUERIES = [
     "Refer to Sepsis Management Protocol v4.2",
     "Lactate of 4 mmol/L with hypotension",
     "How often should vitals be checked for fall risk patients?",
+    "This SOP is reviewed every 3 years",
+    "The protocol has been in effect for 10 years",
+    "Storage out of controlled conditions for >30 minutes without verification",
 ]
 
 
@@ -72,6 +75,36 @@ def test_detects_numeric_and_written_dates():
 
 def test_detects_street_address():
     assert any(s.type == "ADDRESS" for s in provider.detect("lives at 1420 Oakwood Avenue"))
+
+
+def test_detects_age_phrasings():
+    assert any(s.type == "AGE" for s in provider.detect("a 45-year-old patient"))
+    assert any(s.type == "AGE" for s in provider.detect("45yo male presenting with"))
+    assert any(s.type == "AGE" for s in provider.detect("45 y/o male presenting with"))
+    assert any(s.type == "AGE" for s in provider.detect("age 40 with sepsis"))
+    assert any(s.type == "AGE" for s in provider.detect("aged 40 with sepsis"))
+
+
+def test_detects_reported_patient_identifier_phrase():
+    # The exact phrase reported as slipping through: no age-word "old", and a
+    # lowercase name after "name of" - both previously invisible to the guard.
+    result = scan("patient of 40 years with the name of harry")
+    assert result["has_phi"] is True
+    assert "AGE" in result["types"]
+    assert "NAME" in result["types"]
+    assert "harry" not in result["redacted_text"]
+    assert "40" not in result["redacted_text"]
+
+
+def test_lowercase_name_requires_strong_trigger():
+    # A bare lowercase word must NOT be flagged without an explicit trigger.
+    assert provider.detect("the patient reports harry pain in the chest") == [] or \
+        not any(s.type == "NAME" for s in provider.detect("the patient reports harry pain in the chest"))
+
+
+def test_lowercase_name_stopword_is_not_flagged():
+    spans = provider.detect("What is the name of the protocol for sepsis?")
+    assert not any(s.type == "NAME" for s in spans)
 
 
 # --- Redaction correctness -----------------------------------------------------

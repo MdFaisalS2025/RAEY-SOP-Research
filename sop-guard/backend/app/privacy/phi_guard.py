@@ -75,7 +75,20 @@ _CLINICAL_TERMS: set[str] = (
 )
 
 # Common honorifics/labels that strongly signal a following proper name.
-_NAME_TRIGGERS = r"(?:mr|mrs|ms|miss|dr|prof|patient|pt|name\s+is|named|for)"
+_NAME_TRIGGERS = r"(?:mr|mrs|ms|miss|dr|prof|patient|pt|name\s+is|name\s+of|named|pt\s+name|for)"
+
+# Subset of triggers unambiguous enough to also catch a *lowercase* name (a
+# capitalization-independent phrasing like "name of harry" or "named john").
+# Deliberately narrower than _NAME_TRIGGERS - "patient" or "for" alone are too
+# common in ordinary clinical questions to safely trigger on a lowercase word.
+_STRONG_NAME_TRIGGERS = r"(?:name\s+is|name\s+of|named|pt\s+name)"
+
+# Small stoplist so the lowercase-name branch doesn't fire on
+# "the name of the protocol" / "named policy" style phrasing.
+_NAME_STOPWORDS: set[str] = {
+    "the", "a", "an", "patient", "drug", "medication", "protocol", "sop",
+    "policy", "procedure", "unit", "ward",
+}
 
 # Month names for written-out dates (e.g. "January 5, 1980", "5 Jan 1980").
 _MONTHS = (
@@ -120,6 +133,20 @@ _PATTERNS: list[tuple[str, re.Pattern]] = [
         rf"\b\d{{1,2}}(?:st|nd|rd|th)?\s+(?:{_MONTHS})\.?\s+\d{{4}}\b",
         re.IGNORECASE,
     )),
+    # Age: only age-contextualized numbers, never bare numbers, so doses and
+    # durations ("30 mcg", "storage >30 minutes", "500 mg") stay clean.
+    # "40 years old" / "45-year-old" / "40yo" / "45 y/o".
+    ("AGE", re.compile(
+        r"\b\d{1,3}\s*(?:-\s*)?(?:years?|yrs?)\s*(?:-\s*)?old\b", re.IGNORECASE
+    )),
+    ("AGE", re.compile(r"\b\d{1,3}\s*y\s*/?\s*o\b", re.IGNORECASE)),
+    # "age 40" / "aged 40" / "age: 40" / "age of 40".
+    ("AGE", re.compile(r"\bage[d]?\b\s*(?:is|of|:)?\s*\d{1,3}\b", re.IGNORECASE)),
+    # "patient of 40 years", "she is 40 years" - only when explicitly
+    # introduced by "of"/"is" immediately before the number, so a phrase like
+    # "audit conducted for 5 years" (no age framing) doesn't match.
+    ("AGE", re.compile(r"(?<=\bof\s)\d{1,3}\s*years?\b", re.IGNORECASE)),
+    ("AGE", re.compile(r"(?<=\bis\s)\d{1,3}\s*years?\s*old\b", re.IGNORECASE)),
 ]
 
 # Name heuristic: an honorific/label trigger followed by 1-2 capitalized words.
@@ -131,6 +158,13 @@ _PATTERNS: list[tuple[str, re.Pattern]] = [
 # it, "John Smith" matched "John S" and left "mith" behind.
 _NAME_RE = re.compile(
     rf"\b{_NAME_TRIGGERS}\b[.:]?\s+((?:[A-Z][a-zA-Z'’-]+)(?:\s+[A-Z]\.)*(?:\s+[A-Z][a-zA-Z'’-]+){{0,2}})"
+)
+
+# Lowercase counterpart: only fires after an unambiguous _STRONG_NAME_TRIGGERS
+# phrase (e.g. "name of harry", "named john doe"), since without a strong
+# trigger a bare lowercase word is indistinguishable from ordinary text.
+_NAME_LOWER_RE = re.compile(
+    rf"\b{_STRONG_NAME_TRIGGERS}\b[.:]?\s+([a-z][a-zA-Z'’-]+(?:\s+[a-z][a-zA-Z'’-]+){{0,2}})"
 )
 
 
@@ -174,6 +208,24 @@ class RuleBasedPhiProvider(PhiDetectionProvider):
             candidate = m.group(1)
             words = [w for w in re.split(r"\s+", candidate) if w]
             non_clinical = [w for w in words if w.strip(".'’-").lower() not in _CLINICAL_TERMS]
+            if not non_clinical:
+                continue
+            spans.append(PhiSpan(
+                type="NAME", start=m.start(1), end=m.end(1),
+                text=candidate, replacement="[REDACTED-NAME]",
+            ))
+
+        # Lowercase name heuristic - only after an unambiguous trigger phrase
+        # (see _STRONG_NAME_TRIGGERS), filtered against both the clinical-term
+        # exemption list and a small stoplist of generic nouns.
+        for m in _NAME_LOWER_RE.finditer(text):
+            candidate = m.group(1)
+            words = [w for w in re.split(r"\s+", candidate) if w]
+            non_clinical = [
+                w for w in words
+                if w.strip(".'’-").lower() not in _CLINICAL_TERMS
+                and w.strip(".'’-").lower() not in _NAME_STOPWORDS
+            ]
             if not non_clinical:
                 continue
             spans.append(PhiSpan(

@@ -284,8 +284,14 @@ export default function QueryPage() {
   const [serverHistory, setServerHistory] = useState<Array<{ id: number; query: string; confidence: number; query_type: string; timestamp: string }>>([])
   const [readingLevel, setReadingLevel] = useState<ReadingLevel>("clinical")
   // PHI guard: result of scanning the current composer text (see
-  // /api/privacy/scan). Advisory only - never blocks sending.
+  // /api/privacy/scan). Soft-blocks sending until the user redacts or
+  // explicitly confirms "Send anyway".
   const [phi, setPhi] = useState<{ has_phi: boolean; types: string[]; redacted_text: string } | null>(null)
+  const [phiAcknowledged, setPhiAcknowledged] = useState(false)
+  // Tracks which composer text `phi` was computed for, so a submit that
+  // races ahead of the debounced scan can trigger a fresh synchronous check
+  // instead of gating on a stale (or absent) result.
+  const phiScannedTextRef = useRef<string>("")
 
   const chatDisabledRef = useRef(false)
   const threadEndRef = useRef<HTMLDivElement | null>(null)
@@ -297,8 +303,11 @@ export default function QueryPage() {
   // Debounced PHI scan of the composer text. Skips very short input (no point
   // scanning "sepsis?") and clears the indicator when the box is emptied.
   useEffect(() => {
+    // A new keystroke invalidates any prior acknowledgment - re-typing after
+    // "Send anyway" re-gates on the new text.
+    setPhiAcknowledged(false)
     const text = query.trim()
-    if (text.length < 8) { setPhi(null); return }
+    if (text.length < 8) { setPhi(null); phiScannedTextRef.current = query; return }
     const t = setTimeout(() => {
       fetch("/api/privacy/scan", {
         method: "POST",
@@ -306,11 +315,37 @@ export default function QueryPage() {
         body: JSON.stringify({ text: query }),
       })
         .then((r) => r.json())
-        .then((d) => setPhi({ has_phi: !!d.has_phi, types: d.types ?? [], redacted_text: d.redacted_text ?? query }))
+        .then((d) => {
+          setPhi({ has_phi: !!d.has_phi, types: d.types ?? [], redacted_text: d.redacted_text ?? query })
+          phiScannedTextRef.current = query
+        })
         .catch(() => setPhi(null))
     }, 400)
     return () => clearTimeout(t)
   }, [query])
+
+  /** Ensures `phi` reflects the exact text about to be sent, running a
+   * synchronous scan if the debounced background scan hasn't caught up yet
+   * (e.g. a fast type-then-Enter). Returns the up-to-date PHI result. */
+  async function scanForPhiBeforeSend(text: string) {
+    if (phiScannedTextRef.current === text && phi) return phi
+    try {
+      const r = await fetch("/api/privacy/scan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      })
+      const d = await r.json()
+      const result = { has_phi: !!d.has_phi, types: d.types ?? [], redacted_text: d.redacted_text ?? text }
+      setPhi(result)
+      phiScannedTextRef.current = text
+      return result
+    } catch {
+      // Scan failed - don't block sending on a network hiccup (advisory
+      // guard, fail-open), but don't claim a clean result either.
+      return null
+    }
+  }
 
   useEffect(() => {
     fetch("/api/query/history?limit=10")
@@ -431,9 +466,21 @@ export default function QueryPage() {
     try { sessionStorage.removeItem(CHAT_SESSION_KEY) } catch { /* ignore */ }
   }
 
-  const handleSubmit = async (overrideQuery?: string) => {
+  const handleSubmit = async (overrideQuery?: string, skipPhiGate = false) => {
     const q = (overrideQuery ?? query).trim()
     if (!q || loading) return
+
+    // PHI soft-block: only gate the user's own composer text (not
+    // programmatic follow-up-question submits, which come from suggestions
+    // rather than free text the user typed). `skipPhiGate` is set by the
+    // explicit "Send anyway" action, so it bypasses re-checking rather than
+    // relying on the `phiAcknowledged` state, which wouldn't have committed
+    // yet if read in the same handler that just set it.
+    if (overrideQuery === undefined && !skipPhiGate) {
+      const result = await scanForPhiBeforeSend(query)
+      if (result?.has_phi) return // amber warning + Send-anyway stays visible
+    }
+
     setQuery("")
     setMessages(prev => [...prev, { id: nextId(), role: "user", content: q }])
     setLoading(true)
@@ -542,7 +589,10 @@ export default function QueryPage() {
       />
       <div className="max-sm:relative max-sm:mt-2 max-sm:justify-end absolute bottom-3 right-3 flex items-center gap-2">
         <VoiceRecorder onTranscript={(t) => { setQuery(t) }} />
-        <button onClick={() => handleSubmit()} disabled={!query.trim() || loading}
+        <button
+          onClick={() => handleSubmit()}
+          disabled={!query.trim() || loading || (!!phi?.has_phi && !phiAcknowledged)}
+          title={phi?.has_phi && !phiAcknowledged ? "Possible patient identifier detected - redact or confirm before sending" : undefined}
           className="p-3 rounded-xl bg-[#0B6BCB] hover:bg-[#0959AC] disabled:opacity-40 disabled:cursor-not-allowed text-white transition-colors">
           <Send className="w-5 h-5" />
         </button>
@@ -552,13 +602,21 @@ export default function QueryPage() {
           <div className="mt-2 flex items-center flex-wrap gap-x-2 gap-y-1 text-xs">
             <span className="inline-flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-medium">
               <ShieldAlert className="w-3.5 h-3.5" />
-              Possible patient identifier detected{phi.types.length ? ` (${phi.types.join(", ").toLowerCase()})` : ""}
+              Possible patient identifier detected{phi.types.length ? ` (${phi.types.join(", ").toLowerCase()})` : ""} - sending is paused
             </span>
             <button
               onClick={() => setQuery(phi.redacted_text)}
               className="underline underline-offset-2 text-[#0B6BCB] dark:text-[#00E5FF] hover:opacity-80"
             >
               Redact before sending
+            </button>
+            <span className="text-subtle">·</span>
+            <button
+              onClick={() => { setPhiAcknowledged(true); handleSubmit(undefined, true) }}
+              disabled={loading}
+              className="underline underline-offset-2 text-muted-foreground hover:text-foreground disabled:opacity-50"
+            >
+              Send anyway
             </button>
           </div>
         ) : (

@@ -414,6 +414,8 @@ class CAPAUpdate(BaseModel):
 
 
 class CAPAResponse(BaseModel):
+    model_config = {"from_attributes": True}
+
     id: int
     incident_id: int
     title: str = ""

@@ -80,7 +80,7 @@ class TestRedaction:
         redacted, count = redact_unsupported_claims(answer, unsupported)
         assert "0.5 mcg/kg/min" not in redacted
         assert count == 1
-        assert "not confirmed" in redacted
+        assert "verify in source SOP" in redacted
 
     def test_supported_claims_are_left_alone(self):
         # Only the unsupported claim should be passed in by the caller, so a
@@ -166,7 +166,7 @@ class TestPipelineIntegration:
             t_start=0.0, t_generate=1, route="sop_library",
         )
         assert "0.5 mcg/kg/min" not in response.answer
-        assert "not confirmed" in response.answer
+        assert "verify in source SOP" in response.answer
         assert response.numeric_verification["redacted"] is True
         # Citation marker and the rest of the sentence structure survive.
         assert "[1]" in response.answer

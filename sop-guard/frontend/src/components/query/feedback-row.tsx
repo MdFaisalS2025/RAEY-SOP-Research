@@ -47,38 +47,28 @@ export function FeedbackRow({ queryText, answerId }: { queryText: string; answer
   }
 
   const options: { key: FeedbackChoice; label: string; icon: typeof ThumbsUp; active: string }[] = [
-    { key: "helpful", label: "Helpful", icon: ThumbsUp, active: "bg-[#DCFCE7] dark:bg-green-500/10 border-[#BBF7D0] dark:border-green-500/30 text-[#15803D] dark:text-green-400" },
-    { key: "clarification", label: "Needs clarification", icon: MessageCircleQuestion, active: "bg-[#FEF3C7] dark:bg-amber-500/10 border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400" },
-    { key: "disagree", label: "Disagree", icon: ThumbsDown, active: "bg-[#FEE2E2] dark:bg-red-500/10 border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400" },
+    { key: "helpful", label: "Helpful", icon: ThumbsUp, active: "text-[#15803D] dark:text-green-400 bg-[#DCFCE7] dark:bg-green-500/10" },
+    { key: "clarification", label: "Needs clarification", icon: MessageCircleQuestion, active: "text-[#B45309] dark:text-amber-400 bg-[#FEF3C7] dark:bg-amber-500/10" },
+    { key: "disagree", label: "Disagree", icon: ThumbsDown, active: "text-[#B91C1C] dark:text-red-400 bg-[#FEE2E2] dark:bg-red-500/10" },
   ]
 
   return (
-    <div className="p-4 rounded-2xl bg-card border border-border shadow-sm">
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="text-sm text-muted-foreground">Does this match your practice?</span>
-        <div className="flex flex-wrap gap-2">
-          {options.map((o) => (
-            <button
-              key={o.key}
-              onClick={() => select(o.key)}
-              className={cn(
-                "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm border transition-colors duration-150",
-                choice === o.key
-                  ? o.active
-                  : "border-border bg-card text-muted-foreground hover:text-foreground hover:border-input"
-              )}
-            >
-              <o.icon className="w-4 h-4" />
-              {o.label}
-            </button>
-          ))}
-        </div>
-      </div>
-      {choice && (
-        <p className="text-xs text-muted-foreground mt-2.5">
-          Feedback recorded. Repeated disagreement flags this answer for compliance review.
-        </p>
-      )}
+    <div className="flex items-center gap-1 px-1">
+      {options.map((o) => (
+        <button
+          key={o.key}
+          onClick={() => select(o.key)}
+          title={o.label}
+          aria-label={o.label}
+          aria-pressed={choice === o.key}
+          className={cn(
+            "inline-flex items-center justify-center w-8 h-8 rounded-lg transition-colors duration-150",
+            choice === o.key ? o.active : "text-muted-foreground hover:text-foreground hover:bg-muted"
+          )}
+        >
+          <o.icon className="w-4 h-4" />
+        </button>
+      ))}
       <OverrideModal
         open={showOverride}
         onClose={() => setShowOverride(false)}

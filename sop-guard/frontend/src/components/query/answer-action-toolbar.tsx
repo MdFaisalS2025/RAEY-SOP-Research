@@ -1,10 +1,14 @@
 "use client"
 
-// Labeled "Answer tools" toolbar replacing the old icon-only action-bar
-// row. Every button has a visible text label (icons are decorative/
-// leading, never the only signal) - this is what the redesign asked for
-// specifically ("no important action should be icon-only").
+// Primary actions render inline; everything else lives behind a "More"
+// overflow menu instead of a second always-visible row - a real answer
+// used to render ~10-11 buttons across two rows at once (heavier than the
+// answer itself), which is the opposite of the quiet-icon-row pattern
+// Claude/ChatGPT/Perplexity all use for secondary actions.
 
+import { useEffect, useRef, useState } from "react"
+import { motion } from "framer-motion"
+import { MoreHorizontal } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 export interface ToolbarAction {
@@ -17,7 +21,7 @@ export interface ToolbarAction {
   disabled?: boolean
 }
 
-function ToolbarButton({ action, size }: { action: ToolbarAction; size: "primary" | "secondary" }) {
+function PrimaryButton({ action }: { action: ToolbarAction }) {
   const Icon = action.icon
   return (
     <button
@@ -27,20 +31,17 @@ function ToolbarButton({ action, size }: { action: ToolbarAction; size: "primary
       aria-label={action.label}
       aria-pressed={action.active}
       className={cn(
-        "inline-flex items-center gap-2 rounded-xl font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed",
+        "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0B6BCB]/40",
-        size === "primary" ? "px-4 py-2.5 text-sm" : "px-3.5 py-2 text-[13px]",
         action.active
-          ? "bg-[#0B6BCB]/10 dark:bg-[#00E5FF]/10 text-[#0B6BCB] dark:text-[#00E5FF] border border-[#0B6BCB]/30"
-          : size === "primary"
-          ? "bg-card border border-border text-foreground hover:border-[#0B6BCB]/40 hover:bg-[#0B6BCB]/[0.04]"
-          : "border border-transparent text-muted-foreground hover:text-foreground hover:bg-muted"
+          ? "bg-[#0B6BCB]/10 dark:bg-[#00E5FF]/10 text-[#0B6BCB] dark:text-[#00E5FF]"
+          : "text-muted-foreground hover:text-foreground hover:bg-muted"
       )}
     >
-      <Icon className="w-4 h-4 shrink-0" />
+      <Icon className="w-3.5 h-3.5 shrink-0" />
       {action.label}
       {action.count !== undefined && action.count > 0 && (
-        <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-muted text-[11px] font-semibold text-muted-foreground">
+        <span className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full bg-muted text-[10px] font-semibold text-muted-foreground">
           {action.count}
         </span>
       )}
@@ -48,16 +49,82 @@ function ToolbarButton({ action, size }: { action: ToolbarAction; size: "primary
   )
 }
 
-export function AnswerActionToolbar({ primary, secondary }: { primary: ToolbarAction[]; secondary: ToolbarAction[] }) {
+function MoreMenuItem({ action, onAfterClick }: { action: ToolbarAction; onAfterClick: () => void }) {
+  const Icon = action.icon
   return (
-    <div className="space-y-2.5">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Answer tools</p>
-      <div className="flex flex-wrap gap-2">
-        {primary.map((a) => <ToolbarButton key={a.key} action={a} size="primary" />)}
-      </div>
-      <div className="flex flex-wrap gap-1">
-        {secondary.map((a) => <ToolbarButton key={a.key} action={a} size="secondary" />)}
-      </div>
+    <button
+      onClick={() => { action.onClick(); onAfterClick() }}
+      disabled={action.disabled}
+      className={cn(
+        "w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left transition-colors disabled:opacity-40 disabled:cursor-not-allowed",
+        action.active ? "text-[#0B6BCB] dark:text-[#00E5FF] bg-[#0B6BCB]/[0.06]" : "text-foreground hover:bg-muted"
+      )}
+    >
+      <Icon className="w-4 h-4 shrink-0 text-muted-foreground" />
+      <span className="flex-1 truncate">{action.label}</span>
+      {action.count !== undefined && action.count > 0 && (
+        <span className="text-xs text-muted-foreground">{action.count}</span>
+      )}
+    </button>
+  )
+}
+
+export function AnswerActionToolbar({ primary, secondary }: { primary: ToolbarAction[]; secondary: ToolbarAction[] }) {
+  const [open, setOpen] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false)
+    }
+    const handleKeyDown = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false) }
+    document.addEventListener("mousedown", handleClickOutside)
+    document.addEventListener("keydown", handleKeyDown)
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+      document.removeEventListener("keydown", handleKeyDown)
+    }
+  }, [open])
+
+  return (
+    <div className="flex flex-wrap items-center gap-0.5 -mx-1">
+      {primary.map((a) => <PrimaryButton key={a.key} action={a} />)}
+
+      {secondary.length > 0 && (
+        <div className="relative" ref={containerRef}>
+          <button
+            onClick={() => setOpen((v) => !v)}
+            title="More actions"
+            aria-label="More actions"
+            aria-expanded={open}
+            className={cn(
+              "inline-flex items-center justify-center w-8 h-8 rounded-lg transition-colors",
+              open ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+            )}
+          >
+            <MoreHorizontal className="w-4 h-4" />
+          </button>
+          {/* Plain conditional, no AnimatePresence/exit: an exit-animated
+              panel that doesn't unmount cleanly leaves an invisible node
+              with pointer-events: auto sitting over whatever's underneath
+              it (verified live - after closing, the panel was opacity:0
+              but still pointer-events:auto and silently ate a real click
+              on the composer beneath it). A plain conditional removes the
+              node the instant `open` goes false. */}
+          {open && (
+            <motion.div
+              initial={{ opacity: 0, y: -6, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              className="absolute z-20 left-0 top-full mt-1.5 w-64 rounded-xl bg-card border border-border shadow-lg overflow-hidden py-1"
+            >
+              {secondary.map((a) => (
+                <MoreMenuItem key={a.key} action={a} onAfterClick={() => setOpen(false)} />
+              ))}
+            </motion.div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

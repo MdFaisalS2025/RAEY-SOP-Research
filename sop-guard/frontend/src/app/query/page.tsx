@@ -1,23 +1,20 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useLayoutEffect } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   Send,
-  Search,
   History,
-  User,
   RotateCcw,
-  ShieldCheck,
   ShieldAlert,
+  Loader2,
 } from "lucide-react"
 import { type InlineCitation } from "@/components/query/citation-chip"
 import { AnswerRenderer } from "@/components/query/answer-renderer"
 import { ChatAnswerMessage } from "@/components/query/chat-answer-message"
 import { READING_LEVEL_KEY, type ReadingLevel } from "@/components/query/plain-language"
 import AppShell from "@/components/layout/app-shell"
-import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { SafetyNote } from "@/components/ui/safety-note"
 import { VoiceRecorder } from "@/components/voice/voice-recorder"
 import { querySOPs } from "@/lib/api"
@@ -280,7 +277,6 @@ export default function QueryPage() {
   const [streamingText, setStreamingText] = useState("")
   const [queryHistory, setQueryHistory] = useState<Array<{ query: string; confidence: number; type: string; timestamp: number }>>([])
   const [showHistory, setShowHistory] = useState(false)
-  const [userRole, setUserRole] = useState("viewer")
   const [serverHistory, setServerHistory] = useState<Array<{ id: number; query: string; confidence: number; query_type: string; timestamp: string }>>([])
   const [readingLevel, setReadingLevel] = useState<ReadingLevel>("clinical")
   // PHI guard: result of scanning the current composer text (see
@@ -355,7 +351,6 @@ export default function QueryPage() {
   }, [messages.length])
 
   useEffect(() => {
-    setUserRole(localStorage.getItem("meridian-role") || "viewer")
     try {
       const saved = localStorage.getItem(READING_LEVEL_KEY)
       if (saved === "plain" || saved === "clinical") setReadingLevel(saved)
@@ -577,110 +572,96 @@ export default function QueryPage() {
 
   const lastAssistantId = [...messages].reverse().find(m => m.role === "assistant")?.id ?? null
 
+  // Auto-grow the composer textarea (1 row up to ~8 rows) instead of a fixed
+  // rows={3} box - this also removes the need to reserve space for the
+  // button row, since the buttons now live in their own flex row below the
+  // text (in-flow), not absolutely positioned over the textarea's corner.
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null)
+  useLayoutEffect(() => {
+    const el = textareaRef.current
+    if (!el) return
+    el.style.height = "auto"
+    el.style.height = `${Math.min(el.scrollHeight, 200)}px`
+  }, [query])
+
+  const canSend = !!query.trim() && !loading && !(phi?.has_phi && !phiAcknowledged)
+
   const composer = (
-    <div className="relative">
+    <div className="rounded-2xl border border-border bg-muted focus-within:ring-2 focus-within:ring-[#0B6BCB]/40 transition-shadow">
       <textarea
+        ref={textareaRef}
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSubmit() } }}
-        placeholder={submitted ? "Ask a follow-up..." : "Ask about a protocol or procedure..."}
-        rows={3}
-        className="w-full p-4 sm:pr-28 rounded-2xl bg-muted border border-border text-foreground placeholder:text-subtle caret-[#0B6BCB] resize-none focus:outline-none focus:ring-2 focus:ring-[#0B6BCB]/40 text-base"
+        placeholder={submitted ? "Ask a follow-up…" : "Ask about a protocol or procedure…"}
+        rows={1}
+        className="w-full bg-transparent border-0 px-4 pt-3.5 pb-1 resize-none focus:outline-none focus:ring-0 text-foreground placeholder:text-subtle caret-[#0B6BCB] text-base max-h-[200px] overflow-y-auto"
       />
-      <div className="max-sm:relative max-sm:mt-2 max-sm:justify-end absolute bottom-3 right-3 flex items-center gap-2">
+      <div className="flex items-center justify-end gap-1.5 px-2.5 pb-2.5">
         <VoiceRecorder onTranscript={(t) => { setQuery(t) }} />
         <button
           onClick={() => handleSubmit()}
-          disabled={!query.trim() || loading || (!!phi?.has_phi && !phiAcknowledged)}
-          title={phi?.has_phi && !phiAcknowledged ? "Possible patient identifier detected - redact or confirm before sending" : undefined}
-          className="p-3 rounded-xl bg-[#0B6BCB] hover:bg-[#0959AC] disabled:opacity-40 disabled:cursor-not-allowed text-white transition-colors">
-          <Send className="w-5 h-5" />
+          disabled={!canSend}
+          title={phi?.has_phi && !phiAcknowledged ? "Possible patient identifier detected - redact or confirm before sending" : "Send"}
+          aria-label="Send"
+          className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-[#0B6BCB] hover:bg-[#0959AC] disabled:opacity-40 disabled:cursor-not-allowed text-white transition-colors shrink-0">
+          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
         </button>
       </div>
-      {phi && (
-        phi.has_phi ? (
-          <div className="mt-2 flex items-center flex-wrap gap-x-2 gap-y-1 text-xs">
-            <span className="inline-flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-medium">
-              <ShieldAlert className="w-3.5 h-3.5" />
-              Possible patient identifier detected{phi.types.length ? ` (${phi.types.join(", ").toLowerCase()})` : ""} - sending is paused
-            </span>
-            <button
-              onClick={() => setQuery(phi.redacted_text)}
-              className="underline underline-offset-2 text-[#0B6BCB] dark:text-[#00E5FF] hover:opacity-80"
-            >
-              Redact before sending
-            </button>
-            <span className="text-subtle">·</span>
-            <button
-              onClick={() => { setPhiAcknowledged(true); handleSubmit(undefined, true) }}
-              disabled={loading}
-              className="underline underline-offset-2 text-muted-foreground hover:text-foreground disabled:opacity-50"
-            >
-              Send anyway
-            </button>
-          </div>
-        ) : (
-          <div className="mt-2 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-            <ShieldCheck className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
-            No patient identifiers detected
-          </div>
-        )
+      {/* Only surfaces when a patient identifier is actually detected - a
+          permanent "all clear" line under every keystroke is reassurance
+          noise the default (clean) state doesn't need. */}
+      {phi?.has_phi && (
+        <div className="flex items-center flex-wrap gap-x-2 gap-y-1 px-4 pb-3 text-xs">
+          <span className="inline-flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-medium">
+            <ShieldAlert className="w-3.5 h-3.5" />
+            Possible patient identifier detected{phi.types.length ? ` (${phi.types.join(", ").toLowerCase()})` : ""} - sending is paused
+          </span>
+          <button
+            onClick={() => setQuery(phi.redacted_text)}
+            className="underline underline-offset-2 text-[#0B6BCB] dark:text-[#00E5FF] hover:opacity-80"
+          >
+            Redact before sending
+          </button>
+          <span className="text-subtle">·</span>
+          <button
+            onClick={() => { setPhiAcknowledged(true); handleSubmit(undefined, true) }}
+            disabled={loading}
+            className="underline underline-offset-2 text-muted-foreground hover:text-foreground disabled:opacity-50"
+          >
+            Send anyway
+          </button>
+        </div>
       )}
     </div>
   )
 
   return (
     <AppShell>
-      <div className="flex-1 p-4 sm:p-6 max-w-[880px] mx-auto w-full">
-        <Breadcrumb items={[{ label: "Ask Meridian" }]} />
-
-        {/* Chat header */}
-        <div className="mb-4 flex items-start justify-between gap-3 flex-wrap">
-          <div className="min-w-0">
-            <h1 className="text-xl font-semibold text-foreground">Ask Meridian</h1>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
+      <div className="p-4 sm:p-6 max-w-3xl mx-auto w-full">
+        {/* Slim header - just page identity + the two thread-management
+            actions. The old Viewer role chip duplicated the profile menu
+            already in the top nav, so it's gone rather than repeated. */}
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <h1 className="text-base font-semibold text-foreground">Ask Meridian</h1>
+          <div className="flex items-center gap-1">
             <button onClick={() => setShowHistory(!showHistory)}
-              className={cn("inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors",
-                showHistory ? "bg-[#0B6BCB]/10 text-[#0B6BCB] border-[#0B6BCB]/30" : "border-border text-muted-foreground hover:text-foreground hover:border-input")}
+              className={cn("inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-colors",
+                showHistory ? "bg-[#0B6BCB]/10 text-[#0B6BCB]" : "text-muted-foreground hover:text-foreground hover:bg-muted")}
               title="Query history">
               <History className="w-4 h-4" />
               History
             </button>
             {submitted && (
               <button onClick={resetConversation}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border border-border text-muted-foreground hover:text-foreground hover:border-input transition-all"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                 title="Start a new conversation">
                 <RotateCcw className="w-4 h-4" />
                 New conversation
               </button>
             )}
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground pl-1">
-              <User className="w-3.5 h-3.5" />
-              <span className="capitalize">{userRole}</span>
-              {userRole === "admin" && <span className="px-1.5 py-0.5 rounded bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 text-[10px] font-semibold">ADMIN</span>}
-              {userRole === "editor" && <span className="px-1.5 py-0.5 rounded bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 text-[10px] font-semibold">EDITOR</span>}
-            </div>
           </div>
         </div>
-
-        {/* Composer + suggested queries live above the empty state; once a
-            conversation exists they move below the thread (see bottom). */}
-        {!submitted && (
-          <div className="mb-6">
-            {composer}
-            <SafetyNote className="mt-2" />
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-              className="mt-4 flex gap-2 overflow-x-auto pb-2 scrollbar-thin sm:flex-wrap">
-              {suggestedQueries.map((q) => (
-                <button key={q} onClick={() => setQuery(q)}
-                  className="px-3 py-1.5 rounded-lg bg-muted text-sm text-muted-foreground hover:text-foreground border border-border transition-colors whitespace-nowrap shrink-0 sm:whitespace-normal sm:shrink">
-                  {q}
-                </button>
-              ))}
-            </motion.div>
-          </div>
-        )}
 
         {/* Query History Panel */}
         <AnimatePresence>
@@ -708,14 +689,29 @@ export default function QueryPage() {
           )}
         </AnimatePresence>
 
-        {/* Empty state: the composer + suggested-query chips above already
-            carry the "what do I do here" guidance, so this only needs to
-            establish the page identity - no oversized icon or repeated
-            instructions. */}
-        {!submitted && !loading && (
+        {/* Empty state - greeting, composer, and suggested prompts as one
+            vertically-centered block (Claude-style), instead of the
+            composer pinned at the very top with a lone title stranded in
+            the empty space below it. */}
+        {!submitted && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-            className="flex flex-col items-center justify-center py-12 text-center">
-            <h2 className="text-lg font-semibold text-muted-foreground">Ask Meridian</h2>
+            className="min-h-[65vh] flex flex-col items-center justify-center gap-6">
+            <div className="text-center">
+              <h2 className="text-3xl font-display font-semibold text-foreground">Ask Meridian</h2>
+              <p className="text-sm text-muted-foreground mt-1.5">Search approved SOPs and clinical evidence.</p>
+            </div>
+            <div className="w-full">
+              {composer}
+              <SafetyNote className="mt-2" />
+              <div className="mt-4 flex gap-2 overflow-x-auto pb-2 scrollbar-thin sm:flex-wrap sm:justify-center">
+                {suggestedQueries.map((q) => (
+                  <button key={q} onClick={() => setQuery(q)}
+                    className="px-3 py-1.5 rounded-lg bg-muted text-sm text-muted-foreground hover:text-foreground border border-border transition-colors whitespace-nowrap shrink-0 sm:whitespace-normal sm:shrink">
+                    {q}
+                  </button>
+                ))}
+              </div>
+            </div>
           </motion.div>
         )}
 
@@ -747,21 +743,25 @@ export default function QueryPage() {
               real tokens start arriving from the model, the growing text
               itself is the progress signal; before that, a quiet shimmer
               shaped like the answer that's coming - no fake step
-              checklist. */}
-          <AnimatePresence>
-            {loading && (
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-                {streamingText ? (
-                  <div className="p-6 sm:p-8 rounded-2xl bg-card border border-border shadow-sm">
-                    <AnswerRenderer text={streamingText} citations={[]} />
-                    <span className="inline-block w-1.5 h-4 ml-0.5 bg-[#0B6BCB] animate-pulse align-text-bottom" />
-                  </div>
-                ) : (
-                  <AnswerSkeleton />
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
+              checklist. No AnimatePresence/exit here on purpose: an
+              exit-animated node that doesn't unmount cleanly (seen live -
+              the skeleton stayed mounted after `loading` had already gone
+              false, per the Send button's own icon state) leaves a
+              permanent ghost placeholder under a completed answer. A plain
+              conditional removes the node the instant loading flips, so
+              correctness doesn't depend on the exit transition completing. */}
+          {loading && (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+              {streamingText ? (
+                <div className="p-6 sm:p-8 rounded-2xl bg-card border border-border shadow-sm">
+                  <AnswerRenderer text={streamingText} citations={[]} />
+                  <span className="inline-block w-1.5 h-4 ml-0.5 bg-[#0B6BCB] animate-pulse align-text-bottom" />
+                </div>
+              ) : (
+                <AnswerSkeleton />
+              )}
+            </motion.div>
+          )}
           <div ref={threadEndRef} />
         </div>
 

@@ -102,7 +102,7 @@ def verify_numeric_claims(answer: str, chunks: list[dict[str, Any]]) -> dict[str
     }
 
 
-_REDACTION_MARKER = "[value not confirmed in the cited SOP - verify directly]"
+_REDACTION_MARKER = "[verify in source SOP]"
 
 
 def redact_unsupported_claims(answer: str, unsupported: list[dict[str, str]]) -> tuple[str, int]:

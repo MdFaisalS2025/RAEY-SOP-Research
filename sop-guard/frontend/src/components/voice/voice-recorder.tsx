@@ -225,22 +225,22 @@ export function VoiceRecorder({ onTranscript }: VoiceRecorderProps) {
         onClick={handleMicClick}
         disabled={state === "starting"}
         className={cn(
-          "relative p-3 rounded-xl transition-all",
+          "relative inline-flex items-center justify-center w-9 h-9 rounded-full transition-all shrink-0",
           state === "listening" ? "bg-red-500/20 text-red-400"
           : state === "starting" ? "bg-amber-500/20 text-amber-400 animate-pulse"
-          : "bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground"
+          : "text-muted-foreground hover:bg-card hover:text-foreground"
         )}
         title={state === "idle" ? "Start voice input" : state === "listening" ? "Stop and use transcript" : "Starting..."}
         aria-label={state === "idle" ? "Start voice input" : state === "listening" ? "Stop and use transcript" : "Starting voice input"}
       >
         {state === "listening" && (
           <motion.div
-            className="absolute inset-0 rounded-xl border-2 border-red-500"
+            className="absolute inset-0 rounded-full border-2 border-red-500"
             animate={{ scale: [1, 1.15, 1], opacity: [1, 0.4, 1] }}
             transition={{ duration: 1.5, repeat: Infinity }}
           />
         )}
-        {state === "listening" ? <Square className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+        {state === "listening" ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
       </button>
 
       {/* Listening indicator */}

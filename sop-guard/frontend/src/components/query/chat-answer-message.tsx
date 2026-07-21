@@ -131,10 +131,13 @@ function AlignmentStatusLine({
   if (comparison === null) return null
   if (comparison === "loading") {
     return (
-      <p className="flex items-center gap-1.5 text-xs text-muted-foreground px-1">
-        <Loader2 className="w-3 h-3 animate-spin shrink-0" />
-        Checking alignment with external evidence…
-      </p>
+      <>
+        <span className="text-subtle">·</span>
+        <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+          <Loader2 className="w-3 h-3 animate-spin shrink-0" />
+          Checking alignment with external evidence…
+        </span>
+      </>
     )
   }
   if (!comparison.available || !comparison.summary) return null
@@ -143,9 +146,13 @@ function AlignmentStatusLine({
   // Kept deliberately short - match counts and the full recommended-action
   // sentence are one click away in the Compare with Clinical Evidence
   // drawer (onOpenComparison) rather than crowding this quiet inline cue.
+  // Rendered as a fragment (not its own block) so it can sit inline on the
+  // same caption line as the "Based on {SOP}" metadata, not stack a second
+  // full-width row underneath it.
   return (
-    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 px-1 text-xs">
-      <button onClick={onOpenComparison} className={cn("inline-flex items-center gap-1.5 font-medium hover:underline", meta.className)}>
+    <>
+      <span className="text-subtle">·</span>
+      <button onClick={onOpenComparison} className={cn("inline-flex items-center gap-1 font-medium hover:underline", meta.className)}>
         <meta.icon className="w-3.5 h-3.5 shrink-0" />
         {overall_alignment} with external evidence
       </button>
@@ -156,7 +163,7 @@ function AlignmentStatusLine({
           Create Update Recommendation
         </button>
       )}
-    </div>
+    </>
   )
 }
 
@@ -409,19 +416,14 @@ export function ChatAnswerMessage({
       {/* Numeric redaction caution - a dose/threshold value the model stated
           wasn't found in the cited SOP, so it was removed from the answer
           text rather than shown as fact. The redaction marker is already
-          inline in the answer; this banner just makes sure it isn't missed. */}
+          inline in the answer; this one line just makes sure it isn't
+          missed, without the icon-card weight of a standalone banner. */}
       {data.numericRedactionApplied && (
-        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-          className="p-3.5 rounded-2xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 flex items-start gap-3">
-          <AlertTriangle className="w-5 h-5 text-[#B45309] dark:text-amber-400 shrink-0 mt-0.5" />
-          <div>
-            <p className="font-semibold text-[#B45309] dark:text-amber-400 text-sm">Value removed for accuracy</p>
-            <p className="text-[13px] text-muted-foreground mt-0.5">
-              A specific dose or threshold in this answer could not be confirmed against the cited SOP
-              and was removed rather than shown as fact. Verify the exact value directly with the source SOP.
-            </p>
-          </div>
-        </motion.div>
+        <motion.p initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+          className="flex items-start gap-1.5 text-[13px] text-[#B45309] dark:text-amber-400 px-1">
+          <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+          A value couldn&apos;t be confirmed against the cited SOP and was removed - verify directly.
+        </motion.p>
       )}
 
       {/* Conflict details */}
@@ -441,23 +443,28 @@ export function ChatAnswerMessage({
         )}
       </AnimatePresence>
 
-      {/* Message header - metadata line + collapse toggle, no dashboard
-          chrome (grounding-bar pills / staleness banner / quick facts all
-          removed from the main flow; review status lives in Trust Details). */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="min-w-0">
-          {metadataLine && (
-            <p className="text-xs text-muted-foreground truncate">
-              {metadataLine}
-              {(data.route === "sop_library" || data.route === "hybrid") && primarySopId && (
-                <>
-                  {" · "}
-                  <button onClick={() => setActiveDrawer("versions")} className="text-[#0B6BCB] hover:underline font-medium">
-                    View Version History
-                  </button>
-                </>
-              )}
-            </p>
+      {/* Message header - one caption line (SOP + version, version-history
+          link, and live alignment status all together) plus the collapse
+          toggle. No dashboard chrome (grounding-bar pills / staleness
+          banner / quick facts all removed from the main flow; review
+          status lives in Trust Details). */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs px-1">
+          {metadataLine && <span className="text-muted-foreground">{metadataLine}</span>}
+          {(data.route === "sop_library" || data.route === "hybrid") && primarySopId && (
+            <>
+              <span className="text-subtle">·</span>
+              <button onClick={() => setActiveDrawer("versions")} className="text-[#0B6BCB] hover:underline font-medium">
+                Version History
+              </button>
+            </>
+          )}
+          {!collapsed && !isAbstained && (
+            <AlignmentStatusLine
+              comparison={comparison}
+              onOpenComparison={() => setActiveDrawer("comparison")}
+              onCreateRecommendation={handleCreateRecommendation}
+            />
           )}
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
@@ -470,14 +477,6 @@ export function ChatAnswerMessage({
           </button>
         </div>
       </div>
-
-      {!collapsed && !isAbstained && (
-        <AlignmentStatusLine
-          comparison={comparison}
-          onOpenComparison={() => setActiveDrawer("comparison")}
-          onCreateRecommendation={handleCreateRecommendation}
-        />
-      )}
 
       {collapsed ? (
         <button onClick={() => setCollapsed(false)}
@@ -522,7 +521,7 @@ export function ChatAnswerMessage({
             </div>
           )}
 
-          <div className="p-6 sm:p-8 rounded-2xl bg-card border border-border shadow-sm relative">
+          <div className="px-1 relative">
             <div>
               {plain?.summary && (
                 <div className="mb-4 p-3.5 rounded-xl bg-[#0B6BCB]/[0.06] border border-[#0B6BCB]/20">
@@ -553,6 +552,7 @@ export function ChatAnswerMessage({
           {!isAbstained && (
             <AnswerActionToolbar
               primary={[
+                ...(primarySopId ? [{ key: "source", label: "View SOP Source", icon: FileText, onClick: () => router.push(libraryDeepLink(primarySopId, primaryInternalCitation?.snippet, primaryInternalCitation?.section_title)) }] : []),
                 ...(primarySopId ? [{ key: "comparison", label: "Compare with Clinical Evidence", icon: GitCompare, onClick: () => setActiveDrawer("comparison"), active: activeDrawer === "comparison" }] : []),
                 ...(primarySopId ? [{ key: "versions", label: "Version History", icon: History, onClick: () => setActiveDrawer("versions"), active: activeDrawer === "versions" }] : []),
                 ...(hasPermission("create_proposal") ? [{ key: "proposal", label: "Create Update Proposal", icon: PlusCircle, onClick: () => router.push(`/proposals?new=1&sop=${encodeURIComponent(firstCitation)}&query=${encodeURIComponent(data.query)}`) }] : []),

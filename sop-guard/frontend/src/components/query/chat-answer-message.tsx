@@ -69,6 +69,36 @@ function uptodateSearchUrl(term: string): string {
 
 const OPENEVIDENCE_URL = "https://www.openevidence.com/"
 
+/** Optional escape hatch: OpenEvidence has no officially documented query
+ * URL - their user-guide pages are bot-gated and the only known prefill
+ * parameter (?oe_q=) is implemented by a third-party browser extension's
+ * injected content script, not by openevidence.com itself. If an
+ * institution's users run that extension (or OpenEvidence ever ships an
+ * official one), a template can be set to substitute the question in;
+ * absent by default, which falls back to copy+open+toast below. Never
+ * presented as "integrated" either way. */
+const OPENEVIDENCE_URL_TEMPLATE = process.env.NEXT_PUBLIC_OPENEVIDENCE_URL_TEMPLATE || ""
+
+/** Copies the exact question to the clipboard and opens OpenEvidence in a
+ * new tab, since there's no way to hand the question off directly - the
+ * honest "Option B" alternative to a fake integration. Falls back to just
+ * opening the tab (with a degraded toast) if the clipboard write fails,
+ * e.g. an insecure context. */
+async function openInOpenEvidence(query: string, showToast: (msg: string) => void) {
+  if (OPENEVIDENCE_URL_TEMPLATE) {
+    window.open(OPENEVIDENCE_URL_TEMPLATE.replace("{query}", encodeURIComponent(query)), "_blank", "noopener,noreferrer")
+    return
+  }
+  try {
+    await navigator.clipboard.writeText(query)
+    window.open(OPENEVIDENCE_URL, "_blank", "noopener,noreferrer")
+    showToast("Question copied - paste it into OpenEvidence.")
+  } catch {
+    window.open(OPENEVIDENCE_URL, "_blank", "noopener,noreferrer")
+    showToast("Opened OpenEvidence in a new tab.")
+  }
+}
+
 /** Only rendered if an institution has actually configured its PolicyTech
  * tenant URL - absent by default, so no link is shown (honest
  * not-configured) rather than a fabricated/guessed deep-link path, since
@@ -572,9 +602,9 @@ export function ChatAnswerMessage({
                 },
                 {
                   key: "openevidence",
-                  label: "Ask on OpenEvidence (external)",
+                  label: "Open in OpenEvidence (external)",
                   icon: ExternalLink,
-                  onClick: () => window.open(OPENEVIDENCE_URL, "_blank", "noopener,noreferrer"),
+                  onClick: () => openInOpenEvidence(data.query, (msg) => toast({ description: msg, variant: "info" })),
                 },
                 ...(POLICYTECH_BASE_URL ? [{
                   key: "policytech",

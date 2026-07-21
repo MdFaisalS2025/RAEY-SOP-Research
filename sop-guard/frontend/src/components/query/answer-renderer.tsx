@@ -254,8 +254,22 @@ function BlockWrap({ index, animate, children }: { index: number; animate: boole
   )
 }
 
-export function AnswerRenderer({ text, citations, onCitationClick, animate = false }: { text: string; citations?: InlineCitation[]; onCitationClick?: (n: number) => void; animate?: boolean }) {
-  const blocks = parseAnswer(text)
+export function AnswerRenderer({ text, citations, onCitationClick, animate = false, streaming = false }: { text: string; citations?: InlineCitation[]; onCitationClick?: (n: number) => void; animate?: boolean; streaming?: boolean }) {
+  // While tokens are still arriving, the last line is usually mid-word/
+  // mid-sentence - and if it happens to be mid-way through becoming a
+  // heading/bullet/numbered/kv marker (e.g. "1" then "1." then "1. Scr"),
+  // parseAnswer's classification can flip from a plain paragraph to a
+  // list/table block from one token to the next, which reads as a visible
+  // flicker. Held back here and rendered as plain trailing text until a
+  // newline lands and the line is complete enough to classify once.
+  let bodyText = text
+  let trailing = ""
+  if (streaming) {
+    const lastBreak = text.lastIndexOf("\n")
+    bodyText = lastBreak === -1 ? "" : text.slice(0, lastBreak)
+    trailing = lastBreak === -1 ? text : text.slice(lastBreak + 1)
+  }
+  const blocks = parseAnswer(bodyText)
   const ctx: CitationCtx = {
     byNumber: new Map((citations ?? []).map((c) => [c.number, c])),
     onCite: onCitationClick,
@@ -267,6 +281,9 @@ export function AnswerRenderer({ text, citations, onCitationClick, animate = fal
           {renderBlock(block, i, ctx)}
         </BlockWrap>
       ))}
+      {streaming && trailing.trim() && (
+        <p className="text-[16px] leading-[1.7] text-foreground">{renderInline(trailing, ctx)}</p>
+      )}
     </div>
   )
 }

@@ -444,6 +444,15 @@ export default function QueryPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages.length])
 
+  // Gentle follow-scroll while an answer is streaming in - but only when
+  // the reader is already at the bottom (same wasNearBottomRef gate as the
+  // new-question scroll above), so someone who has scrolled up to reread
+  // an earlier answer is never yanked back down mid-generation.
+  useEffect(() => {
+    if (!loading || !streamingText || !wasNearBottomRef.current) return
+    threadEndRef.current?.scrollIntoView({ behavior: "auto", block: "end" })
+  }, [streamingText, loading])
+
   const allHistory = [
     ...queryHistory,
     ...serverHistory
@@ -749,12 +758,17 @@ export default function QueryPage() {
               false, per the Send button's own icon state) leaves a
               permanent ghost placeholder under a completed answer. A plain
               conditional removes the node the instant loading flips, so
-              correctness doesn't depend on the exit transition completing. */}
+              correctness doesn't depend on the exit transition completing.
+              The streaming shell (`px-1`, no card border/shadow) matches
+              ChatAnswerMessage's answer body exactly, so when `loading`
+              flips false and this placeholder is replaced by the real
+              message, the prose doesn't jump position or padding - only
+              the caption line, source strip, and toolbar are new. */}
           {loading && (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
               {streamingText ? (
-                <div className="p-6 sm:p-8 rounded-2xl bg-card border border-border shadow-sm">
-                  <AnswerRenderer text={streamingText} citations={[]} />
+                <div className="px-1">
+                  <AnswerRenderer text={streamingText} citations={[]} streaming />
                   <span className="inline-block w-1.5 h-4 ml-0.5 bg-[#0B6BCB] animate-pulse align-text-bottom" />
                 </div>
               ) : (

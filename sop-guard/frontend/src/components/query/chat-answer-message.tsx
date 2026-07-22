@@ -69,32 +69,38 @@ function uptodateSearchUrl(term: string): string {
 
 const OPENEVIDENCE_URL = "https://www.openevidence.com/"
 
-/** Optional escape hatch: OpenEvidence has no officially documented query
- * URL - their user-guide pages are bot-gated and the only known prefill
- * parameter (?oe_q=) is implemented by a third-party browser extension's
- * injected content script, not by openevidence.com itself. If an
- * institution's users run that extension (or OpenEvidence ever ships an
- * official one), a template can be set to substitute the question in;
- * absent by default, which falls back to copy+open+toast below. Never
- * presented as "integrated" either way. */
+/** OpenEvidence has no officially documented query URL - their user-guide
+ * pages are bot-gated, and the only known prefill parameter (?oe_q=) is
+ * implemented by a third-party browser extension's injected content
+ * script, not by openevidence.com itself. Default best-effort: pass
+ * ?oe_q= anyway - it auto-fills/auto-searches for a clinician who happens
+ * to run that extension, and is harmlessly ignored (unused query param)
+ * by a plain openevidence.com for everyone else. The clipboard copy below
+ * is the actual guarantee this hand-off relies on, not the param.
+ * NEXT_PUBLIC_OPENEVIDENCE_URL_TEMPLATE overrides this entirely (e.g. if
+ * OpenEvidence ever ships an official query URL). Never presented as
+ * "integrated" either way. */
 const OPENEVIDENCE_URL_TEMPLATE = process.env.NEXT_PUBLIC_OPENEVIDENCE_URL_TEMPLATE || ""
 
-/** Copies the exact question to the clipboard and opens OpenEvidence in a
- * new tab, since there's no way to hand the question off directly - the
+function openEvidenceUrlFor(query: string): string {
+  if (OPENEVIDENCE_URL_TEMPLATE) return OPENEVIDENCE_URL_TEMPLATE.replace("{query}", encodeURIComponent(query))
+  return `${OPENEVIDENCE_URL}?oe_q=${encodeURIComponent(query)}`
+}
+
+/** Copies the exact question to the clipboard and opens OpenEvidence
+ * (best-effort auto-searching for extension users, see above) in a new
+ * tab, since there's no way to hand the question off directly - the
  * honest "Option B" alternative to a fake integration. Falls back to just
  * opening the tab (with a degraded toast) if the clipboard write fails,
  * e.g. an insecure context. */
 async function openInOpenEvidence(query: string, showToast: (msg: string) => void) {
-  if (OPENEVIDENCE_URL_TEMPLATE) {
-    window.open(OPENEVIDENCE_URL_TEMPLATE.replace("{query}", encodeURIComponent(query)), "_blank", "noopener,noreferrer")
-    return
-  }
+  const url = openEvidenceUrlFor(query)
   try {
     await navigator.clipboard.writeText(query)
-    window.open(OPENEVIDENCE_URL, "_blank", "noopener,noreferrer")
-    showToast("Question copied - paste it into OpenEvidence.")
+    window.open(url, "_blank", "noopener,noreferrer")
+    showToast("Question copied - paste it into OpenEvidence if it doesn't auto-fill.")
   } catch {
-    window.open(OPENEVIDENCE_URL, "_blank", "noopener,noreferrer")
+    window.open(url, "_blank", "noopener,noreferrer")
     showToast("Opened OpenEvidence in a new tab.")
   }
 }
@@ -581,19 +587,26 @@ export function ChatAnswerMessage({
 
           {!isAbstained && (
             <AnswerActionToolbar
+              // Primary row is deliberately down to the 1-3 actions a
+              // clinician's first reflex after reading an answer actually
+              // is - verify the source, see how it holds up against
+              // current evidence. Everything else (including Version
+              // History, which is real but occasional, not a first
+              // reflex) moved into More, ordered most-likely-next ->
+              // utilities -> external hand-offs -> Flag Issue last (see
+              // plan Phase K.3).
               primary={[
                 ...(primarySopId ? [{ key: "source", label: "View SOP Source", icon: FileText, onClick: () => router.push(libraryDeepLink(primarySopId, primaryInternalCitation?.snippet, primaryInternalCitation?.section_title)) }] : []),
                 ...(primarySopId ? [{ key: "comparison", label: "Compare with Clinical Evidence", icon: GitCompare, onClick: () => setActiveDrawer("comparison"), active: activeDrawer === "comparison" }] : []),
-                ...(primarySopId ? [{ key: "versions", label: "Version History", icon: History, onClick: () => setActiveDrawer("versions"), active: activeDrawer === "versions" }] : []),
                 ...(hasPermission("create_proposal") ? [{ key: "proposal", label: "Create Update Proposal", icon: PlusCircle, onClick: () => router.push(`/proposals?new=1&sop=${encodeURIComponent(firstCitation)}&query=${encodeURIComponent(data.query)}`) }] : []),
               ]}
               secondary={[
                 { key: "evidence", label: "External Evidence", icon: BookOpen, onClick: () => setActiveDrawer("evidence"), active: activeDrawer === "evidence", count: data.sources.length + data.inlineCitations.filter((c) => c.is_external).length || undefined },
+                ...(primarySopId ? [{ key: "versions", label: "Version History", icon: History, onClick: () => setActiveDrawer("versions"), active: activeDrawer === "versions" }] : []),
                 { key: "trust", label: "Trust Details", icon: ShieldCheck, onClick: () => setActiveDrawer("trust"), active: activeDrawer === "trust" },
+                { key: "copy", label: copiedLink === "link" ? "Link copied" : copiedLink === "answer" ? "Copied" : "Copy Link", icon: copiedLink ? Check : Link2, onClick: handleCopyLink },
                 { key: "export", label: "Export Answer", icon: Download, onClick: handleExportJson },
                 { key: "print", label: "Print Report", icon: Printer, onClick: handlePrintReport },
-                { key: "flag", label: "Flag Issue", icon: Flag, onClick: () => setShowFeedbackModal(true) },
-                { key: "copy", label: copiedLink === "link" ? "Link copied" : copiedLink === "answer" ? "Copied" : "Copy Link", icon: copiedLink ? Check : Link2, onClick: handleCopyLink },
                 {
                   key: "uptodate",
                   label: "Look up in UpToDate (external)",
@@ -612,6 +625,7 @@ export function ChatAnswerMessage({
                   icon: Building2,
                   onClick: () => window.open(POLICYTECH_BASE_URL, "_blank", "noopener,noreferrer"),
                 }] : []),
+                { key: "flag", label: "Flag Issue", icon: Flag, onClick: () => setShowFeedbackModal(true) },
               ]}
             />
           )}

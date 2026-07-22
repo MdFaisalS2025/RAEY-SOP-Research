@@ -282,7 +282,7 @@ export function AnswerRenderer({ text, citations, onCitationClick, animate = fal
         </BlockWrap>
       ))}
       {streaming && trailing.trim() && (
-        <p className="text-[16px] leading-[1.7] text-foreground">{renderInline(trailing, ctx)}</p>
+        <p className="text-[16px] leading-[1.7] text-foreground max-w-[70ch]">{renderInline(trailing, ctx)}</p>
       )}
     </div>
   )
@@ -304,13 +304,18 @@ function renderBlock(block: AnswerBlock, i: number, ctx: CitationCtx): React.Rea
     return (
       <div key={i} className="flex items-start gap-3 p-4 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30">
         <AlertTriangle className="w-4 h-4 text-[#B45309] dark:text-amber-400 shrink-0 mt-0.5" />
-        <p className="text-[15px] leading-relaxed text-foreground">{renderInline(block.text, ctx)}</p>
+        <p className="text-[15px] leading-relaxed text-foreground max-w-[70ch]">{renderInline(block.text, ctx)}</p>
       </div>
     )
   }
   if (block.type === "para") {
+    // Prose gets a comfortable reading measure even inside the wider K-B
+    // column (max-w-4xl on the page) - structured blocks below (steps,
+    // tables, kv rows) intentionally use the full width instead, since
+    // they benefit from the room and don't suffer the same way long
+    // unbroken lines of text do.
     return (
-      <p key={i} className="text-[16px] leading-[1.7] text-foreground">
+      <p key={i} className="text-[16px] leading-[1.7] text-foreground max-w-[70ch]">
         {renderInline(block.text, ctx)}
       </p>
     )

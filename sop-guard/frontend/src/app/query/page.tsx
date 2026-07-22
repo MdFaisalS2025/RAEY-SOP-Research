@@ -27,6 +27,48 @@ const suggestedQueries = [
 "What should a nurse monitor after central line insertion?",
 ]
 
+// Answers are typed out for the reader rather than popping in whole - see
+// the revealedText buffer below. Structured/cached/special-intent answers
+// (most of the demo's best content) arrive from the backend as a single
+// SSE token event carrying the entire answer at once (routes_chat.py's
+// special-intent branch, pipeline.py's cache hit) - there's nothing to
+// progressively reveal at the network layer, so pacing has to happen
+// client-side regardless of how the text arrived.
+//
+// A line that already looks like a numbered step / bullet / table row /
+// heading / "Label: value" pair is held back until it's complete, then
+// revealed in one jump instead of word-by-word - typing out "1." then
+// " Screen" then " with" reads as broken, not "typed". Matches the same
+// line-shape heuristics parseAnswer() uses in answer-renderer.tsx.
+const STRUCTURED_LINE_RE = /^(#{1,3}\s+|\d+[.)]\s+|[-*]\s+|[A-Z][A-Za-z /]{1,28}:\s+\S|>\s+)/
+
+/** Given the full text received so far (`target`) and how much of it has
+ * already been revealed (`revealedLen`), returns the next reveal length:
+ * the next word boundary for prose, or the end of the current line if that
+ * line is complete and looks structured (held at the current length -
+ * i.e. no progress - until the line finishes, so it always snaps in whole
+ * rather than partially). */
+function nextRevealLen(target: string, revealedLen: number): number {
+  if (revealedLen >= target.length) return target.length
+  const lineStart = target.lastIndexOf("\n", Math.max(revealedLen - 1, 0)) + 1
+  const newlineIdx = target.indexOf("\n", lineStart)
+  const lineComplete = newlineIdx !== -1
+  const lineEnd = lineComplete ? newlineIdx + 1 : target.length
+  const lineSoFar = target.slice(lineStart, lineComplete ? newlineIdx : target.length)
+  if (STRUCTURED_LINE_RE.test(lineSoFar.trimStart())) {
+    return lineComplete ? lineEnd : revealedLen
+  }
+  const spaceIdx = target.indexOf(" ", revealedLen)
+  if (spaceIdx === -1 || spaceIdx >= lineEnd) return lineComplete ? lineEnd : target.length
+  return spaceIdx + 1
+}
+
+// Base pace for small/live increments (feels like natural typing); scales
+// up for a large backlog (e.g. an entire cached answer landing at once) so
+// it still finishes within REVEAL_MAX_MS instead of crawling.
+const REVEAL_BASE_CPS = 45
+const REVEAL_MAX_MS = 2200
+
 const CHAT_SESSION_KEY = "meridian-chat-session"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -275,6 +317,11 @@ export default function QueryPage() {
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [streamingText, setStreamingText] = useState("")
+  // What's actually shown while an answer is in flight - paced toward
+  // streamingText by the RAF loop below instead of rendering the full
+  // buffer the instant it arrives, so a one-shot cached/special-intent
+  // answer still reads as typed rather than popping in whole.
+  const [revealedText, setRevealedText] = useState("")
   const [queryHistory, setQueryHistory] = useState<Array<{ query: string; confidence: number; type: string; timestamp: number }>>([])
   const [showHistory, setShowHistory] = useState(false)
   const [serverHistory, setServerHistory] = useState<Array<{ id: number; query: string; confidence: number; query_type: string; timestamp: string }>>([])
@@ -293,6 +340,79 @@ export default function QueryPage() {
   const threadEndRef = useRef<HTMLDivElement | null>(null)
   const wasNearBottomRef = useRef(true)
   const prevMessageCountRef = useRef(0)
+  const streamingTextRef = useRef("")
+  const revealedTextRef = useRef("")
+  useEffect(() => { streamingTextRef.current = streamingText }, [streamingText])
+  useEffect(() => { revealedTextRef.current = revealedText }, [revealedText])
+
+  // Paces revealedText toward streamingText for the lifetime of the page -
+  // idle (no-op, same state reference so React bails out of re-rendering)
+  // whenever there's nothing new to reveal. Runs once; reduced-motion users
+  // skip pacing and always see the full buffer immediately.
+  //
+  // Deliberately setInterval, not requestAnimationFrame: rAF is throttled
+  // to near-zero (and can be suspended entirely, confirmed live - it never
+  // fired once in a background/non-composited tab during testing) whenever
+  // the tab isn't the foreground, actively-rendering one. A clinician very
+  // plausibly leaves Ask Meridian in a background tab while an answer
+  // generates; rAF-driven pacing would silently strand the reveal there
+  // forever. setInterval keeps firing (browsers clamp its rate in
+  // background tabs, but never fully suspend it), so the buffer always
+  // keeps moving and finalization is never stuck waiting on it.
+  useEffect(() => {
+    const reduceMotion = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+    const TICK_MS = 40
+    let lastTs = performance.now()
+    const intervalId = setInterval(() => {
+      const ts = performance.now()
+      try {
+        const target = streamingTextRef.current
+        setRevealedText((prev) => {
+          if (prev.length >= target.length) return prev.length === target.length ? prev : target
+          if (reduceMotion) return target
+          const backlog = target.length - prev.length
+          const cps = Math.max(REVEAL_BASE_CPS, backlog / (REVEAL_MAX_MS / 1000))
+          const dt = (ts - lastTs) / 1000
+          let budget = Math.max(1, Math.round(cps * dt))
+          let next = prev.length
+          while (budget > 0) {
+            const advanced = nextRevealLen(target, next)
+            if (advanced === next) break
+            budget -= advanced - next
+            next = advanced
+          }
+          return next === prev.length ? prev : target.slice(0, next)
+        })
+      } catch (err) {
+        // Pacing is presentation-only - never let a bug here strand the
+        // answer mid-reveal. Log it, then jump straight to the full text
+        // so the conversation still completes.
+        console.error("reveal tick failed", err)
+        setRevealedText(streamingTextRef.current)
+      }
+      lastTs = ts
+    }, TICK_MS)
+    return () => clearInterval(intervalId)
+  }, [])
+
+  /** Resolves once revealedText has caught up to `target` (or maxWaitMs
+   * elapses) - used right before finalizing an answer so the typing
+   * animation finishes instead of being cut off mid-word. setTimeout, not
+   * requestAnimationFrame - see the reveal-loop comment above; the same
+   * background-tab throttling would otherwise strand this await forever. */
+  function waitForRevealCatchUp(target: string, maxWaitMs = 3000): Promise<void> {
+    return new Promise((resolve) => {
+      const start = performance.now()
+      const check = () => {
+        if (revealedTextRef.current.length >= target.length || performance.now() - start > maxWaitMs) {
+          resolve()
+          return
+        }
+        setTimeout(check, 40)
+      }
+      check()
+    })
+  }
 
   const submitted = messages.length > 0
 
@@ -449,9 +569,9 @@ export default function QueryPage() {
   // new-question scroll above), so someone who has scrolled up to reread
   // an earlier answer is never yanked back down mid-generation.
   useEffect(() => {
-    if (!loading || !streamingText || !wasNearBottomRef.current) return
+    if (!loading || !revealedText || !wasNearBottomRef.current) return
     threadEndRef.current?.scrollIntoView({ behavior: "auto", block: "end" })
-  }, [streamingText, loading])
+  }, [revealedText, loading])
 
   const allHistory = [
     ...queryHistory,
@@ -466,6 +586,7 @@ export default function QueryPage() {
     setQuery("")
     setLoading(false)
     setStreamingText("")
+    setRevealedText("")
     chatDisabledRef.current = false
     try { sessionStorage.removeItem(CHAT_SESSION_KEY) } catch { /* ignore */ }
   }
@@ -489,6 +610,7 @@ export default function QueryPage() {
     setMessages(prev => [...prev, { id: nextId(), role: "user", content: q }])
     setLoading(true)
     setStreamingText("")
+    setRevealedText("")
 
     const startedAt = Date.now()
     let data: AssistantData | null = null
@@ -531,6 +653,7 @@ export default function QueryPage() {
 
       if (!response) {
         setStreamingText("")
+        setRevealedText("")
         try {
           response = await streamSSE(
             "/api/query/stream",
@@ -574,8 +697,19 @@ export default function QueryPage() {
       setQueryHistory(prev => [{ query: q, confidence: 0, type: "error", timestamp: Date.now() }, ...prev].slice(0, 10))
     }
 
+    // Let the typing animation finish catching up to the authoritative
+    // final answer text (which can differ slightly from the raw streamed
+    // tokens - e.g. numeric redaction applied post-generation) before
+    // swapping in the finalized message, so finalization only adds the
+    // caption line/source strip/toolbar rather than also cutting the
+    // typing effect short.
+    if (data) {
+      setStreamingText(data.answer)
+      await waitForRevealCatchUp(data.answer)
+    }
     setLoading(false)
     setStreamingText("")
+    setRevealedText("")
     if (data) setMessages(prev => [...prev, { id: nextId(), role: "assistant", data }])
   }
 
@@ -647,7 +781,7 @@ export default function QueryPage() {
 
   return (
     <AppShell>
-      <div className="p-4 sm:p-6 max-w-3xl mx-auto w-full">
+      <div className="p-4 sm:p-6 max-w-4xl mx-auto w-full">
         {/* Slim header - just page identity + the two thread-management
             actions. The old Viewer role chip duplicated the profile menu
             already in the top nav, so it's gone rather than repeated. */}
@@ -766,9 +900,9 @@ export default function QueryPage() {
               the caption line, source strip, and toolbar are new. */}
           {loading && (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-              {streamingText ? (
+              {revealedText ? (
                 <div className="px-1">
-                  <AnswerRenderer text={streamingText} citations={[]} streaming />
+                  <AnswerRenderer text={revealedText} citations={[]} streaming />
                   <span className="inline-block w-1.5 h-4 ml-0.5 bg-[#0B6BCB] animate-pulse align-text-bottom" />
                 </div>
               ) : (

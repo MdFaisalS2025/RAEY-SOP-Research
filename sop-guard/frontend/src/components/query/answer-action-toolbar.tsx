@@ -53,6 +53,7 @@ function MoreMenuItem({ action, onAfterClick }: { action: ToolbarAction; onAfter
   const Icon = action.icon
   return (
     <button
+      role="menuitem"
       onClick={() => { action.onClick(); onAfterClick() }}
       disabled={action.disabled}
       className={cn(
@@ -72,15 +73,36 @@ function MoreMenuItem({ action, onAfterClick }: { action: ToolbarAction; onAfter
 export function AnswerActionToolbar({ primary, secondary }: { primary: ToolbarAction[]; secondary: ToolbarAction[] }) {
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
+
+  const close = () => {
+    setOpen(false)
+    triggerRef.current?.focus()
+  }
 
   useEffect(() => {
     if (!open) return
     const handleClickOutside = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false)
     }
-    const handleKeyDown = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false) }
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { close(); return }
+      if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return
+      const items = panelRef.current ? Array.from(panelRef.current.querySelectorAll<HTMLButtonElement>('[role="menuitem"]:not(:disabled)')) : []
+      if (items.length === 0) return
+      e.preventDefault()
+      const currentIndex = items.indexOf(document.activeElement as HTMLButtonElement)
+      const nextIndex = e.key === "ArrowDown"
+        ? (currentIndex + 1) % items.length
+        : (currentIndex - 1 + items.length) % items.length
+      items[nextIndex]?.focus()
+    }
     document.addEventListener("mousedown", handleClickOutside)
     document.addEventListener("keydown", handleKeyDown)
+    // Move focus to the first menu item on open, matching standard menu
+    // button behavior (WAI-ARIA menu button pattern).
+    panelRef.current?.querySelector<HTMLButtonElement>('[role="menuitem"]:not(:disabled)')?.focus()
     return () => {
       document.removeEventListener("mousedown", handleClickOutside)
       document.removeEventListener("keydown", handleKeyDown)
@@ -94,9 +116,11 @@ export function AnswerActionToolbar({ primary, secondary }: { primary: ToolbarAc
       {secondary.length > 0 && (
         <div className="relative" ref={containerRef}>
           <button
+            ref={triggerRef}
             onClick={() => setOpen((v) => !v)}
             title="More actions"
             aria-label="More actions"
+            aria-haspopup="menu"
             aria-expanded={open}
             className={cn(
               "inline-flex items-center justify-center w-8 h-8 rounded-lg transition-colors",
@@ -114,12 +138,15 @@ export function AnswerActionToolbar({ primary, secondary }: { primary: ToolbarAc
               node the instant `open` goes false. */}
           {open && (
             <motion.div
+              ref={panelRef}
+              role="menu"
+              aria-label="More actions"
               initial={{ opacity: 0, y: -6, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               className="absolute z-20 left-0 top-full mt-1.5 w-64 rounded-xl bg-card border border-border shadow-lg overflow-hidden py-1"
             >
               {secondary.map((a) => (
-                <MoreMenuItem key={a.key} action={a} onAfterClick={() => setOpen(false)} />
+                <MoreMenuItem key={a.key} action={a} onAfterClick={close} />
               ))}
             </motion.div>
           )}

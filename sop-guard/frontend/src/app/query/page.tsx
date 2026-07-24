@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useLayoutEffect } from "react"
 import { useRouter } from "next/navigation"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion } from "framer-motion"
 import {
   Send,
   History,
@@ -278,28 +278,34 @@ function AnswerSkeleton() {
     return () => clearInterval(t)
   }, [])
   return (
-    <div className="p-6 sm:p-8 rounded-2xl bg-card border border-border shadow-sm space-y-4" aria-hidden="true">
-      <p className="text-sm text-muted-foreground">{LOADING_PHRASES[phraseIndex]}</p>
-      <div className="space-y-4 animate-pulse">
-        <div className="h-4 w-2/5 rounded bg-muted" />
-        <div className="space-y-2">
-          <div className="h-3 w-full rounded bg-muted" />
-          <div className="h-3 w-11/12 rounded bg-muted" />
-          <div className="h-3 w-4/5 rounded bg-muted" />
-        </div>
-        <div className="space-y-3 pt-2">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="flex items-start gap-3">
-              <div className="w-7 h-7 rounded-full bg-muted shrink-0" />
-              <div className="flex-1 space-y-1.5 pt-1">
-                <div className="h-3 w-full rounded bg-muted" />
-                <div className="h-3 w-2/3 rounded bg-muted" />
+    <>
+      {/* Sibling to the aria-hidden shimmer below, not nested inside it -
+          screen readers get the phase text ("Searching approved SOPs…" etc.)
+          without the decorative pulsing shapes being announced. */}
+      <span role="status" aria-live="polite" className="sr-only">{LOADING_PHRASES[phraseIndex]}</span>
+      <div className="p-6 sm:p-8 rounded-2xl bg-card border border-border shadow-sm space-y-4" aria-hidden="true">
+        <p className="text-sm text-muted-foreground">{LOADING_PHRASES[phraseIndex]}</p>
+        <div className="space-y-4 animate-pulse">
+          <div className="h-4 w-2/5 rounded bg-muted" />
+          <div className="space-y-2">
+            <div className="h-3 w-full rounded bg-muted" />
+            <div className="h-3 w-11/12 rounded bg-muted" />
+            <div className="h-3 w-4/5 rounded bg-muted" />
+          </div>
+          <div className="space-y-3 pt-2">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="flex items-start gap-3">
+                <div className="w-7 h-7 rounded-full bg-muted shrink-0" />
+                <div className="flex-1 space-y-1.5 pt-1">
+                  <div className="h-3 w-full rounded bg-muted" />
+                  <div className="h-3 w-2/3 rounded bg-muted" />
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }
 
@@ -316,6 +322,17 @@ export default function QueryPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  // Screen-reader-only completion announcement: fires once per answer when
+  // `loading` flips back to false, giving non-visual users a clear signal
+  // without literally announcing every typed word of the reveal (that would
+  // be unusably noisy - the typewriter effect is a sighted-user affordance).
+  const [completionAnnouncement, setCompletionAnnouncement] = useState("")
+  const wasLoadingRef = useRef(false)
+  useEffect(() => {
+    if (wasLoadingRef.current && !loading) setCompletionAnnouncement("Answer ready")
+    else if (loading) setCompletionAnnouncement("")
+    wasLoadingRef.current = loading
+  }, [loading])
   const [streamingText, setStreamingText] = useState("")
   // What's actually shown while an answer is in flight - paced toward
   // streamingText by the RAF loop below instead of rendering the full
@@ -324,6 +341,7 @@ export default function QueryPage() {
   const [revealedText, setRevealedText] = useState("")
   const [queryHistory, setQueryHistory] = useState<Array<{ query: string; confidence: number; type: string; timestamp: number }>>([])
   const [showHistory, setShowHistory] = useState(false)
+  const historyRef = useRef<HTMLDivElement>(null)
   const [serverHistory, setServerHistory] = useState<Array<{ id: number; query: string; confidence: number; query_type: string; timestamp: string }>>([])
   const [readingLevel, setReadingLevel] = useState<ReadingLevel>("clinical")
   // PHI guard: result of scanning the current composer text (see
@@ -573,6 +591,22 @@ export default function QueryPage() {
     threadEndRef.current?.scrollIntoView({ behavior: "auto", block: "end" })
   }, [revealedText, loading])
 
+  // Click-outside/Escape close for the History popover (role-switcher.tsx /
+  // answer-action-toolbar.tsx pattern), only attached while open.
+  useEffect(() => {
+    if (!showHistory) return
+    const handleClickOutside = (e: MouseEvent) => {
+      if (historyRef.current && !historyRef.current.contains(e.target as Node)) setShowHistory(false)
+    }
+    const handleKeyDown = (e: KeyboardEvent) => { if (e.key === "Escape") setShowHistory(false) }
+    document.addEventListener("mousedown", handleClickOutside)
+    document.addEventListener("keydown", handleKeyDown)
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+      document.removeEventListener("keydown", handleKeyDown)
+    }
+  }, [showHistory])
+
   const allHistory = [
     ...queryHistory,
     ...serverHistory
@@ -788,13 +822,42 @@ export default function QueryPage() {
         <div className="mb-2 flex items-center justify-between gap-3">
           <h1 className="text-base font-semibold text-foreground">Ask Meridian</h1>
           <div className="flex items-center gap-1">
-            <button onClick={() => setShowHistory(!showHistory)}
-              className={cn("inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-colors",
-                showHistory ? "bg-[#0B6BCB]/10 text-[#0B6BCB]" : "text-muted-foreground hover:text-foreground hover:bg-muted")}
-              title="Query history">
-              <History className="w-4 h-4" />
-              History
-            </button>
+            {/* Floating popover (role-switcher.tsx / answer-action-toolbar.tsx
+                pattern: relative container + ref, click-outside/Escape
+                effect only attached while open, plain conditional render -
+                no AnimatePresence/exit) instead of the old full-width inline
+                card that pushed the whole thread down when opened. */}
+            <div className="relative" ref={historyRef}>
+              <button onClick={() => setShowHistory(!showHistory)}
+                className={cn("inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-colors",
+                  showHistory ? "bg-[#0B6BCB]/10 text-[#0B6BCB]" : "text-muted-foreground hover:text-foreground hover:bg-muted")}
+                title="Query history" aria-expanded={showHistory} aria-haspopup="menu">
+                <History className="w-4 h-4" />
+                History
+              </button>
+              {showHistory && allHistory.length > 0 && (
+                <motion.div initial={{ opacity: 0, y: -6, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }}
+                  className="absolute right-0 top-full mt-1.5 z-30 w-80 max-w-[calc(100vw-2rem)] p-4 rounded-2xl bg-card border border-border shadow-lg">
+                  <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                    <History className="w-4 h-4 text-[#0B6BCB]" />
+                    Recent Queries
+                  </h3>
+                  <div className="space-y-2 max-h-80 overflow-y-auto">
+                    {allHistory.map((h) => (
+                      <button key={h.timestamp} onClick={() => { setQuery(h.query); setShowHistory(false) }}
+                        className="w-full text-left p-2.5 rounded-xl hover:bg-muted border border-transparent hover:border-border transition-all group">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm truncate flex-1 mr-3">{h.query}</span>
+                          <span className={cn("text-xs font-mono shrink-0", h.confidence >= 0.7 ? "text-[#15803D] dark:text-green-400" : h.confidence >= 0.5 ? "text-[#B45309] dark:text-amber-400" : "text-[#B91C1C] dark:text-red-400")}>
+                            {Math.round(h.confidence * 100)}%
+                          </span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </div>
             {submitted && (
               <button onClick={resetConversation}
                 className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
@@ -805,32 +868,6 @@ export default function QueryPage() {
             )}
           </div>
         </div>
-
-        {/* Query History Panel */}
-        <AnimatePresence>
-          {showHistory && allHistory.length > 0 && (
-            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-              className="mb-4 p-4 rounded-2xl bg-card border border-border">
-              <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                <History className="w-4 h-4 text-[#0B6BCB]" />
-                Recent Queries
-              </h3>
-              <div className="space-y-2">
-                {allHistory.map((h) => (
-                  <button key={h.timestamp} onClick={() => { setQuery(h.query); setShowHistory(false) }}
-                    className="w-full text-left p-2.5 rounded-xl hover:bg-muted border border-transparent hover:border-border transition-all group">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm truncate flex-1 mr-3">{h.query}</span>
-                      <span className={cn("text-xs font-mono shrink-0", h.confidence >= 0.7 ? "text-[#15803D] dark:text-green-400" : h.confidence >= 0.5 ? "text-[#B45309] dark:text-amber-400" : "text-[#B91C1C] dark:text-red-400")}>
-                        {Math.round(h.confidence * 100)}%
-                      </span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {/* Empty state - greeting, composer, and suggested prompts as one
             vertically-centered block (Claude-style), instead of the
@@ -911,6 +948,7 @@ export default function QueryPage() {
             </motion.div>
           )}
           <div ref={threadEndRef} />
+          <span role="status" aria-live="polite" className="sr-only">{completionAnnouncement}</span>
         </div>
 
         {/* Composer follows the thread once a conversation exists, like a

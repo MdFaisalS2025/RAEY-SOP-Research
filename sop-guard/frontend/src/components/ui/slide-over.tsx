@@ -7,7 +7,7 @@
 // feature inventing its own drawer/modal/inline-card - same backdrop,
 // same close affordance, same slide-in spring, every time.
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { motion } from "framer-motion"
 import { X } from "lucide-react"
@@ -33,6 +33,28 @@ export function SlideOver({
 }) {
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
+
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null)
+
+  // Escape-to-close, focus-on-open (the close button - always present, a
+  // sensible first stop), and focus-restore-on-close. No full Tab-cycling
+  // focus trap: the backdrop already blocks pointer interaction with the
+  // rest of the page while open (aria-modal + pointerEvents), so this
+  // covers the practical gap without the added complexity of trapping Tab.
+  useEffect(() => {
+    if (open) {
+      previouslyFocusedRef.current = document.activeElement as HTMLElement
+      closeButtonRef.current?.focus()
+    } else if (previouslyFocusedRef.current) {
+      previouslyFocusedRef.current.focus()
+      previouslyFocusedRef.current = null
+    }
+    if (!open) return
+    const handleKeyDown = (e: KeyboardEvent) => { if (e.key === "Escape") onClose() }
+    document.addEventListener("keydown", handleKeyDown)
+    return () => document.removeEventListener("keydown", handleKeyDown)
+  }, [open, onClose])
 
   // The backdrop/panel stay permanently mounted (never conditionally
   // rendered via AnimatePresence's exit) and are driven purely by `open`.
@@ -69,7 +91,7 @@ export function SlideOver({
             </h3>
             {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
           </div>
-          <button onClick={onClose} aria-label="Close" title="Close"
+          <button ref={closeButtonRef} onClick={onClose} aria-label="Close" title="Close"
             className="shrink-0 p-2 rounded-lg hover:bg-muted text-muted-foreground transition-colors">
             <X className="w-5 h-5" />
           </button>

@@ -9,6 +9,7 @@ import Link from "next/link"
 import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { SafetyNote } from "@/components/ui/safety-note"
+import { ErrorState } from "@/components/ui/error-state"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
 
@@ -102,19 +103,24 @@ function QuickRefCard({ sop, index }: { sop: RealSOP; index: number }) {
 export default function QuickRefPage() {
   const [sops, setSops] = useState<RealSOP[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [search, setSearch] = useState("")
   const [dept, setDept] = useState("All")
 
-  useEffect(() => {
+  const loadSops = () => {
+    setLoading(true)
+    setLoadError(false)
     fetch(`${API_BASE}/api/sops`)
-      .then((r) => r.json())
+      .then((r) => { if (!r.ok) throw new Error(); return r.json() })
       .then((data) => {
         const list = Array.isArray(data) ? data : (data.sops ?? data.items ?? [])
         setSops(list)
       })
-      .catch(() => setSops([]))
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false))
-  }, [])
+  }
+
+  useEffect(loadSops, [])
 
   const cardableSops = useMemo(
     () => sops.filter((s) => (s.structured_json?.steps?.length ?? 0) > 0),
@@ -202,6 +208,8 @@ export default function QuickRefPage() {
           <div className="flex items-center justify-center py-16 text-muted-foreground gap-2 print:hidden">
             <Loader2 className="w-5 h-5 animate-spin" /> Loading SOPs...
           </div>
+        ) : loadError ? (
+          <ErrorState message="Couldn't load SOPs for quick reference." onRetry={loadSops} />
         ) : filtered.length === 0 ? (
           <div className="rounded-2xl bg-card border border-border p-12 text-center text-muted-foreground text-sm">
             No cards match your search.

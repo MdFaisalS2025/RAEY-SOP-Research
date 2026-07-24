@@ -342,6 +342,20 @@ export default function QueryPage() {
   const [queryHistory, setQueryHistory] = useState<Array<{ query: string; confidence: number; type: string; timestamp: number }>>([])
   const [showHistory, setShowHistory] = useState(false)
   const historyRef = useRef<HTMLDivElement>(null)
+  // Respects the Voice Input toggle on Settings ("meridian-settings" in
+  // localStorage) - that toggle previously had no consumer anywhere, so
+  // turning it off did nothing. Defaults to on (matches the toggle's
+  // own default) if unset or unreadable.
+  const [voiceInputEnabled, setVoiceInputEnabled] = useState(true)
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("meridian-settings")
+      if (stored) {
+        const s = JSON.parse(stored)
+        if (typeof s.voiceEnabled === "boolean") setVoiceInputEnabled(s.voiceEnabled)
+      }
+    } catch { /* ignore */ }
+  }, [])
   const [serverHistory, setServerHistory] = useState<Array<{ id: number; query: string; confidence: number; query_type: string; timestamp: string }>>([])
   const [readingLevel, setReadingLevel] = useState<ReadingLevel>("clinical")
   // PHI guard: result of scanning the current composer text (see
@@ -775,7 +789,7 @@ export default function QueryPage() {
         className="w-full bg-transparent border-0 px-4 pt-3.5 pb-1 resize-none focus:outline-none focus:ring-0 text-foreground placeholder:text-subtle caret-[#0B6BCB] text-base max-h-[200px] overflow-y-auto"
       />
       <div className="flex items-center justify-end gap-1.5 px-2.5 pb-2.5">
-        <VoiceRecorder onTranscript={(t) => { setQuery(t) }} />
+        {voiceInputEnabled && <VoiceRecorder onTranscript={(t) => { setQuery(t) }} />}
         <button
           onClick={() => handleSubmit()}
           disabled={!canSend}

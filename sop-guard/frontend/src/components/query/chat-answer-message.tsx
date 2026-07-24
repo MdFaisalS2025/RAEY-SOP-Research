@@ -420,6 +420,19 @@ export function ChatAnswerMessage({
       ? `Based on ${distinctSopTitles[0]}${primaryVersion ? ` v${primaryVersion}` : ""}`
       : null
 
+  // Generation-mode tag, surfaced right on the answer instead of two clicks
+  // deep in the Trust Details drawer. Framed as what it IS (grounded,
+  // extractive) rather than what it isn't ("fallback") - extractive
+  // answering can't hallucinate since every sentence is lifted from the
+  // cited SOP text, so this is a safety property worth showing, not a
+  // degradation worth hiding. Suppressed on abstained/gap answers, which
+  // have their own dedicated framing already.
+  const generationTag = isAbstained ? null : data.generationMode === "llm"
+    ? "Model-generated"
+    : data.generationMode
+      ? "Extractive"
+      : null
+
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="space-y-3">
 
@@ -486,6 +499,17 @@ export function ChatAnswerMessage({
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs px-1">
           {metadataLine && <span className="text-muted-foreground">{metadataLine}</span>}
+          {generationTag && (
+            <>
+              {metadataLine && <span className="text-subtle">·</span>}
+              <span
+                title={generationTag === "Extractive" ? "Assembled directly from the cited SOP text - not model-synthesized, so it can't introduce facts the SOP doesn't contain." : "Drafted by the in-house model, then checked against the cited SOP text."}
+                className="text-muted-foreground cursor-help"
+              >
+                {generationTag}
+              </span>
+            </>
+          )}
           {(data.route === "sop_library" || data.route === "hybrid") && primarySopId && (
             <>
               <span className="text-subtle">·</span>

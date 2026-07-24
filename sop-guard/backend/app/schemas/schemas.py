@@ -211,6 +211,39 @@ class FeedbackListResponse(BaseModel):
     items: list[FeedbackItem] = []
 
 
+# ── Human Evaluation ───────────────────────────────────────────
+
+class HumanEvalRatingRequest(BaseModel):
+    evaluator_role: str = ""
+    evaluator_name: str = ""
+    item_id: str
+    correctness: int = Field(ge=1, le=5)
+    completeness: int = Field(ge=1, le=5)
+    safety: int = Field(ge=1, le=5)
+    comment: str = ""
+
+
+class HumanEvalRatingResponse(BaseModel):
+    id: int
+    message: str
+
+
+class HumanEvalRatingItem(BaseModel):
+    id: int
+    evaluator_role: str
+    evaluator_name: str
+    item_id: str
+    correctness: int
+    completeness: int
+    safety: int
+    comment: str
+    created_at: str
+
+
+class HumanEvalRatingListResponse(BaseModel):
+    ratings: list[HumanEvalRatingItem] = []
+
+
 # ── Analytics ──────────────────────────────────────────────────
 
 class AnalyticsResponse(BaseModel):

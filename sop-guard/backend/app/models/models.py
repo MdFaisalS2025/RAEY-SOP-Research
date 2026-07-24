@@ -96,6 +96,25 @@ class Feedback(Base):
     query = relationship("Query", back_populates="feedbacks")
 
 
+class HumanEvalRating(Base):
+    """Clinician ratings from the /human-eval sensitivity study (see
+    app/api/routes_human_eval.py). Previously written only to browser
+    localStorage - invisible to anyone but the rater, and destroyed by a
+    cache clear or the page's own "Restart" button. Real persistence for
+    what is otherwise the app's only clinician-evaluation instrument."""
+    __tablename__ = "human_eval_ratings"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    evaluator_role = Column(String(64), default="")
+    evaluator_name = Column(String(128), default="")
+    item_id = Column(String(32), nullable=False)
+    correctness = Column(Integer, nullable=False)
+    completeness = Column(Integer, nullable=False)
+    safety = Column(Integer, nullable=False)
+    comment = Column(Text, default="")
+    created_at = Column(DateTime, default=_utcnow)
+
+
 class SOPUpdate(Base):
     __tablename__ = "sop_updates"
 

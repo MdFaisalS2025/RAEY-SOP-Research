@@ -9,6 +9,7 @@ import {
 import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { SafetyNote } from "@/components/ui/safety-note"
+import { ErrorState } from "@/components/ui/error-state"
 import { cn } from "@/lib/utils"
 import { useRole } from "@/lib/role-context"
 
@@ -36,16 +37,17 @@ export default function TrainingPage() {
   const { role } = useRole()
   const [records, setRecords] = useState<CreditRecord[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
 
   useEffect(() => {
     let cancelled = false
     fetch(`${API_BASE}/api/credits?limit=500`)
-      .then((r) => r.json())
+      .then((r) => { if (!r.ok) throw new Error(); return r.json() })
       .then((creditsData) => {
         if (cancelled) return
         setRecords(Array.isArray(creditsData?.credits) ? creditsData.credits : [])
       })
-      .catch(() => { if (!cancelled) setRecords([]) })
+      .catch(() => { if (!cancelled) setLoadError(true) })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
   }, [])
@@ -113,6 +115,8 @@ export default function TrainingPage() {
           <div className="flex items-center justify-center py-16 text-muted-foreground gap-2">
             <Loader2 className="w-5 h-5 animate-spin" /> Loading training activity...
           </div>
+        ) : loadError ? (
+          <ErrorState message="Couldn't load training activity." />
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

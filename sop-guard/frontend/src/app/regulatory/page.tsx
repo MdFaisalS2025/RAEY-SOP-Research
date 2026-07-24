@@ -10,6 +10,8 @@ import {
 import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { SafetyNote } from "@/components/ui/safety-note"
+import { IllustrativeNote } from "@/components/ui/illustrative-note"
+import { ErrorState } from "@/components/ui/error-state"
 import { cn } from "@/lib/utils"
 import { downloadCSV } from "@/lib/csv-export"
 
@@ -140,7 +142,7 @@ const READY_STATUS_META: Record<string, { label: string; className: string }> = 
 
 // ─── Standards Mapping tab ────────────────────────────────────────────────────
 
-function StandardsMappingTab({ sops, loading }: { sops: RealSOP[]; loading: boolean }) {
+function StandardsMappingTab({ sops, loading, loadError, onRetry }: { sops: RealSOP[]; loading: boolean; loadError: boolean; onRetry: () => void }) {
   const [activeTab, setActiveTab] = useState<Framework>("All")
   const [exportState, setExportState] = useState<"idle" | "loading" | "success">("idle")
 
@@ -272,6 +274,8 @@ function StandardsMappingTab({ sops, loading }: { sops: RealSOP[]; loading: bool
         <div className="flex items-center justify-center py-12 text-muted-foreground gap-2">
           <Loader2 className="w-5 h-5 animate-spin" /> Loading SOP corpus...
         </div>
+      ) : loadError ? (
+        <ErrorState message="Couldn't load the SOP corpus." onRetry={onRetry} />
       ) : (
       <div className="space-y-4">
         {filtered.length === 0 && (
@@ -376,7 +380,7 @@ function StandardsMappingTab({ sops, loading }: { sops: RealSOP[]; loading: bool
 
 // ─── Survey Readiness tab ─────────────────────────────────────────────────────
 
-function SurveyReadinessTab({ sops, loading }: { sops: RealSOP[]; loading: boolean }) {
+function SurveyReadinessTab({ sops, loading, loadError, onRetry }: { sops: RealSOP[]; loading: boolean; loadError: boolean; onRetry: () => void }) {
   const [activeTab, setActiveTab] = useState<FilterTab>("all")
   const [exportState, setExportState] = useState<"idle" | "loading" | "success">("idle")
   const [tracerToast, setTracerToast] = useState<string | null>(null)
@@ -458,6 +462,8 @@ function SurveyReadinessTab({ sops, loading }: { sops: RealSOP[]; loading: boole
         <div className="flex items-center justify-center py-12 text-muted-foreground gap-2">
           <Loader2 className="w-5 h-5 animate-spin" /> Loading SOP corpus...
         </div>
+      ) : loadError ? (
+        <ErrorState message="Couldn't load the SOP corpus." onRetry={onRetry} />
       ) : (
       <>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -646,18 +652,23 @@ function SurveyReadinessTab({ sops, loading }: { sops: RealSOP[]; loading: boole
 export default function RegulatoryPage() {
   const [sops, setSops] = useState<RealSOP[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [tab, setTab] = useState<"standards" | "readiness">(() => {
     if (typeof window === "undefined") return "standards"
     return new URLSearchParams(window.location.search).get("tab") === "readiness" ? "readiness" : "standards"
   })
 
-  useEffect(() => {
+  const loadSops = () => {
+    setLoading(true)
+    setLoadError(false)
     fetch(`${API_BASE}/api/sops`)
-      .then((r) => r.json())
+      .then((r) => { if (!r.ok) throw new Error(); return r.json() })
       .then((data) => setSops(Array.isArray(data) ? data : (data.sops ?? data.items ?? [])))
-      .catch(() => setSops([]))
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false))
-  }, [])
+  }
+
+  useEffect(loadSops, [])
 
   const TABS = [
     { key: "standards" as const, label: "Standards Mapping", icon: Shield },
@@ -684,6 +695,7 @@ export default function RegulatoryPage() {
         </div>
 
         <SafetyNote />
+        <IllustrativeNote detail="TJC/CMS/OSHA standard mappings, chapter scores, and tracer items below are illustrative examples, not a live accreditation feed. Only the underlying SOP list is real." />
 
         <div className="flex gap-1 p-1 rounded-xl bg-muted border border-border w-fit">
           {TABS.map((t) => (
@@ -702,9 +714,9 @@ export default function RegulatoryPage() {
         </div>
 
         {tab === "standards" ? (
-          <StandardsMappingTab sops={sops} loading={loading} />
+          <StandardsMappingTab sops={sops} loading={loading} loadError={loadError} onRetry={loadSops} />
         ) : (
-          <SurveyReadinessTab sops={sops} loading={loading} />
+          <SurveyReadinessTab sops={sops} loading={loading} loadError={loadError} onRetry={loadSops} />
         )}
       </div>
     </AppShell>

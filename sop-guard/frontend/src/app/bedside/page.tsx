@@ -38,6 +38,12 @@ export default function BedsidePage() {
   const [listening, setListening] = useState(false)
   const [loading, setLoading] = useState(false)
   const [answer, setAnswer] = useState<BedsideAnswer | null>(null)
+  // Separate from `answer` on purpose: a fetch failure used to render
+  // through the exact same card as a real cited answer (and could be
+  // read aloud by speech synthesis in the same voice as real guidance) -
+  // indistinguishable from a genuine result at the bedside. Errors now
+  // get their own visually distinct treatment and are never spoken.
+  const [error, setError] = useState<string | null>(null)
   const [audioEnabled, setAudioEnabled] = useState(true)
   const [speaking, setSpeaking] = useState(false)
   const [voiceSupported, setVoiceSupported] = useState(false)
@@ -101,6 +107,7 @@ export default function BedsidePage() {
     if (!question || loading) return
     setLoading(true)
     setAnswer(null)
+    setError(null)
     stopAudio()
     try {
       const res = await fetch("/api/query", {
@@ -108,6 +115,7 @@ export default function BedsidePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query: question }),
       })
+      if (!res.ok) throw new Error(`Request failed (${res.status})`)
       const data = await res.json()
       const text: string = data.answer ?? "This information is not covered in the available SOPs."
       const sourceMatch = text.match(/Source:\s*(.+)$/im)
@@ -127,12 +135,7 @@ export default function BedsidePage() {
         window.speechSynthesis.speak(utterance)
       }
     } catch {
-      setAnswer({
-        answerText: "Could not reach the SOP database. Check your connection and try again.",
-        keyValue: null,
-        sourceSop: "",
-        hasConflict: false,
-      })
+      setError("Could not reach the SOP database. Check your connection and try again.")
     } finally {
       setLoading(false)
     }
@@ -206,6 +209,26 @@ export default function BedsidePage() {
         </div>
 
         <AnimatePresence>
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="w-full bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 rounded-2xl shadow-sm p-6 flex items-start gap-3"
+            >
+              <AlertTriangle className="w-6 h-6 text-[#B91C1C] dark:text-red-400 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-lg font-semibold text-[#B91C1C] dark:text-red-400 mb-1">Couldn't get an answer</p>
+                <p className="text-base text-foreground/90">{error}</p>
+                <button
+                  onClick={() => runQuery(transcript)}
+                  className="mt-3 px-4 py-2 rounded-lg bg-[#B91C1C] dark:bg-red-500/20 text-white dark:text-red-300 text-sm font-medium hover:opacity-90 transition-opacity"
+                >
+                  Try again
+                </button>
+              </div>
+            </motion.div>
+          )}
           {answer && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}

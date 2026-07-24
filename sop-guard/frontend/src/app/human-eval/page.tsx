@@ -147,7 +147,25 @@ export default function HumanEvalPage() {
     }
     const updated = [...ratings, rating]
     setRatings(updated)
+    // localStorage remains the in-progress resume cache (so refreshing
+    // mid-study doesn't lose your place) - the real record of the rating
+    // now also goes to the backend, which previously never happened at
+    // all. Best-effort: a failed POST doesn't block the study, but is no
+    // longer the *only* copy of the data either way.
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
+    fetch("/api/human-eval/ratings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        evaluator_role: currentUser.role,
+        evaluator_name: currentUser.name,
+        item_id: rating.item_id,
+        correctness: rating.correctness,
+        completeness: rating.completeness,
+        safety: rating.safety,
+        comment: rating.comment,
+      }),
+    }).catch(() => { /* best-effort; localStorage still has it */ })
     setCurrent({})
     setComment("")
     if (idx + 1 >= EVAL_ITEMS.length) setDone(true)
@@ -156,6 +174,7 @@ export default function HumanEvalPage() {
 
   const restart = () => {
     localStorage.removeItem(STORAGE_KEY)
+    fetch(`/api/human-eval/ratings?evaluator_name=${encodeURIComponent(currentUser.name)}`, { method: "DELETE" }).catch(() => {})
     setRatings([])
     setCurrent({})
     setComment("")

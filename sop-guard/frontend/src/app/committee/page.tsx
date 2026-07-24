@@ -529,6 +529,10 @@ export default function CommitteePage() {
                 <h2 className="font-display text-lg font-bold text-foreground flex items-center gap-2">
                   <Users className="w-5 h-5 text-[#0B6BCB]" /> Committee Members
                 </h2>
+                <p className="text-xs text-muted-foreground -mt-2">
+                  Illustrative roster - Meridian has no committee-membership model yet. Each member&apos;s vote status
+                  below is real, matched against the live proposal votes above by name.
+                </p>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {committeeUsers.map((user, i) => {
                     const hasVoted = proposals.some((p) => p.votes.some((v) => v.user_name === user.name))

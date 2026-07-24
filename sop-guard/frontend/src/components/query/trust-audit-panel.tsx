@@ -160,7 +160,7 @@ export function TrustAuditPanel({
           <InfoCard label="Generated" icon={Clock} value={new Date(data.answeredAt).toLocaleString()} />
           <InfoCard label="User Role" icon={User} value={role.replace(/_/g, " ")} />
           <InfoCard label="Audit Event ID" icon={Hash} value={data.answerId ?? "not persisted"} />
-          <InfoCard label="Generation Mode" icon={Cpu} value={data.generationMode === "llm" ? "In-house model" : data.generationMode === "mock_fallback" ? "Extractive (model fallback)" : "Extractive (no model configured)"} />
+          <InfoCard label="Answer Method" icon={Cpu} value={data.generationMode === "llm" ? "Model-generated (in-house)" : "Extractive - assembled directly from cited SOP text"} />
           <InfoCard label="Sources Consulted" icon={Layers} value={`${distinctSopTitles.length} SOP${distinctSopTitles.length === 1 ? "" : "s"}`} />
         </div>
       </div>

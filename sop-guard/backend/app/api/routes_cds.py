@@ -7,6 +7,7 @@ https://cds-hooks.org
 Research prototype. Not for clinical use.
 """
 
+import logging
 from typing import Any
 
 from fastapi import APIRouter, Depends
@@ -16,6 +17,8 @@ from app.database.db import get_db
 from app.rag.hybrid_retriever import HybridRetriever
 from app.rag.entity_graph import DRUG_LEXICON, build_graph, find_conflicts
 from app.services.chunk_loader import load_chunks
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["CDS Hooks"])
 
@@ -73,7 +76,13 @@ def _extract_medication(body: dict[str, Any]) -> tuple[str, str]:
             medication = body.get("medication", "") or context.get("medication", "")
             dose = dose or body.get("dose", "") or context.get("dose", "")
     except Exception:
-        pass
+        # A malformed FHIR draftOrders payload shouldn't crash the CDS
+        # Hooks endpoint - {"cards": []} downstream is spec-compliant
+        # "nothing to report" - but a silent swallow here was previously
+        # indistinguishable from "the EHR sent a clean order with no
+        # medication." Logged so a real parse failure is visible in
+        # operations, not just invisible.
+        logger.warning("CDS Hooks: failed to parse medication from draftOrders payload", exc_info=True)
     return (medication or "").strip(), (dose or "").strip()
 
 
@@ -128,7 +137,13 @@ async def protocol_check(body: dict, db: AsyncSession = Depends(get_db)):
                 indicator = "critical"
                 conflict_msgs.append(c["message"])
     except Exception:
-        pass
+        # If conflict detection itself throws, indicator silently stays at
+        # whatever it already was (info/warning) instead of the "critical"
+        # it might genuinely deserve - the wrong default for a safety
+        # check. Can't safely force "critical" on an unrelated exception
+        # either (that would cry wolf on every transient error), so this
+        # is logged to make the degradation visible rather than invisible.
+        logger.warning("CDS Hooks: conflict detection failed for drug=%r - indicator may be understated", drug, exc_info=True)
 
     if indicator != "critical" and any(
         (c.get("chunk_type") or "") in ("threshold", "contraindication")

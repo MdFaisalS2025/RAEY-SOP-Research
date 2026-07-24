@@ -132,7 +132,6 @@ export default function SettingsPage() {
   const [voiceEnabled, setVoiceEnabled] = useState(true)
   const [voiceAvailable, setVoiceAvailable] = useState(false)
   const [isDark, setIsDark] = useState(true)
-  const [demoMode, setDemoMode] = useState(true)
   const [saved, setSaved] = useState(false)
   const [backendStatus, setBackendStatus] = useState<"checking" | "online" | "offline">("checking")
   const [healthData, setHealthData] = useState<any>(null)
@@ -161,7 +160,6 @@ export default function SettingsPage() {
       if (stored) {
         const s = JSON.parse(stored)
         if (typeof s.voiceEnabled === "boolean") setVoiceEnabled(s.voiceEnabled)
-        if (typeof s.demoMode === "boolean") setDemoMode(s.demoMode)
       }
     } catch {}
 
@@ -216,7 +214,7 @@ export default function SettingsPage() {
   }, [])
 
   const handleSave = () => {
-    const settings = { voiceEnabled, demoMode }
+    const settings = { voiceEnabled }
     localStorage.setItem("meridian-settings", JSON.stringify(settings))
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
@@ -345,7 +343,7 @@ export default function SettingsPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <StatusItem label="Provider" value={llmStatus?.provider || "ollama"} />
                   <StatusItem label="Model" value={llmStatus?.model || "llama3.2"} />
-                  <StatusItem label="Model reachable" value={llmStatus?.available ? "Yes" : "No — using template fallback"} />
+                  <StatusItem label="Answer method" value={llmStatus?.available ? "Model-generated" : "Extractive - assembled from cited SOP text"} />
                   <StatusItem label="Embedding backend" value={embeddingStatus?.backend || "BAAI/bge-small-en-v1.5"} />
                 </div>
               </SettingsCard>
@@ -353,20 +351,8 @@ export default function SettingsPage() {
               <SettingsCard title="Preferences">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-foreground">Demo Mode</p>
-                    <p className="text-xs text-muted-foreground">Use mock data when backend is unavailable</p>
-                  </div>
-                  <Toggle on={demoMode} onClick={() => setDemoMode(!demoMode)} />
-                </div>
-                {demoMode && (
-                  <div className="px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs">
-                    Demo mode is active. The app will use simulated data when the backend is unreachable.
-                  </div>
-                )}
-                <div className="flex items-center justify-between">
-                  <div>
                     <p className="text-sm font-medium text-foreground">Voice Input</p>
-                    <p className="text-xs text-muted-foreground">Enable microphone for voice queries</p>
+                    <p className="text-xs text-muted-foreground">Show the microphone button on Ask Meridian&apos;s composer</p>
                   </div>
                   <div className="flex items-center gap-2">
                     {voiceAvailable ? (

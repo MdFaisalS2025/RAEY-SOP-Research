@@ -9,6 +9,7 @@ import {
 import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { SafetyNote } from "@/components/ui/safety-note"
+import { ErrorState } from "@/components/ui/error-state"
 import { cn } from "@/lib/utils"
 import type { AuditEntry, AuditEventType } from "@/lib/governance-types"
 import { useRole } from "@/lib/role-context"
@@ -110,17 +111,22 @@ export default function AuditPage() {
   const [showExportMenu, setShowExportMenu] = useState(false)
   const [auditEntries, setAuditEntries] = useState<AuditEntry[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
 
-  useEffect(() => {
+  const loadAudit = () => {
+    setLoading(true)
+    setLoadError(false)
     fetch("/api/activity?limit=200")
-      .then((r) => r.json())
+      .then((r) => { if (!r.ok) throw new Error(); return r.json() })
       .then((data) => {
         const raw: RawActivityEntry[] = Array.isArray(data?.entries) ? data.entries : []
         setAuditEntries(raw.map(mapActivityToAuditEntry))
       })
-      .catch(() => setAuditEntries([]))
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false))
-  }, [])
+  }
+
+  useEffect(loadAudit, [])
 
   const uniqueEventTypes = useMemo(() => {
     const types = Array.from(new Set(auditEntries.map((e) => e.event_type)))
@@ -381,7 +387,14 @@ export default function AuditPage() {
                   </AnimatePresence>
                 </Fragment>
               ))}
-              {!loading && filteredAudit.length === 0 && (
+              {!loading && loadError && (
+                <tr>
+                  <td colSpan={7} className="p-0">
+                    <ErrorState message="Couldn't load the audit trail." onRetry={loadAudit} />
+                  </td>
+                </tr>
+              )}
+              {!loading && !loadError && filteredAudit.length === 0 && (
                 <tr>
                   <td colSpan={7} className="p-8 text-center text-muted-foreground text-sm">
                     {auditEntries.length === 0

@@ -29,6 +29,7 @@ import {
 import { useRole } from "@/lib/role-context"
 import AppShell from "@/components/layout/app-shell"
 import { FirstRunDemo } from "@/components/layout/first-run-demo"
+import { IllustrativeNote } from "@/components/ui/illustrative-note"
 import {
   MOCK_SOPS,
   MOCK_COMPLIANCE,
@@ -732,6 +733,8 @@ function ComplianceOfficerDashboard() {
         <StatTile label="Audit Events Today" value={MOCK_DASHBOARD_STATS.audit_events_today} color="teal" icon={Activity} trend="up" />
       </div>
 
+      <IllustrativeNote detail="Showing illustrative department-compliance data, not wired to a live tracking system. See Compliance → Reviews for real attestation records." />
+
       {/* Compliance Heatmap */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
@@ -810,20 +813,28 @@ function CommitteeDashboard() {
         <StatTile label="Proposals Total" value={MOCK_PROPOSALS.length} color="teal" icon={FileText} />
       </div>
 
+      <IllustrativeNote detail="Showing illustrative proposal/evidence-watch data, not wired to a live feed. See Governance → Proposals for the real proposal list." />
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="space-y-3">
           <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
             Awaiting Your Review
           </h3>
+          {/* Static preview, not a Link and no action buttons - these are
+              illustrative fixtures (see banner above), not real proposal
+              records, so they can't honestly deep-link to /proposals/{id}
+              or take a real approve/reject action. Those previously
+              intercepted every click with e.preventDefault() and did
+              nothing - looked interactive, did nothing. Real proposal
+              actions live on the actual Governance -> Proposals page. */}
           {MOCK_PROPOSALS.map((proposal) => (
-            <Link
+            <div
               key={proposal.id}
-              href={`/proposals/${proposal.id}`}
-              className="block bg-muted border border-border rounded-lg p-4 hover:border-[#0B6BCB]/30 transition-colors group"
+              className="bg-muted border border-border rounded-lg p-4"
             >
               <div className="flex items-start gap-2 mb-2">
                 <div className="min-w-0 flex-1">
-                  <p className="text-[12px] font-semibold text-foreground group-hover:text-[#0B6BCB] transition-colors line-clamp-2 mb-1">
+                  <p className="text-[12px] font-semibold text-foreground line-clamp-2 mb-1">
                     {proposal.title}
                   </p>
                   <div className="flex items-center gap-2 flex-wrap">
@@ -841,28 +852,11 @@ function CommitteeDashboard() {
                   </div>
                 </div>
               </div>
-              <div className="flex gap-2 mt-3">
-                <button
-                  onClick={(e) => e.preventDefault()}
-                  className="flex-1 py-1.5 text-[11px] font-semibold rounded-lg bg-[#DCFCE7] dark:bg-green-500/10 border border-[#BBF7D0] dark:border-green-500/30 text-[#15803D] dark:text-green-400 hover:bg-[#BBF7D0] transition-colors"
-                >
-                  Approve
-                </button>
-                <button
-                  onClick={(e) => e.preventDefault()}
-                  className="flex-1 py-1.5 text-[11px] font-semibold rounded-lg bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400 hover:bg-[#FECACA] transition-colors"
-                >
-                  Reject
-                </button>
-                <button
-                  onClick={(e) => e.preventDefault()}
-                  className="flex-1 py-1.5 text-[11px] font-semibold rounded-lg bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 hover:bg-[#FDE68A] transition-colors"
-                >
-                  Request Changes
-                </button>
-              </div>
-            </Link>
+            </div>
           ))}
+          <Link href="/proposals" className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#0B6BCB] hover:text-[#0959AC] transition-colors">
+            Review real proposals <ChevronRight className="w-3.5 h-3.5" />
+          </Link>
         </div>
 
         <div className="space-y-3">
@@ -903,6 +897,8 @@ function LegalRiskDashboard() {
         <StatTile label="Awaiting Review" value={MOCK_LEGAL.filter((l) => l.status === "under_review").length} color="amber" icon={Clock} />
         <StatTile label="Resolved" value={MOCK_LEGAL.filter((l) => l.status === "resolved").length} color="emerald" icon={CheckCircle2} trend="up" />
       </div>
+
+      <IllustrativeNote detail="Showing illustrative legal-review data, not wired to a live case-tracking system. See Legal & Risk for the same disclosure and full detail." />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="space-y-3">
@@ -990,6 +986,8 @@ function NurseEducatorDashboard() {
         <StatTile label="Overdue" value={totalOverdue} color="red" icon={Clock} trend="down" />
         <StatTile label="Completed" value={totalCompleted} color="emerald" icon={CheckCircle2} trend="up" />
       </div>
+
+      <IllustrativeNote detail="Showing illustrative training-enrollment data - Meridian doesn't have an LMS integration, so completion isn't tracked against real staff rosters." />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 space-y-3">

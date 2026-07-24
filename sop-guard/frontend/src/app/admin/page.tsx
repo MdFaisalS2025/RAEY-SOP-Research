@@ -1,11 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import {
   Settings, Database, Activity,
   Users, Globe, ToggleLeft, ToggleRight, Plus,
-  Server, Brain, HardDrive, Eye, ShieldCheck, Bell, Mail, Smartphone
+  Server, Brain, HardDrive, Eye, ShieldCheck, Bell, Mail, Smartphone, Loader2
 } from "lucide-react"
 import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
@@ -23,26 +23,16 @@ const ROLE_LABELS: Record<string, string> = {
 }
 
 interface EvidenceSource {
+  key: string
   name: string
-  type: string
-  trustScore: number
-  status: "active" | "paused"
-  lastCheck: string
+  status: "active" | "not_configured" | "requires_api_key" | "mock"
+  enabled: boolean
 }
 
-// Mirrors the backend's actual EvidenceSource registry
-// (backend/app/integrations/evidence_registry.py) - these are the only
-// sources the app really queries live from /api/evidence/search. Trust
-// score/last-check here are still illustrative (the backend doesn't expose
-// per-source trust scoring), but the source names/types are real, not
-// placeholder journal names that were never wired up.
-const INITIAL_SOURCES: EvidenceSource[] = [
-  { name: "PubMed", type: "pubmed", trustScore: 95, status: "active", lastCheck: "Today" },
-  { name: "Europe PMC", type: "europepmc", trustScore: 93, status: "active", lastCheck: "Today" },
-  { name: "CDC", type: "cdc", trustScore: 97, status: "active", lastCheck: "Today" },
-  { name: "WHO Guidelines", type: "who", trustScore: 96, status: "active", lastCheck: "Today" },
-  { name: "ClinicalTrials.gov", type: "clinicaltrials", trustScore: 92, status: "active", lastCheck: "Today" },
-]
+const SOURCE_LABELS: Record<string, string> = {
+  pubmed: "PubMed", europepmc: "Europe PMC", cdc: "CDC", who: "WHO Guidelines",
+  clinicaltrials: "ClinicalTrials.gov", fda: "FDA", medlineplus: "MedlinePlus", cms: "CMS",
+}
 
 // Non-auth integrations (Authentication card is replaced with SSO section below)
 const otherIntegrations = [
@@ -51,32 +41,101 @@ const otherIntegrations = [
   { name: "SharePoint", subtitle: "Policy Repository", description: "Connect to SharePoint for existing policy document import and version synchronization.", icon: Globe },
 ]
 
-const systemStatus = [
-  { name: "Backend API", detail: "FastAPI (Python)", status: "online" as const, icon: Server },
-  { name: "LLM Provider", detail: "Ollama (self-hosted) / llama3.2 — no third-party API calls", status: "online" as const, icon: Brain },
-  { name: "Embedding Model", detail: "BAAI/bge-small-en-v1.5", status: "online" as const, icon: Activity },
-  { name: "Database", detail: "SQLite (Demo) - PostgreSQL (Production)", status: "demo" as const, icon: HardDrive },
-  { name: "Evidence Watch", detail: "Active: 5 sources monitored", status: "online" as const, icon: Eye },
-  { name: "Vector Index", detail: "In-memory cosine similarity (sentence-transformers, TF-IDF fallback)", status: "online" as const, icon: Database },
-]
+interface StatusItem { name: string; detail: string; status: "online" | "offline" | "demo" | "checking"; icon: typeof Server }
 
 type SSOProtocol = "saml" | "oauth" | "ldap"
 
 export default function AdminPage() {
   const { role } = useRole()
-  const [sources, setSources] = useState<EvidenceSource[]>(INITIAL_SOURCES)
+  const [sources, setSources] = useState<EvidenceSource[]>([])
+  const [sourcesLoading, setSourcesLoading] = useState(true)
   const [ssoProtocol, setSSOProtocol] = useState<SSOProtocol>("saml")
+  const [systemStatus, setSystemStatus] = useState<StatusItem[]>([
+    { name: "Backend API", detail: "Checking…", status: "checking", icon: Server },
+    { name: "LLM Provider", detail: "Checking…", status: "checking", icon: Brain },
+    { name: "Embedding Model", detail: "Checking…", status: "checking", icon: Activity },
+    { name: "Database", detail: "SQLite (dev) — implied healthy if the above respond", status: "demo", icon: HardDrive },
+    { name: "Evidence Sources", detail: "Checking…", status: "checking", icon: Eye },
+  ])
+
+  // Real probes replacing the previous hardcoded "online" for every row -
+  // this card used to claim every service was healthy without ever
+  // checking. Each of these endpoints already exists and is used elsewhere
+  // (Settings page) to report genuine status.
+  useEffect(() => {
+    fetch("/api/health").then((r) => r.ok ? r.json() : Promise.reject())
+      .then(() => setSystemStatus((prev) => prev.map((s) => s.name === "Backend API" ? { ...s, detail: "FastAPI (Python) — responding", status: "online" } : s)))
+      .catch(() => setSystemStatus((prev) => prev.map((s) => s.name === "Backend API" ? { ...s, detail: "Not responding", status: "offline" } : s)))
+
+    fetch("/api/llm/status").then((r) => r.ok ? r.json() : Promise.reject())
+      .then((d) => setSystemStatus((prev) => prev.map((s) => s.name === "LLM Provider" ? {
+        ...s,
+        detail: d.mode === "llm" ? `${d.provider} / ${d.model} — reachable` : `${d.provider} — not reachable, answers use extractive template mode`,
+        status: d.mode === "llm" ? "online" : "demo",
+      } : s)))
+      .catch(() => setSystemStatus((prev) => prev.map((s) => s.name === "LLM Provider" ? { ...s, detail: "Status check failed", status: "offline" } : s)))
+
+    fetch("/api/embedding/status").then((r) => r.ok ? r.json() : Promise.reject())
+      .then((d) => setSystemStatus((prev) => prev.map((s) => s.name === "Embedding Model" ? {
+        ...s,
+        detail: d.mode === "semantic" ? `${d.backend} — semantic search active` : `${d.backend} — TF-IDF fallback (no semantic embeddings)`,
+        status: d.mode === "semantic" ? "online" : "demo",
+      } : s)))
+      .catch(() => setSystemStatus((prev) => prev.map((s) => s.name === "Embedding Model" ? { ...s, detail: "Status check failed", status: "offline" } : s)))
+
+    fetch("/api/evidence/providers").then((r) => r.ok ? r.json() : Promise.reject())
+      .then((d) => {
+        const providers = Array.isArray(d?.providers) ? d.providers : []
+        const active = providers.filter((p: { status: string }) => p.status === "active").length
+        setSystemStatus((prev) => prev.map((s) => s.name === "Evidence Sources" ? { ...s, detail: `${active} of ${providers.length} sources active`, status: active > 0 ? "online" : "offline" } : s))
+      })
+      .catch(() => setSystemStatus((prev) => prev.map((s) => s.name === "Evidence Sources" ? { ...s, detail: "Status check failed", status: "offline" } : s)))
+  }, [])
+
+  // Real evidence-source list + enabled state from /api/settings and
+  // /api/evidence/providers (same endpoints the Settings page uses) - was
+  // previously a hardcoded array with invented "trust scores" and a toggle
+  // that only flipped local state.
+  useEffect(() => {
+    Promise.all([
+      fetch("/api/settings").then((r) => r.json()),
+      fetch("/api/evidence/providers").then((r) => r.json()),
+    ]).then(([settingsData, providersData]) => {
+      const enabled = new Set<string>(settingsData?.enabled_evidence_sources ?? [])
+      const statusByKey = new Map<string, string>((providersData?.providers ?? []).map((p: { key: string; status: string }) => [p.key, p.status]))
+      const allSources: string[] = settingsData?.all_evidence_sources ?? []
+      setSources(allSources.map((key) => ({
+        key,
+        name: SOURCE_LABELS[key] ?? key,
+        status: (statusByKey.get(key) as EvidenceSource["status"]) ?? "not_configured",
+        enabled: enabled.has(key),
+      })))
+    }).catch(() => setSources([])).finally(() => setSourcesLoading(false))
+  }, [])
 
   if (role !== "system_admin") {
     return <AccessRestricted label="Admin" requirement="This area requires System Administrator access." />
   }
 
-  const toggleSource = (index: number) => {
-    setSources((prev) =>
-      prev.map((s, i) =>
-        i === index ? { ...s, status: s.status === "active" ? "paused" : "active" } : s
-      )
-    )
+  const toggleSource = async (key: string) => {
+    const next = sources.map((s) => (s.key === key ? { ...s, enabled: !s.enabled } : s))
+    setSources(next)
+    try {
+      await fetch("/api/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled_evidence_sources: next.filter((s) => s.enabled).map((s) => s.key) }),
+      })
+    } catch {
+      setSources(sources) // revert on failure
+    }
+  }
+
+  const statusMeta: Record<EvidenceSource["status"], { label: string; className: string }> = {
+    active: { label: "Live source", className: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30" },
+    mock: { label: "Mock", className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30" },
+    requires_api_key: { label: "Requires API key", className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30" },
+    not_configured: { label: "Not configured", className: "bg-card text-muted-foreground border-input" },
   }
 
   const inputCls = "w-full px-3 py-2 rounded-lg bg-[#F8FAFC] border border-border text-sm text-muted-foreground placeholder:text-muted-foreground/50 opacity-50 cursor-not-allowed"
@@ -116,60 +175,72 @@ export default function AdminPage() {
               </div>
             </div>
           </div>
+          {sourcesLoading ? (
+            <div className="flex items-center gap-2 text-muted-foreground text-sm py-8 justify-center">
+              <Loader2 className="w-4 h-4 animate-spin" /> Loading evidence sources...
+            </div>
+          ) : sources.length === 0 ? (
+            <div className="rounded-2xl bg-card border border-border p-8 text-center">
+              <p className="text-sm text-muted-foreground">Couldn't load evidence source status.</p>
+            </div>
+          ) : (
           <div className="rounded-2xl bg-card border border-border overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-xs text-muted-foreground uppercase tracking-wider">
                   <th className="p-4 text-left">Name</th>
-                  <th className="p-4 text-left">Type</th>
-                  <th className="p-4 text-left">Trust Score</th>
-                  <th className="p-4 text-left">Status</th>
-                  <th className="p-4 text-left">Last Check</th>
+                  <th className="p-4 text-left">Backend Status</th>
+                  <th className="p-4 text-left">Queried by Ask Meridian</th>
                   <th className="p-4 text-left">Toggle</th>
                 </tr>
               </thead>
               <tbody>
-                {sources.map((source, i) => (
+                {sources.map((source, i) => {
+                  const meta = statusMeta[source.status]
+                  return (
                   <motion.tr
-                    key={source.name}
+                    key={source.key}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: i * 0.04 }}
                     className="border-b border-border hover:bg-[#F8FAFC] transition-colors"
                   >
                     <td className="p-4 font-medium">{source.name}</td>
-                    <td className="p-4 text-muted-foreground text-xs">{source.type}</td>
                     <td className="p-4">
-                      <span className="text-[#15803D] dark:text-green-400 font-semibold">{source.trustScore}%</span>
+                      <span className={cn("px-2 py-0.5 rounded-full text-xs font-medium border", meta.className)}>
+                        {meta.label}
+                      </span>
                     </td>
                     <td className="p-4">
                       <span className={cn(
                         "px-2 py-0.5 rounded-full text-xs font-medium",
-                        source.status === "active"
+                        source.enabled
                           ? "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30"
                           : "bg-card text-muted-foreground border border-input"
                       )}>
-                        {source.status === "active" ? "Active" : "Paused"}
+                        {source.enabled ? "Enabled" : "Disabled"}
                       </span>
                     </td>
-                    <td className="p-4 text-muted-foreground text-xs">{source.lastCheck}</td>
                     <td className="p-4">
                       <button
-                        onClick={() => toggleSource(i)}
+                        onClick={() => toggleSource(source.key)}
+                        title="Also changes the Evidence Sources toggle on the Settings page - both read the same backend state"
                         className="flex items-center gap-1.5 text-xs transition-colors"
                       >
-                        {source.status === "active"
+                        {source.enabled
                           ? <ToggleRight className="w-6 h-6 text-[#0B6BCB]" />
                           : <ToggleLeft className="w-6 h-6 text-subtle" />}
                       </button>
                     </td>
                   </motion.tr>
-                ))}
+                  )
+                })}
               </tbody>
             </table>
             </div>
           </div>
+          )}
         </section>
 
         {/* SSO / Active Directory Configuration */}
@@ -526,20 +597,24 @@ export default function AdminPage() {
                 <div className={cn(
                   "w-9 h-9 rounded-xl flex items-center justify-center",
                   item.status === "online" ? "bg-[#DCFCE7] dark:bg-green-500/10" :
-                    item.status === "demo" ? "bg-[#FEF3C7] dark:bg-amber-500/10" : "bg-[#FEE2E2] dark:bg-red-500/10"
+                    item.status === "demo" ? "bg-[#FEF3C7] dark:bg-amber-500/10" :
+                    item.status === "checking" ? "bg-[#0B6BCB]/10" : "bg-[#FEE2E2] dark:bg-red-500/10"
                 )}>
-                  <item.icon className={cn(
-                    "w-5 h-5",
-                    item.status === "online" ? "text-[#15803D] dark:text-green-400" :
-                      item.status === "demo" ? "text-[#B45309] dark:text-amber-400" : "text-[#B91C1C] dark:text-red-400"
-                  )} />
+                  {item.status === "checking"
+                    ? <Loader2 className="w-5 h-5 text-[#0B6BCB] animate-spin" />
+                    : <item.icon className={cn(
+                        "w-5 h-5",
+                        item.status === "online" ? "text-[#15803D] dark:text-green-400" :
+                          item.status === "demo" ? "text-[#B45309] dark:text-amber-400" : "text-[#B91C1C] dark:text-red-400"
+                      )} />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
                     <div className={cn(
                       "w-2 h-2 rounded-full",
                       item.status === "online" ? "bg-[#15803D]" :
-                        item.status === "demo" ? "bg-[#B45309]" : "bg-[#B91C1C]"
+                        item.status === "demo" ? "bg-[#B45309]" :
+                        item.status === "checking" ? "bg-[#0B6BCB]" : "bg-[#B91C1C]"
                     )} />
                     <p className="text-sm font-medium">{item.name}</p>
                   </div>
@@ -548,9 +623,10 @@ export default function AdminPage() {
                 <span className={cn(
                   "px-2 py-0.5 rounded-full text-xs font-medium shrink-0",
                   item.status === "online" ? "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400" :
-                    item.status === "demo" ? "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400" : "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400"
+                    item.status === "demo" ? "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400" :
+                    item.status === "checking" ? "bg-[#0B6BCB]/10 text-[#0B6BCB]" : "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400"
                 )}>
-                  {item.status === "online" ? "Online" : item.status === "demo" ? "Demo Mode" : "Offline"}
+                  {item.status === "online" ? "Online" : item.status === "demo" ? "Demo Mode" : item.status === "checking" ? "Checking…" : "Offline"}
                 </span>
               </motion.div>
             ))}

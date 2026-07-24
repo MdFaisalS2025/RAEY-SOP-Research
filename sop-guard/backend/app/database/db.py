@@ -132,6 +132,18 @@ async def init_db() -> None:
         "ALTER TABLE attestation_records ADD COLUMN content_hash VARCHAR(64) DEFAULT ''",
         "ALTER TABLE attestation_records ADD COLUMN prev_hash VARCHAR(64) DEFAULT ''",
         "ALTER TABLE query_log_records ADD COLUMN route VARCHAR(32) DEFAULT 'sop_library'",
+        "ALTER TABLE feedbacks ADD COLUMN answer_id INTEGER",
+        "ALTER TABLE feedbacks ADD COLUMN status VARCHAR(16) DEFAULT 'new'",
+        # These three were added to the QueryLogRecord model by Phase E
+        # (token usage logging) but never got a matching migration here -
+        # every query's audit-log INSERT against a pre-existing dev DB has
+        # been silently failing since (caught and logged as a warning),
+        # meaning no QueryLogRecord row - and no real answer_id - ever got
+        # created. Found while verifying the new feedback flow, which
+        # depends on a real answer_id existing.
+        "ALTER TABLE query_log_records ADD COLUMN prompt_tokens INTEGER",
+        "ALTER TABLE query_log_records ADD COLUMN completion_tokens INTEGER",
+        "ALTER TABLE query_log_records ADD COLUMN total_tokens INTEGER",
     ):
         try:
             from sqlalchemy import text

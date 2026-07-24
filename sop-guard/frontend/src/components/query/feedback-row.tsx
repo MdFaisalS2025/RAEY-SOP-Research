@@ -5,6 +5,7 @@ import { MessageCircleQuestion, ThumbsDown, ThumbsUp } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { OverrideModal } from "@/components/ui/override-modal"
 import { toast } from "@/components/ui/use-toast"
+import { submitFeedback } from "@/lib/api"
 
 type FeedbackChoice = "helpful" | "clarification" | "disagree"
 
@@ -42,6 +43,12 @@ export function FeedbackRow({ queryText, answerId }: { queryText: string; answer
     if (c === "disagree") {
       setShowOverride(true)
     } else {
+      // "disagree" already gets a real backend call via OverrideModal
+      // below (POST /api/overrides); helpful/clarification need their own.
+      // Backend's feedback_type vocabulary is positive/negative/correction/
+      // clarification/incorrect/unsafe/missing - "helpful" maps to
+      // "positive"; "clarification" already matches by name.
+      submitFeedback({ answerId, feedbackType: c === "helpful" ? "positive" : c, feedbackText: "" }).catch(() => { /* best-effort */ })
       toast({ description: "Feedback recorded", variant: "success" })
     }
   }

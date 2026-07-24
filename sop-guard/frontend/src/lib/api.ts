@@ -75,17 +75,21 @@ export async function uploadSOP(file: File): Promise<SOP> {
   return res.json()
 }
 
-export async function submitFeedback(
-  queryId: number,
-  type: string,
-  text?: string
-): Promise<void> {
+export async function submitFeedback({
+  answerId,
+  feedbackType,
+  feedbackText,
+}: {
+  answerId?: string | number | null
+  feedbackType: string
+  feedbackText?: string
+}): Promise<void> {
   await request("/api/feedback", {
     method: "POST",
     body: JSON.stringify({
-      query_id: queryId,
-      feedback_type: type,
-      feedback_text: text || "",
+      answer_id: answerId != null ? Number(answerId) : undefined,
+      feedback_type: feedbackType,
+      feedback_text: feedbackText || "",
     }),
   })
 }

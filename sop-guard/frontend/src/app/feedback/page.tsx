@@ -152,16 +152,44 @@ export default function FeedbackPage() {
         // keep demo data
       }
 
+      // Fetch real feedback needing review, replacing demoReviewQueue.
+      // `time` arrives as an ISO string (matches activity/sop-usage above),
+      // formatted the same way for display consistency.
+      try {
+        const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "") + "/api/feedback?needs_review=true&limit=20")
+        if (!res.ok) throw new Error("Failed")
+        const data = await res.json()
+        if (data.items) {
+          setReviewQueue(data.items.map((it: any) => ({
+            id: it.id,
+            status: it.status,
+            type: it.type,
+            sop: it.sop,
+            query: it.query,
+            role: it.role || "",
+            time: it.time ? new Date(it.time).toLocaleString("en-US") : it.time,
+          })))
+        }
+      } catch {
+        // keep demo data
+      }
+
       setIsDemo(demo)
       setLoading(false)
     }
     fetchData()
   }, [])
 
-  const handleMarkReviewed = (id: number) => {
+  const handleMarkReviewed = async (id: number) => {
     setReviewQueue(prev => prev.map(item =>
       item.id === id ? { ...item, status: "reviewed" } : item
     ))
+    try {
+      await fetch((process.env.NEXT_PUBLIC_API_URL || "") + `/api/feedback/${id}?status=reviewed`, { method: "PATCH" })
+    } catch {
+      // local state already updated optimistically; a failed persist just
+      // means it reverts to "new" on next real fetch, not a broken UI
+    }
   }
 
   if (role !== "governance_compliance" && role !== "system_admin") {

@@ -84,8 +84,13 @@ class Feedback(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     query_id = Column(Integer, ForeignKey("queries.id", ondelete="CASCADE"), nullable=False)
-    feedback_type = Column(String(32), nullable=False)  # positive / negative / correction
+    # QueryLogRecord.id, when the feedback originated from a real chat/query
+    # answer - lets GET /api/feedback join back to the actual answer/SOP
+    # context instead of the denormalized bridging Query row below.
+    answer_id = Column(Integer, nullable=True)
+    feedback_type = Column(String(32), nullable=False)  # positive / negative / correction / clarification / incorrect / unsafe / missing
     feedback_text = Column(Text, default="")
+    status = Column(String(16), default="new")  # new / reviewed
     created_at = Column(DateTime, default=_utcnow)
 
     query = relationship("Query", back_populates="feedbacks")

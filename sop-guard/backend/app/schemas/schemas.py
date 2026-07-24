@@ -183,14 +183,32 @@ class SOPUpdateResponse(BaseModel):
 # ── Feedback ───────────────────────────────────────────────────
 
 class FeedbackRequest(BaseModel):
-    query_id: int
-    feedback_type: str  # positive / negative / correction
+    # Either query_id (legacy) or answer_id (QueryLogRecord.id - the real
+    # per-answer identifier the chat/query pipeline actually uses) must be
+    # given; answer_id is preferred for anything originating from Ask Meridian.
+    query_id: int | None = None
+    answer_id: int | None = None
+    feedback_type: str  # positive / negative / correction / clarification / incorrect / unsafe / missing
     feedback_text: str = ""
 
 
 class FeedbackResponse(BaseModel):
     id: int
     message: str
+
+
+class FeedbackItem(BaseModel):
+    id: int
+    status: str
+    type: str
+    sop: str
+    query: str
+    role: str = ""
+    time: str
+
+
+class FeedbackListResponse(BaseModel):
+    items: list[FeedbackItem] = []
 
 
 # ── Analytics ──────────────────────────────────────────────────

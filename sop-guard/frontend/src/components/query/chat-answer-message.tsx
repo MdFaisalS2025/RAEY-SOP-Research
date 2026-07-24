@@ -322,8 +322,7 @@ export function ChatAnswerMessage({
 
   const handleFlagFeedback = async (key: string, note: string) => {
     try {
-      const typeMap: Record<string, "positive" | "negative" | "correction"> = { incorrect: "negative", unsafe: "negative", missing: "correction" }
-      await submitFeedback(0, typeMap[key] || "negative")
+      await submitFeedback({ answerId: data.answerId, feedbackType: key, feedbackText: note })
       toast({ description: "Feedback submitted - thank you", variant: "success" })
     } catch {
       toast({ description: "Couldn't submit feedback - it wasn't saved", variant: "error" })
@@ -575,7 +574,7 @@ export function ChatAnswerMessage({
               </div>
             )}
           </div>
-          <FeedbackRow queryText={data.query} />
+          <FeedbackRow queryText={data.query} answerId={data.answerId} />
         </div>
       )}
 

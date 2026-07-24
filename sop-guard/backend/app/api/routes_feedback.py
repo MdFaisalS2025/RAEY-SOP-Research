@@ -9,27 +9,57 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 
 from app.database.db import get_db
-from app.models.models import Query, Feedback
-from app.schemas.schemas import FeedbackRequest, FeedbackResponse, AnalyticsResponse
+from app.models.models import Query, Feedback, QueryLogRecord
+from app.schemas.schemas import FeedbackRequest, FeedbackResponse, AnalyticsResponse, FeedbackItem, FeedbackListResponse
 
 router = APIRouter(tags=["Feedback & Analytics"])
+
+_VALID_FEEDBACK_TYPES = {
+    "positive", "negative", "correction", "clarification",
+    "incorrect", "unsafe", "missing",
+}
+# Positive signals don't need governance review; everything else surfaces
+# in the /feedback page's Needs Review queue.
+_NEEDS_REVIEW_TYPES = _VALID_FEEDBACK_TYPES - {"positive"}
 
 
 @router.post("/api/feedback", response_model=FeedbackResponse)
 async def submit_feedback(req: FeedbackRequest, db: AsyncSession = Depends(get_db)):
     """Submit feedback for a query response."""
-    query = (await db.execute(
-        select(Query).where(Query.id == req.query_id)
-    )).scalar_one_or_none()
+    if req.feedback_type not in _VALID_FEEDBACK_TYPES:
+        raise HTTPException(status_code=400, detail=f"feedback_type must be one of {sorted(_VALID_FEEDBACK_TYPES)}.")
+    if req.answer_id is None and req.query_id is None:
+        raise HTTPException(status_code=400, detail="Either answer_id or query_id is required.")
 
-    if not query:
-        raise HTTPException(status_code=404, detail=f"Query {req.query_id} not found.")
-
-    if req.feedback_type not in ("positive", "negative", "correction"):
-        raise HTTPException(status_code=400, detail="feedback_type must be positive, negative, or correction.")
+    query_id = req.query_id
+    if req.answer_id is not None:
+        record = (await db.execute(
+            select(QueryLogRecord).where(QueryLogRecord.id == req.answer_id)
+        )).scalar_one_or_none()
+        if not record:
+            raise HTTPException(status_code=404, detail=f"Answer {req.answer_id} not found.")
+        # `queries`/Query is a legacy table the current chat/query pipeline
+        # doesn't otherwise use (real per-answer records live in
+        # QueryLogRecord) - Feedback.query_id stays NOT NULL, so a small
+        # bridging Query row mirrors the answer's text to satisfy the FK
+        # without a schema migration.
+        bridge = Query(
+            query_text=record.query_text,
+            query_type=record.query_type,
+            answer_text=record.answer_text,
+            confidence_score=record.confidence,
+        )
+        db.add(bridge)
+        await db.flush()
+        query_id = bridge.id
+    else:
+        query = (await db.execute(select(Query).where(Query.id == query_id))).scalar_one_or_none()
+        if not query:
+            raise HTTPException(status_code=404, detail=f"Query {query_id} not found.")
 
     fb = Feedback(
-        query_id=req.query_id,
+        query_id=query_id,
+        answer_id=req.answer_id,
         feedback_type=req.feedback_type,
         feedback_text=req.feedback_text,
     )
@@ -37,6 +67,53 @@ async def submit_feedback(req: FeedbackRequest, db: AsyncSession = Depends(get_d
     await db.flush()
 
     return FeedbackResponse(id=fb.id, message="Feedback recorded.")
+
+
+@router.get("/api/feedback", response_model=FeedbackListResponse)
+async def list_feedback(needs_review: bool = False, limit: int = 20, db: AsyncSession = Depends(get_db)):
+    """Recent feedback rows for the governance Needs Review queue."""
+    stmt = select(Feedback).order_by(Feedback.created_at.desc()).limit(limit)
+    if needs_review:
+        stmt = stmt.where(Feedback.feedback_type.in_(_NEEDS_REVIEW_TYPES))
+    rows = (await db.execute(stmt)).scalars().all()
+
+    items: list[FeedbackItem] = []
+    for fb in rows:
+        query_text, sop_title = "", ""
+        if fb.answer_id is not None:
+            record = (await db.execute(
+                select(QueryLogRecord).where(QueryLogRecord.id == fb.answer_id)
+            )).scalar_one_or_none()
+            if record:
+                query_text = record.query_text
+                citations = record.citations_json or []
+                if citations:
+                    sop_title = citations[0].get("sop_title", "")
+        if not query_text:
+            legacy = (await db.execute(select(Query).where(Query.id == fb.query_id))).scalar_one_or_none()
+            if legacy:
+                query_text = legacy.query_text
+
+        items.append(FeedbackItem(
+            id=fb.id,
+            status=fb.status or "new",
+            type=fb.feedback_type,
+            sop=sop_title or "—",
+            query=query_text,
+            time=fb.created_at.isoformat() if fb.created_at else "",
+        ))
+
+    return FeedbackListResponse(items=items)
+
+
+@router.patch("/api/feedback/{feedback_id}", response_model=FeedbackResponse)
+async def update_feedback_status(feedback_id: int, status: str = "reviewed", db: AsyncSession = Depends(get_db)):
+    fb = (await db.execute(select(Feedback).where(Feedback.id == feedback_id))).scalar_one_or_none()
+    if not fb:
+        raise HTTPException(status_code=404, detail=f"Feedback {feedback_id} not found.")
+    fb.status = status
+    await db.flush()
+    return FeedbackResponse(id=fb.id, message="Feedback updated.")
 
 
 @router.get("/api/analytics", response_model=AnalyticsResponse)

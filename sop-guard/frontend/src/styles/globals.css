@@ -42,7 +42,10 @@
     --success-foreground: 0 0% 100%;
     --warning: 26 90.5% 37.1%;    /* #B45309 */
     --warning-foreground: 0 0% 100%;
-    --text-subtle: 215 20% 65%;   /* #94A3B8 - lighter tier than muted-foreground */
+    --text-subtle: 215 25% 42%;   /* #506786 - was 215 20% 65% (#94A3B8), which measured ~2.6:1
+                                      against --background and failed WCAG AA at any size. This
+                                      value measures ~5.5:1. Still a distinct, lighter tier than
+                                      --muted-foreground (#64748B, ~4.7:1), just no longer failing. */
     --brand-accent: 187 100% 42%; /* Meridian cyan, light-mode strength */
     --brand-ink: 217 33% 15%;     /* Meridian graphite/ink, light-mode */
 

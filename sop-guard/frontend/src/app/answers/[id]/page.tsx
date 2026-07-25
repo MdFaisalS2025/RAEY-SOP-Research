@@ -139,7 +139,7 @@ export default function AnswerPermalinkPage() {
               <ArrowLeft className="w-4 h-4" /> Back to query
             </button>
 
-            <h1 className="text-2xl font-semibold text-foreground mb-1">{record.query}</h1>
+            <h1 className="text-2xl font-bold text-foreground mb-1">{record.query}</h1>
             <p className="text-xs text-subtle mb-5">
               {record.created_at ? new Date(record.created_at).toLocaleString("en-US") : ""}
             </p>

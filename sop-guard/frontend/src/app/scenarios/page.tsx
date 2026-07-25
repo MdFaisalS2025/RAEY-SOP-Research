@@ -502,7 +502,7 @@ export default function ScenariosPage() {
             <Target className="w-6 h-6 text-[#0B6BCB]" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">Scenario Training</h1>
+            <h1 className="text-2xl font-bold text-foreground">Scenario Training</h1>
             <p className="text-sm text-muted-foreground">Practice decisions against this hospital&apos;s own protocols.</p>
           </div>
         </div>

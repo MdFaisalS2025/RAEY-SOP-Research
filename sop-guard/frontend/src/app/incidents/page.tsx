@@ -1341,7 +1341,7 @@ export default function IncidentsPage() {
             <AlertOctagon className="w-6 h-6 text-[#B91C1C] dark:text-red-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-semibold text-foreground">Deviations &amp; Incidents</h1>
+            <h1 className="text-2xl font-bold text-foreground">Deviations &amp; Incidents</h1>
             <p className="text-sm text-muted-foreground mt-0.5">
               Where practice diverged from SOP - after the fact (incidents) or in the moment, for a documented reason (exceptions)
             </p>

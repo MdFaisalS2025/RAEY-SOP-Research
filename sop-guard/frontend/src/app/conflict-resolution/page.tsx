@@ -444,7 +444,7 @@ export default function ConflictResolutionPage() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-1">
           <div className="flex items-center gap-3">
             <GitCompare className="w-7 h-7 text-[#0B6BCB]" />
-            <h1 className="text-3xl font-bold text-foreground">SOP Conflicts &amp; Impact</h1>
+            <h1 className="text-2xl font-bold text-foreground">SOP Conflicts &amp; Impact</h1>
           </div>
         </motion.div>
 

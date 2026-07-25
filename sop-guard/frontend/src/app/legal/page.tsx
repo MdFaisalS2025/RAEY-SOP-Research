@@ -78,7 +78,7 @@ export default function LegalPage() {
             <Scale className="w-6 h-6 text-[#B91C1C] dark:text-red-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">Legal &amp; Risk Center</h1>
+            <h1 className="text-2xl font-bold text-foreground">Legal &amp; Risk Center</h1>
             <p className="text-sm text-muted-foreground">Policy liability review and risk governance</p>
           </div>
         </div>

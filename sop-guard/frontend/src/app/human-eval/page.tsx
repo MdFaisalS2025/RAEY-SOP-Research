@@ -213,7 +213,7 @@ export default function HumanEvalPage() {
             <ClipboardCheck className="w-6 h-6 text-[#0B6BCB]" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">Clinician Evaluation</h1>
+            <h1 className="text-2xl font-bold text-foreground">Clinician Evaluation</h1>
             <p className="text-sm text-muted-foreground">Rate AI answers for the Meridian research study.</p>
           </div>
         </div>

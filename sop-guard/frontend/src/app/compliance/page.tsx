@@ -1198,7 +1198,7 @@ export default function CompliancePage() {
               <CheckCircle className="w-6 h-6 text-[#0B6BCB]" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">Compliance</h1>
+              <h1 className="text-2xl font-bold text-foreground">Compliance</h1>
               <p className="text-sm text-muted-foreground">Policy acknowledgment status and SOP review currency</p>
             </div>
           </div>

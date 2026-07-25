@@ -158,7 +158,7 @@ export default function AdminPage() {
             <Settings className="w-6 h-6 text-[#0B6BCB]" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">System Administration</h1>
+            <h1 className="text-2xl font-bold text-foreground">System Administration</h1>
             <p className="text-sm text-muted-foreground">Platform configuration and integration management</p>
           </div>
         </div>

@@ -186,7 +186,7 @@ export default function LeadershipPage() {
               <ShieldCheck className="w-6 h-6 text-[#0B6BCB]" />
             </div>
             <div>
-              <h1 className="text-2xl font-semibold text-foreground mb-1">Leadership Overview</h1>
+              <h1 className="text-2xl font-bold text-foreground mb-1">Leadership Overview</h1>
               <p className="text-[13px] text-subtle">Governance and safety posture for executive review</p>
             </div>
           </div>

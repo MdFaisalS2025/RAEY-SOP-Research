@@ -28,7 +28,7 @@ export default function EffectivenessPage() {
             <Activity className="w-6 h-6 text-[#0B6BCB]" />
           </div>
           <div>
-            <h1 className="text-2xl font-semibold text-foreground">SOP Impact</h1>
+            <h1 className="text-2xl font-bold text-foreground">SOP Impact</h1>
             <p className="text-sm text-muted-foreground mt-0.5">
               How SOP changes could be linked to patient safety outcomes
             </p>

@@ -115,7 +115,7 @@ export default function CDSDemoPage() {
             <Plug className="w-6 h-6 text-[#0B6BCB]" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">EMR Integration (CDS Hooks)</h1>
+            <h1 className="text-2xl font-bold text-foreground">EMR Integration (CDS Hooks)</h1>
             <p className="text-sm text-muted-foreground">
               When a clinician places an order in the EMR, Meridian returns protocol guidance cards using the HL7 CDS Hooks standard.
             </p>

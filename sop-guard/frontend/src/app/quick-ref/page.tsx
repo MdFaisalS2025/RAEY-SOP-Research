@@ -159,7 +159,7 @@ export default function QuickRefPage() {
               <BookOpen className="w-6 h-6 text-[#0B6BCB]" />
             </div>
             <div>
-              <h1 className="text-2xl font-semibold">Quick Reference Cards</h1>
+              <h1 className="text-2xl font-bold text-foreground">Quick Reference Cards</h1>
               <p className="text-sm text-muted-foreground mt-0.5">
                 Generated live from each SOP&apos;s structured steps and thresholds - verify against the full SOP first
               </p>

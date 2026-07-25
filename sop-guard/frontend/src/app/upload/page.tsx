@@ -105,7 +105,7 @@ export default function UploadPage() {
             <Upload className="w-6 h-6 text-[#0B6BCB]" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">Upload SOP</h1>
+            <h1 className="text-2xl font-bold text-foreground">Upload SOP</h1>
             <p className="text-sm text-muted-foreground">Upload a PDF, DOCX, or TXT file. Review and edit metadata before adding to the library.</p>
           </div>
         </div>

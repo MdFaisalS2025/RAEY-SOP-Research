@@ -94,7 +94,7 @@ export default function TrainingPage() {
             <BookOpen className="w-6 h-6 text-[#0B6BCB]" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">Training Center</h1>
+            <h1 className="text-2xl font-bold text-foreground">Training Center</h1>
             <p className="text-sm text-muted-foreground">Live activity and credit tracking across the organization</p>
           </div>
         </div>

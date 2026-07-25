@@ -67,6 +67,18 @@ function uptodateSearchUrl(term: string): string {
   return `https://www.uptodate.com/contents/search?search=${encodeURIComponent(term)}`
 }
 
+/** PubMed's search UI takes a plain, publicly documented `?term=` query
+ * param and actually runs the search server-side - unlike OpenEvidence
+ * below, this one genuinely auto-searches, no copy/paste hand-off needed.
+ * No login wall, no API key. Confirmed live: openevidence.com's own
+ * search box is client-rendered and gated behind auth with no URL/API
+ * equivalent, so a real auto-search hand-off to OpenEvidence specifically
+ * isn't achievable without their cooperation - this is offered as the
+ * genuinely-working alternative. */
+function pubmedSearchUrl(term: string): string {
+  return `https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(term)}`
+}
+
 const OPENEVIDENCE_URL = "https://www.openevidence.com/"
 
 /** OpenEvidence has no officially documented query URL - their user-guide
@@ -635,6 +647,12 @@ export function ChatAnswerMessage({
                   label: "Look up in UpToDate (external)",
                   icon: Search,
                   onClick: () => window.open(uptodateSearchUrl(data.query), "_blank", "noopener,noreferrer"),
+                },
+                {
+                  key: "pubmed",
+                  label: "Search PubMed (external)",
+                  icon: Search,
+                  onClick: () => window.open(pubmedSearchUrl(data.query), "_blank", "noopener,noreferrer"),
                 },
                 {
                   key: "openevidence",

@@ -6,6 +6,7 @@ import { motion } from "framer-motion"
 import { ArrowLeft, ShieldCheck, ShieldAlert, ShieldX, MessageCircle, FileQuestion } from "lucide-react"
 import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
+import { LoadingBlock } from "@/components/ui/loading-block"
 import { cn } from "@/lib/utils"
 
 interface AnswerRecord {
@@ -104,7 +105,9 @@ export default function AnswerPermalinkPage() {
         <Breadcrumb items={[{ label: "Shared answer" }]} />
 
         {status === "loading" && (
-          <div className="mt-8 text-sm text-muted-foreground">Loading answer...</div>
+          <div className="mt-8">
+            <LoadingBlock label="Loading answer..." />
+          </div>
         )}
 
         {status === "notfound" && (

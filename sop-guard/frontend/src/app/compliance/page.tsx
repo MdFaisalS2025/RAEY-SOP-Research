@@ -16,6 +16,8 @@ import { cn } from "@/lib/utils"
 import { MOCK_COMPLIANCE, MOCK_SOPS, MOCK_DASHBOARD_STATS } from "@/lib/mock-data"
 import { useRole } from "@/lib/role-context"
 import { downloadCSV } from "@/lib/csv-export"
+import { ErrorState } from "@/components/ui/error-state"
+import { EmptyState } from "@/components/ui/empty-state"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
 const LEGAL_TEXT = "By clicking Attest, I confirm I have read, understood, and will comply with this policy in my clinical practice. This attestation is timestamped and may be used as evidence in regulatory audits or litigation."
@@ -428,12 +430,18 @@ function AcknowledgmentsTab() {
   const [attestations, setAttestations] = useState<RealAttestation[]>([])
   const [sopTitleById, setSopTitleById] = useState<Record<string, string>>({})
   const [firstRealSop, setFirstRealSop] = useState<{ sop_id: string; title: string; version: string } | null>(null)
+  const [attestationsError, setAttestationsError] = useState(false)
+
+  const loadAttestations = () => {
+    setAttestationsError(false)
+    fetch(`${API_BASE}/api/governance/attestations?limit=200`)
+      .then((r) => { if (!r.ok) throw new Error(); return r.json() })
+      .then((data) => setAttestations(Array.isArray(data?.attestations) ? data.attestations : []))
+      .catch(() => setAttestationsError(true))
+  }
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/governance/attestations?limit=200`)
-      .then((r) => r.json())
-      .then((data) => setAttestations(Array.isArray(data?.attestations) ? data.attestations : []))
-      .catch(() => setAttestations([]))
+    loadAttestations()
 
     fetch(`${API_BASE}/api/sops`)
       .then((r) => r.json())
@@ -739,7 +747,10 @@ function AcknowledgmentsTab() {
                 </tr>
               </thead>
               <tbody>
-                {attestations.length === 0 && (
+                {attestationsError && (
+                  <tr><td colSpan={8} className="p-6"><ErrorState message="Couldn't load attestations." onRetry={loadAttestations} /></td></tr>
+                )}
+                {!attestationsError && attestations.length === 0 && (
                   <tr>
                     <td colSpan={8} className="p-6 text-center text-xs text-muted-foreground">No attestations recorded yet.</td>
                   </tr>
@@ -895,14 +906,18 @@ const ESCALATION_STEPS = [
 function ReviewsTab() {
   const [sops, setSops] = useState<RealSOPWithReview[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
 
-  useEffect(() => {
+  const loadSops = () => {
+    setLoading(true)
+    setLoadError(false)
     fetch("/api/sops")
-      .then((r) => r.json())
+      .then((r) => { if (!r.ok) throw new Error(); return r.json() })
       .then((data) => setSops(Array.isArray(data?.sops) ? data.sops : []))
-      .catch(() => setSops([]))
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false))
-  }, [])
+  }
+  useEffect(loadSops, [])
 
   const unscheduledCount = useMemo(() => sops.filter((s) => !s.review_date).length, [sops])
 
@@ -1024,10 +1039,12 @@ function ReviewsTab() {
           </div>
         )}
 
-        {!loading && items.length === 0 && (
-          <div className="p-8 rounded-2xl bg-card border border-border text-center text-sm text-muted-foreground">
-            No SOPs with a scheduled review date yet.
-          </div>
+        {!loading && loadError && (
+          <ErrorState message="Couldn't load SOPs." onRetry={loadSops} />
+        )}
+
+        {!loading && !loadError && items.length === 0 && (
+          <EmptyState title="No SOPs with a scheduled review date yet." />
         )}
 
         {!loading && unscheduledCount > 0 && (

@@ -21,6 +21,7 @@ import {
 } from "lucide-react"
 import { type InlineCitation } from "@/components/query/citation-chip"
 import { cn } from "@/lib/utils"
+import { Card } from "@/components/ui/card"
 import { EvidenceDrawer } from "@/components/query/evidence-drawer"
 import { FollowupChips } from "@/components/query/followup-chips"
 import { FeedbackRow } from "@/components/query/feedback-row"
@@ -560,7 +561,7 @@ export function ChatAnswerMessage({
           )}
         </button>
       ) : isAbstained ? (
-        <div className="p-6 sm:p-8 rounded-2xl bg-card border border-border">
+        <Card padding="lg" className="sm:p-8">
           <div className="flex items-start gap-4">
             <div className="w-11 h-11 rounded-xl bg-muted flex items-center justify-center shrink-0">
               <FileText className="w-5 h-5 text-muted-foreground" />
@@ -576,11 +577,11 @@ export function ChatAnswerMessage({
           <div className="mt-6 pt-5 border-t border-border">
             <GapReportPanel queryText={data.query} externalCitations={data.inlineCitations.filter((c) => c.is_external)} />
           </div>
-        </div>
+        </Card>
       ) : (
         <div className="space-y-3">
           {data.route === "external_evidence" && (
-            <div className="p-4 rounded-2xl bg-card border border-border">
+            <Card padding="sm">
               <div className="flex items-center gap-2 flex-wrap mb-1">
                 <FileText className="w-4 h-4 text-muted-foreground shrink-0" />
                 <h3 className="text-sm font-semibold text-foreground">No approved SOP found</h3>
@@ -589,7 +590,7 @@ export function ChatAnswerMessage({
                 Relevant external clinical evidence is shown below for review.
               </p>
               <GapReportPanel queryText={data.query} externalCitations={data.inlineCitations.filter((c) => c.is_external)} />
-            </div>
+            </Card>
           )}
 
           <div className="px-1 relative">

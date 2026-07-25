@@ -6,6 +6,7 @@ import { FileWarning, Gavel, PlusCircle, Eye, Users, CheckCircle2, Loader2 } fro
 import { toast } from "@/components/ui/use-toast"
 import { AnswerActionToolbar } from "@/components/query/answer-action-toolbar"
 import type { InlineCitation } from "@/components/query/citation-chip"
+import { Card } from "@/components/ui/card"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
 
@@ -103,7 +104,7 @@ export function GapReportPanel({
       <ExternalOnlyWarning />
 
       {outline.length > 0 && (
-        <div className="rounded-2xl bg-card border border-border p-4">
+        <Card padding="sm">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2 flex items-center gap-1.5">
             <FileWarning className="w-3.5 h-3.5" /> Suggested Procedure Outline
           </p>
@@ -117,7 +118,7 @@ export function GapReportPanel({
           <p className="text-[11px] text-subtle mt-2">
             Derived from external literature titles. A committee must author any real SOP content.
           </p>
-        </div>
+        </Card>
       )}
 
       {/* Two primary actions - review the evidence gap, or start drafting a

@@ -14,6 +14,7 @@ import { useRole } from "@/lib/role-context"
 import { cn } from "@/lib/utils"
 import { ErrorState } from "@/components/ui/error-state"
 import { EmptyState } from "@/components/ui/empty-state"
+import { Card } from "@/components/ui/card"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
 
@@ -409,13 +410,13 @@ export default function EvidenceWatchPage() {
               className="grid grid-cols-2 lg:grid-cols-4 gap-4"
             >
               {stats.map(({ label, value, icon: Icon, color }) => (
-                <div key={label} className="rounded-2xl bg-card border border-border p-4 space-y-2">
+                <Card padding="sm" className="space-y-2" key={label}>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-muted-foreground font-medium">{label}</span>
                     <Icon className={cn("w-4 h-4", color)} />
                   </div>
                   <p className={cn("text-3xl font-bold font-display", color)}>{value}</p>
-                </div>
+                </Card>
               ))}
             </motion.div>
 
@@ -450,7 +451,7 @@ export default function EvidenceWatchPage() {
               </div>
 
               <div className="space-y-4">
-                <div className="rounded-2xl bg-card border border-border p-5 space-y-3">
+                <Card className="space-y-3">
                   <div className="flex items-center gap-2">
                     <Shield className="w-4 h-4 text-[#0B6BCB]" />
                     <h3 className="text-sm font-bold text-foreground">Monitored Sources</h3>
@@ -467,7 +468,7 @@ export default function EvidenceWatchPage() {
                     (drug dose / threshold cross-checks across the current corpus). Reviews Due comes from each
                     SOP&apos;s own review_date.
                   </p>
-                </div>
+                </Card>
 
                 <div className="rounded-xl bg-card border border-border px-4 py-3 text-center">
                   <SafetyNote />

@@ -8,6 +8,7 @@ import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { cn } from "@/lib/utils"
 import { useRole } from "@/lib/role-context"
+import { Card } from "@/components/ui/card"
 
 // ─── Evaluation items ────────────────────────────────────────────────────────
 // "flawed" is internal only. Never rendered.
@@ -229,16 +230,16 @@ export default function HumanEvalPage() {
             </div>
 
             {/* Question + answer */}
-            <div className="rounded-2xl bg-card border border-border shadow-sm p-5 space-y-3">
+            <Card className="shadow-sm space-y-3">
               <p className="text-sm font-bold text-foreground">{item.question}</p>
               <div className="rounded-xl bg-background border border-border p-4">
                 <p className="text-sm text-foreground leading-relaxed">{item.answer}</p>
               </div>
               <p className="text-xs text-muted-foreground">Source: {item.source_sop}</p>
-            </div>
+            </Card>
 
             {/* Scales */}
-            <div className="rounded-2xl bg-card border border-border shadow-sm p-5 space-y-4">
+            <Card className="shadow-sm space-y-4">
               {SCALES.map(scale => (
                 <div key={scale} className="space-y-1.5">
                   <div className="flex items-center justify-between">
@@ -283,21 +284,21 @@ export default function HumanEvalPage() {
               >
                 {idx + 1 >= EVAL_ITEMS.length ? "Finish" : "Next"} <ArrowRight className="w-4 h-4" />
               </button>
-            </div>
+            </Card>
           </div>
         )}
 
         {/* Completion */}
         {done && (
           <div className="space-y-4">
-            <div className="rounded-2xl bg-card border border-border shadow-sm p-6 text-center space-y-2">
+            <Card padding="lg" className="shadow-sm text-center space-y-2">
               <CheckCircle2 className="w-10 h-10 text-[#15803D] dark:text-green-400 mx-auto" />
               <h2 className="text-lg font-bold">Thank you</h2>
               <p className="text-sm text-muted-foreground">All {EVAL_ITEMS.length} items rated.</p>
-            </div>
+            </Card>
 
             {/* Summary table */}
-            <div className="rounded-2xl bg-card border border-border shadow-sm overflow-hidden">
+            <Card padding="none" className="shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                 <thead>
@@ -320,7 +321,7 @@ export default function HumanEvalPage() {
                 </tbody>
               </table>
               </div>
-            </div>
+            </Card>
 
             {/* Reveal */}
             <div className="rounded-2xl bg-[#DCFCE7] dark:bg-green-500/10 border border-[#BBF7D0] dark:border-green-500/30 p-5 space-y-1">

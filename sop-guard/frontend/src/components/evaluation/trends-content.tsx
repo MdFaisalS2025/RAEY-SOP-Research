@@ -12,6 +12,7 @@ import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { TrendingUp, Loader2, Camera, Info, AlertTriangle } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { Card } from "@/components/ui/card"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
 
@@ -160,14 +161,14 @@ export function TrendsContent() {
           <Loader2 className="w-5 h-5 animate-spin" /> Loading snapshot history...
         </div>
       ) : snapshots.length === 0 ? (
-        <div className="rounded-2xl bg-card border border-border p-10 text-center space-y-2">
+        <Card padding="none" className="p-10 text-center space-y-2">
           <Camera className="w-8 h-8 mx-auto text-muted-foreground opacity-40" />
           <p className="text-sm text-muted-foreground">No snapshots recorded yet.</p>
           <p className="text-xs text-muted-foreground">Click "Record Snapshot" to establish the first baseline - each one takes a minute or two, since it runs every eval harness once.</p>
-        </div>
+        </Card>
       ) : (
         <>
-          <div className="p-5 rounded-2xl bg-card border border-border">
+          <Card>
             <TrendChart snapshots={snapshots} />
             <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-3 pt-3 border-t border-border">
               {TRACKED_METRICS.map((m) => (
@@ -177,7 +178,7 @@ export function TrendsContent() {
                 </span>
               ))}
             </div>
-          </div>
+          </Card>
 
           {latest && (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -190,7 +191,7 @@ export function TrendsContent() {
             </div>
           )}
 
-          <div className="rounded-2xl bg-card border border-border overflow-x-auto">
+          <Card padding="none" className="overflow-x-auto">
             <table className="w-full text-sm min-w-[720px]">
               <thead>
                 <tr className="border-b border-border text-left text-[11px] uppercase tracking-wide text-muted-foreground">
@@ -226,7 +227,7 @@ export function TrendsContent() {
                 ))}
               </tbody>
             </table>
-          </div>
+          </Card>
         </>
       )}
     </motion.div>

@@ -4,6 +4,7 @@ import { useState } from "react"
 import { ChevronDown, ChevronRight, ExternalLink, FileText } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { reviewStaleness, type InlineCitation } from "./citation-chip"
+import { Card } from "@/components/ui/card"
 
 /** Builds the deep-link target for "cite to exact line": the Library's
  * Full Text tab, with enough context (source snippet + section heading)
@@ -131,7 +132,7 @@ export function SourcePanel({
   const uncited = citations.filter((c) => !c.cited_in_answer)
 
   return (
-    <div className="p-5 rounded-2xl bg-card border border-border shadow-sm">
+    <Card className="shadow-sm">
       <h3 className="text-sm font-semibold mb-4 flex items-center gap-2 text-foreground">
         <FileText className="w-4 h-4 text-[#0B6BCB]" />
         Sources
@@ -159,6 +160,6 @@ export function SourcePanel({
           )}
         </div>
       )}
-    </div>
+    </Card>
   )
 }

@@ -14,6 +14,7 @@ import { MOCK_SOPS } from "@/lib/mock-data"
 import { useRole } from "@/lib/role-context"
 import { ErrorState } from "@/components/ui/error-state"
 import { EmptyState } from "@/components/ui/empty-state"
+import { Card } from "@/components/ui/card"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
 
@@ -1282,7 +1283,7 @@ function ExceptionsTab() {
         )}
       </section>
 
-      <div className="rounded-2xl bg-card border border-border p-5">
+      <Card>
         {!showForm ? (
           <div className="flex items-center justify-between">
             <div>
@@ -1313,7 +1314,7 @@ function ExceptionsTab() {
             />
           </div>
         )}
-      </div>
+      </Card>
     </div>
   )
 }

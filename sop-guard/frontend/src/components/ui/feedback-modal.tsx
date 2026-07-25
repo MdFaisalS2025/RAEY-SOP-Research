@@ -10,6 +10,7 @@ import { createPortal } from "react-dom"
 import { X, CheckCircle2, XCircle, AlertTriangle, FileText } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useDialogA11y } from "@/lib/use-dialog-a11y"
+import { Card } from "@/components/ui/card"
 
 export type FeedbackType = "incorrect" | "unsafe" | "missing"
 
@@ -65,9 +66,7 @@ export function FeedbackModal({
       style={{ opacity: open ? 1 : 0, pointerEvents: open ? "auto" : "none" }}
       aria-hidden={!open}
       onClick={handleClose}>
-      <div
-        className="w-full max-w-md rounded-2xl bg-card border border-border shadow-md overflow-hidden transition-all duration-150"
-        style={{
+      <Card padding="none" className="w-full max-w-md shadow-md overflow-hidden transition-all duration-150" style={{
           opacity: open ? 1 : 0,
           transform: open ? "scale(1) translateY(0)" : "scale(0.96) translateY(12px)",
         }}
@@ -129,7 +128,7 @@ export function FeedbackModal({
               </>
             )
         )}
-      </div>
+      </Card>
     </div>,
     document.body
   )

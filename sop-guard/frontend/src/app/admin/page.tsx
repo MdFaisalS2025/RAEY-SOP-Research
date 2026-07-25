@@ -16,6 +16,7 @@ import { DEMO_USERS } from "@/lib/mock-data"
 import { useRole } from "@/lib/role-context"
 import { ErrorState } from "@/components/ui/error-state"
 import { EmptyState } from "@/components/ui/empty-state"
+import { Card } from "@/components/ui/card"
 
 const ROLE_LABELS: Record<string, string> = {
   clinical_staff: "Clinical Staff",
@@ -190,7 +191,7 @@ export default function AdminPage() {
           ) : sources.length === 0 ? (
             <EmptyState title="No evidence sources configured." />
           ) : (
-          <div className="rounded-2xl bg-card border border-border overflow-hidden">
+          <Card padding="none" className="overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
               <thead>
@@ -245,7 +246,7 @@ export default function AdminPage() {
               </tbody>
             </table>
             </div>
-          </div>
+          </Card>
           )}
         </section>
 
@@ -256,7 +257,7 @@ export default function AdminPage() {
             <h2 className="text-lg font-semibold">SSO / Active Directory Configuration</h2>
           </div>
 
-          <div className="rounded-2xl bg-card border border-border p-5 space-y-5">
+          <Card className="space-y-5">
             {/* Protocol selector */}
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2 font-medium">Protocol</p>
@@ -393,7 +394,7 @@ export default function AdminPage() {
             <p className="text-xs text-muted-foreground/70 italic border-t border-border pt-3">
               SSO configuration requires IT department coordination. Contact your CMIO or IT Director to provision service account credentials. Supports: Microsoft Azure AD, Okta, Ping Identity, and on-premise Active Directory.
             </p>
-          </div>
+          </Card>
         </section>
 
         {/* Other Integration Placeholders */}
@@ -441,7 +442,7 @@ export default function AdminPage() {
             <h2 className="text-lg font-semibold">Notification &amp; Alert Configuration</h2>
           </div>
 
-          <div className="rounded-2xl bg-card border border-border p-5 space-y-4">
+          <Card className="space-y-4">
             <p className="text-sm font-medium text-muted-foreground">Alert Recipients Configuration</p>
 
             {/* Escalation recipient table */}
@@ -517,7 +518,7 @@ export default function AdminPage() {
             <p className="text-xs text-muted-foreground/70 italic">
               In production, connect to hospital email relay and notification service.
             </p>
-          </div>
+          </Card>
         </section>
 
         {/* User Management */}
@@ -536,7 +537,7 @@ export default function AdminPage() {
               </div>
             </div>
           </div>
-          <div className="rounded-2xl bg-card border border-border overflow-hidden">
+          <Card padding="none" className="overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
               <thead>
@@ -582,7 +583,7 @@ export default function AdminPage() {
               </tbody>
             </table>
             </div>
-          </div>
+          </Card>
           <p className="text-xs text-muted-foreground px-1">
             Production: Connect to hospital LDAP/Active Directory for user management.
           </p>

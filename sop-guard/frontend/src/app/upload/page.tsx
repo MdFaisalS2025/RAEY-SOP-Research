@@ -10,6 +10,7 @@ import { uploadSOP } from "@/lib/api"
 import { cn } from "@/lib/utils"
 import { AccessRestricted } from "@/components/ui/access-restricted"
 import { useRole } from "@/lib/role-context"
+import { Card } from "@/components/ui/card"
 
 type UploadState = "idle" | "selected" | "uploading" | "processing" | "done" | "error"
 
@@ -146,7 +147,7 @@ export default function UploadPage() {
 
           {state === "selected" && selectedFile && (
             <motion.div key="selected" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-4">
-              <div className="flex items-center gap-4 p-4 rounded-2xl bg-card border border-border">
+              <Card padding="sm" className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-xl bg-[#0B6BCB]/10 flex items-center justify-center">
                   <File className="w-6 h-6 text-[#0B6BCB]" />
                 </div>
@@ -155,7 +156,7 @@ export default function UploadPage() {
                   <p className="text-xs text-muted-foreground">{formatSize(selectedFile.size)} - {selectedFile.name.split('.').pop()?.toUpperCase()}</p>
                 </div>
                 <button onClick={reset} aria-label="Remove selected file" className="p-2 rounded-lg hover:bg-muted text-muted-foreground"><X className="w-4 h-4" /></button>
-              </div>
+              </Card>
               <button onClick={handleUpload} className="press w-full py-3 rounded-xl bg-[#0B6BCB] hover:bg-[#0959AC] text-white font-medium transition-colors">
                 Upload & Process
               </button>

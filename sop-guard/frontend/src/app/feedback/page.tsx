@@ -12,6 +12,7 @@ import { SafetyNote } from "@/components/ui/safety-note"
 import { Skeleton } from "@/components/ui/skeleton"
 import { AccessRestricted } from "@/components/ui/access-restricted"
 import { useRole } from "@/lib/role-context"
+import { Card } from "@/components/ui/card"
 
 /* ─── Demo / fallback data ─── */
 
@@ -203,18 +204,18 @@ export default function FeedbackPage() {
           {/* Summary cards skeleton */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="p-4 rounded-2xl bg-card border border-border space-y-2">
+              <Card padding="sm" className="space-y-2" key={i}>
                 <div className="flex items-center gap-2 mb-1">
                   <Skeleton className="h-4 w-4 rounded-full" />
                   <Skeleton className="h-3 w-20" />
                 </div>
                 <Skeleton className="h-7 w-12" />
-              </div>
+              </Card>
             ))}
           </div>
 
           {/* Needs review table skeleton */}
-          <div className="p-5 rounded-2xl bg-card border border-border space-y-3">
+          <Card className="space-y-3">
             <Skeleton className="h-4 w-32 mb-2" />
             <div className="space-y-2">
               {[1, 2, 3].map((i) => (
@@ -225,10 +226,10 @@ export default function FeedbackPage() {
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
 
           {/* Recent activity skeleton */}
-          <div className="p-5 rounded-2xl bg-card border border-border space-y-3">
+          <Card className="space-y-3">
             <Skeleton className="h-4 w-32 mb-2" />
             <div className="space-y-2">
               {[1, 2, 3, 4, 5].map((i) => (
@@ -239,7 +240,7 @@ export default function FeedbackPage() {
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
         </div>
       </AppShell>
     )

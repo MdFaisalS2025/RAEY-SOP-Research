@@ -17,6 +17,7 @@ import { AccessRestricted } from "@/components/ui/access-restricted"
 import { priorityBadge, statusBadge } from "@/components/proposals/badges"
 import { ErrorState } from "@/components/ui/error-state"
 import { EmptyState } from "@/components/ui/empty-state"
+import { Card } from "@/components/ui/card"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
 
@@ -82,7 +83,7 @@ function RecurringGapsWidget() {
   return (
     <div className="space-y-3">
       {recurring.map((c, i) => (
-        <div key={i} className="rounded-2xl bg-card border border-border p-4 space-y-2.5">
+        <Card padding="sm" className="space-y-2.5" key={i}>
           <div className="flex items-start justify-between gap-3">
             <p className="text-sm font-medium text-foreground leading-snug">{c.representative_question}</p>
             {c.count > 1 && (
@@ -106,7 +107,7 @@ function RecurringGapsWidget() {
             className="inline-flex items-center gap-1.5 text-xs font-medium text-[#0B6BCB] hover:underline pt-1">
             <PlusCircle className="w-3.5 h-3.5" /> Draft a new SOP for this
           </Link>
-        </div>
+        </Card>
       ))}
     </div>
   )
@@ -182,7 +183,7 @@ function AutoDetectedGapsWidget() {
         <EmptyState icon={HelpCircle} title="No auto-detected gaps in this window." />
       ) : (
         clusters.slice(0, 6).map((c, i) => (
-          <div key={i} className="rounded-2xl bg-card border border-border p-4 space-y-2.5">
+          <Card padding="sm" className="space-y-2.5" key={i}>
             <div className="flex items-start justify-between gap-3">
               <p className="text-sm font-medium text-foreground leading-snug">{c.representative_question}</p>
               {c.count > 1 && (
@@ -201,7 +202,7 @@ function AutoDetectedGapsWidget() {
               className="inline-flex items-center gap-1.5 text-xs font-medium text-[#0B6BCB] hover:underline pt-1">
               <PlusCircle className="w-3.5 h-3.5" /> Draft a new SOP for this
             </Link>
-          </div>
+          </Card>
         ))
       )}
     </div>
@@ -444,13 +445,13 @@ export default function CommitteePage() {
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {stats.map(({ label, value, color, isText, icon: Icon }) => (
-            <div key={label} className="rounded-2xl bg-card border border-border p-4 space-y-2">
+            <Card padding="sm" className="space-y-2" key={label}>
               <div className="flex items-center justify-between">
                 <span className="text-xs text-muted-foreground font-medium">{label}</span>
                 <Icon className={cn("w-4 h-4", color)} />
               </div>
               <p className={cn("font-bold font-display", color, isText ? "text-lg" : "text-3xl")}>{value}</p>
-            </div>
+            </Card>
           ))}
         </motion.div>
 
@@ -577,7 +578,7 @@ export default function CommitteePage() {
             </div>
 
             <div className="space-y-4">
-              <div className="rounded-2xl bg-card border border-border p-5 space-y-3">
+              <Card className="space-y-3">
                 <div className="flex items-center gap-2">
                   <ShieldAlert className="w-4 h-4 text-[#B45309] dark:text-amber-400" />
                   <h3 className="text-sm font-bold text-foreground">Quorum Rules</h3>
@@ -586,7 +587,7 @@ export default function CommitteePage() {
                   <p>Threshold: <span className="font-semibold text-foreground">{quorumThreshold} votes</span> out of a <span className="font-semibold text-foreground">{committeeSize}-member</span> committee.</p>
                   <p>A proposal auto-resolves to Approved or Rejected once quorum is reached, based on whether approve votes outnumber reject + request-changes votes.</p>
                 </div>
-              </div>
+              </Card>
             </div>
           </div>
         )}

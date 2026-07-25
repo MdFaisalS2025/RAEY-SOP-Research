@@ -10,6 +10,7 @@ import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { cn } from "@/lib/utils"
 import { useRole } from "@/lib/role-context"
+import { Card } from "@/components/ui/card"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -515,7 +516,7 @@ export default function ScenariosPage() {
 
         {/* Practice mode toggle */}
         {!active && (
-          <div className="rounded-2xl bg-card border border-border shadow-sm p-4 space-y-2">
+          <Card padding="sm" className="shadow-sm space-y-2">
             <p className="text-sm font-bold text-foreground">Practice mode</p>
             <p className="text-xs text-muted-foreground">
               Blind recall asks you to commit to your own judgment before seeing any options. Clinicians who state their answer first are less prone to automation bias.
@@ -544,7 +545,7 @@ export default function ScenariosPage() {
                 <PenLine className="w-4 h-4" /> Blind recall
               </button>
             </div>
-          </div>
+          </Card>
         )}
 
         {/* Scenario picker */}
@@ -616,7 +617,7 @@ export default function ScenariosPage() {
             </div>
 
             {/* Situation panel */}
-            <div className="rounded-2xl bg-card border border-border shadow-sm p-5 space-y-4">
+            <Card className="shadow-sm space-y-4">
               <div>
                 <h2 className="text-base font-bold">{active.title}</h2>
                 <p className="text-sm text-muted-foreground mt-1">
@@ -633,10 +634,10 @@ export default function ScenariosPage() {
                   </div>
                 ))}
               </div>
-            </div>
+            </Card>
 
             {/* Question */}
-            <div className="rounded-2xl bg-card border border-border shadow-sm p-5 space-y-3">
+            <Card className="shadow-sm space-y-3">
               <h3 className="text-sm font-bold">{active.steps[stepIdx].question}</h3>
               <div className="space-y-2">
                 {active.steps[stepIdx].options.map((opt, i) => {
@@ -688,7 +689,7 @@ export default function ScenariosPage() {
                   </div>
                 )
               })()}
-            </div>
+            </Card>
           </div>
         )}
 
@@ -700,7 +701,7 @@ export default function ScenariosPage() {
             .filter(d => d.opt.grade === "wrong")
           return (
             <div className="space-y-4">
-              <div className="rounded-2xl bg-card border border-border shadow-sm p-6 text-center space-y-2">
+              <Card padding="lg" className="shadow-sm text-center space-y-2">
                 <p className="text-sm text-muted-foreground">{active.title}</p>
                 <p className={cn(
                   "text-4xl font-bold",
@@ -709,10 +710,10 @@ export default function ScenariosPage() {
                   {score} / {active.steps.length}
                 </p>
                 <p className="text-sm text-muted-foreground">correct decisions</p>
-              </div>
+              </Card>
 
               {/* Per-step recap */}
-              <div className="rounded-2xl bg-card border border-border shadow-sm p-5 space-y-3">
+              <Card className="shadow-sm space-y-3">
                 <h3 className="text-sm font-bold">Step recap</h3>
                 {active.steps.map((step, i) => {
                   const opt = step.options[picks[i]]
@@ -729,7 +730,7 @@ export default function ScenariosPage() {
                     </div>
                   )
                 })}
-              </div>
+              </Card>
 
               {/* Deviations */}
               {deviations.length > 0 && (

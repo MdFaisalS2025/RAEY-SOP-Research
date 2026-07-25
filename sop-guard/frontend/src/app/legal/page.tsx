@@ -14,6 +14,7 @@ import { MOCK_LEGAL, MOCK_PROPOSALS } from "@/lib/mock-data"
 import { useRole } from "@/lib/role-context"
 import type { LegalRiskItem } from "@/lib/governance-types"
 import { toneChip } from "@/components/ui/tone"
+import { Card } from "@/components/ui/card"
 
 const riskClassConfig: Record<LegalRiskItem["risk_classification"], { label: string; className: string }> = {
   critical: { label: "Critical", className: toneChip.danger },
@@ -261,7 +262,7 @@ export default function LegalPage() {
         {/* Risk Classification Summary */}
         <section>
           <h2 className="text-lg font-semibold mb-3">Risk Classification Summary</h2>
-          <div className="rounded-2xl bg-card border border-border p-5 space-y-3">
+          <Card className="space-y-3">
             {(["critical", "high", "medium", "low"] as const).map((level) => {
               const count = riskCounts[level]
               const total = MOCK_LEGAL.length
@@ -291,7 +292,7 @@ export default function LegalPage() {
                 </div>
               )
             })}
-          </div>
+          </Card>
         </section>
       </div>
     </AppShell>

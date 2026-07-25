@@ -6,6 +6,7 @@ import { X, CheckCircle2, Eye, UserX, ShieldOff, MoreHorizontal } from "lucide-r
 import { cn } from "@/lib/utils"
 import { useRole } from "@/lib/role-context"
 import { useDialogA11y } from "@/lib/use-dialog-a11y"
+import { Card } from "@/components/ui/card"
 
 type OverrideReason = "will_monitor" | "not_applicable" | "disagree_with_sop" | "other"
 
@@ -93,9 +94,7 @@ export function OverrideModal({ open, onClose, contextType, contextId, contextLa
       aria-hidden={!open}
       onClick={handleClose}
     >
-      <div
-        className="w-full max-w-md rounded-2xl bg-card border border-border shadow-md overflow-hidden transition-all duration-150"
-        style={{
+      <Card padding="none" className="w-full max-w-md shadow-md overflow-hidden transition-all duration-150" style={{
           opacity: open ? 1 : 0,
           transform: open ? "scale(1) translateY(0)" : "scale(0.96) translateY(12px)",
         }}
@@ -181,7 +180,7 @@ export function OverrideModal({ open, onClose, contextType, contextId, contextLa
               </>
             )
         )}
-      </div>
+      </Card>
     </div>,
     document.body
   )

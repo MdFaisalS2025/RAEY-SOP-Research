@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { CheckCircle2, AlertTriangle, XCircle, MinusCircle, ExternalLink, Loader2, GitCompare, ShieldCheck } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { Card } from "@/components/ui/card"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
 
@@ -67,7 +68,7 @@ const ALIGNMENT_META: Record<string, { className: string }> = {
 function AlignmentSummaryCard({ summary }: { summary: NonNullable<ComparisonResponse["summary"]> }) {
   const meta = ALIGNMENT_META[summary.overall_alignment] ?? ALIGNMENT_META["Needs Review"]
   return (
-    <div className="rounded-2xl bg-card border border-border p-5 space-y-3">
+    <Card className="space-y-3">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
           <GitCompare className="w-4 h-4 text-[#0B6BCB]" /> Comparison Summary
@@ -97,13 +98,13 @@ function AlignmentSummaryCard({ summary }: { summary: NonNullable<ComparisonResp
       <p className="text-sm text-foreground pt-2 border-t border-border">
         <span className="font-semibold">Recommended action: </span>{summary.recommended_action}
       </p>
-    </div>
+    </Card>
   )
 }
 
 function ComparisonMatrix({ rows, mode }: { rows: ComparisonRow[]; mode?: ComparisonMode }) {
   return (
-    <div className="rounded-2xl bg-card border border-border overflow-hidden">
+    <Card padding="none" className="overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-sm min-w-[640px]">
           <thead>
@@ -152,7 +153,7 @@ function ComparisonMatrix({ rows, mode }: { rows: ComparisonRow[]; mode?: Compar
           </tbody>
         </table>
       </div>
-    </div>
+    </Card>
   )
 }
 
@@ -248,7 +249,7 @@ export function ProtocolComparisonPanel({ sopId, preloaded }: { sopId: string; p
       <ComparisonMatrix rows={data.rows} mode={data.mode} />
 
       {data.sop_only_steps && data.sop_only_steps.length > 0 && (
-        <div className="rounded-2xl bg-card border border-border p-4">
+        <Card padding="sm">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2 flex items-center gap-1.5">
             <MinusCircle className="w-3.5 h-3.5" /> SOP-Only Steps (not in {data.mode === "dynamic" ? "the compared evidence" : "reference bundle"})
           </p>
@@ -260,7 +261,7 @@ export function ProtocolComparisonPanel({ sopId, preloaded }: { sopId: string; p
             ))}
           </ul>
           <p className="text-[11px] text-subtle mt-2">Extra steps in your SOP not reflected in the compared external material - not necessarily a problem, just outside its scope.</p>
-        </div>
+        </Card>
       )}
     </div>
   )

@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils"
 import { ErrorState } from "@/components/ui/error-state"
 import { EmptyState } from "@/components/ui/empty-state"
 import { toneChip } from "@/components/ui/tone"
+import { Card } from "@/components/ui/card"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
 
@@ -194,10 +195,10 @@ function AllConflictsTab({ data, loading, error, refreshing, onRefresh }: {
             </div>
 
             {conflicts.length === 0 ? (
-              <div className="rounded-2xl bg-card border border-border p-12 text-center">
+              <Card padding="none" className="p-12 text-center">
                 <ShieldAlert className="w-8 h-8 text-muted-foreground mx-auto mb-3 opacity-40" />
                 <p className="text-muted-foreground text-sm">No conflicting drug doses or thresholds detected across the current SOP corpus.</p>
-              </div>
+              </Card>
             ) : (
               conflicts.map((c, i) => (
                 <ConflictCard key={`${c.entity}-${c.sop_a}-${c.sop_b}-${i}`} conflict={c} index={i} />

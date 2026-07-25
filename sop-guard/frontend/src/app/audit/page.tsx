@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils"
 import type { AuditEntry, AuditEventType } from "@/lib/governance-types"
 import { useRole } from "@/lib/role-context"
 import { downloadCSV } from "@/lib/csv-export"
+import { Card } from "@/components/ui/card"
 
 interface RawActivityEntry {
   id: number
@@ -290,7 +291,7 @@ export default function AuditPage() {
         </div>
 
         {/* Audit table */}
-        <div className="rounded-2xl bg-card border border-border overflow-hidden">
+        <Card padding="none" className="overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
             <thead>
@@ -416,7 +417,7 @@ export default function AuditPage() {
             </tbody>
           </table>
           </div>
-        </div>
+        </Card>
 
         {/* Export */}
         <div className="flex justify-center">

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { MessageSquare, Search, Brain, Shield, Gauge, Send, ChevronDown } from "lucide-react"
 import AppShell from "@/components/layout/app-shell"
 import { cn } from "@/lib/utils"
+import { Card } from "@/components/ui/card"
 
 interface AgentDetail {
   id: string
@@ -322,14 +323,14 @@ export default function ArchitecturePage() {
           <h2 className="text-lg font-semibold mb-4">Technology Stack</h2>
           <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
             {techStack.map((group) => (
-              <div key={group.category} className="p-4 rounded-2xl bg-card border border-border">
+              <Card padding="sm" key={group.category}>
                 <h3 className="text-xs font-semibold uppercase text-muted-foreground mb-3">{group.category}</h3>
                 <ul className="space-y-1.5">
                   {group.items.map((item) => (
                     <li key={item} className="text-sm text-foreground">{item}</li>
                   ))}
                 </ul>
-              </div>
+              </Card>
             ))}
           </div>
         </motion.div>

@@ -1,4 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton"
+import { Card } from "@/components/ui/card"
 
 /**
  * Generic "content is loading" placeholder with the accessibility pattern
@@ -11,13 +12,13 @@ export function LoadingBlock({ label = "Loading...", lines = 3 }: { label?: stri
   return (
     <>
       <span role="status" aria-live="polite" className="sr-only">{label}</span>
-      <div className="p-6 rounded-2xl bg-card border border-border space-y-3" aria-hidden="true">
+      <Card padding="lg" className="space-y-3" aria-hidden="true">
         <div className="space-y-2 animate-pulse">
           {Array.from({ length: lines }).map((_, i) => (
             <Skeleton key={i} className={`h-3 ${i === lines - 1 ? "w-2/3" : "w-full"}`} />
           ))}
         </div>
-      </div>
+      </Card>
     </>
   )
 }

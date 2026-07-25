@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils"
 import { useRole } from "@/lib/role-context"
 import { DiffView, DiffStatsRow, type DiffSegment, type DiffStats } from "@/components/governance/diff-view"
 import { priorityBadge, statusBadge, voteBadge } from "@/components/proposals/badges"
+import { Card } from "@/components/ui/card"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
 
@@ -162,7 +163,7 @@ function ImpactAssessmentCard({ proposalId }: { proposalId: number }) {
   const conflicts = impact.new_conflicts ?? []
 
   return (
-    <div className="rounded-2xl bg-card border border-border p-5 space-y-3">
+    <Card className="space-y-3">
       <div className="flex items-center gap-2">
         <AlertTriangle className="w-4 h-4 text-[#0B6BCB]" />
         <h3 className="text-sm font-semibold text-foreground">Change Impact Assessment</h3>
@@ -196,7 +197,7 @@ function ImpactAssessmentCard({ proposalId }: { proposalId: number }) {
           ))}
         </div>
       )}
-    </div>
+    </Card>
   )
 }
 
@@ -487,10 +488,10 @@ export default function ProposalDetailPage() {
           <Link href="/proposals" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-[#0B6BCB] transition-colors">
             <ChevronLeft className="w-3.5 h-3.5" /> Back to Proposals
           </Link>
-          <div className="rounded-2xl bg-card border border-border p-12 text-center">
+          <Card padding="none" className="p-12 text-center">
             <FileText className="w-8 h-8 text-muted-foreground mx-auto mb-3 opacity-40" />
             <p className="text-muted-foreground text-sm">Proposal {id} was not found.</p>
-          </div>
+          </Card>
         </div>
       </AppShell>
     )

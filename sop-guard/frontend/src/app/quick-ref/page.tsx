@@ -10,6 +10,7 @@ import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { SafetyNote } from "@/components/ui/safety-note"
 import { ErrorState } from "@/components/ui/error-state"
+import { Card } from "@/components/ui/card"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
 
@@ -213,9 +214,9 @@ export default function QuickRefPage() {
         ) : loadError ? (
           <ErrorState message="Couldn't load SOPs for quick reference." onRetry={loadSops} />
         ) : filtered.length === 0 ? (
-          <div className="rounded-2xl bg-card border border-border p-12 text-center text-muted-foreground text-sm">
+          <Card padding="none" className="p-12 text-center text-muted-foreground text-sm">
             No cards match your search.
-          </div>
+          </Card>
         ) : (
           <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
             {filtered.map((sop, i) => (

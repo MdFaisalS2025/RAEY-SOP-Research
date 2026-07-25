@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { ChevronDown, ChevronRight, Loader2, History, GraduationCap, ClipboardCheck, Gavel, FlaskConical } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { DiffView, DiffStatsRow, type DiffSegment, type DiffStats } from "@/components/governance/diff-view"
+import { Card } from "@/components/ui/card"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
 
@@ -117,7 +118,7 @@ function VersionComparePicker({ sopId, versions }: { sopId: string; versions: SO
   if (sorted.length < 2) return null
 
   return (
-    <div className="rounded-2xl bg-card border border-border p-4 space-y-3">
+    <Card padding="sm" className="space-y-3">
       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Compare versions</p>
       <div className="flex flex-wrap items-center gap-2">
         <select aria-label="Compare from version" value={fromVersion} onChange={(e) => setFromVersion(e.target.value)}
@@ -145,7 +146,7 @@ function VersionComparePicker({ sopId, versions }: { sopId: string; versions: SO
           <VersionDiff sopId={sopId} versionNumber={compared.to} fromVersion={compared.from} />
         </div>
       )}
-    </div>
+    </Card>
   )
 }
 

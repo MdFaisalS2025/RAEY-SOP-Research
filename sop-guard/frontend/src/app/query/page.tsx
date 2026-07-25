@@ -19,6 +19,7 @@ import { SafetyNote } from "@/components/ui/safety-note"
 import { VoiceRecorder } from "@/components/voice/voice-recorder"
 import { querySOPs } from "@/lib/api"
 import { cn } from "@/lib/utils"
+import { Card } from "@/components/ui/card"
 
 const suggestedQueries = [
 "What are the steps for sepsis management?",
@@ -283,7 +284,7 @@ function AnswerSkeleton() {
           screen readers get the phase text ("Searching approved SOPs…" etc.)
           without the decorative pulsing shapes being announced. */}
       <span role="status" aria-live="polite" className="sr-only">{LOADING_PHRASES[phraseIndex]}</span>
-      <div className="p-6 sm:p-8 rounded-2xl bg-card border border-border shadow-sm space-y-4" aria-hidden="true">
+      <Card padding="lg" className="sm:p-8 shadow-sm space-y-4" aria-hidden="true">
         <p className="text-sm text-muted-foreground">{LOADING_PHRASES[phraseIndex]}</p>
         <div className="space-y-4 animate-pulse">
           <div className="h-4 w-2/5 rounded bg-muted" />
@@ -304,7 +305,7 @@ function AnswerSkeleton() {
             ))}
           </div>
         </div>
-      </div>
+      </Card>
     </>
   )
 }

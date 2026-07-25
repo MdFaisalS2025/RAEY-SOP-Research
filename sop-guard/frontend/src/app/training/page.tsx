@@ -12,6 +12,7 @@ import { SafetyNote } from "@/components/ui/safety-note"
 import { ErrorState } from "@/components/ui/error-state"
 import { cn } from "@/lib/utils"
 import { useRole } from "@/lib/role-context"
+import { Card } from "@/components/ui/card"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
 
@@ -141,24 +142,24 @@ export default function TrainingPage() {
 
             <div className="grid lg:grid-cols-3 gap-4">
               {(Object.keys(ACTIVITY_CONFIG) as ActivityType[]).map((type) => (
-                <div key={type} className="rounded-2xl bg-card border border-border p-4">
+                <Card padding="sm" key={type}>
                   <span className={cn("px-2.5 py-0.5 rounded-full text-xs font-medium", ACTIVITY_CONFIG[type].className)}>
                     {ACTIVITY_CONFIG[type].label}
                   </span>
                   <p className="text-3xl font-bold text-foreground mt-2">{countByType[type]}</p>
                   <p className="text-xs text-muted-foreground">activities logged</p>
-                </div>
+                </Card>
               ))}
             </div>
 
             <section className="space-y-3">
               <h2 className="text-lg font-semibold">Recent Activity</h2>
               {recentActivity.length === 0 ? (
-                <div className="rounded-2xl bg-card border border-border p-10 text-center text-sm text-muted-foreground">
+                <Card padding="none" className="p-10 text-center text-sm text-muted-foreground">
                   No training activity logged yet.
-                </div>
+                </Card>
               ) : (
-                <div className="rounded-2xl bg-card border border-border overflow-hidden">
+                <Card padding="none" className="overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
@@ -185,7 +186,7 @@ export default function TrainingPage() {
                       </tbody>
                     </table>
                   </div>
-                </div>
+                </Card>
               )}
             </section>
           </>

@@ -1,6 +1,7 @@
 "use client"
 
 import { ChevronRight } from "lucide-react"
+import { Card } from "@/components/ui/card"
 
 export function FollowupChips({
   questions,
@@ -11,7 +12,7 @@ export function FollowupChips({
 }) {
   if (!questions || questions.length === 0) return null
   return (
-    <div className="p-5 rounded-2xl bg-card border border-border shadow-sm">
+    <Card className="shadow-sm">
       <p className="text-xs font-semibold tracking-wide text-muted-foreground mb-3">Related questions</p>
       <div className="space-y-2">
         {questions.map((q, i) => (
@@ -25,6 +26,6 @@ export function FollowupChips({
           </button>
         ))}
       </div>
-    </div>
+    </Card>
   )
 }

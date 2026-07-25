@@ -9,6 +9,7 @@ import {
 import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { cn } from "@/lib/utils"
+import { Card } from "@/components/ui/card"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -217,7 +218,7 @@ export default function CDSDemoPage() {
         </div>
 
         {/* How this works */}
-        <section className="rounded-2xl bg-card border border-border shadow-sm">
+        <Card as="section" padding="none" className="shadow-sm">
           <button
             onClick={() => setHowOpen(!howOpen)}
             className="w-full flex items-center justify-between px-5 py-4 text-sm font-semibold text-foreground"
@@ -258,7 +259,7 @@ ${JSON.stringify(requestBody, null, 2)}`}
               </div>
             </div>
           )}
-        </section>
+        </Card>
       </div>
     </AppShell>
   )

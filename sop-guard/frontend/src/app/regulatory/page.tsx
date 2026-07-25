@@ -14,6 +14,7 @@ import { IllustrativeNote } from "@/components/ui/illustrative-note"
 import { ErrorState } from "@/components/ui/error-state"
 import { cn } from "@/lib/utils"
 import { downloadCSV } from "@/lib/csv-export"
+import { Card } from "@/components/ui/card"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
 
@@ -279,9 +280,9 @@ function StandardsMappingTab({ sops, loading, loadError, onRetry }: { sops: Real
       ) : (
       <div className="space-y-4">
         {filtered.length === 0 && (
-          <div className="rounded-2xl bg-card border border-border p-8 text-center text-muted-foreground text-sm">
+          <Card padding="xl" className="text-center text-muted-foreground text-sm">
             No standards found for this framework.
-          </div>
+          </Card>
         )}
         {filtered.map((std, i) => {
           const stMeta = STATUS_META[std.status] ?? STATUS_META.not_assessed
@@ -356,7 +357,7 @@ function StandardsMappingTab({ sops, loading, loadError, onRetry }: { sops: Real
       </div>
       )}
 
-      <div className="rounded-2xl bg-card border border-border p-4">
+      <Card padding="sm">
         <h3 className="text-sm font-medium mb-3">Regulatory Frameworks</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
           {[
@@ -373,7 +374,7 @@ function StandardsMappingTab({ sops, loading, loadError, onRetry }: { sops: Real
             </div>
           ))}
         </div>
-      </div>
+      </Card>
     </div>
   )
 }

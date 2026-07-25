@@ -18,6 +18,7 @@ import { useRole } from "@/lib/role-context"
 import { downloadCSV } from "@/lib/csv-export"
 import { ErrorState } from "@/components/ui/error-state"
 import { EmptyState } from "@/components/ui/empty-state"
+import { Card } from "@/components/ui/card"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
 const LEGAL_TEXT = "By clicking Attest, I confirm I have read, understood, and will comply with this policy in my clinical practice. This attestation is timestamped and may be used as evidence in regulatory audits or litigation."
@@ -610,7 +611,7 @@ function AcknowledgmentsTab() {
       {/* SOPs Requiring Review */}
       <section>
         <h2 className="text-lg font-semibold mb-3">SOPs Requiring Review</h2>
-        <div className="rounded-2xl bg-card border border-border overflow-hidden">
+        <Card padding="none" className="overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
             <thead>
@@ -653,7 +654,7 @@ function AcknowledgmentsTab() {
             </tbody>
           </table>
           </div>
-        </div>
+        </Card>
       </section>
 
       {/* ─── LEGAL ATTESTATION SECTION ─── */}
@@ -731,7 +732,7 @@ function AcknowledgmentsTab() {
           </AnimatePresence>
         </div>
 
-        <div className="rounded-2xl bg-card border border-border overflow-hidden">
+        <Card padding="none" className="overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm min-w-[860px]">
               <thead>
@@ -801,7 +802,7 @@ function AcknowledgmentsTab() {
               </tbody>
             </table>
           </div>
-        </div>
+        </Card>
       </section>
 
     </div>
@@ -979,7 +980,7 @@ function ReviewsTab() {
         ))}
       </div>
 
-      <section className="rounded-2xl bg-card border border-border p-5">
+      <Card as="section">
         <div className="mb-4">
           <h2 className="text-base font-semibold">Staged Escalation Protocol</h2>
           <p className="text-xs text-muted-foreground mt-0.5">TJC LD.04.03.07 - Automated notification escalation based on days until review due date</p>
@@ -1027,7 +1028,7 @@ function ReviewsTab() {
             </p>
           </div>
         )}
-      </section>
+      </Card>
 
       <section>
         <h2 className="text-lg font-medium mb-3">Review Timeline - sorted by urgency</h2>
@@ -1126,7 +1127,7 @@ function ReviewsTab() {
         </div>
       </section>
 
-      <div className="rounded-2xl bg-card border border-border p-4">
+      <Card padding="sm">
         <h3 className="text-sm font-medium mb-3 text-muted-foreground">Alert Tier Reference</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
           {(["expired", "due_soon", "upcoming", "current"] as ExpiryStatus[]).map((s) => (
@@ -1140,9 +1141,9 @@ function ReviewsTab() {
             </div>
           ))}
         </div>
-      </div>
+      </Card>
 
-      <div className="rounded-2xl bg-card border border-border p-5 space-y-4">
+      <Card className="space-y-4">
         <div className="flex items-center gap-2">
           <Bell className="w-4 h-4 text-muted-foreground" />
           <h3 className="text-sm font-semibold">Notification Settings</h3>
@@ -1167,7 +1168,7 @@ function ReviewsTab() {
         <p className="text-xs text-muted-foreground/70 italic">
           These settings require IT integration in production.
         </p>
-      </div>
+      </Card>
     </div>
   )
 }

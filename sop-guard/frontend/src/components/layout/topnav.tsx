@@ -38,6 +38,10 @@ import {
   ShieldOff,
   UploadCloud,
   Inbox,
+  Stethoscope,
+  PlayCircle,
+  Radio,
+  ClipboardCheck,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { RoleSwitcher } from "@/components/layout/role-switcher"
@@ -69,10 +73,16 @@ const DIRECT_LINKS: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
 ]
 
-// Reorganized from 5 heavy enterprise-sounding groups down to 4 calmer
-// ones - every route below already existed and stays role-gated exactly
-// as before; this only changes how they're grouped/labeled, nothing is
-// removed or made unreachable.
+// Reorganized from 5 heavy enterprise-sounding groups down to 3 - every
+// route below already existed and stays role-gated exactly as before;
+// this only changes how they're grouped/labeled, nothing is removed or
+// made unreachable. Quality folded into Governance (both were
+// compliance-adjacent oversight tooling for the same governance_compliance
+// audience, and Quality alone only ever held 3 items - not enough to earn
+// its own dropdown). Bedside Lookup and Scenario Training, previously
+// reachable only via Ctrl+K, are promoted into Protocols since they're
+// real clinical/educator workflows, not demos - a first-time user
+// shouldn't need to know the command palette exists to find them.
 const NAV_GROUPS: NavGroup[] = [
   {
     label: "Protocols",
@@ -81,12 +91,14 @@ const NAV_GROUPS: NavGroup[] = [
       { href: "/query", label: "Ask Meridian", icon: MessageSquare },
       { href: "/library", label: "SOP Library", icon: BookOpen },
       { href: "/quick-ref", label: "Quick Reference", icon: BookMarked },
+      { href: "/bedside", label: "Bedside Lookup", icon: Stethoscope, roles: ["clinical_staff", "system_admin"] },
       { href: "/evidence-watch", label: "Evidence Watch", icon: FlaskConical, roles: ["governance_compliance", "system_admin"] },
       { href: "/training", label: "Training", icon: GraduationCap },
+      { href: "/scenarios", label: "Scenario Training", icon: PlayCircle, roles: ["educator", "clinical_staff", "system_admin"] },
     ],
   },
   {
-    label: "Governance",
+    label: "Governance & Quality",
     items: [
       { href: "/proposals", label: "Proposals", icon: GitBranch, roles: ["governance_compliance", "system_admin"] },
       { href: "/committee", label: "Committee", icon: Users, roles: ["governance_compliance", "system_admin"] },
@@ -95,11 +107,6 @@ const NAV_GROUPS: NavGroup[] = [
       { href: "/audit", label: "Audit", icon: ClipboardList, roles: ["governance_compliance", "system_admin"] },
       { href: "/legal", label: "Legal & Risk", icon: Scale, roles: ["governance_compliance", "system_admin"] },
       { href: "/regulatory", label: "Regulatory & Accreditation", icon: Landmark, roles: ["governance_compliance", "system_admin"] },
-    ],
-  },
-  {
-    label: "Quality",
-    items: [
       // Leadership is reachable via the "Leadership Overview" shortcut on the
       // Dashboard for governance/admin roles rather than a separate nav item
       // - it duplicated the Dashboard's own metrics.
@@ -112,8 +119,10 @@ const NAV_GROUPS: NavGroup[] = [
     label: "Admin",
     items: [
       { href: "/evaluation", label: "AI Evaluation", icon: Gauge, roles: ["system_admin"] },
+      { href: "/human-eval", label: "Clinician Evaluation", icon: ClipboardCheck, roles: ["system_admin", "governance_compliance"] },
       { href: "/feedback", label: "Usage & Feedback", icon: Inbox, roles: ["governance_compliance", "system_admin"] },
       { href: "/upload", label: "Upload SOP", icon: UploadCloud, roles: ["system_admin"] },
+      { href: "/cds-demo", label: "EMR Integration Demo", icon: Radio, roles: ["system_admin"] },
       { href: "/settings", label: "Settings", icon: Settings },
       { href: "/admin", label: "Admin", icon: Wrench, roles: ["system_admin"] },
     ],

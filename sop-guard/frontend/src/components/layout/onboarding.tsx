@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, MessageSquare, ShieldCheck, FileText, ArrowRight } from "lucide-react"
+import { X, MessageSquare, ShieldCheck, FileText, ArrowRight, Compass } from "lucide-react"
 
 const steps = [
   {
@@ -19,6 +19,11 @@ const steps = [
     icon: FileText,
     title: "Trace every source",
     description: "Click any source to see the exact SOP section used. Every claim links back to a real document.",
+  },
+  {
+    icon: Compass,
+    title: "Find everything else",
+    description: "Beyond Ask Meridian, the top menu groups Protocols, Governance & Quality, and Admin tools - each trimmed to what your role actually needs. Can't find a page by name? Press Ctrl+K to search all of them.",
   },
 ]
 

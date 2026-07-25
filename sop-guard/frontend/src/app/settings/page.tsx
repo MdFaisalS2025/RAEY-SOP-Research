@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
 import {
   Save, CheckCircle2, XCircle, Loader2,
@@ -125,9 +126,23 @@ const TABS = [
   { id: "analytics", label: "Analytics", icon: BarChart3 },
 ] as const
 type TabId = typeof TABS[number]["id"]
+const TAB_IDS = TABS.map((t) => t.id) as string[]
 
-export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<TabId>("system")
+function SettingsPageInner() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const tabParam = searchParams.get("tab")
+  const [activeTab, setActiveTabState] = useState<TabId>(
+    tabParam && TAB_IDS.includes(tabParam) ? (tabParam as TabId) : "system"
+  )
+
+  // Keeps the URL in sync with the active tab so a reload or a shared link
+  // (e.g. "check the Evidence Sources tab") lands on the same section
+  // instead of always resetting to System.
+  const setActiveTab = (tab: TabId) => {
+    setActiveTabState(tab)
+    router.replace(`/settings?tab=${tab}`, { scroll: false })
+  }
 
   const [voiceEnabled, setVoiceEnabled] = useState(true)
   const [voiceAvailable, setVoiceAvailable] = useState(false)
@@ -609,5 +624,13 @@ export default function SettingsPage() {
         </motion.div>
       </div>
     </AppShell>
+  )
+}
+
+export default function SettingsPage() {
+  return (
+    <Suspense fallback={<AppShell><div /></AppShell>}>
+      <SettingsPageInner />
+    </Suspense>
   )
 }

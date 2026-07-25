@@ -15,6 +15,8 @@ import { useRole } from "@/lib/role-context"
 import { COMMITTEE_ROSTER } from "@/lib/mock-data"
 import { AccessRestricted } from "@/components/ui/access-restricted"
 import { priorityBadge, statusBadge } from "@/components/proposals/badges"
+import { ErrorState } from "@/components/ui/error-state"
+import { EmptyState } from "@/components/ui/empty-state"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
 
@@ -45,14 +47,18 @@ const RISK_STYLE: Record<string, string> = {
 function RecurringGapsWidget() {
   const [clusters, setClusters] = useState<GapCluster[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
 
-  useEffect(() => {
+  const load = () => {
+    setLoading(true)
+    setLoadError(false)
     fetch(`${API_BASE}/api/sop-gap-reports/summary`)
-      .then((r) => r.json())
+      .then((r) => { if (!r.ok) throw new Error(); return r.json() })
       .then((data) => setClusters(Array.isArray(data?.clusters) ? data.clusters : []))
-      .catch(() => setClusters([]))
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false))
-  }, [])
+  }
+  useEffect(load, [])
 
   if (loading) {
     return (
@@ -62,13 +68,14 @@ function RecurringGapsWidget() {
     )
   }
 
+  if (loadError) {
+    return <ErrorState message="Couldn't load recurring gaps." onRetry={load} />
+  }
+
   const recurring = clusters.filter((c) => c.count >= 1).slice(0, 6)
   if (recurring.length === 0) {
     return (
-      <div className="rounded-2xl bg-card border border-border p-8 text-center">
-        <HelpCircle className="w-8 h-8 mx-auto mb-3 text-muted-foreground opacity-40" />
-        <p className="text-sm text-muted-foreground">No unanswered questions have been flagged yet.</p>
-      </div>
+      <EmptyState icon={HelpCircle} title="No unanswered questions have been flagged yet." />
     )
   }
 
@@ -131,10 +138,13 @@ function AutoDetectedGapsWidget() {
   const [clusters, setClusters] = useState<AutoGapCluster[]>([])
   const [totals, setTotals] = useState<{ unanswered: number; logged: number; days: number } | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
 
-  useEffect(() => {
+  const load = () => {
+    setLoading(true)
+    setLoadError(false)
     fetch(`${API_BASE}/api/sop-gap-reports/auto-detected?days=30`)
-      .then((r) => r.json())
+      .then((r) => { if (!r.ok) throw new Error(); return r.json() })
       .then((data) => {
         setClusters(Array.isArray(data?.clusters) ? data.clusters : [])
         setTotals({
@@ -143,9 +153,10 @@ function AutoDetectedGapsWidget() {
           days: data?.window_days ?? 30,
         })
       })
-      .catch(() => { setClusters([]); setTotals(null) })
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false))
-  }, [])
+  }
+  useEffect(load, [])
 
   if (loading) {
     return (
@@ -153,6 +164,10 @@ function AutoDetectedGapsWidget() {
         <Loader2 className="w-4 h-4 animate-spin" /> Loading auto-detected gaps...
       </div>
     )
+  }
+
+  if (loadError) {
+    return <ErrorState message="Couldn't load auto-detected gaps." onRetry={load} />
   }
 
   return (
@@ -164,10 +179,7 @@ function AutoDetectedGapsWidget() {
         </p>
       )}
       {clusters.length === 0 ? (
-        <div className="rounded-2xl bg-card border border-border p-8 text-center">
-          <HelpCircle className="w-8 h-8 mx-auto mb-3 text-muted-foreground opacity-40" />
-          <p className="text-sm text-muted-foreground">No auto-detected gaps in this window.</p>
-        </div>
+        <EmptyState icon={HelpCircle} title="No auto-detected gaps in this window." />
       ) : (
         clusters.slice(0, 6).map((c, i) => (
           <div key={i} className="rounded-2xl bg-card border border-border p-4 space-y-2.5">
@@ -374,14 +386,18 @@ export default function CommitteePage() {
   const { role } = useRole()
   const [proposals, setProposals] = useState<Proposal[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
 
-  useEffect(() => {
+  const loadProposals = () => {
+    setLoading(true)
+    setLoadError(false)
     fetch(`${API_BASE}/api/governance/proposals?limit=200`)
-      .then((r) => r.json())
+      .then((r) => { if (!r.ok) throw new Error(); return r.json() })
       .then((data) => setProposals(Array.isArray(data?.proposals) ? data.proposals : []))
-      .catch(() => setProposals([]))
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false))
-  }, [])
+  }
+  useEffect(loadProposals, [])
 
   function handleVoteCast(updated: Proposal) {
     setProposals((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))
@@ -442,6 +458,8 @@ export default function CommitteePage() {
           <div className="flex items-center justify-center py-16 text-muted-foreground gap-2">
             <Loader2 className="w-5 h-5 animate-spin" /> Loading committee data...
           </div>
+        ) : loadError ? (
+          <ErrorState message="Couldn't load committee data." onRetry={loadProposals} />
         ) : (
           <div className="grid xl:grid-cols-[1fr_320px] gap-8">
             <div className="space-y-8">
@@ -456,10 +474,7 @@ export default function CommitteePage() {
                 </div>
 
                 {activeProposals.length === 0 ? (
-                  <div className="rounded-2xl bg-card border border-border p-10 text-center">
-                    <Vote className="w-8 h-8 mx-auto mb-3 text-muted-foreground opacity-40" />
-                    <p className="text-sm text-muted-foreground">No proposals currently awaiting review.</p>
-                  </div>
+                  <EmptyState icon={Vote} title="No proposals currently awaiting review." />
                 ) : (
                   activeProposals.map((p, i) => (
                     <CommitteeProposalCard key={p.id} proposal={p} index={i} onVoteCast={handleVoteCast} />
@@ -494,7 +509,7 @@ export default function CommitteePage() {
                 </h2>
 
                 {decidedProposals.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No decided proposals yet.</p>
+                  <EmptyState icon={CheckCircle2} title="No decided proposals yet." />
                 ) : (
                   <div className="space-y-3">
                     {decidedProposals.map((p, i) => {

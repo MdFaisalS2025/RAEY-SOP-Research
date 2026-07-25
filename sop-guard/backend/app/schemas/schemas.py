@@ -51,7 +51,6 @@ class QueryRequest(BaseModel):
     user_role: Optional[str] = "nurse"
     department: Optional[str] = ""
     news2_score: Optional[int] = None
-    use_hyde: bool = False
 
 
 class RetrievedChunk(BaseModel):

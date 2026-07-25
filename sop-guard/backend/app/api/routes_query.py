@@ -107,7 +107,6 @@ async def submit_query(req: QueryRequest, db: AsyncSession = Depends(get_db)):
         user_role=req.user_role or "",
         department=req.department or "",
         news2_score=req.news2_score,
-        use_hyde=req.use_hyde,
     )
 
     await _persist_query_result(req, result, db)
@@ -136,7 +135,6 @@ async def submit_query_stream(req: QueryRequest, db: AsyncSession = Depends(get_
             user_role=req.user_role or "",
             department=req.department or "",
             news2_score=req.news2_score,
-            use_hyde=req.use_hyde,
         ):
             if event["type"] == "token":
                 yield f"data: {json.dumps({'type': 'token', 'text': event['text']})}\n\n"

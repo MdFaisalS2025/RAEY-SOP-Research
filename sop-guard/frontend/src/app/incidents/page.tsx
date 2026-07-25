@@ -219,8 +219,8 @@ function ReportModal({ onClose, onCreated }: ReportModalProps) {
 
         <div className="space-y-3">
           <div>
-            <label className="text-xs text-muted-foreground mb-1 block">Incident Type</label>
-            <select value={incidentType} onChange={(e) => setIncidentType(e.target.value)}
+            <label htmlFor="incident-type" className="text-xs text-muted-foreground mb-1 block">Incident Type</label>
+            <select id="incident-type" value={incidentType} onChange={(e) => setIncidentType(e.target.value)}
               className="w-full bg-card border border-border rounded-xl px-3 py-2 text-sm text-foreground focus:outline-none focus:border-[#0B6BCB]/50">
               <option value="near_miss">Near Miss</option>
               <option value="adverse_event">Adverse Event</option>
@@ -229,13 +229,13 @@ function ReportModal({ onClose, onCreated }: ReportModalProps) {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs text-muted-foreground mb-1 block">Reported By</label>
-              <input value={reporter} onChange={(e) => setReporter(e.target.value)} placeholder="Your name"
+              <label htmlFor="incident-reporter" className="text-xs text-muted-foreground mb-1 block">Reported By</label>
+              <input id="incident-reporter" value={reporter} onChange={(e) => setReporter(e.target.value)} placeholder="Your name"
                 className="w-full bg-card border border-border rounded-xl px-3 py-2 text-sm text-foreground focus:outline-none focus:border-[#0B6BCB]/50" />
             </div>
             <div>
-              <label className="text-xs text-muted-foreground mb-1 block">Severity</label>
-              <select value={severity} onChange={(e) => setSeverity(e.target.value)}
+              <label htmlFor="incident-severity" className="text-xs text-muted-foreground mb-1 block">Severity</label>
+              <select id="incident-severity" value={severity} onChange={(e) => setSeverity(e.target.value)}
                 className="w-full bg-card border border-border rounded-xl px-3 py-2 text-sm text-foreground focus:outline-none focus:border-[#0B6BCB]/50">
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
@@ -245,8 +245,8 @@ function ReportModal({ onClose, onCreated }: ReportModalProps) {
             </div>
           </div>
           <div>
-            <label className="text-xs text-muted-foreground mb-1 block">Department</label>
-            <select value={department} onChange={(e) => setDepartment(e.target.value)}
+            <label htmlFor="incident-department" className="text-xs text-muted-foreground mb-1 block">Department</label>
+            <select id="incident-department" value={department} onChange={(e) => setDepartment(e.target.value)}
               className="w-full bg-card border border-border rounded-xl px-3 py-2 text-sm text-foreground focus:outline-none focus:border-[#0B6BCB]/50">
               <option>ICU</option>
               <option>Emergency</option>
@@ -258,8 +258,9 @@ function ReportModal({ onClose, onCreated }: ReportModalProps) {
             </select>
           </div>
           <div>
-            <label className="text-xs text-muted-foreground mb-1 block">Brief Description</label>
+            <label htmlFor="incident-description" className="text-xs text-muted-foreground mb-1 block">Brief Description</label>
             <textarea
+              id="incident-description"
               rows={3}
               value={description} onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe what happened..."
@@ -267,8 +268,8 @@ function ReportModal({ onClose, onCreated }: ReportModalProps) {
             />
           </div>
           <div>
-            <label className="text-xs text-muted-foreground mb-1 block">Related SOP</label>
-            <select value={relatedSop} onChange={(e) => setRelatedSop(e.target.value)}
+            <label htmlFor="incident-related-sop" className="text-xs text-muted-foreground mb-1 block">Related SOP</label>
+            <select id="incident-related-sop" value={relatedSop} onChange={(e) => setRelatedSop(e.target.value)}
               className="w-full bg-card border border-border rounded-xl px-3 py-2 text-sm text-foreground focus:outline-none focus:border-[#0B6BCB]/50">
               <option value="">-- Select SOP (optional) --</option>
               {MOCK_SOPS.map((sop) => (
@@ -374,7 +375,7 @@ function CAPAEditor({ capa, onSaved }: { capa: CAPA; onSaved: () => void }) {
             </a>
           )}
         </div>
-        <select value={status} onChange={(e) => { const v = e.target.value as CAPA["status"]; setStatus(v); save({ status: v }) }}
+        <select aria-label="CAPA status" value={status} onChange={(e) => { const v = e.target.value as CAPA["status"]; setStatus(v); save({ status: v }) }}
           className="text-xs bg-card border border-border rounded-lg px-2 py-1">
           <option value="open">Open</option>
           <option value="investigating">Investigating</option>
@@ -384,32 +385,32 @@ function CAPAEditor({ capa, onSaved }: { capa: CAPA; onSaved: () => void }) {
       </div>
 
       <div>
-        <label className="text-[11px] text-subtle mb-1 block">Root Cause</label>
-        <textarea rows={2} value={rootCause} onChange={(e) => setRootCause(e.target.value)} onBlur={() => save()}
+        <label htmlFor={`capa-${capa.id}-root-cause`} className="text-[11px] text-subtle mb-1 block">Root Cause</label>
+        <textarea id={`capa-${capa.id}-root-cause`} rows={2} value={rootCause} onChange={(e) => setRootCause(e.target.value)} onBlur={() => save()}
           placeholder="Why did this happen?"
           className="w-full bg-card border border-border rounded-lg px-3 py-2 text-xs text-foreground resize-none" />
       </div>
       <div>
-        <label className="text-[11px] text-subtle mb-1 block">Corrective Action</label>
-        <textarea rows={2} value={correctiveAction} onChange={(e) => setCorrectiveAction(e.target.value)} onBlur={() => save()}
+        <label htmlFor={`capa-${capa.id}-corrective-action`} className="text-[11px] text-subtle mb-1 block">Corrective Action</label>
+        <textarea id={`capa-${capa.id}-corrective-action`} rows={2} value={correctiveAction} onChange={(e) => setCorrectiveAction(e.target.value)} onBlur={() => save()}
           placeholder="What was done to fix the immediate issue?"
           className="w-full bg-card border border-border rounded-lg px-3 py-2 text-xs text-foreground resize-none" />
       </div>
       <div>
-        <label className="text-[11px] text-subtle mb-1 block">Preventive Action</label>
-        <textarea rows={2} value={preventiveAction} onChange={(e) => setPreventiveAction(e.target.value)} onBlur={() => save()}
+        <label htmlFor={`capa-${capa.id}-preventive-action`} className="text-[11px] text-subtle mb-1 block">Preventive Action</label>
+        <textarea id={`capa-${capa.id}-preventive-action`} rows={2} value={preventiveAction} onChange={(e) => setPreventiveAction(e.target.value)} onBlur={() => save()}
           placeholder="What will stop this from happening again? (e.g. an SOP change)"
           className="w-full bg-card border border-border rounded-lg px-3 py-2 text-xs text-foreground resize-none" />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="text-[11px] text-subtle mb-1 block">Owner</label>
-          <input value={owner} onChange={(e) => setOwner(e.target.value)} onBlur={() => save()}
+          <label htmlFor={`capa-${capa.id}-owner`} className="text-[11px] text-subtle mb-1 block">Owner</label>
+          <input id={`capa-${capa.id}-owner`} value={owner} onChange={(e) => setOwner(e.target.value)} onBlur={() => save()}
             className="w-full bg-card border border-border rounded-lg px-3 py-2 text-xs text-foreground" />
         </div>
         <div>
-          <label className="text-[11px] text-subtle mb-1 block">Due Date</label>
-          <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} onBlur={() => save()}
+          <label htmlFor={`capa-${capa.id}-due-date`} className="text-[11px] text-subtle mb-1 block">Due Date</label>
+          <input id={`capa-${capa.id}-due-date`} type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} onBlur={() => save()}
             className="w-full bg-card border border-border rounded-lg px-3 py-2 text-xs text-foreground" />
         </div>
       </div>
@@ -1070,8 +1071,9 @@ function SubmitForm({ onClose, onCreated }: { onClose: () => void; onCreated: (e
     <form className="space-y-4" onSubmit={handleSubmit}>
       <div className="grid md:grid-cols-2 gap-4">
         <div>
-          <label className="text-xs text-muted-foreground block mb-1">SOP Affected</label>
+          <label htmlFor="exc-sop-id" className="text-xs text-muted-foreground block mb-1">SOP Affected</label>
           <input
+            id="exc-sop-id"
             required
             value={form.sop_id}
             onChange={(e) => set("sop_id", e.target.value)}
@@ -1080,8 +1082,9 @@ function SubmitForm({ onClose, onCreated }: { onClose: () => void; onCreated: (e
           />
         </div>
         <div>
-          <label className="text-xs text-muted-foreground block mb-1">Department</label>
+          <label htmlFor="exc-department" className="text-xs text-muted-foreground block mb-1">Department</label>
           <input
+            id="exc-department"
             required
             value={form.department}
             onChange={(e) => set("department", e.target.value)}
@@ -1090,8 +1093,9 @@ function SubmitForm({ onClose, onCreated }: { onClose: () => void; onCreated: (e
           />
         </div>
         <div>
-          <label className="text-xs text-muted-foreground block mb-1">Date and Time of Deviation</label>
+          <label htmlFor="exc-date" className="text-xs text-muted-foreground block mb-1">Date and Time of Deviation</label>
           <input
+            id="exc-date"
             required
             type="datetime-local"
             value={form.date_of_deviation}
@@ -1100,8 +1104,9 @@ function SubmitForm({ onClose, onCreated }: { onClose: () => void; onCreated: (e
           />
         </div>
         <div>
-          <label className="text-xs text-muted-foreground block mb-1">Severity</label>
+          <label htmlFor="exc-severity" className="text-xs text-muted-foreground block mb-1">Severity</label>
           <select
+            id="exc-severity"
             required
             value={form.severity}
             onChange={(e) => set("severity", e.target.value)}
@@ -1115,8 +1120,9 @@ function SubmitForm({ onClose, onCreated }: { onClose: () => void; onCreated: (e
           </select>
         </div>
         <div>
-          <label className="text-xs text-muted-foreground block mb-1">Deviation Type</label>
+          <label htmlFor="exc-deviation-type" className="text-xs text-muted-foreground block mb-1">Deviation Type</label>
           <select
+            id="exc-deviation-type"
             required
             value={form.deviation_type}
             onChange={(e) => set("deviation_type", e.target.value)}
@@ -1132,8 +1138,9 @@ function SubmitForm({ onClose, onCreated }: { onClose: () => void; onCreated: (e
           </select>
         </div>
         <div>
-          <label className="text-xs text-muted-foreground block mb-1">Patient Harm?</label>
+          <label htmlFor="exc-patient-harm" className="text-xs text-muted-foreground block mb-1">Patient Harm?</label>
           <select
+            id="exc-patient-harm"
             required
             value={form.patient_harm}
             onChange={(e) => set("patient_harm", e.target.value)}
@@ -1146,8 +1153,9 @@ function SubmitForm({ onClose, onCreated }: { onClose: () => void; onCreated: (e
         </div>
       </div>
       <div>
-        <label className="text-xs text-muted-foreground block mb-1">Description of Deviation</label>
+        <label htmlFor="exc-description" className="text-xs text-muted-foreground block mb-1">Description of Deviation</label>
         <textarea
+          id="exc-description"
           required
           rows={3}
           value={form.description}
@@ -1157,8 +1165,9 @@ function SubmitForm({ onClose, onCreated }: { onClose: () => void; onCreated: (e
         />
       </div>
       <div>
-        <label className="text-xs text-muted-foreground block mb-1">Immediate Actions Taken</label>
+        <label htmlFor="exc-immediate-action" className="text-xs text-muted-foreground block mb-1">Immediate Actions Taken</label>
         <textarea
+          id="exc-immediate-action"
           required
           rows={2}
           value={form.immediate_action_taken}

@@ -17,7 +17,6 @@ from app.rag.llm_generator import LLMGenerator
 from app.rag.multihop import MultiHopRetriever
 from app.rag.reranker import get_shared_reranker, CrossEncoderReranker
 from app.rag.evidence_sufficiency import EvidenceSufficiencyChecker, build_corpus_vocabulary, confidence_tier
-from app.rag.hyde import generate_hypothetical_doc
 from app.verifier.verifier import ProceduralFaithfulnessVerifier
 from app.verifier.numeric_verifier import verify_numeric_claims, redact_unsupported_claims
 from app.agents.query_agent import QueryUnderstandingAgent
@@ -124,13 +123,12 @@ class MeridianPipeline:
         self,
         query: str,
         news2_score: int | None = None,
-        use_hyde: bool = False,
         retrieval_query: str | None = None,
         context_query: str = "",
     ) -> dict[str, Any]:
         """Steps 1-2 shared by both the single-shot and streaming pipelines:
-        query understanding, optional HyDE expansion, retrieval, multi-hop,
-        and the evidence-sufficiency gate. Returns either
+        query understanding, retrieval, multi-hop, and the
+        evidence-sufficiency gate. Returns either
         {"abstain": QueryResponse} when there isn't enough evidence to
         answer, or {"retrieved": ..., "query_type": ..., "reasoning": ...,
         "evidence": ..., "analysis": ...} to continue into generation.
@@ -146,21 +144,7 @@ class MeridianPipeline:
         reasoning.extend(analysis["trace"])
         reasoning.append(f"Timing - Query understanding: {t_intake}ms")
 
-        # 1b. Optional HyDE query expansion
         retrieval_query = retrieval_query or query
-        if use_hyde:
-            try:
-                if await self.generator._check_available():
-                    hypo = await generate_hypothetical_doc(query, self.generator._call_llm)
-                    if hypo:
-                        retrieval_query = f"{query}\n{hypo}"
-                        reasoning.append(f"HyDE: expanded query with hypothetical doc ({len(hypo)} chars)")
-                    else:
-                        reasoning.append("HyDE: no hypothetical doc generated, using original query")
-                else:
-                    reasoning.append("HyDE requested but LLM unavailable, using original query")
-            except Exception as e:
-                reasoning.append(f"HyDE failed ({e}), using original query")
 
         # 2. Retrieve (with query-type boosting and synonym expansion)
         t0 = time.perf_counter()
@@ -531,7 +515,6 @@ class MeridianPipeline:
         user_role: str = "",
         department: str = "",
         news2_score: int | None = None,
-        use_hyde: bool = False,
         retrieval_query: str | None = None,
         history_context: str = "",
         context_query: str = "",
@@ -558,7 +541,7 @@ class MeridianPipeline:
                 yield {"type": "final", "response": cached}
                 return
 
-        prep = await self._prepare(query, news2_score=news2_score, use_hyde=use_hyde, retrieval_query=retrieval_query, context_query=context_query)
+        prep = await self._prepare(query, news2_score=news2_score, retrieval_query=retrieval_query, context_query=context_query)
         if "abstain" in prep:
             yield {"type": "final", "response": prep["abstain"]}
             return
@@ -601,7 +584,6 @@ class MeridianPipeline:
         user_role: str = "",
         department: str = "",
         news2_score: int | None = None,
-        use_hyde: bool = False,
         retrieval_query: str | None = None,
         history_context: str = "",
         context_query: str = "",
@@ -617,7 +599,7 @@ class MeridianPipeline:
             if cached is not None:
                 return cached
 
-        prep = await self._prepare(query, news2_score=news2_score, use_hyde=use_hyde, retrieval_query=retrieval_query, context_query=context_query)
+        prep = await self._prepare(query, news2_score=news2_score, retrieval_query=retrieval_query, context_query=context_query)
         if "abstain" in prep:
             return prep["abstain"]
 

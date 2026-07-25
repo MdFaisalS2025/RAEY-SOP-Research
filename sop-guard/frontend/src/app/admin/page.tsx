@@ -285,24 +285,27 @@ export default function AdminPage() {
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">SAML Configuration</p>
               <div className="grid gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs text-muted-foreground">Identity Provider URL</label>
+                  <label htmlFor="sso-saml-idp-url" className="text-xs text-muted-foreground">Identity Provider URL</label>
                   <input
+                    id="sso-saml-idp-url"
                     disabled
                     placeholder="https://your-hospital-idp.example.com/saml2"
                     className={inputCls}
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs text-muted-foreground">Entity ID</label>
+                  <label htmlFor="sso-saml-entity-id" className="text-xs text-muted-foreground">Entity ID</label>
                   <input
+                    id="sso-saml-entity-id"
                     disabled
                     placeholder="meridian-production"
                     className={inputCls}
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs text-muted-foreground">X.509 Certificate</label>
+                  <label htmlFor="sso-saml-cert" className="text-xs text-muted-foreground">X.509 Certificate</label>
                   <textarea
+                    id="sso-saml-cert"
                     disabled
                     rows={3}
                     placeholder="Paste certificate here..."
@@ -310,8 +313,9 @@ export default function AdminPage() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs text-muted-foreground">Attribute Mapping</label>
+                  <label htmlFor="sso-saml-attr-mapping" className="text-xs text-muted-foreground">Attribute Mapping</label>
                   <input
+                    id="sso-saml-attr-mapping"
                     disabled
                     placeholder="email=[email], name=[displayName], role=[department]"
                     className={inputCls}
@@ -325,32 +329,36 @@ export default function AdminPage() {
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">LDAP Configuration</p>
               <div className="grid gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs text-muted-foreground">Server URL</label>
+                  <label htmlFor="sso-ldap-server-url" className="text-xs text-muted-foreground">Server URL</label>
                   <input
+                    id="sso-ldap-server-url"
                     disabled
                     placeholder="ldap://ad.hospital.internal:389"
                     className={inputCls}
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs text-muted-foreground">Base DN</label>
+                  <label htmlFor="sso-ldap-base-dn" className="text-xs text-muted-foreground">Base DN</label>
                   <input
+                    id="sso-ldap-base-dn"
                     disabled
                     placeholder="dc=hospital,dc=internal"
                     className={inputCls}
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs text-muted-foreground">Bind DN</label>
+                  <label htmlFor="sso-ldap-bind-dn" className="text-xs text-muted-foreground">Bind DN</label>
                   <input
+                    id="sso-ldap-bind-dn"
                     disabled
                     placeholder="cn=sopguard-service,ou=services,dc=hospital,dc=internal"
                     className={inputCls}
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs text-muted-foreground">Bind Password</label>
+                  <label htmlFor="sso-ldap-bind-password" className="text-xs text-muted-foreground">Bind Password</label>
                   <input
+                    id="sso-ldap-bind-password"
                     disabled
                     type="password"
                     placeholder="••••••••"
@@ -358,8 +366,9 @@ export default function AdminPage() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs text-muted-foreground">User Search Filter</label>
+                  <label htmlFor="sso-ldap-search-filter" className="text-xs text-muted-foreground">User Search Filter</label>
                   <input
+                    id="sso-ldap-search-filter"
                     disabled
                     placeholder="(sAMAccountName={'{username}'})"
                     className={inputCls}

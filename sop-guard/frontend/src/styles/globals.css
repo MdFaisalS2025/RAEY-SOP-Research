@@ -16,6 +16,7 @@
     --popover-foreground: 217 33% 15%;
     --primary: 210 87% 42%;       /* #0B6BCB clinical blue */
     --primary-foreground: 0 0% 100%;
+    --primary-hover: 210.6 90.1% 35.5%; /* #0959AC - the hover shade ~45 hardcoded call sites pair with bg-[#0B6BCB] */
     --secondary: 210 40% 96%;     /* #F1F5F9 */
     --secondary-foreground: 217 33% 15%;
     --muted: 210 40% 96%;         /* #F1F5F9 */
@@ -46,6 +47,7 @@
     --popover-foreground: 190 12% 90%;
     --primary: 187 100% 50%;     /* #00E5FF clinical cyan */
     --primary-foreground: 220 20% 4%;
+    --primary-hover: 185.8 100% 42.5%; /* #00C4D9 - matches the small number of call sites that already got a dark:hover: sibling right */
     --secondary: 180 10% 13%;    /* #192122 surface container */
     --secondary-foreground: 190 12% 90%;
     --muted: 180 10% 13%;
@@ -251,6 +253,16 @@
   .dark [class*="border-\[\#0B6BCB\]\/"] { border-color: hsl(var(--primary) / var(--tw-border-opacity, 1)); }
   .dark [class*="bg-\[\#0B6BCB\]\/"] { background-color: hsl(var(--primary) / var(--tw-bg-opacity, 1)); }
   .dark [class*="ring-\[\#0B6BCB\]\/"] { --tw-ring-color: hsl(var(--primary)); }
+
+  /* Coverage gap in the remap above: primary buttons are written as
+     `bg-[#0B6BCB] text-white hover:bg-[#0959AC]` with no dark: siblings.
+     The bg remap two lines up already turns the rest state into the dark
+     cyan accent, but `text-white` and the hover shade were never
+     remapped - so in dark mode a typical primary button rendered white
+     text at ~1.35:1 contrast on bright cyan, and inverted to navy on
+     hover. Close both gaps the same way. */
+  .dark .bg-\[\#0B6BCB\].text-white { color: hsl(var(--primary-foreground)); }
+  .dark .hover\:bg-\[\#0959AC\]:hover { background-color: hsl(var(--primary-hover)); }
 
   /* Same remap, extended to the other three semantic status colors that
      get hardcoded as literal hex utilities the same way #0B6BCB does:

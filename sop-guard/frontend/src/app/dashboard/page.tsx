@@ -1348,7 +1348,7 @@ export default function DashboardPage() {
         <div className="space-y-3">
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
-              <h1 className="text-2xl font-bold font-display text-foreground mb-1">
+              <h1 className="text-2xl font-bold text-foreground mb-1">
                 {greeting}, {currentUser.name.split(" ")[0]}
                 {currentUser.name.includes("Dr.") || currentUser.name.includes("Nurse") ? "" : ""}
               </h1>

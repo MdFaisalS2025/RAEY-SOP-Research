@@ -103,7 +103,7 @@ function LiteratureCard({ sop, record, index }: { sop: RealSOP; record: PubMedRe
           )}
         </div>
 
-        <h3 className="font-display text-base font-bold text-foreground leading-snug">{record.title || "(untitled)"}</h3>
+        <h3 className="text-base font-bold text-foreground leading-snug">{record.title || "(untitled)"}</h3>
 
         <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
           <span className="flex items-center gap-1.5"><Shield className="w-3 h-3" /> {record.journal}{record.authors ? ` · ${record.authors}` : ""}</span>
@@ -167,7 +167,7 @@ function ConflictCard({ conflict, index }: { conflict: RealConflict; index: numb
             {conflict.entity}
           </span>
         </div>
-        <h3 className="font-display text-base font-bold text-foreground leading-snug flex items-center gap-2">
+        <h3 className="text-base font-bold text-foreground leading-snug flex items-center gap-2">
           <GitCompare className="w-4 h-4 text-[#0B6BCB]" /> Internal SOP conflict detected
         </h3>
         <p className="text-sm text-muted-foreground leading-relaxed">{conflict.message}</p>
@@ -205,7 +205,7 @@ function ReviewCard({ sop, daysUntilDue, index }: { sop: RealSOP; daysUntilDue: 
             {sop.department}
           </span>
         </div>
-        <h3 className="font-display text-base font-bold text-foreground leading-snug flex items-center gap-2">
+        <h3 className="text-base font-bold text-foreground leading-snug flex items-center gap-2">
           <Clock className="w-4 h-4 text-[#0B6BCB]" /> {sop.title}
         </h3>
         <p className="text-sm text-muted-foreground leading-relaxed">
@@ -340,7 +340,7 @@ export default function EvidenceWatchPage() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex items-start justify-between gap-4 flex-wrap">
           <div className="space-y-1">
             <div className="flex items-center gap-3">
-              <h1 className="font-display text-3xl font-bold text-foreground">Evidence Watch</h1>
+              <h1 className="text-3xl font-bold text-foreground">Evidence Watch</h1>
             </div>
             <p className="text-muted-foreground text-sm max-w-3xl">
               SOPs go stale the moment new literature, a contradicting internal policy, or an expired review
@@ -453,7 +453,7 @@ export default function EvidenceWatchPage() {
                 <div className="rounded-2xl bg-card border border-border p-5 space-y-3">
                   <div className="flex items-center gap-2">
                     <Shield className="w-4 h-4 text-[#0B6BCB]" />
-                    <h3 className="font-display text-sm font-bold text-foreground">Monitored Sources</h3>
+                    <h3 className="text-sm font-bold text-foreground">Monitored Sources</h3>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {MONITORED_SOURCES.map((name) => (

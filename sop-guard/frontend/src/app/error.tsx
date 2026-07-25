@@ -33,7 +33,7 @@ export default function GlobalError({
         <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-[#FEE2E2] dark:bg-red-500/10 flex items-center justify-center">
           <AlertOctagon className="w-10 h-10 text-[#B91C1C] dark:text-red-400" />
         </div>
-        <h1 className="font-display text-xl font-semibold text-foreground mb-2">Something went wrong</h1>
+        <h1 className="text-xl font-semibold text-foreground mb-2">Something went wrong</h1>
         <p className="text-sm text-muted-foreground mb-2 leading-relaxed">
           This page hit an unexpected error. Your data is safe - this is a display problem, not a lost record.
         </p>

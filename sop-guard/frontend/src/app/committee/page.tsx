@@ -326,7 +326,7 @@ function CommitteeProposalCard({ proposal, index, onVoteCast }: {
           <span className={cn("px-2 py-0.5 rounded text-xs font-semibold", statusInfo.cls)}>{statusInfo.label}</span>
         </div>
 
-        <h3 className="font-display text-sm font-bold text-foreground leading-snug">{proposal.title}</h3>
+        <h3 className="text-sm font-bold text-foreground leading-snug">{proposal.title}</h3>
 
         {proposal.affected_sop_id && (
           <div className="flex items-start gap-2">
@@ -429,7 +429,7 @@ export default function CommitteePage() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-1">
           <div className="flex items-center gap-3">
             <Gavel className="w-7 h-7 text-[#0B6BCB]" />
-            <h1 className="font-display text-3xl font-bold text-foreground">Committee Workspace</h1>
+            <h1 className="text-3xl font-bold text-foreground">Committee Workspace</h1>
           </div>
           <p className="text-muted-foreground text-sm pl-10">Live proposals and quorum status from the governance API.</p>
         </motion.div>
@@ -465,7 +465,7 @@ export default function CommitteePage() {
             <div className="space-y-8">
               <section className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="font-display text-lg font-bold text-foreground flex items-center gap-2">
+                  <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
                     <Vote className="w-5 h-5 text-[#0B6BCB]" /> Proposals Awaiting Review
                   </h2>
                   <span className="px-2.5 py-1 rounded-full bg-muted border border-input text-xs text-foreground font-semibold">
@@ -483,7 +483,7 @@ export default function CommitteePage() {
               </section>
 
               <section className="space-y-4">
-                <h2 className="font-display text-lg font-bold text-foreground flex items-center gap-2">
+                <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
                   <HelpCircle className="w-5 h-5 text-[#0B6BCB]" /> Recurring Unanswered Questions
                 </h2>
                 <p className="text-xs text-muted-foreground -mt-2">
@@ -493,7 +493,7 @@ export default function CommitteePage() {
               </section>
 
               <section className="space-y-4">
-                <h2 className="font-display text-lg font-bold text-foreground flex items-center gap-2">
+                <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
                   <AlertTriangle className="w-5 h-5 text-[#0B6BCB]" /> Auto-Detected Coverage Gaps
                 </h2>
                 <p className="text-xs text-muted-foreground -mt-2">
@@ -504,7 +504,7 @@ export default function CommitteePage() {
               </section>
 
               <section className="space-y-4">
-                <h2 className="font-display text-lg font-bold text-foreground flex items-center gap-2">
+                <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
                   <CheckCircle2 className="w-5 h-5 text-[#15803D] dark:text-green-400" /> Recent Decisions
                 </h2>
 
@@ -541,7 +541,7 @@ export default function CommitteePage() {
               </section>
 
               <section className="space-y-4">
-                <h2 className="font-display text-lg font-bold text-foreground flex items-center gap-2">
+                <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
                   <Users className="w-5 h-5 text-[#0B6BCB]" /> Committee Members
                 </h2>
                 <p className="text-xs text-muted-foreground -mt-2">
@@ -580,7 +580,7 @@ export default function CommitteePage() {
               <div className="rounded-2xl bg-card border border-border p-5 space-y-3">
                 <div className="flex items-center gap-2">
                   <ShieldAlert className="w-4 h-4 text-[#B45309] dark:text-amber-400" />
-                  <h3 className="font-display text-sm font-bold text-foreground">Quorum Rules</h3>
+                  <h3 className="text-sm font-bold text-foreground">Quorum Rules</h3>
                 </div>
                 <div className="space-y-2 text-xs text-muted-foreground">
                   <p>Threshold: <span className="font-semibold text-foreground">{quorumThreshold} votes</span> out of a <span className="font-semibold text-foreground">{committeeSize}-member</span> committee.</p>

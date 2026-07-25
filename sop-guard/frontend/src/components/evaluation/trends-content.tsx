@@ -131,7 +131,7 @@ export function TrendsContent() {
             <TrendingUp className="w-4.5 h-4.5 text-[#0B6BCB]" />
           </div>
           <div>
-            <h2 className="text-base font-semibold font-display text-foreground">Metric Trends</h2>
+            <h2 className="text-base font-semibold text-foreground">Metric Trends</h2>
             <p className="text-xs text-muted-foreground max-w-xl">
               Each recorded snapshot runs the full evaluation suite once (faithfulness, route accuracy, retrieval
               precision, gold-answer correctness, adversarial verifier check) and persists the result, so a metric

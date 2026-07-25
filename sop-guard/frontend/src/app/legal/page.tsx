@@ -78,7 +78,7 @@ export default function LegalPage() {
             <Scale className="w-6 h-6 text-[#B91C1C] dark:text-red-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold font-display">Legal &amp; Risk Center</h1>
+            <h1 className="text-2xl font-bold">Legal &amp; Risk Center</h1>
             <p className="text-sm text-muted-foreground">Policy liability review and risk governance</p>
           </div>
         </div>
@@ -129,7 +129,7 @@ export default function LegalPage() {
 
         {/* Legal Risk Items */}
         <section className="space-y-4">
-          <h2 className="text-lg font-semibold font-display">Legal Risk Items</h2>
+          <h2 className="text-lg font-semibold">Legal Risk Items</h2>
           {MOCK_LEGAL.map((item, i) => {
             const notesExpanded = expandedNotes[item.id]
             const truncatedNotes = item.legal_notes.slice(0, 100)
@@ -230,7 +230,7 @@ export default function LegalPage() {
 
         {/* Proposals Requiring Legal Review */}
         <section>
-          <h2 className="text-lg font-semibold font-display mb-3">Proposals Requiring Legal Review</h2>
+          <h2 className="text-lg font-semibold mb-3">Proposals Requiring Legal Review</h2>
           <div className="grid md:grid-cols-2 gap-4">
             {proposalsNeedingLegal.map((proposal, i) => (
               <motion.div
@@ -260,7 +260,7 @@ export default function LegalPage() {
 
         {/* Risk Classification Summary */}
         <section>
-          <h2 className="text-lg font-semibold font-display mb-3">Risk Classification Summary</h2>
+          <h2 className="text-lg font-semibold mb-3">Risk Classification Summary</h2>
           <div className="rounded-2xl bg-card border border-border p-5 space-y-3">
             {(["critical", "high", "medium", "low"] as const).map((level) => {
               const count = riskCounts[level]

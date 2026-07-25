@@ -892,7 +892,7 @@ export default function QueryPage() {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             className="min-h-[65vh] flex flex-col items-center justify-center gap-6">
             <div className="text-center">
-              <h2 className="text-3xl font-display font-semibold text-foreground">Ask Meridian</h2>
+              <h2 className="text-3xl font-semibold text-foreground">Ask Meridian</h2>
               <p className="text-sm text-muted-foreground mt-1.5">Search approved SOPs and clinical evidence.</p>
             </div>
             <div className="w-full">

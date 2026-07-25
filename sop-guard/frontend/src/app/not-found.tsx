@@ -17,7 +17,7 @@ export default function NotFound() {
           <ShieldAlert className="w-10 h-10 text-teal-600 dark:text-[#00E5FF]" />
         </div>
         <p className="font-display text-7xl font-bold text-foreground mb-2 tracking-tight">404</p>
-        <h1 className="font-display text-xl font-semibold text-foreground mb-2">Page not found</h1>
+        <h1 className="text-xl font-semibold text-foreground mb-2">Page not found</h1>
         <p className="text-sm text-muted-foreground mb-8 leading-relaxed">
           The page you&apos;re looking for doesn&apos;t exist or may have moved.
           Try the SOP Library or run a query instead.

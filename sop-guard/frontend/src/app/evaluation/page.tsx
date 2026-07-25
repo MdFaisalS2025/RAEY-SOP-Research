@@ -144,7 +144,7 @@ function SectionTitle({ icon: Icon, title, subtitle }: { icon: React.ElementType
         <Icon className="w-4.5 h-4.5 text-[#0B6BCB]" />
       </div>
       <div>
-        <h2 className="text-base font-semibold font-display text-foreground">{title}</h2>
+        <h2 className="text-base font-semibold text-foreground">{title}</h2>
         {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
       </div>
     </div>
@@ -275,7 +275,7 @@ export default function EvaluationPage() {
               <FlaskConical className="w-6 h-6 text-[#0B6BCB]" />
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-2xl font-bold font-display text-foreground">Research Evaluation Dashboard</h1>
+              <h1 className="text-2xl font-bold text-foreground">Research Evaluation Dashboard</h1>
               <p className="text-sm text-muted-foreground mt-0.5">Live metrics from the running RAG pipeline and current SOP corpus</p>
             </div>
             <button

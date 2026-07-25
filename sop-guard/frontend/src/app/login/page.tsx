@@ -114,7 +114,7 @@ function LoginPageInner() {
 
           {/* Tagline */}
           <div className="mb-8">
-            <h1 className="font-display text-2xl font-semibold text-foreground leading-tight mb-2">
+            <h1 className="text-2xl font-semibold text-foreground leading-tight mb-2">
               Clinical SOP Intelligence Platform
             </h1>
             <p className="text-sm text-[#0B6BCB] dark:text-[#00E5FF] font-medium tracking-wide">
@@ -169,7 +169,7 @@ function LoginPageInner() {
           {/* Heading + session status */}
           <div className="mb-7 flex items-start justify-between gap-4">
             <div>
-              <h2 className="font-display text-3xl font-bold text-foreground mb-1.5">Welcome back</h2>
+              <h2 className="text-3xl font-bold text-foreground mb-1.5">Welcome back</h2>
               <p className="text-muted-foreground text-sm">Sign in to Meridian</p>
             </div>
             <span className="inline-flex items-center gap-1.5 mt-1 px-2.5 py-1 rounded-full bg-[#DCFCE7] dark:bg-green-500/10 border border-[#BBF7D0] dark:border-green-500/30 text-[#15803D] dark:text-green-400 text-[10px] font-semibold shrink-0">

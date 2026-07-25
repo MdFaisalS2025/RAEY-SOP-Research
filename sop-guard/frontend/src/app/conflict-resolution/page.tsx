@@ -190,7 +190,7 @@ function AllConflictsTab({ data, loading, error, refreshing, onRefresh }: {
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <ShieldAlert className="w-5 h-5 text-[#0B6BCB]" />
-              <h2 className="font-display text-lg font-bold text-foreground">Detected Conflicts</h2>
+              <h2 className="text-lg font-bold text-foreground">Detected Conflicts</h2>
             </div>
 
             {conflicts.length === 0 ? (
@@ -444,7 +444,7 @@ export default function ConflictResolutionPage() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-1">
           <div className="flex items-center gap-3">
             <GitCompare className="w-7 h-7 text-[#0B6BCB]" />
-            <h1 className="font-display text-3xl font-bold text-foreground">SOP Conflicts &amp; Impact</h1>
+            <h1 className="text-3xl font-bold text-foreground">SOP Conflicts &amp; Impact</h1>
           </div>
         </motion.div>
 

@@ -94,7 +94,7 @@ export default function TrainingPage() {
             <BookOpen className="w-6 h-6 text-[#0B6BCB]" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold font-display">Training Center</h1>
+            <h1 className="text-2xl font-bold">Training Center</h1>
             <p className="text-sm text-muted-foreground">Live activity and credit tracking across the organization</p>
           </div>
         </div>
@@ -152,7 +152,7 @@ export default function TrainingPage() {
             </div>
 
             <section className="space-y-3">
-              <h2 className="text-lg font-semibold font-display">Recent Activity</h2>
+              <h2 className="text-lg font-semibold">Recent Activity</h2>
               {recentActivity.length === 0 ? (
                 <div className="rounded-2xl bg-card border border-border p-10 text-center text-sm text-muted-foreground">
                   No training activity logged yet.

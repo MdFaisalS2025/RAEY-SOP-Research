@@ -548,7 +548,7 @@ function AcknowledgmentsTab() {
 
       {/* Department Compliance Heatmap */}
       <section>
-        <h2 className="text-lg font-semibold font-display mb-3">Department Compliance Heatmap</h2>
+        <h2 className="text-lg font-semibold mb-3">Department Compliance Heatmap</h2>
         <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
           {MOCK_COMPLIANCE.map((dept, i) => (
             <motion.div
@@ -609,7 +609,7 @@ function AcknowledgmentsTab() {
 
       {/* SOPs Requiring Review */}
       <section>
-        <h2 className="text-lg font-semibold font-display mb-3">SOPs Requiring Review</h2>
+        <h2 className="text-lg font-semibold mb-3">SOPs Requiring Review</h2>
         <div className="rounded-2xl bg-card border border-border overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -661,7 +661,7 @@ function AcknowledgmentsTab() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Shield className="w-5 h-5 text-[#0B6BCB]" />
-            <h2 className="text-lg font-semibold font-display">Staff Attestation Records</h2>
+            <h2 className="text-lg font-semibold">Staff Attestation Records</h2>
           </div>
           <div className="flex items-center gap-2">
             <ChainIntegrityBadge />
@@ -1198,7 +1198,7 @@ export default function CompliancePage() {
               <CheckCircle className="w-6 h-6 text-[#0B6BCB]" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold font-display">Compliance</h1>
+              <h1 className="text-2xl font-bold">Compliance</h1>
               <p className="text-sm text-muted-foreground">Policy acknowledgment status and SOP review currency</p>
             </div>
           </div>

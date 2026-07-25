@@ -25,7 +25,7 @@ export function AccessRestricted({
           <div className="w-16 h-16 rounded-2xl bg-[#FEE2E2] dark:bg-red-500/10 flex items-center justify-center">
             <Lock className="w-8 h-8 text-[#B91C1C] dark:text-red-400" />
           </div>
-          <h2 className="text-xl font-bold font-display">Access Restricted</h2>
+          <h2 className="text-xl font-bold">Access Restricted</h2>
           <p className="text-muted-foreground">{requirement}</p>
           <p className="text-sm text-muted-foreground/70">Contact your system administrator for access.</p>
         </div>

@@ -294,9 +294,9 @@ function renderBlock(block: AnswerBlock, i: number, ctx: CitationCtx): React.Rea
     const marginClass = block.level === 1 ? "" : block.level === 2 ? "pt-2 border-t border-border" : ""
     return (
       <div key={i} className={cn("first:mt-0", i > 0 && marginClass)}>
-        {block.level === 1 && <h1 className={cn("font-display text-[#0B6BCB]", sizeClass)}>{block.text}</h1>}
-        {block.level === 2 && <h2 className={cn("font-display text-[#0B6BCB]", sizeClass)}>{block.text}</h2>}
-        {block.level === 3 && <h3 className={cn("font-display text-foreground", sizeClass)}>{block.text}</h3>}
+        {block.level === 1 && <h1 className={cn("text-[#0B6BCB]", sizeClass)}>{block.text}</h1>}
+        {block.level === 2 && <h2 className={cn("text-[#0B6BCB]", sizeClass)}>{block.text}</h2>}
+        {block.level === 3 && <h3 className={cn("text-foreground", sizeClass)}>{block.text}</h3>}
       </div>
     )
   }

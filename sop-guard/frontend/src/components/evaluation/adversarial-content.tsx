@@ -383,7 +383,7 @@ export function AdversarialContent() {
               <ShieldAlert className="w-5 h-5 text-[#B91C1C] dark:text-red-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-2xl font-bold font-display text-foreground">Adversarial Query Testing</h1>
+              <h1 className="text-2xl font-bold text-foreground">Adversarial Query Testing</h1>
               <p className="text-sm text-muted-foreground mt-0.5">
                 Probing failure modes and edge cases in clinical SOP retrieval
               </p>
@@ -469,7 +469,7 @@ export function AdversarialContent() {
           className="rounded-2xl bg-card border border-[#0B6BCB]/10 p-6 space-y-4"
         >
           <div className="flex items-center justify-between flex-wrap gap-2">
-            <h2 className="text-base font-semibold font-display text-foreground flex items-center gap-2">
+            <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
               <FlaskConical className="w-4 h-4 text-[#0B6BCB]" />
               Live Verifier Benchmark
             </h2>
@@ -572,7 +572,7 @@ export function AdversarialContent() {
           className="rounded-2xl bg-card border border-[#0B6BCB]/10 p-6 space-y-5"
         >
           <div>
-            <h2 className="text-base font-semibold font-display text-foreground flex items-center gap-2">
+            <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
               <FlaskConical className="w-4 h-4 text-[#0B6BCB]" />
               Illustrative Failure-Mode Categories
             </h2>

@@ -158,7 +158,7 @@ export default function AdminPage() {
             <Settings className="w-6 h-6 text-[#0B6BCB]" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold font-display">System Administration</h1>
+            <h1 className="text-2xl font-bold">System Administration</h1>
             <p className="text-sm text-muted-foreground">Platform configuration and integration management</p>
           </div>
         </div>
@@ -168,7 +168,7 @@ export default function AdminPage() {
         {/* External Evidence Sources */}
         <section className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold font-display">External Evidence Sources</h2>
+            <h2 className="text-lg font-semibold">External Evidence Sources</h2>
             <div className="relative group">
               <button
                 disabled
@@ -253,7 +253,7 @@ export default function AdminPage() {
         <section className="space-y-4">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-muted-foreground" />
-            <h2 className="text-lg font-semibold font-display">SSO / Active Directory Configuration</h2>
+            <h2 className="text-lg font-semibold">SSO / Active Directory Configuration</h2>
           </div>
 
           <div className="rounded-2xl bg-card border border-border p-5 space-y-5">
@@ -398,7 +398,7 @@ export default function AdminPage() {
 
         {/* Other Integration Placeholders */}
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold font-display">Integration Placeholders</h2>
+          <h2 className="text-lg font-semibold">Integration Placeholders</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {otherIntegrations.map((integration, i) => (
               <motion.div
@@ -438,7 +438,7 @@ export default function AdminPage() {
         <section className="space-y-4">
           <div className="flex items-center gap-2">
             <Bell className="w-5 h-5 text-muted-foreground" />
-            <h2 className="text-lg font-semibold font-display">Notification &amp; Alert Configuration</h2>
+            <h2 className="text-lg font-semibold">Notification &amp; Alert Configuration</h2>
           </div>
 
           <div className="rounded-2xl bg-card border border-border p-5 space-y-4">
@@ -523,7 +523,7 @@ export default function AdminPage() {
         {/* User Management */}
         <section className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold font-display">User Management</h2>
+            <h2 className="text-lg font-semibold">User Management</h2>
             <div className="relative group">
               <button
                 disabled
@@ -590,7 +590,7 @@ export default function AdminPage() {
 
         {/* System Status */}
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold font-display">System Status</h2>
+          <h2 className="text-lg font-semibold">System Status</h2>
           <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
             {systemStatus.map((item, i) => (
               <motion.div

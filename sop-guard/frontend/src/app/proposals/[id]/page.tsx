@@ -523,7 +523,7 @@ export default function ProposalDetailPage() {
             )}
           </div>
 
-          <h1 className="font-display text-2xl font-bold text-foreground leading-snug">{proposal.title}</h1>
+          <h1 className="text-2xl font-bold text-foreground leading-snug">{proposal.title}</h1>
 
           <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
             {proposal.department && (

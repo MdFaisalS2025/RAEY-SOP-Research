@@ -93,7 +93,7 @@ export default function LeadershipPage() {
             <div className="w-12 h-12 rounded-2xl bg-[#0B6BCB]/10 flex items-center justify-center mx-auto">
               <ShieldCheck className="w-6 h-6 text-[#0B6BCB]" />
             </div>
-            <h1 className="text-xl font-semibold font-display text-foreground">Leadership Overview</h1>
+            <h1 className="text-xl font-semibold text-foreground">Leadership Overview</h1>
             <p className="text-[13px] text-muted-foreground leading-relaxed">
               This view is designed for hospital leadership. Switch to a leadership role to preview it.
             </p>
@@ -186,7 +186,7 @@ export default function LeadershipPage() {
               <ShieldCheck className="w-6 h-6 text-[#0B6BCB]" />
             </div>
             <div>
-              <h1 className="text-2xl font-semibold font-display text-foreground mb-1">Leadership Overview</h1>
+              <h1 className="text-2xl font-semibold text-foreground mb-1">Leadership Overview</h1>
               <p className="text-[13px] text-subtle">Governance and safety posture for executive review</p>
             </div>
           </div>

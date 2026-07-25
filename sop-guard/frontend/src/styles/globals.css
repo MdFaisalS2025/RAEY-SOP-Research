@@ -14,7 +14,16 @@
     --card-foreground: 217 33% 15%;
     --popover: 0 0% 100%;
     --popover-foreground: 217 33% 15%;
-    --primary: 210 87% 42%;       /* #0B6BCB clinical blue */
+    /* --primary/--destructive/--warning/--success below are corrected to
+       byte-exact HSL for the hex values their comments claim - the prior
+       values (210 87% 42%, 32 81% 36%, ...) were close but not exact,
+       so bg-primary rendered a visibly different color (#0E6BC8, #A66111)
+       than the literal bg-[#0B6BCB]/bg-[#B45309] hex utilities used
+       throughout the app. There are no other call sites of bg-primary/
+       text-primary/bg-destructive/text-destructive today (verified), so
+       this correction is a no-op for existing UI and only matters for
+       code written against the tokens going forward (M3-4/M3-5). */
+    --primary: 210 89.7% 42%;     /* #0B6BCB clinical blue */
     --primary-foreground: 0 0% 100%;
     --primary-hover: 210.6 90.1% 35.5%; /* #0959AC - the hover shade ~45 hardcoded call sites pair with bg-[#0B6BCB] */
     --secondary: 210 40% 96%;     /* #F1F5F9 */
@@ -23,19 +32,39 @@
     --muted-foreground: 215 16% 47%;  /* #64748B */
     --accent: 210 40% 96%;        /* #F1F5F9 */
     --accent-foreground: 217 33% 15%;
-    --destructive: 0 72% 42%;     /* #B91C1C */
+    --destructive: 0 73.7% 41.8%; /* #B91C1C */
     --destructive-foreground: 0 0% 100%;
     --border: 214 32% 91%;        /* #E2E8F0 */
     --input: 213 27% 84%;         /* #CBD5E1 */
-    --ring: 210 87% 42%;          /* #0B6BCB */
+    --ring: 210 89.7% 42%;        /* #0B6BCB */
     --radius: 0.5rem;
-    --success: 142 72% 29%;       /* #15803D */
+    --success: 142.4 71.8% 29.2%; /* #15803D */
     --success-foreground: 0 0% 100%;
-    --warning: 32 81% 36%;        /* #B45309 */
+    --warning: 26 90.5% 37.1%;    /* #B45309 */
     --warning-foreground: 0 0% 100%;
     --text-subtle: 215 20% 65%;   /* #94A3B8 - lighter tier than muted-foreground */
     --brand-accent: 187 100% 42%; /* Meridian cyan, light-mode strength */
     --brand-ink: 217 33% 15%;     /* Meridian graphite/ink, light-mode */
+
+    /* Soft tint triples (surface / border / foreground) for danger, warn,
+       ok - collapse the 7-utility pattern
+       `bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA]
+       dark:border-red-500/30 text-[#B91C1C] dark:text-red-400` down to
+       `bg-danger-soft border border-danger-soft-border text-danger-soft-fg`.
+       Light values are the exact opaque hexes already used everywhere;
+       dark values use Tailwind's own red-500/amber-500/green-500 base
+       hues at the same /10 and /30 alphas the hand-written dark: siblings
+       already use, expressed as alpha-in-token (see --border's
+       `0 0% 100% / 0.08` above for the precedent this follows). */
+    --danger-soft: 0 93.3% 94.1%;        /* #FEE2E2 */
+    --danger-soft-border: 0 96.3% 89.4%; /* #FECACA */
+    --danger-soft-fg: 0 73.7% 41.8%;     /* #B91C1C */
+    --warn-soft: 48 96.5% 88.8%;         /* #FEF3C7 */
+    --warn-soft-border: 48 96.6% 76.7%;  /* #FDE68A */
+    --warn-soft-fg: 26 90.5% 37.1%;      /* #B45309 */
+    --ok-soft: 140.6 84.2% 92.5%;        /* #DCFCE7 */
+    --ok-soft-border: 141 78.9% 85.1%;   /* #BBF7D0 */
+    --ok-soft-fg: 142.4 71.8% 29.2%;     /* #15803D */
   }
 
   .dark {
@@ -66,6 +95,23 @@
     --text-subtle: 190 8% 55%;   /* dimmer than muted-foreground, still legible on #0A0C10 */
     --brand-accent: 187 100% 50%; /* Meridian cyan, dark-mode strength (matches primary) */
     --brand-ink: 190 12% 90%;    /* Meridian graphite/ink, dark-mode (near-white on dark) */
+
+    /* Same alpha-in-token trick as --border above: reproduce Tailwind's
+       red-500/amber-500/green-500 at the /10 (surface) and /30 (border)
+       fractions the hand-written dark: siblings already use, so a plain
+       bg-danger-soft/border-danger-soft-border utility (no dark: needed)
+       renders identically to what dark:bg-red-500/10 dark:border-red-500/30
+       does today. Foreground pairs (dark:text-red-400 etc.) at full
+       opacity, matching Tailwind's red-400/amber-400/green-400. */
+    --danger-soft: 0 84.2% 60.2% / 0.10;
+    --danger-soft-border: 0 84.2% 60.2% / 0.30;
+    --danger-soft-fg: 0 90.6% 70.8%;      /* red-400 */
+    --warn-soft: 37.7 92.1% 50.2% / 0.10;
+    --warn-soft-border: 37.7 92.1% 50.2% / 0.30;
+    --warn-soft-fg: 43.3 96.4% 56.3%;     /* amber-400 */
+    --ok-soft: 142.1 70.6% 45.3% / 0.10;
+    --ok-soft-border: 142.1 70.6% 45.3% / 0.30;
+    --ok-soft-fg: 141.9 69.2% 58%;        /* green-400 */
   }
 }
 

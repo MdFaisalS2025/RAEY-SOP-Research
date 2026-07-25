@@ -25,6 +25,7 @@ const config: Config = {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          hover: "hsl(var(--primary-hover))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -59,6 +60,12 @@ const config: Config = {
           foreground: "hsl(var(--warning-foreground))",
         },
         subtle: "hsl(var(--text-subtle))",
+        // Soft tint triples for the tone.ts / badge consolidation (M3-6) -
+        // collapse the 7-utility bg-[#FEE2E2] dark:bg-red-500/10 pattern
+        // used ~40 times across the app down to bg-danger-soft border-danger-soft-border text-danger-soft-fg.
+        danger: { soft: "hsl(var(--danger-soft))", "soft-border": "hsl(var(--danger-soft-border))", "soft-fg": "hsl(var(--danger-soft-fg))" },
+        warn: { soft: "hsl(var(--warn-soft))", "soft-border": "hsl(var(--warn-soft-border))", "soft-fg": "hsl(var(--warn-soft-fg))" },
+        ok: { soft: "hsl(var(--ok-soft))", "soft-border": "hsl(var(--ok-soft-border))", "soft-fg": "hsl(var(--ok-soft-fg))" },
         brand: {
           accent: "hsl(var(--brand-accent))",
           ink: "hsl(var(--brand-ink))",

@@ -19,6 +19,7 @@ import { downloadCSV } from "@/lib/csv-export"
 import { ErrorState } from "@/components/ui/error-state"
 import { EmptyState } from "@/components/ui/empty-state"
 import { Card } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
 const LEGAL_TEXT = "By clicking Attest, I confirm I have read, understood, and will comply with this policy in my clinical practice. This attestation is timestamped and may be used as evidence in regulatory audits or litigation."
@@ -318,14 +319,11 @@ function TestAttestationModal({
               </div>
 
               <div className="flex items-center gap-3 pt-1">
-                <button
-                  onClick={handleAttest}
-                  disabled={submitting || !nameMatches}
-                  className="flex-1 py-2.5 rounded-xl bg-[#0B6BCB] hover:bg-[#0959AC] disabled:opacity-50 text-white font-semibold text-sm transition-colors flex items-center justify-center gap-2"
-                >
+                <Button className="flex-1 py-2.5 rounded-xl disabled:opacity-50 font-semibold text-sm transition-colors flex items-center justify-center gap-2" onClick={handleAttest}
+                  disabled={submitting || !nameMatches}>
                   {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
                   I Attest
-                </button>
+                </Button>
                 <button
                   onClick={onClose}
                   className="flex-1 py-2.5 rounded-xl bg-muted text-foreground hover:bg-[#E2E8F0] text-sm font-medium transition-colors border border-border"

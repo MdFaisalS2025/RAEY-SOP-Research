@@ -11,6 +11,7 @@ import { X, CheckCircle2, XCircle, AlertTriangle, FileText } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useDialogA11y } from "@/lib/use-dialog-a11y"
 import { Card } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 
 export type FeedbackType = "incorrect" | "unsafe" | "missing"
 
@@ -117,10 +118,9 @@ export function FeedbackModal({
                 </div>
 
                 <div className="flex items-center gap-3 px-5 pb-5 pt-1">
-                  <button onClick={handleSubmit} disabled={!type || submitting}
-                    className="flex-1 py-2.5 rounded-xl bg-[#0B6BCB] hover:bg-[#0959AC] disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold text-sm transition-colors">
+                  <Button className="flex-1 py-2.5 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-sm transition-colors" onClick={handleSubmit} disabled={!type || submitting}>
                     {submitting ? "Submitting..." : "Submit feedback"}
-                  </button>
+                  </Button>
                   <button onClick={handleClose} className="text-sm text-muted-foreground hover:text-foreground font-medium transition-colors">
                     Cancel
                   </button>

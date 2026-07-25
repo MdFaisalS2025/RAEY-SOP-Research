@@ -13,6 +13,7 @@ import { motion } from "framer-motion"
 import { TrendingUp, Loader2, Camera, Info, AlertTriangle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Card } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
 
@@ -140,14 +141,11 @@ export function TrendsContent() {
             </p>
           </div>
         </div>
-        <button
-          onClick={recordSnapshot}
-          disabled={recording}
-          className="press flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#0B6BCB] hover:bg-[#0959AC] disabled:opacity-50 text-white text-xs font-medium transition-colors shrink-0"
-        >
+        <Button className="press flex items-center gap-1.5 px-3.5 py-2 rounded-xl disabled:opacity-50 text-xs font-medium transition-colors shrink-0" onClick={recordSnapshot}
+          disabled={recording}>
           {recording ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Camera className="w-3.5 h-3.5" />}
           {recording ? "Recording (runs the full suite)..." : "Record Snapshot"}
-        </button>
+        </Button>
       </div>
 
       {error && (

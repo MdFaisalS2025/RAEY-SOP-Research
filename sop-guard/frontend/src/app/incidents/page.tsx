@@ -15,6 +15,7 @@ import { useRole } from "@/lib/role-context"
 import { ErrorState } from "@/components/ui/error-state"
 import { EmptyState } from "@/components/ui/empty-state"
 import { Card } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
 
@@ -194,12 +195,9 @@ function ReportModal({ onClose, onCreated }: ReportModalProps) {
           <p className="text-sm text-muted-foreground mb-4">
             Your incident report has been submitted. Relevant SOPs will be flagged for review.
           </p>
-          <button
-            onClick={onClose}
-            className="px-6 py-2 rounded-xl bg-[#0B6BCB] text-white text-sm font-medium hover:bg-[#0959AC] transition-colors"
-          >
+          <Button className="px-6 py-2 rounded-xl text-sm font-medium transition-colors" onClick={onClose}>
             Close
-          </button>
+          </Button>
         </motion.div>
       </div>
     )
@@ -284,14 +282,11 @@ function ReportModal({ onClose, onCreated }: ReportModalProps) {
         </div>
 
         <div className="flex items-center gap-3 pt-2">
-          <button
-            onClick={handleSubmit}
-            disabled={submitting}
-            className="flex-1 py-2.5 rounded-xl bg-[#0B6BCB] hover:bg-[#0959AC] disabled:opacity-50 text-white text-sm font-semibold transition-colors flex items-center justify-center gap-2"
-          >
+          <Button className="flex-1 py-2.5 rounded-xl disabled:opacity-50 text-sm font-semibold transition-colors flex items-center justify-center gap-2" onClick={handleSubmit}
+            disabled={submitting}>
             {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
             Submit Report
-          </button>
+          </Button>
           <button
             onClick={onClose}
             className="px-4 py-2.5 rounded-xl bg-muted text-muted-foreground text-sm font-medium hover:bg-muted transition-colors"
@@ -479,11 +474,10 @@ function CAPAPanel({ incidentId, incidentTitle, onChange }: { incidentId: number
     <div className="space-y-3 pt-2">
       <div className="flex items-center justify-between">
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Corrective & Preventive Actions</p>
-        <button onClick={openCapa} disabled={creating}
-          className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-[#0B6BCB] hover:bg-[#0959AC] disabled:opacity-50 text-white font-medium transition-colors">
+        <Button className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg disabled:opacity-50 font-medium transition-colors" onClick={openCapa} disabled={creating}>
           {creating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
           Open CAPA
-        </button>
+        </Button>
       </div>
       {loadError && <ErrorState message="Couldn't load CAPA records." onRetry={load} />}
       {!loadError && capas.length === 0 && (
@@ -1175,13 +1169,10 @@ function SubmitForm({ onClose, onCreated }: { onClose: () => void; onCreated: (e
       </div>
       {error && <p className="text-xs text-[#B91C1C] dark:text-red-400">{error}</p>}
       <div className="flex gap-3 pt-1">
-        <button
-          type="submit"
-          disabled={submitting}
-          className="flex-1 py-2.5 rounded-xl bg-[#0B6BCB] hover:bg-[#0959AC] text-white text-sm font-semibold transition-colors disabled:opacity-50"
-        >
+        <Button className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50" type="submit"
+          disabled={submitting}>
           {submitting ? "Submitting..." : "Submit Exception Report"}
-        </button>
+        </Button>
         <button
           type="button"
           onClick={onClose}

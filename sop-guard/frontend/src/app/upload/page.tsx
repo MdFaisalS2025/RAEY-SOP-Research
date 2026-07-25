@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils"
 import { AccessRestricted } from "@/components/ui/access-restricted"
 import { useRole } from "@/lib/role-context"
 import { Card } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 
 type UploadState = "idle" | "selected" | "uploading" | "processing" | "done" | "error"
 
@@ -157,9 +158,9 @@ export default function UploadPage() {
                 </div>
                 <button onClick={reset} aria-label="Remove selected file" className="p-2 rounded-lg hover:bg-muted text-muted-foreground"><X className="w-4 h-4" /></button>
               </Card>
-              <button onClick={handleUpload} className="press w-full py-3 rounded-xl bg-[#0B6BCB] hover:bg-[#0959AC] text-white font-medium transition-colors">
+              <Button className="press w-full py-3 rounded-xl font-medium transition-colors" onClick={handleUpload}>
                 Upload & Process
-              </button>
+              </Button>
             </motion.div>
           )}
 

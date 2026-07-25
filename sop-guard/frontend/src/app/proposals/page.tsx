@@ -17,6 +17,7 @@ import { priorityBadge, statusBadge as statusBadgeInfo } from "@/components/prop
 import { useDialogA11y } from "@/lib/use-dialog-a11y"
 import { ErrorState } from "@/components/ui/error-state"
 import { EmptyState } from "@/components/ui/empty-state"
+import { Button } from "@/components/ui/button"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
 
@@ -272,11 +273,10 @@ function NewProposalModal({ onClose, onCreated, initial }: { onClose: () => void
             )}
           </div>
           {error && <p className="text-xs text-red-400">{error}</p>}
-          <button type="submit" disabled={submitting}
-            className="w-full py-2.5 rounded-xl bg-[#0B6BCB] hover:bg-[#0959AC] disabled:opacity-50 text-white text-sm font-semibold flex items-center justify-center gap-2">
+          <Button className="w-full py-2.5 rounded-xl disabled:opacity-50 text-sm font-semibold flex items-center justify-center gap-2" type="submit" disabled={submitting}>
             {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
             Create Proposal
-          </button>
+          </Button>
         </form>
       </motion.div>
     </div>

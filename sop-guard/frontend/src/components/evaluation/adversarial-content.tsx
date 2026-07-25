@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils"
 import { useRole } from "@/lib/role-context"
 import { useToast } from "@/components/ui/use-toast"
 import { toneChip } from "@/components/ui/tone"
+import { Button } from "@/components/ui/button"
 
 interface VerifierMetrics {
   sensitivity: number
@@ -634,14 +635,11 @@ export function AdversarialContent() {
 
           {/* Run live benchmark CTA */}
           <div className="flex items-center gap-3 pt-2 border-t border-border">
-            <button
-              onClick={handleRunTestSuite}
-              disabled={loadingBenchmark}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0B6BCB] hover:bg-[#0959AC] text-white text-sm font-medium transition-colors disabled:opacity-60"
-            >
+            <Button className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors disabled:opacity-60" onClick={handleRunTestSuite}
+              disabled={loadingBenchmark}>
               {loadingBenchmark ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
               {loadingBenchmark ? "Running..." : "Run Live Verifier Benchmark"}
-            </button>
+            </Button>
             <span className="text-xs text-subtle italic">Runs the real procedural faithfulness verifier - see the section above</span>
           </div>
         </motion.div>

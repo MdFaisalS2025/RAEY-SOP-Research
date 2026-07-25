@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils"
 import { useRole } from "@/lib/role-context"
 import { AdversarialContent } from "@/components/evaluation/adversarial-content"
 import { TrendsContent } from "@/components/evaluation/trends-content"
+import { Button } from "@/components/ui/button"
 
 // "" (not an absolute localhost URL) so requests go through the Next.js
 // rewrite proxy same-origin, like every other page - an absolute
@@ -278,14 +279,11 @@ export default function EvaluationPage() {
               <h1 className="text-2xl font-bold text-foreground">Research Evaluation Dashboard</h1>
               <p className="text-sm text-muted-foreground mt-0.5">Live metrics from the running RAG pipeline and current SOP corpus</p>
             </div>
-            <button
-              onClick={handleRunFresh}
-              disabled={refreshing || loading}
-              className="press flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#0B6BCB] hover:bg-[#0959AC] disabled:opacity-50 text-white text-xs font-medium transition-colors"
-            >
+            <Button className="press flex items-center gap-1.5 px-3.5 py-2 rounded-xl disabled:opacity-50 text-xs font-medium transition-colors" onClick={handleRunFresh}
+              disabled={refreshing || loading}>
               {refreshing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
               Run Fresh Evaluation
-            </button>
+            </Button>
           </div>
 
           {/* Badges */}

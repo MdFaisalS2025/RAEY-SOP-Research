@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Mic, MicOff, Volume2, VolumeX, X, AlertTriangle, Loader2 } from "lucide-react"
 import { SafetyNote } from "@/components/ui/safety-note"
 import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 
 const QUICK_QUERIES = [
   "Sepsis 1 hour bundle",
@@ -188,13 +189,10 @@ export default function BedsidePage() {
             placeholder="Ask a clinical question"
             className="flex-1 text-2xl px-4 py-4 rounded-xl border border-input bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-[#0B6BCB]/40 focus:border-[#0B6BCB]"
           />
-          <button
-            type="submit"
-            disabled={loading || !transcript.trim()}
-            className="px-6 rounded-xl bg-[#0B6BCB] hover:bg-[#0959AC] disabled:opacity-50 text-white font-medium transition-colors"
-          >
+          <Button className="px-6 rounded-xl disabled:opacity-50 font-medium transition-colors" type="submit"
+            disabled={loading || !transcript.trim()}>
             {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : "Ask"}
-          </button>
+          </Button>
         </form>
 
         <div className="w-full flex flex-wrap gap-2 justify-center mb-8">

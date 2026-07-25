@@ -2,10 +2,6 @@ import type {
   QueryResponse,
   SOP,
   SOPListResponse,
-  SOPUpdate,
-  AnalyticsData,
-  EvaluationResult,
-  TranscriptionResponse,
 } from "./types"
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || ""
@@ -53,10 +49,6 @@ export async function getSOPs(): Promise<SOP[]> {
   return data.sops
 }
 
-export async function getSOP(id: string): Promise<SOP> {
-  return request<SOP>(`/api/sops/${id}`)
-}
-
 export async function uploadSOP(file: File): Promise<SOP> {
   const formData = new FormData()
   formData.append("file", file)
@@ -91,63 +83,6 @@ export async function submitFeedback({
       feedback_type: feedbackType,
       feedback_text: feedbackText || "",
     }),
-  })
-}
-
-export async function proposeUpdate(
-  sopId: string,
-  section: string,
-  oldText: string,
-  newText: string,
-  reason: string,
-  proposedBy: string
-): Promise<SOPUpdate> {
-  return request<SOPUpdate>(`/api/sops/${sopId}/propose-update`, {
-    method: "POST",
-    body: JSON.stringify({
-      section,
-      old_text: oldText,
-      new_text: newText,
-      reason,
-      proposed_by: proposedBy,
-    }),
-  })
-}
-
-export async function approveUpdate(
-  sopId: string,
-  updateId: string
-): Promise<SOPUpdate> {
-  return request<SOPUpdate>(`/api/sops/${sopId}/approve-update/${updateId}`, {
-    method: "POST",
-  })
-}
-
-export async function getAnalytics(): Promise<AnalyticsData> {
-  return request<AnalyticsData>("/api/analytics")
-}
-
-export async function transcribeVoice(audioBlob: Blob): Promise<TranscriptionResponse> {
-  const formData = new FormData()
-  formData.append("audio", audioBlob, "recording.webm")
-
-  const url = `${BASE_URL}/api/voice/transcribe`
-  const res = await fetch(url, {
-    method: "POST",
-    body: formData,
-  })
-
-  if (!res.ok) {
-    const error = await res.text().catch(() => res.statusText)
-    throw new Error(`API error ${res.status}: ${error}`)
-  }
-
-  return res.json()
-}
-
-export async function runEvaluation(): Promise<EvaluationResult> {
-  return request<EvaluationResult>("/api/evaluate", {
-    method: "POST",
   })
 }
 

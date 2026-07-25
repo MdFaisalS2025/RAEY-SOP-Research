@@ -58,42 +58,8 @@ export interface SOPListResponse {
   total: number
 }
 
-export interface SOPUpdate {
-  id: string
-  sop_id: string
-  section: string
-  old_text: string
-  new_text: string
-  reason: string
-  proposed_by: string
-  status: string
-}
-
 export interface FeedbackRequest {
   query_id: number
   feedback_type: string
   feedback_text: string
-}
-
-export interface AnalyticsData {
-  total_queries: number
-  queries_by_type: Record<string, number>
-  feedback_counts: Record<string, number>
-  verification_stats: Record<string, number>
-  most_queried_departments: Record<string, number>
-  avg_confidence: number
-}
-
-export interface EvaluationResult {
-  total_cases: number
-  retrieval_precision: number
-  answer_accuracy: number
-  verification_detection_rate: number
-  details: Record<string, unknown>[]
-}
-
-export interface TranscriptionResponse {
-  text: string
-  duration_seconds: number
-  mode: string
 }

@@ -25,6 +25,7 @@ import {
   CheckCheck,
   Vote,
   FileCheck,
+  Loader2,
 } from "lucide-react"
 import { useRole } from "@/lib/role-context"
 import AppShell from "@/components/layout/app-shell"
@@ -304,15 +305,17 @@ function MostSearchedSops() {
   const [win, setWin] = useState<SearchWindow>("week")
   const [sops, setSops] = useState<TopSop[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
 
   useEffect(() => {
     let cancelled = false
     setLoading(true)
+    setLoadError(false)
     const base = process.env.NEXT_PUBLIC_API_URL || ""
     fetch(`${base}/api/analytics/top-sops?window=${win}&limit=5`)
-      .then((r) => r.json())
+      .then((r) => { if (!r.ok) throw new Error(); return r.json() })
       .then((d) => { if (!cancelled) setSops(Array.isArray(d?.sops) ? d.sops : []) })
-      .catch(() => { if (!cancelled) setSops([]) })
+      .catch(() => { if (!cancelled) setLoadError(true) })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
   }, [win])
@@ -340,7 +343,11 @@ function MostSearchedSops() {
         </div>
       </div>
       {loading ? (
-        <p className="text-[12px] text-muted-foreground py-2">Loading...</p>
+        <div className="flex items-center gap-2 text-[12px] text-muted-foreground py-2">
+          <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading...
+        </div>
+      ) : loadError ? (
+        <p className="text-[12px] text-[#B91C1C] dark:text-red-400 py-2">Couldn&apos;t load - backend didn&apos;t respond.</p>
       ) : sops.length === 0 ? (
         <p className="text-[12px] text-muted-foreground py-2">No queries logged in this window yet.</p>
       ) : (
@@ -489,7 +496,7 @@ function NurseDashboard() {
   useEffect(() => {
     const base = process.env.NEXT_PUBLIC_API_URL || ""
     fetch(`${base}/api/governance/acknowledgments?user_id=${encodeURIComponent(currentUser.name)}&limit=500`)
-      .then((r) => r.json())
+      .then((r) => { if (!r.ok) throw new Error(); return r.json() })
       .then((data) => {
         const rows: { sop_id: string }[] = Array.isArray(data?.acknowledgments) ? data.acknowledgments : []
         setAcknowledged(new Set(rows.map((r) => r.sop_id)))
@@ -1165,6 +1172,7 @@ function SystemAdminDashboard() {
   const [sopCount, setSopCount] = useState<number | null>(null)
   const [chunkCount, setChunkCount] = useState<number | null>(null)
   const [activity, setActivity] = useState<RawActivityEntry[]>([])
+  const [activityError, setActivityError] = useState(false)
   const [llmStatus, setLlmStatus] = useState<LlmStatus | null>(null)
   const [backendOnline, setBackendOnline] = useState<boolean | null>(null)
 
@@ -1186,17 +1194,17 @@ function SystemAdminDashboard() {
       .catch(() => { if (!cancelled) setBackendOnline(false) })
 
     fetch(`${base}/api/evaluation/chunk-distribution`)
-      .then((r) => r.json())
+      .then((r) => { if (!r.ok) throw new Error(); return r.json() })
       .then((data) => { if (!cancelled) setChunkCount(data?.total_chunks ?? null) })
       .catch(() => { if (!cancelled) setChunkCount(null) })
 
     fetch(`${base}/api/activity?limit=200`)
-      .then((r) => r.json())
+      .then((r) => { if (!r.ok) throw new Error(); return r.json() })
       .then((data) => { if (!cancelled) setActivity(Array.isArray(data?.entries) ? data.entries : []) })
-      .catch(() => { if (!cancelled) setActivity([]) })
+      .catch(() => { if (!cancelled) { setActivity([]); setActivityError(true) } })
 
     fetch(`${base}/api/llm/status`)
-      .then((r) => r.json())
+      .then((r) => { if (!r.ok) throw new Error(); return r.json() })
       .then((data) => { if (!cancelled) setLlmStatus(data) })
       .catch(() => { if (!cancelled) setLlmStatus(null) })
 
@@ -1276,7 +1284,10 @@ function SystemAdminDashboard() {
             Recent Activity
           </h3>
           <div className="space-y-2">
-            {recentActivity.length === 0 && (
+            {activityError && (
+              <p className="text-[12px] text-[#B91C1C] dark:text-red-400 px-1">Couldn&apos;t load activity - backend didn&apos;t respond.</p>
+            )}
+            {!activityError && recentActivity.length === 0 && (
               <p className="text-[12px] text-subtle px-1">No activity logged yet this session.</p>
             )}
             {recentActivity.map((entry) => {

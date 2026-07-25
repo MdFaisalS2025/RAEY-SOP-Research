@@ -12,6 +12,8 @@ import { SafetyNote } from "@/components/ui/safety-note"
 import { cn } from "@/lib/utils"
 import { MOCK_SOPS } from "@/lib/mock-data"
 import { useRole } from "@/lib/role-context"
+import { ErrorState } from "@/components/ui/error-state"
+import { EmptyState } from "@/components/ui/empty-state"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
 
@@ -433,14 +435,16 @@ function CAPAEditor({ capa, onSaved }: { capa: CAPA; onSaved: () => void }) {
 function CAPAPanel({ incidentId, incidentTitle, onChange }: { incidentId: number; incidentTitle: string; onChange: () => void }) {
   const [capas, setCapas] = useState<CAPA[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [creating, setCreating] = useState(false)
 
   function load() {
     setLoading(true)
+    setLoadError(false)
     fetch(`${API_BASE}/api/incidents/${incidentId}/capa`)
-      .then((r) => r.json())
+      .then((r) => { if (!r.ok) throw new Error(); return r.json() })
       .then((data) => setCapas(Array.isArray(data?.capas) ? data.capas : []))
-      .catch(() => setCapas([]))
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false))
   }
 
@@ -480,7 +484,8 @@ function CAPAPanel({ incidentId, incidentTitle, onChange }: { incidentId: number
           Open CAPA
         </button>
       </div>
-      {capas.length === 0 && (
+      {loadError && <ErrorState message="Couldn't load CAPA records." onRetry={load} />}
+      {!loadError && capas.length === 0 && (
         <p className="text-xs text-subtle">No CAPA opened yet for this incident.</p>
       )}
       {capas.map((c) => (
@@ -493,15 +498,17 @@ function CAPAPanel({ incidentId, incidentTitle, onChange }: { incidentId: number
 function IncidentsTab() {
   const [incidents, setIncidents] = useState<Incident[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set())
   const [showModal, setShowModal] = useState(false)
 
   function loadIncidents() {
     setLoading(true)
+    setLoadError(false)
     fetch(`${API_BASE}/api/incidents`)
-      .then((r) => r.json())
+      .then((r) => { if (!r.ok) throw new Error(); return r.json() })
       .then((data) => setIncidents(Array.isArray(data?.incidents) ? data.incidents : []))
-      .catch(() => setIncidents([]))
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false))
   }
 
@@ -628,8 +635,11 @@ function IncidentsTab() {
             <Loader2 className="w-4 h-4 animate-spin" /> Loading incidents...
           </div>
         )}
-        {!loading && incidents.length === 0 && (
-          <p className="text-sm text-muted-foreground py-8 text-center">No incidents reported yet.</p>
+        {!loading && loadError && (
+          <ErrorState message="Couldn't load incidents." onRetry={loadIncidents} />
+        )}
+        {!loading && !loadError && incidents.length === 0 && (
+          <EmptyState icon={AlertOctagon} title="No incidents reported yet." />
         )}
         <div className="space-y-4">
           {incidents.map((inc, i) => {
@@ -1187,13 +1197,15 @@ function ExceptionsTab() {
   const [showForm, setShowForm] = useState(false)
   const [exceptions, setExceptions] = useState<ExceptionReport[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
 
   function loadExceptions() {
     setLoading(true)
+    setLoadError(false)
     fetch(`${API_BASE}/api/exceptions`)
-      .then((r) => r.json())
+      .then((r) => { if (!r.ok) throw new Error(); return r.json() })
       .then((data) => setExceptions(Array.isArray(data?.exceptions) ? data.exceptions : []))
-      .catch(() => setExceptions([]))
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false))
   }
 
@@ -1250,10 +1262,10 @@ function ExceptionsTab() {
           <div className="flex items-center justify-center py-12 text-muted-foreground gap-2 text-sm">
             <Loader2 className="w-4 h-4 animate-spin" /> Loading exception reports...
           </div>
+        ) : loadError ? (
+          <ErrorState message="Couldn't load exception reports." onRetry={loadExceptions} />
         ) : exceptions.length === 0 ? (
-          <div className="rounded-2xl bg-card border border-border p-10 text-center text-sm text-muted-foreground">
-            No exception reports filed yet.
-          </div>
+          <EmptyState title="No exception reports filed yet." />
         ) : (
           <div className="space-y-3">
             {exceptions.map((exc, i) => (

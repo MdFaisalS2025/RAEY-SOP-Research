@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { motion } from "framer-motion"
 import {
   Plus, Scale, Calendar, Building2, FileText, ChevronRight,
@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils"
 import { useRole } from "@/lib/role-context"
 import { AccessRestricted } from "@/components/ui/access-restricted"
 import { priorityBadge, statusBadge as statusBadgeInfo } from "@/components/proposals/badges"
+import { useDialogA11y } from "@/lib/use-dialog-a11y"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
 
@@ -149,6 +150,8 @@ interface NewProposalInitial {
 
 function NewProposalModal({ onClose, onCreated, initial }: { onClose: () => void; onCreated: (p: Proposal) => void; initial?: NewProposalInitial }) {
   const { currentUser } = useRole()
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+  useDialogA11y(true, onClose, closeButtonRef)
   const [title, setTitle] = useState(initial?.title ?? "")
   const [department, setDepartment] = useState("")
   const [affectedSopId, setAffectedSopId] = useState(initial?.affectedSopId ?? "")
@@ -201,10 +204,13 @@ function NewProposalModal({ onClose, onCreated, initial }: { onClose: () => void
         initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}
         className="w-full max-w-lg bg-card border border-border rounded-2xl p-6 space-y-4"
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label="New Proposal"
       >
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-foreground">New Proposal</h2>
-          <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-lg hover:bg-muted"><X className="w-4 h-4" /></button>
+          <button ref={closeButtonRef} onClick={onClose} aria-label="Close" className="p-1.5 rounded-lg hover:bg-muted"><X className="w-4 h-4" /></button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>

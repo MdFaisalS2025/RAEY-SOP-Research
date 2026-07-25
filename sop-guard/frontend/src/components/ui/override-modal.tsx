@@ -1,10 +1,11 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { X, CheckCircle2, Eye, UserX, ShieldOff, MoreHorizontal } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useRole } from "@/lib/role-context"
+import { useDialogA11y } from "@/lib/use-dialog-a11y"
 
 type OverrideReason = "will_monitor" | "not_applicable" | "disagree_with_sop" | "other"
 
@@ -44,6 +45,8 @@ export function OverrideModal({ open, onClose, contextType, contextId, contextLa
     reset()
     onClose()
   }
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+  useDialogA11y(open, handleClose, closeButtonRef)
 
   const handleSubmit = async () => {
     if (!reason || submitting) return
@@ -97,6 +100,9 @@ export function OverrideModal({ open, onClose, contextType, contextId, contextLa
           transform: open ? "scale(1) translateY(0)" : "scale(0.96) translateY(12px)",
         }}
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Why are you overriding this?"
       >
         {open && (
             status !== "idle" ? (
@@ -115,7 +121,7 @@ export function OverrideModal({ open, onClose, contextType, contextId, contextLa
                     <h2 className="text-sm font-semibold text-foreground">Why are you overriding this?</h2>
                     <p className="text-xs text-muted-foreground mt-1">{contextLabel}</p>
                   </div>
-                  <button onClick={handleClose} aria-label="Close override dialog" className="text-muted-foreground hover:text-foreground transition-colors shrink-0">
+                  <button ref={closeButtonRef} onClick={handleClose} aria-label="Close override dialog" className="text-muted-foreground hover:text-foreground transition-colors shrink-0">
                     <X className="w-4 h-4" />
                   </button>
                 </div>
@@ -147,6 +153,7 @@ export function OverrideModal({ open, onClose, contextType, contextId, contextLa
 
                   {reason === "other" && (
                     <textarea
+                      aria-label="Reason for override"
                       value={note}
                       onChange={(e) => setNote(e.target.value)}
                       placeholder="Briefly describe your reason..."

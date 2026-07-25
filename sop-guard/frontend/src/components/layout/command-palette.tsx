@@ -60,6 +60,7 @@ export function CommandPalette() {
   const auth = useAuth()
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null)
 
   const close = useCallback(() => setOpen(false), [])
 
@@ -149,13 +150,20 @@ export function CommandPalette() {
     setOpen(false)
   }, [pathname])
 
-  // Reset and focus on open
+  // Reset and focus on open; restore focus to whatever triggered the
+  // palette (Ctrl+K, the search button) when it closes - previously the
+  // only place in the app that focused an element on open without also
+  // restoring it, unlike slide-over.tsx's dialogs.
   useEffect(() => {
     if (open) {
+      previouslyFocusedRef.current = document.activeElement as HTMLElement
       setQuery("")
       setSelected(0)
       const t = setTimeout(() => inputRef.current?.focus(), 30)
       return () => clearTimeout(t)
+    } else if (previouslyFocusedRef.current) {
+      previouslyFocusedRef.current.focus()
+      previouslyFocusedRef.current = null
     }
   }, [open])
 

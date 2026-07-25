@@ -5,10 +5,11 @@
 // scale-in/success-state pattern already established in override-modal.tsx
 // rather than inventing a new modal shell for this one case.
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { X, CheckCircle2, XCircle, AlertTriangle, FileText } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useDialogA11y } from "@/lib/use-dialog-a11y"
 
 export type FeedbackType = "incorrect" | "unsafe" | "missing"
 
@@ -36,8 +37,10 @@ export function FeedbackModal({
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
 
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
   const reset = () => { setType(null); setNote(""); setSubmitting(false); setSubmitted(false) }
   const handleClose = () => { reset(); onClose() }
+  useDialogA11y(open, handleClose, closeButtonRef)
 
   const handleSubmit = async () => {
     if (!type || submitting) return
@@ -68,7 +71,10 @@ export function FeedbackModal({
           opacity: open ? 1 : 0,
           transform: open ? "scale(1) translateY(0)" : "scale(0.96) translateY(12px)",
         }}
-        onClick={(e) => e.stopPropagation()}>
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Flag this answer">
         {open && (
           submitted ? (
               <div className="flex flex-col items-center justify-center gap-3 px-6 py-10">
@@ -84,7 +90,7 @@ export function FeedbackModal({
                     <h2 className="text-sm font-semibold text-foreground">Flag this answer</h2>
                     <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{questionText}</p>
                   </div>
-                  <button onClick={handleClose} aria-label="Close" className="text-muted-foreground hover:text-foreground transition-colors shrink-0">
+                  <button ref={closeButtonRef} onClick={handleClose} aria-label="Close" className="text-muted-foreground hover:text-foreground transition-colors shrink-0">
                     <X className="w-4 h-4" />
                   </button>
                 </div>
@@ -102,6 +108,7 @@ export function FeedbackModal({
                     </button>
                   ))}
                   <textarea
+                    aria-label="Optional feedback details"
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
                     placeholder="Optional details - what should be different?"

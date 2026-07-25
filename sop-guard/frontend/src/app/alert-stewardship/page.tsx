@@ -5,6 +5,8 @@ import { motion } from "framer-motion"
 import { AlertTriangle, ShieldOff, TrendingDown, Info } from "lucide-react"
 import AppShell from "@/components/layout/app-shell"
 import { cn } from "@/lib/utils"
+import { ErrorState } from "@/components/ui/error-state"
+import { EmptyState } from "@/components/ui/empty-state"
 
 interface StewardshipCandidate {
   context_type: string
@@ -38,15 +40,18 @@ export default function AlertStewardshipPage() {
   const [data, setData] = useState<StewardshipResponse | null>(null)
   const [minOverrides, setMinOverrides] = useState(2)
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
 
-  useEffect(() => {
+  const load = () => {
     setLoading(true)
+    setLoadError(false)
     fetch(`/api/overrides/stewardship?min_overrides=${minOverrides}`)
-      .then((r) => r.json())
+      .then((r) => { if (!r.ok) throw new Error(); return r.json() })
       .then(setData)
-      .catch(() => setData(null))
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false))
-  }, [minOverrides])
+  }
+  useEffect(load, [minOverrides])
 
   return (
     <AppShell>
@@ -88,13 +93,12 @@ export default function AlertStewardshipPage() {
           <div className="p-8 text-center text-sm text-muted-foreground">Loading override history...</div>
         )}
 
-        {!loading && data && data.candidates.length === 0 && (
-          <div className="p-8 rounded-2xl bg-card border border-border text-center">
-            <Info className="w-5 h-5 text-muted-foreground mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">
-              No alerts have been overridden {minOverrides} or more times yet.
-            </p>
-          </div>
+        {!loading && loadError && (
+          <ErrorState message="Couldn't load override history." onRetry={load} />
+        )}
+
+        {!loading && !loadError && data && data.candidates.length === 0 && (
+          <EmptyState icon={Info} title={`No alerts have been overridden ${minOverrides} or more times yet.`} />
         )}
 
         {!loading && data && data.candidates.length > 0 && (

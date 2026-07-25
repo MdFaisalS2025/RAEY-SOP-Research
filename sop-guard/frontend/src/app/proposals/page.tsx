@@ -15,6 +15,8 @@ import { useRole } from "@/lib/role-context"
 import { AccessRestricted } from "@/components/ui/access-restricted"
 import { priorityBadge, statusBadge as statusBadgeInfo } from "@/components/proposals/badges"
 import { useDialogA11y } from "@/lib/use-dialog-a11y"
+import { ErrorState } from "@/components/ui/error-state"
+import { EmptyState } from "@/components/ui/empty-state"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
 
@@ -288,14 +290,18 @@ export default function ProposalsPage() {
   const [loading, setLoading] = useState(true)
   const [showNewModal, setShowNewModal] = useState(false)
   const [newModalInitial, setNewModalInitial] = useState<NewProposalInitial | undefined>(undefined)
+  const [loadError, setLoadError] = useState(false)
 
-  useEffect(() => {
+  const loadProposals = () => {
+    setLoading(true)
+    setLoadError(false)
     fetch(`${API_BASE}/api/governance/proposals?limit=200`)
-      .then((r) => r.json())
+      .then((r) => { if (!r.ok) throw new Error(); return r.json() })
       .then((data) => setProposals(Array.isArray(data?.proposals) ? data.proposals : []))
-      .catch(() => setProposals([]))
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false))
-  }, [])
+  }
+  useEffect(loadProposals, [])
 
   // Physician workflow entry points (alignment status "Create Update
   // Recommendation", SOP gap panel's "Create Draft SOP Proposal") link here
@@ -396,11 +402,10 @@ export default function ProposalsPage() {
             <div className="flex items-center justify-center py-16 text-muted-foreground gap-2">
               <Loader2 className="w-5 h-5 animate-spin" /> Loading proposals...
             </div>
+          ) : loadError ? (
+            <ErrorState message="Couldn't load proposals." onRetry={loadProposals} />
           ) : filtered.length === 0 ? (
-            <div className="rounded-2xl bg-card border border-border p-12 text-center">
-              <ClipboardList className="w-8 h-8 text-muted-foreground mx-auto mb-3 opacity-40" />
-              <p className="text-muted-foreground text-sm">No proposals match this filter.</p>
-            </div>
+            <EmptyState icon={ClipboardList} title="No proposals match this filter." />
           ) : (
             filtered.map((p, i) => <ProposalCard key={p.id} proposal={p} index={i} />)
           )}

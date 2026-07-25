@@ -14,6 +14,8 @@ import { AccessRestricted } from "@/components/ui/access-restricted"
 import { cn } from "@/lib/utils"
 import { DEMO_USERS } from "@/lib/mock-data"
 import { useRole } from "@/lib/role-context"
+import { ErrorState } from "@/components/ui/error-state"
+import { EmptyState } from "@/components/ui/empty-state"
 
 const ROLE_LABELS: Record<string, string> = {
   clinical_staff: "Clinical Staff",
@@ -49,6 +51,7 @@ export default function AdminPage() {
   const { role } = useRole()
   const [sources, setSources] = useState<EvidenceSource[]>([])
   const [sourcesLoading, setSourcesLoading] = useState(true)
+  const [sourcesError, setSourcesError] = useState(false)
   const [ssoProtocol, setSSOProtocol] = useState<SSOProtocol>("saml")
   const [systemStatus, setSystemStatus] = useState<StatusItem[]>([
     { name: "Backend API", detail: "Checking…", status: "checking", icon: Server },
@@ -96,10 +99,12 @@ export default function AdminPage() {
   // /api/evidence/providers (same endpoints the Settings page uses) - was
   // previously a hardcoded array with invented "trust scores" and a toggle
   // that only flipped local state.
-  useEffect(() => {
+  const loadSources = () => {
+    setSourcesLoading(true)
+    setSourcesError(false)
     Promise.all([
-      fetch("/api/settings").then((r) => r.json()),
-      fetch("/api/evidence/providers").then((r) => r.json()),
+      fetch("/api/settings").then((r) => { if (!r.ok) throw new Error(); return r.json() }),
+      fetch("/api/evidence/providers").then((r) => { if (!r.ok) throw new Error(); return r.json() }),
     ]).then(([settingsData, providersData]) => {
       const enabled = new Set<string>(settingsData?.enabled_evidence_sources ?? [])
       const statusByKey = new Map<string, string>((providersData?.providers ?? []).map((p: { key: string; status: string }) => [p.key, p.status]))
@@ -110,8 +115,9 @@ export default function AdminPage() {
         status: (statusByKey.get(key) as EvidenceSource["status"]) ?? "not_configured",
         enabled: enabled.has(key),
       })))
-    }).catch(() => setSources([])).finally(() => setSourcesLoading(false))
-  }, [])
+    }).catch(() => setSourcesError(true)).finally(() => setSourcesLoading(false))
+  }
+  useEffect(loadSources, [])
 
   if (role !== "system_admin") {
     return <AccessRestricted label="Admin" requirement="This area requires System Administrator access." />
@@ -179,10 +185,10 @@ export default function AdminPage() {
             <div className="flex items-center gap-2 text-muted-foreground text-sm py-8 justify-center">
               <Loader2 className="w-4 h-4 animate-spin" /> Loading evidence sources...
             </div>
+          ) : sourcesError ? (
+            <ErrorState message="Couldn't load evidence source status." onRetry={loadSources} />
           ) : sources.length === 0 ? (
-            <div className="rounded-2xl bg-card border border-border p-8 text-center">
-              <p className="text-sm text-muted-foreground">Couldn't load evidence source status.</p>
-            </div>
+            <EmptyState title="No evidence sources configured." />
           ) : (
           <div className="rounded-2xl bg-card border border-border overflow-hidden">
             <div className="overflow-x-auto">

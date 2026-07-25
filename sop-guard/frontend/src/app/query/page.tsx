@@ -781,6 +781,7 @@ export default function QueryPage() {
     <div className="rounded-2xl border border-border bg-muted focus-within:ring-2 focus-within:ring-[#0B6BCB]/40 transition-shadow">
       <textarea
         ref={textareaRef}
+        aria-label={submitted ? "Ask a follow-up question" : "Ask about a protocol or procedure"}
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSubmit() } }}

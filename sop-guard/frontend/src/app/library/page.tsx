@@ -393,6 +393,7 @@ function LibraryPageInner() {
           <div className="flex-1 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-card border border-border">
             <Search className="w-4 h-4 text-muted-foreground" />
             <input
+              aria-label="Search SOPs by title or department"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search SOPs by title or department..."

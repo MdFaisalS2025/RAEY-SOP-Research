@@ -113,6 +113,7 @@ export default function UploadPage() {
         <input
           ref={inputRef}
           type="file"
+          aria-label="Upload SOP file"
           accept=".pdf,.docx,.txt,.doc"
           onChange={handleInputChange}
           className="hidden"

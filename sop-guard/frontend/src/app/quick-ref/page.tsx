@@ -180,6 +180,7 @@ export default function QuickRefPage() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
+              aria-label="Search cards by keyword, SOP ID, department"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search cards by keyword, SOP ID, department..."
@@ -189,6 +190,7 @@ export default function QuickRefPage() {
           <div className="relative">
             <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <select
+              aria-label="Filter by department"
               value={dept}
               onChange={(e) => setDept(e.target.value)}
               className="rounded-xl bg-muted border border-border pl-9 pr-8 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/40 appearance-none"

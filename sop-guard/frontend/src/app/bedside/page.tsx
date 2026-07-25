@@ -182,6 +182,7 @@ export default function BedsidePage() {
           className="w-full flex gap-2 mb-8"
         >
           <input
+            aria-label="Ask a clinical question"
             value={transcript}
             onChange={e => setTranscript(e.target.value)}
             placeholder="Ask a clinical question"

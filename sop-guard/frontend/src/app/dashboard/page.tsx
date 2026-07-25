@@ -202,6 +202,7 @@ function QuickLookup() {
       <form onSubmit={handleSearch} className="flex gap-2">
         <input
           type="text"
+          aria-label="Ask about a protocol or procedure"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Ask about a protocol or procedure..."

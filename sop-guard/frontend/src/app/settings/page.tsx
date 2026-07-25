@@ -520,6 +520,8 @@ function SettingsPageInner() {
                 <div className="flex items-center gap-4">
                   <input
                     type="range"
+                    aria-label="Confidence threshold"
+                    aria-valuetext={confidenceThreshold.toFixed(2)}
                     min={0.3}
                     max={0.9}
                     step={0.05}

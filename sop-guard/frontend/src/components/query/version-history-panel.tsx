@@ -120,12 +120,12 @@ function VersionComparePicker({ sopId, versions }: { sopId: string; versions: SO
     <div className="rounded-2xl bg-card border border-border p-4 space-y-3">
       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Compare versions</p>
       <div className="flex flex-wrap items-center gap-2">
-        <select value={fromVersion} onChange={(e) => setFromVersion(e.target.value)}
+        <select aria-label="Compare from version" value={fromVersion} onChange={(e) => setFromVersion(e.target.value)}
           className="px-3 py-2 rounded-lg bg-muted border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#0B6BCB]/40">
           {sorted.map((v) => <option key={v.id} value={v.version_number}>v{v.version_number}</option>)}
         </select>
         <span className="text-xs text-muted-foreground">vs.</span>
-        <select value={toVersion} onChange={(e) => setToVersion(e.target.value)}
+        <select aria-label="Compare to version" value={toVersion} onChange={(e) => setToVersion(e.target.value)}
           className="px-3 py-2 rounded-lg bg-muted border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#0B6BCB]/40">
           {sorted.map((v) => <option key={v.id} value={v.version_number}>v{v.version_number}</option>)}
         </select>

@@ -241,6 +241,7 @@ export default function AuditPage() {
           <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
+              aria-label="Search events, users, resources"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search events, users, resources..."
@@ -248,6 +249,7 @@ export default function AuditPage() {
             />
           </div>
           <select
+            aria-label="Filter by event type"
             value={eventTypeFilter}
             onChange={(e) => setEventTypeFilter(e.target.value)}
             className="px-3 py-2 rounded-xl bg-card border border-border text-sm text-foreground focus:outline-none focus:border-[#0B6BCB]/30"
@@ -258,6 +260,7 @@ export default function AuditPage() {
             ))}
           </select>
           <select
+            aria-label="Filter by role"
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
             className="px-3 py-2 rounded-xl bg-card border border-border text-sm text-foreground focus:outline-none focus:border-[#0B6BCB]/30"

@@ -13,29 +13,30 @@ import { cn } from "@/lib/utils"
 import { MOCK_LEGAL, MOCK_PROPOSALS } from "@/lib/mock-data"
 import { useRole } from "@/lib/role-context"
 import type { LegalRiskItem } from "@/lib/governance-types"
+import { toneChip } from "@/components/ui/tone"
 
 const riskClassConfig: Record<LegalRiskItem["risk_classification"], { label: string; className: string }> = {
-  critical: { label: "Critical", className: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30" },
-  high: { label: "High", className: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30" },
-  medium: { label: "Medium", className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30" },
+  critical: { label: "Critical", className: toneChip.danger },
+  high: { label: "High", className: toneChip.danger },
+  medium: { label: "Medium", className: toneChip.warning },
   low: { label: "Low", className: "bg-card text-muted-foreground border border-input" },
 }
 
 const issueTypeConfig: Record<LegalRiskItem["issue_type"], string> = {
-  liability: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30",
+  liability: toneChip.danger,
   compliance: "bg-muted text-muted-foreground border border-border",
   regulatory: "bg-muted text-muted-foreground border border-border",
   privacy: "bg-muted text-muted-foreground border border-border",
   documentation: "bg-muted text-muted-foreground border border-border",
-  consent: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30",
+  consent: toneChip.warning,
 }
 
 const legalStatusConfig: Record<LegalRiskItem["status"], { label: string; className: string }> = {
-  open: { label: "Open", className: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30" },
-  under_review: { label: "Under Review", className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30" },
-  resolved: { label: "Resolved", className: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30" },
+  open: { label: "Open", className: toneChip.danger },
+  under_review: { label: "Under Review", className: toneChip.warning },
+  resolved: { label: "Resolved", className: toneChip.success },
   on_hold: { label: "On Hold", className: "bg-card text-muted-foreground border border-input" },
-  escalated: { label: "Escalated", className: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30" },
+  escalated: { label: "Escalated", className: toneChip.danger },
 }
 
 function isUrgent(dateStr?: string) {

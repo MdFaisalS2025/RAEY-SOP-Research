@@ -18,6 +18,7 @@ import { SafetyNote } from "@/components/ui/safety-note"
 import { cn } from "@/lib/utils"
 import { useRole } from "@/lib/role-context"
 import { useToast } from "@/components/ui/use-toast"
+import { toneChip } from "@/components/ui/tone"
 
 interface VerifierMetrics {
   sensitivity: number
@@ -207,19 +208,19 @@ function statusBadge(status: TestStatus) {
   switch (status) {
     case "pass":
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#DCFCE7] dark:bg-green-500/10 border border-[#BBF7D0] dark:border-green-500/30 text-[#15803D] dark:text-green-400 text-xs font-semibold">
+        <span className={cn("inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold", toneChip.success)}>
           <CheckCircle2 className="w-3.5 h-3.5" /> Pass
         </span>
       )
     case "partial":
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 text-xs font-semibold">
+        <span className={cn("inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold", toneChip.warning)}>
           <AlertCircle className="w-3.5 h-3.5" /> Partial
         </span>
       )
     case "fail":
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400 text-xs font-semibold">
+        <span className={cn("inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold", toneChip.danger)}>
           <XCircle className="w-3.5 h-3.5" /> Fail
         </span>
       )
@@ -228,13 +229,13 @@ function statusBadge(status: TestStatus) {
 
 function severityBadge(severity: Severity) {
   const map: Record<Severity, string> = {
-    critical: "bg-[#FEE2E2] dark:bg-red-500/10 border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400",
-    high: "bg-[#FEE2E2] dark:bg-red-500/10 border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400",
-    medium: "bg-[#FEF3C7] dark:bg-amber-500/10 border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400",
-    low: "bg-muted border-input text-muted-foreground",
+    critical: toneChip.danger,
+    high: toneChip.danger,
+    medium: toneChip.warning,
+    low: toneChip.neutral,
   }
   return (
-    <span className={cn("inline-flex items-center px-2 py-0.5 rounded-md border text-xs font-medium", map[severity])}>
+    <span className={cn("inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium", map[severity])}>
       {severity.toUpperCase()}
     </span>
   )
@@ -242,9 +243,9 @@ function severityBadge(severity: Severity) {
 
 function statusBg(status: TestStatus) {
   switch (status) {
-    case "pass": return "bg-[#DCFCE7] dark:bg-green-500/10 border-[#BBF7D0] dark:border-green-500/30"
-    case "partial": return "bg-[#FEF3C7] dark:bg-amber-500/10 border-[#FDE68A] dark:border-amber-500/30"
-    case "fail": return "bg-[#FEE2E2] dark:bg-red-500/10 border-[#FECACA] dark:border-red-500/30"
+    case "pass": return toneChip.success
+    case "partial": return toneChip.warning
+    case "fail": return toneChip.danger
   }
 }
 

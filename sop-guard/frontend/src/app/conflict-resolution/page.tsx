@@ -14,6 +14,7 @@ import { useRole } from "@/lib/role-context"
 import { cn } from "@/lib/utils"
 import { ErrorState } from "@/components/ui/error-state"
 import { EmptyState } from "@/components/ui/empty-state"
+import { toneChip } from "@/components/ui/tone"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
 
@@ -45,15 +46,15 @@ interface RealSOP {
 
 function severityBadge(severity: string) {
   const map: Record<string, string> = {
-    critical: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30",
-    high: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30",
+    critical: toneChip.danger,
+    high: toneChip.warning,
   }
-  return map[severity] ?? "bg-muted text-muted-foreground"
+  return map[severity] ?? toneChip.neutral
 }
 
 function typeBadge(type: string) {
   return type === "DRUG"
-    ? "bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30"
+    ? toneChip.info
     : "bg-[#7C3AED]/10 text-[#7C3AED] border border-[#7C3AED]/30"
 }
 

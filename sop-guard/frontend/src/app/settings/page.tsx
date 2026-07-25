@@ -79,12 +79,14 @@ const PROVIDER_STATUS_META: Record<ProviderStatus, { label: string; className: s
 // drawer, which should show search results, not backend configuration state.
 function ProviderStatusList() {
   const [providers, setProviders] = useState<ProviderInfo[] | null>(null)
+  const [loadError, setLoadError] = useState(false)
   useEffect(() => {
     fetch("/api/evidence/providers")
-      .then((r) => r.json())
+      .then((r) => { if (!r.ok) throw new Error(); return r.json() })
       .then((data) => setProviders(Array.isArray(data?.providers) ? data.providers : []))
-      .catch(() => setProviders([]))
+      .catch(() => setLoadError(true))
   }, [])
+  if (loadError) return <p className="text-xs text-[#B91C1C] dark:text-red-400">Couldn&apos;t load provider status.</p>
   if (!providers) return <p className="text-xs text-muted-foreground">Loading provider status...</p>
   if (providers.length === 0) return null
   return (

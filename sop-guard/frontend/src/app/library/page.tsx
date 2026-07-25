@@ -186,7 +186,7 @@ function LibraryPageInner() {
   useEffect(() => {
     const base = process.env.NEXT_PUBLIC_API_URL || ""
     fetch(`${base}/api/governance/acknowledgments?user_id=${encodeURIComponent(currentUser.name)}&limit=500`)
-      .then((r) => r.json())
+      .then((r) => { if (!r.ok) throw new Error(); return r.json() })
       .then((data) => {
         const rows: { sop_id: string }[] = Array.isArray(data?.acknowledgments) ? data.acknowledgments : []
         setAcknowledged(new Set(rows.map((r) => r.sop_id)))

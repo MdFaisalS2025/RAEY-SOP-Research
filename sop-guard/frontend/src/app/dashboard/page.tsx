@@ -398,8 +398,6 @@ function MostSearchedSops() {
 
 function PhysicianDashboard() {
   const { currentUser } = useRole()
-  const proposal = MOCK_PROPOSALS.find((p) => p.id === "prop-001")
-  const evidenceAlert = MOCK_EVIDENCE_WATCH[0]
 
   // Real specialty scoping - this used to be a hardcoded "12" regardless
   // of who was logged in, and "Recently Updated SOPs" showed the same
@@ -412,7 +410,23 @@ function PhysicianDashboard() {
     .sort((a, b) => (b.last_updated || "").localeCompare(a.last_updated || ""))
     .slice(0, 2)
   const deptEvidenceAlerts = MOCK_EVIDENCE_WATCH.filter((e) => e.departments_affected.includes(currentUser.department))
+  // Was MOCK_EVIDENCE_WATCH[0] unconditionally - the same alert for every
+  // department regardless of relevance. Falls back to the single most
+  // recent alert org-wide only when this department genuinely has none,
+  // same fallback shape as recentSops above.
+  const evidenceAlert = deptEvidenceAlerts[0] ?? MOCK_EVIDENCE_WATCH[0]
   const deptTrainingDue = MOCK_TRAINING.filter((t) => t.department === currentUser.department && t.overdue > 0)
+  // "Open Proposals" used to be openProposalsCount() - an org-wide total -
+  // sitting beside three tiles that are all scoped to this user's own
+  // department. Scoped the same way for consistency with its siblings.
+  const deptOpenProposals = MOCK_PROPOSALS.filter(
+    (p) => OPEN_PROPOSAL_STATUSES.includes(p.status) && p.affected_departments?.includes(currentUser.department)
+  ).length
+  // Was MOCK_PROPOSALS.find(p => p.id === "prop-001") - the exact same
+  // proposal shown to every clinical_staff user regardless of who actually
+  // raised it. Scoped to proposals this user initiated.
+  const myProposals = MOCK_PROPOSALS.filter((p) => p.initiated_by?.id === currentUser.id)
+  const proposal = myProposals[0]
 
   return (
     <div className="space-y-6">
@@ -420,9 +434,11 @@ function PhysicianDashboard() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatTile label="SOPs in Specialty" value={specialtySops.length} color="teal" icon={BookOpen} trend="neutral" />
         <StatTile label="Evidence Alerts" value={deptEvidenceAlerts.length} color="amber" icon={AlertTriangle} />
-        <StatTile label="Open Proposals" value={openProposalsCount()} color="gray" icon={FileText} />
+        <StatTile label="Open Proposals" value={deptOpenProposals} color="gray" icon={FileText} />
         <StatTile label="Training Due" value={deptTrainingDue.length} color="red" icon={GraduationCap} />
       </div>
+
+      <IllustrativeNote detail="Showing illustrative SOP, evidence-watch, training, and proposal data, not wired to a live feed. See the SOP Library and Governance → Proposals for real records." />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Recently Updated SOPs */}
@@ -632,7 +648,14 @@ function NurseDashboard() {
           <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
             My Training
           </h3>
-          {MOCK_TRAINING.slice(0, 2).map((tm) => (
+          {/* Was MOCK_TRAINING.slice(0, 2) - array position, not this
+              user's department, so every nurse saw the same two modules
+              regardless of who they were. Falls back to the first two
+              org-wide only if this department has none of its own. */}
+          {(() => {
+            const deptTraining = MOCK_TRAINING.filter((t) => t.department === currentUser.department)
+            return (deptTraining.length > 0 ? deptTraining : MOCK_TRAINING).slice(0, 2)
+          })().map((tm) => (
             <div
               key={tm.id}
               className="bg-muted border border-border rounded-lg p-4"

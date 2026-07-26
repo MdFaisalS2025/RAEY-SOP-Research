@@ -1003,6 +1003,180 @@ function LegalRiskDashboard() {
   )
 }
 
+// ─── Educator: real data widgets ───────────────────────────────────────────
+// The educator dashboard used to be 100% MOCK_TRAINING/MOCK_COMPLIANCE with
+// no fetch and no links out of the section at all. These three widgets are
+// wired to endpoints that already existed and already track real activity
+// (credits, gap reports, query analytics) but nothing in the UI surfaced
+// them to this role.
+
+interface CreditEntry {
+  id: number
+  user_name: string
+  activity_type: string
+  activity_title: string
+  credits: number
+  created_at: string | null
+}
+
+const ACTIVITY_TYPE_LABEL: Record<string, string> = {
+  scenario_completed: "Completed scenario",
+  sop_reviewed: "Reviewed SOP",
+  committee_participation: "Committee participation",
+}
+
+function LearningActivityFeed() {
+  const [entries, setEntries] = useState<CreditEntry[]>([])
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    const base = process.env.NEXT_PUBLIC_API_URL || ""
+    fetch(`${base}/api/credits?limit=8`)
+      .then((r) => { if (!r.ok) throw new Error(); return r.json() })
+      .then((d) => { if (!cancelled) setEntries(Array.isArray(d?.credits) ? d.credits : []) })
+      .catch(() => { if (!cancelled) setLoadError(true) })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [])
+
+  return (
+    <div className="bg-card border border-border shadow-sm rounded-xl p-4">
+      <div className="flex items-center gap-2 mb-3">
+        <CheckCheck className="w-4 h-4 text-[#0B6BCB]" />
+        <h3 className="text-[13px] font-semibold text-foreground">Recent Learning Activity</h3>
+      </div>
+      {loading ? (
+        <div className="flex items-center gap-2 text-[12px] text-muted-foreground py-2">
+          <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading...
+        </div>
+      ) : loadError ? (
+        <p className="text-[12px] text-[#B91C1C] dark:text-red-400 py-2">Couldn&apos;t load - backend didn&apos;t respond.</p>
+      ) : entries.length === 0 ? (
+        <p className="text-[12px] text-muted-foreground py-2">No logged activity yet - scenario completions and SOP reviews will appear here.</p>
+      ) : (
+        <ul className="space-y-1.5">
+          {entries.map((e) => (
+            <li key={e.id} className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg hover:bg-muted transition-colors">
+              <div className="min-w-0">
+                <span className="text-[12px] font-medium text-foreground">{e.user_name || "Unknown user"}</span>
+                <span className="text-[12px] text-muted-foreground"> · {ACTIVITY_TYPE_LABEL[e.activity_type] || e.activity_type}</span>
+                {e.activity_title && <span className="block text-[11px] text-subtle truncate">{e.activity_title}</span>}
+              </div>
+              <span className="text-[11px] font-mono text-muted-foreground shrink-0">+{e.credits}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
+interface GapCluster {
+  representative_question: string
+  count: number
+  most_common_department: string
+  most_common_risk_level: string
+}
+
+function TrainingNeedSignals() {
+  const [clusters, setClusters] = useState<GapCluster[]>([])
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    const base = process.env.NEXT_PUBLIC_API_URL || ""
+    fetch(`${base}/api/sop-gap-reports/summary?min_count=1`)
+      .then((r) => { if (!r.ok) throw new Error(); return r.json() })
+      .then((d) => { if (!cancelled) setClusters(Array.isArray(d?.clusters) ? d.clusters.slice(0, 5) : []) })
+      .catch(() => { if (!cancelled) setLoadError(true) })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [])
+
+  return (
+    <div className="bg-card border border-border shadow-sm rounded-xl p-4">
+      <div className="flex items-center gap-2 mb-1">
+        <AlertTriangle className="w-4 h-4 text-[#B45309] dark:text-amber-400" />
+        <h3 className="text-[13px] font-semibold text-foreground">Training-Need Signals</h3>
+      </div>
+      <p className="text-[11px] text-muted-foreground mb-3">
+        Questions staff asked with no approved SOP to answer them - said more than once is a prioritization signal.
+      </p>
+      {loading ? (
+        <div className="flex items-center gap-2 text-[12px] text-muted-foreground py-2">
+          <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading...
+        </div>
+      ) : loadError ? (
+        <p className="text-[12px] text-[#B91C1C] dark:text-red-400 py-2">Couldn&apos;t load - backend didn&apos;t respond.</p>
+      ) : clusters.length === 0 ? (
+        <p className="text-[12px] text-muted-foreground py-2">No coverage gaps flagged yet.</p>
+      ) : (
+        <ul className="space-y-2">
+          {clusters.map((c, i) => (
+            <li key={i} className="px-2 py-1.5 rounded-lg bg-muted">
+              <p className="text-[12px] font-medium text-foreground line-clamp-2">{c.representative_question}</p>
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30">
+                  Asked {c.count}×
+                </span>
+                {c.most_common_department && (
+                  <span className="text-[10px] text-muted-foreground">{c.most_common_department}</span>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
+interface LeaderboardEntry {
+  user_id: string
+  user_name: string
+  total_credits: number
+}
+
+function CreditsLeaderboard() {
+  const [entries, setEntries] = useState<LeaderboardEntry[]>([])
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    const base = process.env.NEXT_PUBLIC_API_URL || ""
+    fetch(`${base}/api/credits/leaderboard`)
+      .then((r) => { if (!r.ok) throw new Error(); return r.json() })
+      .then((d) => { if (!cancelled) setEntries(Array.isArray(d?.leaderboard) ? d.leaderboard : []) })
+      .catch(() => { if (!cancelled) setLoadError(true) })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [])
+
+  if (loading || loadError || entries.length === 0) return null
+
+  return (
+    <div className="bg-card border border-border shadow-sm rounded-xl p-4">
+      <div className="flex items-center gap-2 mb-3">
+        <TrendingUp className="w-4 h-4 text-[#0B6BCB]" />
+        <h3 className="text-[13px] font-semibold text-foreground">Top Contributors</h3>
+      </div>
+      <ol className="flex flex-wrap gap-2">
+        {entries.map((e, i) => (
+          <li key={e.user_id || i} className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted text-[12px]">
+            <span className="text-[10px] font-semibold text-subtle">{i + 1}</span>
+            <span className="font-medium text-foreground">{e.user_name || "Unknown"}</span>
+            <span className="text-muted-foreground font-mono">{e.total_credits}</span>
+          </li>
+        ))}
+      </ol>
+    </div>
+  )
+}
+
 function NurseEducatorDashboard() {
   const totalAssigned = MOCK_TRAINING.reduce((s, t) => s + t.total_assigned, 0)
   const avgCompletion = Math.round(
@@ -1013,6 +1187,31 @@ function NurseEducatorDashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Real activity, driven by endpoints that already existed
+          (/api/credits, /api/sop-gap-reports/summary,
+          /api/analytics/top-sops) but were never surfaced to this role -
+          previously this dashboard made zero fetches. */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
+          What's Actually Happening
+        </h3>
+        <div className="flex items-center gap-2">
+          <Link href="/training" className="text-[12px] font-medium text-[#0B6BCB] hover:underline">
+            Go to Training
+          </Link>
+          <span className="text-subtle">·</span>
+          <Link href="/library" className="text-[12px] font-medium text-[#0B6BCB] hover:underline">
+            Go to Library
+          </Link>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <LearningActivityFeed />
+        <TrainingNeedSignals />
+        <MostSearchedSops />
+      </div>
+      <CreditsLeaderboard />
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatTile label="Active Modules" value={MOCK_TRAINING.filter((t) => t.status === "active").length} color="gray" icon={GraduationCap} />
         <StatTile label="Avg Completion" value={`${avgCompletion}%`} color="teal" icon={TrendingUp} trend="up" />

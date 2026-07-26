@@ -492,6 +492,38 @@ export function TopNav() {
               {desktopGroups.map((group) => {
                 const groupActive = group.items.some((item) => isActiveLink(item.href))
                 const isOpen = openGroup === group.label
+
+                // A group can drop to a single visible item once its
+                // siblings are filtered out by role (e.g. educator sees
+                // only "Compliance" under Governance & Quality, only
+                // "Settings" under Admin) - a dropdown holding one entry
+                // is a wasted click, so render it as a direct link instead.
+                if (group.items.length === 1) {
+                  const item = group.items[0]
+                  const active = isActiveLink(item.href)
+                  return (
+                    <Link
+                      key={group.label}
+                      href={item.href}
+                      title={item.label}
+                      aria-current={active ? "page" : undefined}
+                      className={cn(
+                        "relative flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-[13px] font-medium whitespace-nowrap transition-all duration-200",
+                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0B6BCB]/50 dark:focus-visible:ring-[#00E5FF]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                        active
+                          ? "bg-[#0B6BCB]/10 text-[#0B6BCB] dark:text-[#00E5FF] dark:glow-cyan"
+                          : "text-[#64748B] dark:text-slate-400 hover:text-foreground dark:hover:text-white hover:bg-muted dark:hover:bg-white/5"
+                      )}
+                    >
+                      <item.icon className="w-4 h-4 shrink-0" />
+                      <span className="hidden xl:inline">{item.label}</span>
+                      {active && (
+                        <div className="absolute left-2 right-2 -bottom-[1px] h-[2px] rounded-full bg-[#0B6BCB] dark:bg-[#00E5FF]" />
+                      )}
+                    </Link>
+                  )
+                }
+
                 return (
                   <div key={group.label} className="relative">
                     <button

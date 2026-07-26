@@ -1392,6 +1392,14 @@ interface LlmStatus {
   mode: string
 }
 
+interface GovernancePulse {
+  openProposals: number | null
+  gapReportClusters: number | null
+  openExceptions: number | null
+  activeProviders: number | null
+  totalProviders: number | null
+}
+
 function SystemAdminDashboard() {
   const [sopCount, setSopCount] = useState<number | null>(null)
   const [chunkCount, setChunkCount] = useState<number | null>(null)
@@ -1399,6 +1407,10 @@ function SystemAdminDashboard() {
   const [activityError, setActivityError] = useState(false)
   const [llmStatus, setLlmStatus] = useState<LlmStatus | null>(null)
   const [backendOnline, setBackendOnline] = useState<boolean | null>(null)
+  const [dbDialect, setDbDialect] = useState<string | null>(null)
+  const [pulse, setPulse] = useState<GovernancePulse>({
+    openProposals: null, gapReportClusters: null, openExceptions: null, activeProviders: null, totalProviders: null,
+  })
 
   useEffect(() => {
     const base = process.env.NEXT_PUBLIC_API_URL || ""
@@ -1432,6 +1444,55 @@ function SystemAdminDashboard() {
       .then((data) => { if (!cancelled) setLlmStatus(data) })
       .catch(() => { if (!cancelled) setLlmStatus(null) })
 
+    // Database status used to be the literal string "SQLite (dev)",
+    // regardless of what was actually configured - /api/health now reports
+    // the real dialect it's connected to (see main.py).
+    fetch(`${base}/api/health`)
+      .then((r) => { if (!r.ok) throw new Error(); return r.json() })
+      .then((data) => { if (!cancelled) setDbDialect(data?.database_dialect ?? null) })
+      .catch(() => { if (!cancelled) setDbDialect(null) })
+
+    // Governance/content pulse: previously a system_admin - who holds
+    // every permission in the app - saw only infra metrics here and had
+    // to visit 4 separate pages to learn the platform's actual state.
+    fetch(`${base}/api/governance/proposals?limit=500`)
+      .then((r) => { if (!r.ok) throw new Error(); return r.json() })
+      .then((data) => {
+        if (cancelled) return
+        const proposals = Array.isArray(data?.proposals) ? data.proposals : []
+        const open = proposals.filter((p: { status?: string }) => OPEN_PROPOSAL_STATUSES.includes(p.status as ProposalStatus)).length
+        setPulse((prev) => ({ ...prev, openProposals: open }))
+      })
+      .catch(() => { if (!cancelled) setPulse((prev) => ({ ...prev, openProposals: null })) })
+
+    fetch(`${base}/api/sop-gap-reports/summary`)
+      .then((r) => { if (!r.ok) throw new Error(); return r.json() })
+      .then((data) => { if (!cancelled) setPulse((prev) => ({ ...prev, gapReportClusters: data?.total_clusters ?? 0 })) })
+      .catch(() => { if (!cancelled) setPulse((prev) => ({ ...prev, gapReportClusters: null })) })
+
+    fetch(`${base}/api/exceptions?limit=500`)
+      .then((r) => { if (!r.ok) throw new Error(); return r.json() })
+      .then((data) => {
+        if (cancelled) return
+        const exceptions = Array.isArray(data?.exceptions) ? data.exceptions : []
+        const open = exceptions.filter((e: { status?: string }) => e.status === "open" || e.status === "under_review").length
+        setPulse((prev) => ({ ...prev, openExceptions: open }))
+      })
+      .catch(() => { if (!cancelled) setPulse((prev) => ({ ...prev, openExceptions: null })) })
+
+    fetch(`${base}/api/evidence/providers`)
+      .then((r) => { if (!r.ok) throw new Error(); return r.json() })
+      .then((data) => {
+        if (cancelled) return
+        const providers = Array.isArray(data?.providers) ? data.providers : []
+        setPulse((prev) => ({
+          ...prev,
+          totalProviders: providers.length,
+          activeProviders: providers.filter((p: { status?: string }) => p.status === "active").length,
+        }))
+      })
+      .catch(() => { if (!cancelled) setPulse((prev) => ({ ...prev, activeProviders: null, totalProviders: null })) })
+
     return () => { cancelled = true }
   }, [])
 
@@ -1448,9 +1509,38 @@ function SystemAdminDashboard() {
     <div className="space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatTile label="Total SOPs" value={sopCount ?? "-"} color="teal" icon={BookOpen} />
-        <StatTile label="Total Users" value={DEMO_USERS.length} color="teal" icon={Users} />
+        <StatTile label="Demo Accounts" value={DEMO_USERS.length} color="teal" icon={Users} />
         <StatTile label="Corpus Chunks Indexed" value={chunkCount ?? "-"} color="gray" icon={Activity} />
         <StatTile label="Audit Events" value={activity.length} color="gray" icon={ClipboardList} trend="up" />
+      </div>
+
+      {/* Governance/content pulse - the platform owner sees no SOP,
+          governance, or evidence signal below without this; every number
+          here comes from a real endpoint, not a fixture. */}
+      <div className="space-y-3">
+        <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
+          Governance Pulse
+        </h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <Link href="/proposals" className="bg-card border border-border shadow-sm rounded-xl p-4 hover:border-[#0B6BCB]/30 transition-colors">
+            <p className="text-[11px] text-muted-foreground uppercase tracking-widest font-semibold mb-1">Open Proposals</p>
+            <p className="text-2xl font-bold font-display text-[#0B6BCB]">{pulse.openProposals ?? "-"}</p>
+          </Link>
+          <Link href="/library" className="bg-card border border-border shadow-sm rounded-xl p-4 hover:border-[#0B6BCB]/30 transition-colors">
+            <p className="text-[11px] text-muted-foreground uppercase tracking-widest font-semibold mb-1">SOP Gap Clusters</p>
+            <p className="text-2xl font-bold font-display text-[#B45309] dark:text-amber-400">{pulse.gapReportClusters ?? "-"}</p>
+          </Link>
+          <Link href="/incidents" className="bg-card border border-border shadow-sm rounded-xl p-4 hover:border-[#0B6BCB]/30 transition-colors">
+            <p className="text-[11px] text-muted-foreground uppercase tracking-widest font-semibold mb-1">Open Exceptions</p>
+            <p className="text-2xl font-bold font-display text-[#B91C1C] dark:text-red-400">{pulse.openExceptions ?? "-"}</p>
+          </Link>
+          <div className="bg-card border border-border shadow-sm rounded-xl p-4">
+            <p className="text-[11px] text-muted-foreground uppercase tracking-widest font-semibold mb-1">Evidence Providers</p>
+            <p className="text-2xl font-bold font-display text-[#15803D] dark:text-green-400">
+              {pulse.activeProviders ?? "-"}<span className="text-muted-foreground text-base">/{pulse.totalProviders ?? "-"}</span>
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -1463,7 +1553,7 @@ function SystemAdminDashboard() {
             {[
               { label: "Backend API", status: backendOnline === null ? "Checking..." : backendOnline ? "Online" : "Offline", color: backendOnline ? "green" as const : backendOnline === false ? "red" as const : "amber" as const },
               { label: "LLM Engine", status: llmLabel, color: llmColor as "green" | "amber" },
-              { label: "Database", status: "SQLite (dev)", color: "teal" as const },
+              { label: "Database", status: dbDialect ?? "Checking...", color: dbDialect ? "teal" as const : "amber" as const },
               { label: "Activity Logging", status: activity.length > 0 ? "Active" : "No events yet", color: activity.length > 0 ? "green" as const : "amber" as const },
             ].map(({ label, status, color }) => (
               <div

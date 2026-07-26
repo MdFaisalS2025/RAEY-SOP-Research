@@ -413,4 +413,13 @@ async def root():
 @app.get("/health")
 @app.get("/api/health")
 async def health():
-    return {"status": "healthy", "llm_provider": settings.LLM_PROVIDER}
+    # database_dialect used to be hardcoded on the frontend ("SQLite
+    # (dev)") regardless of what was actually configured, which silently
+    # went stale the moment DATABASE_URL pointed at Postgres in production.
+    # Derived from the same URL db.py connects with, not guessed.
+    dialect = settings.DATABASE_URL.split("://", 1)[0].split("+", 1)[0] if settings.DATABASE_URL else "unknown"
+    return {
+        "status": "healthy",
+        "llm_provider": settings.LLM_PROVIDER,
+        "database_dialect": dialect,
+    }

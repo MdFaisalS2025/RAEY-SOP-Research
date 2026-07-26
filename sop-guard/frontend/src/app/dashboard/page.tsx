@@ -678,6 +678,49 @@ function NurseDashboard() {
   )
 }
 
+// governance_compliance previously landed on 4 full-height stacked
+// dashboards (department admin, committee, compliance, legal - each with
+// its own 4-tile stat row, ~16 tiles total) with no sense of what actually
+// needs a decision today. This summary pulls the single most decision-
+// relevant number out of each section into one prioritized row up top,
+// with a jump link into the section that has the detail. The 4 sections
+// below are unchanged and still hold the full illustrative detail.
+function GovernanceAttentionSummary() {
+  const awaitingVoteCount = MOCK_PROPOSALS.filter(
+    (p) => p.status === "committee_review" || p.status === "legal_review"
+  ).length
+  const overdueReviewsCount = MOCK_COMPLIANCE.reduce((sum, c) => sum + c.overdue_reviews, 0)
+  const criticalLegalCount = MOCK_LEGAL.filter((l) => l.risk_classification === "critical" && l.status !== "resolved").length
+  const actionRequiredEvidenceCount = MOCK_EVIDENCE_WATCH.filter((e) => e.action_required).length
+
+  const items = [
+    { label: "Proposals awaiting your vote", value: awaitingVoteCount, href: "#committee", color: "amber" as const },
+    { label: "Overdue SOP reviews", value: overdueReviewsCount, href: "#dept-compliance", color: "red" as const },
+    { label: "Critical legal flags open", value: criticalLegalCount, href: "#legal", color: "red" as const },
+    { label: "Evidence alerts needing action", value: actionRequiredEvidenceCount, href: "#committee", color: "amber" as const },
+  ]
+
+  return (
+    <div className="space-y-3">
+      <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
+        Needs Your Attention
+      </h3>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {items.map((item) => (
+          <a
+            key={item.label}
+            href={item.href}
+            className="bg-card border border-border shadow-sm rounded-xl p-4 hover:border-[#0B6BCB]/30 transition-colors block"
+          >
+            <p className={cn("text-2xl font-bold font-display", HEALTH_TEXT_COLOR[item.color])}>{item.value}</p>
+            <p className="text-[11px] text-muted-foreground mt-1">{item.label}</p>
+          </a>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function DeptAdminDashboard() {
   const overdueSops = MOCK_SOPS.filter((s) => s.status === "needs_update")
   // This view's table below spans every department (MOCK_COMPLIANCE.slice(0,5)),
@@ -685,6 +728,11 @@ function DeptAdminDashboard() {
   // to one department - keeps the tiles and the table they sit above consistent.
   const totalDeptSops = MOCK_COMPLIANCE.reduce((sum, c) => sum + c.total_sops, 0)
   const totalOverdueReviews = MOCK_COMPLIANCE.reduce((sum, c) => sum + c.overdue_reviews, 0)
+  // Was hardcoded to the first 5 of 8 departments with no way to see the
+  // rest - the three siblings of this section all show this same
+  // department list in full elsewhere; this one silently truncated it.
+  const [showAllDepts, setShowAllDepts] = useState(false)
+  const visibleDepts = showAllDepts ? MOCK_COMPLIANCE : MOCK_COMPLIANCE.slice(0, 5)
 
   return (
     <div className="space-y-6">
@@ -694,6 +742,8 @@ function DeptAdminDashboard() {
         <StatTile label="Compliance Rate" value={`${avgComplianceScore()}%`} color="amber" icon={ShieldCheck} />
         <StatTile label="Open Proposals" value={openProposalsCount()} color="teal" icon={FileText} />
       </div>
+
+      <IllustrativeNote detail="Showing illustrative department-compliance data, not wired to a live tracking system. See Compliance → Reviews for real attestation records." />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Department Compliance */}
@@ -712,7 +762,7 @@ function DeptAdminDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {MOCK_COMPLIANCE.slice(0, 5).map((c) => (
+                {visibleDepts.map((c) => (
                   <tr key={c.department} className="border-b border-border hover:bg-muted">
                     <td className="px-3 py-2 text-foreground">{c.department}</td>
                     <td className="px-3 py-2 text-right">
@@ -737,6 +787,14 @@ function DeptAdminDashboard() {
               </tbody>
             </table>
             </div>
+            {MOCK_COMPLIANCE.length > 5 && (
+              <button
+                onClick={() => setShowAllDepts((v) => !v)}
+                className="w-full px-3 py-2 text-[11px] font-semibold text-[#0B6BCB] hover:bg-muted transition-colors border-t border-border"
+              >
+                {showAllDepts ? "Show fewer" : `Show all ${MOCK_COMPLIANCE.length} departments`}
+              </button>
+            )}
           </div>
         </div>
 
@@ -859,8 +917,15 @@ function CommitteeDashboard() {
               or take a real approve/reject action. Those previously
               intercepted every click with e.preventDefault() and did
               nothing - looked interactive, did nothing. Real proposal
-              actions live on the actual Governance -> Proposals page. */}
-          {MOCK_PROPOSALS.map((proposal) => (
+              actions live on the actual Governance -> Proposals page.
+              Also previously rendered ALL of MOCK_PROPOSALS under this
+              "Awaiting Your Review" heading regardless of status - now
+              filtered to the same awaitingVote set the stat tile above
+              counts, so the heading and the list agree. */}
+          {awaitingVote.length === 0 && (
+            <p className="text-[12px] text-muted-foreground px-1">Nothing awaiting your review right now.</p>
+          )}
+          {awaitingVote.map((proposal) => (
             <div
               key={proposal.id}
               className="bg-muted border border-border rounded-lg p-4"
@@ -1722,16 +1787,19 @@ export default function DashboardPage() {
         {role === "educator" && <NurseEducatorDashboard />}
         {role === "governance_compliance" && (
           <>
-            <DeptAdminDashboard />
-            <div className="pt-2 border-t border-border">
+            <GovernanceAttentionSummary />
+            <div id="dept-compliance">
+              <DeptAdminDashboard />
+            </div>
+            <div id="committee" className="pt-2 border-t border-border">
               <h2 className="text-xs font-semibold uppercase tracking-widest text-subtle mb-4">Committee</h2>
               <CommitteeDashboard />
             </div>
-            <div className="pt-2 border-t border-border">
+            <div id="compliance" className="pt-2 border-t border-border">
               <h2 className="text-xs font-semibold uppercase tracking-widest text-subtle mb-4">Compliance</h2>
               <ComplianceOfficerDashboard />
             </div>
-            <div className="pt-2 border-t border-border">
+            <div id="legal" className="pt-2 border-t border-border">
               <h2 className="text-xs font-semibold uppercase tracking-widest text-subtle mb-4">Legal &amp; Risk</h2>
               <LegalRiskDashboard />
             </div>

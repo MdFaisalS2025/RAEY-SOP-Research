@@ -17,7 +17,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import {
   ShieldCheck, AlertTriangle, FileText, ExternalLink, GitCompare, History,
   BookOpen, Download, Printer, Flag, PlusCircle, HelpCircle, ChevronDown, ChevronUp,
-  Link2, Check, Loader2, CheckCircle2, ClipboardEdit, Search, Building2,
+  Link2, Check, Loader2, CheckCircle2, ClipboardEdit, Search, Building2, RotateCcw, Square,
 } from "lucide-react"
 import { type InlineCitation } from "@/components/query/citation-chip"
 import { cn } from "@/lib/utils"
@@ -219,12 +219,15 @@ function AlignmentStatusLine({
 export function ChatAnswerMessage({
   data,
   onFollowup,
+  onRetry,
   readingLevel,
   onReadingLevelChange,
   isLatest,
 }: {
   data: AssistantData
   onFollowup: (q: string) => void
+  /** Resubmits data.query. Only meaningful when data.error is set. */
+  onRetry?: () => void
   readingLevel: ReadingLevel
   onReadingLevelChange: (v: ReadingLevel) => void
   isLatest: boolean
@@ -379,14 +382,29 @@ export function ChatAnswerMessage({
           <div className="w-10 h-10 rounded-xl bg-[#FEE2E2] dark:bg-red-500/10 flex items-center justify-center shrink-0">
             <AlertTriangle className="w-5 h-5 text-[#B91C1C] dark:text-red-400" />
           </div>
-          <div>
-            <p className="font-semibold text-foreground mb-1">Backend unavailable</p>
-            <p className="text-[15px] text-muted-foreground">Could not reach the Meridian backend. Make sure the Python server is running on port 8000, then try again.</p>
-            <p className="text-xs text-muted-foreground mt-3 font-mono bg-muted px-3 py-2 rounded-lg inline-block">
-              cd backend &amp;&amp; uvicorn app.main:app --reload
-            </p>
+          <div className="flex-1">
+            <p className="font-semibold text-foreground mb-1">Couldn't get an answer</p>
+            <p className="text-[15px] text-muted-foreground">Meridian couldn't reach the server for this question. Your question wasn't lost - try again.</p>
+            {onRetry && (
+              <button
+                onClick={onRetry}
+                className="press mt-3 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-medium bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 hover:bg-[#FECACA] dark:hover:bg-red-500/20 transition-colors">
+                <RotateCcw className="w-3.5 h-3.5" /> Try again
+              </button>
+            )}
           </div>
         </div>
+      </div>
+    )
+  }
+
+  if (data.stopped) {
+    return (
+      <div className="px-1">
+        <AnswerRenderer text={data.answer || "(stopped before any text was generated)"} citations={data.inlineCitations} animate={false} />
+        <p className="mt-2 text-xs text-muted-foreground italic flex items-center gap-1.5">
+          <Square className="w-3 h-3 fill-current" /> Generation stopped
+        </p>
       </div>
     )
   }
@@ -520,6 +538,17 @@ export function ChatAnswerMessage({
                 className="text-muted-foreground cursor-help"
               >
                 {generationTag}
+              </span>
+            </>
+          )}
+          {data.contextDegraded && (
+            <>
+              <span className="text-subtle">·</span>
+              <span
+                title="The conversational path failed for this turn, so it was answered without your earlier questions as context - a follow-up referencing them may not land."
+                className="text-[#B45309] dark:text-amber-400 cursor-help"
+              >
+                Answered without conversation memory
               </span>
             </>
           )}

@@ -80,6 +80,24 @@ const TILE_VALUE: Record<string, string> = {
   green: "text-[#15803D] dark:text-green-400",
 }
 
+// System Health status dots/labels used to build their classes dynamically
+// (`` `bg-${color}-400` ``, `` `text-${color}-400` ``) - Tailwind can only
+// see literal class strings at build time, so those never made it into the
+// compiled CSS and every dot/label rendered unstyled. Literal maps, same
+// pattern as TILE_BORDER/TILE_VALUE above.
+const HEALTH_DOT_COLOR: Record<"green" | "amber" | "red" | "teal", string> = {
+  green: "bg-[#15803D] dark:bg-green-400",
+  amber: "bg-[#B45309] dark:bg-amber-400",
+  red: "bg-[#B91C1C] dark:bg-red-400",
+  teal: "bg-[#0B6BCB]",
+}
+const HEALTH_TEXT_COLOR: Record<"green" | "amber" | "red" | "teal", string> = {
+  green: "text-[#15803D] dark:text-green-400",
+  amber: "text-[#B45309] dark:text-amber-400",
+  red: "text-[#B91C1C] dark:text-red-400",
+  teal: "text-[#0B6BCB]",
+}
+
 function StatTile({ label, value, trend, color = "teal", icon: Icon }: StatTileProps) {
   return (
     <div
@@ -159,7 +177,11 @@ function avgComplianceScore(): number {
 function SopCard({ sop }: { sop: typeof MOCK_SOPS[0] }) {
   return (
     <Link
-      href={`/library/${sop.id}`}
+      // /library/[id] does not exist - the library page reads a SOP via
+      // ?sopId=<sop_id> instead (see library/page.tsx and MostSearchedSops
+      // above, which already gets this right). Every card built from this
+      // component used to 404 into not-found.tsx.
+      href={`/library?sopId=${encodeURIComponent(sop.sop_id)}`}
       className="block bg-muted border border-border rounded-lg p-4 hover:border-[#0B6BCB]/30 transition-colors group"
     >
       <div className="flex items-start justify-between gap-2 mb-2">
@@ -420,9 +442,12 @@ function PhysicianDashboard() {
               Evidence Watch
             </h3>
             {evidenceAlert && (
-              <Link
-                href="/evidence-watch"
-                className="block bg-muted border border-[#FDE68A] dark:border-amber-500/30 rounded-lg p-4 hover:border-[#FDE68A] dark:border-amber-500/30 transition-colors"
+              // Not a link to /evidence-watch: that page gates clinical_staff
+              // out with an Access Restricted screen, so this card used to
+              // send its own audience somewhere they're immediately blocked
+              // from. Surfaced here instead, non-interactively.
+              <div
+                className="bg-muted border border-[#FDE68A] dark:border-amber-500/30 rounded-lg p-4"
               >
                 <div className="flex items-start gap-2">
                   <AlertTriangle className="w-4 h-4 text-[#B45309] dark:text-amber-400 shrink-0 mt-0.5" />
@@ -437,7 +462,7 @@ function PhysicianDashboard() {
                     </div>
                   </div>
                 </div>
-              </Link>
+              </div>
             )}
           </div>
 
@@ -1248,8 +1273,8 @@ function SystemAdminDashboard() {
               >
                 <span className="text-[12px] text-muted-foreground">{label}</span>
                 <div className="flex items-center gap-1.5">
-                  <div className={cn("w-1.5 h-1.5 rounded-full", `bg-${color}-400`)} />
-                  <span className={cn("text-[11px] font-semibold", `text-${color}-400`)}>{status}</span>
+                  <div className={cn("w-1.5 h-1.5 rounded-full", HEALTH_DOT_COLOR[color])} />
+                  <span className={cn("text-[11px] font-semibold", HEALTH_TEXT_COLOR[color])}>{status}</span>
                 </div>
               </div>
             ))}
@@ -1350,7 +1375,6 @@ export default function DashboardPage() {
             <div>
               <h1 className="text-2xl font-bold text-foreground mb-1">
                 {greeting}, {currentUser.name.split(" ")[0]}
-                {currentUser.name.includes("Dr.") || currentUser.name.includes("Nurse") ? "" : ""}
               </h1>
               <p className="text-[13px] text-muted-foreground">{currentUser.title}</p>
             </div>

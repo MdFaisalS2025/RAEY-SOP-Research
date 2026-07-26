@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect } from "react"
+import { createContext, useContext, useState, useLayoutEffect } from "react"
 import type { UserRole, DemoUser } from "./governance-types"
 import { DEMO_USERS, ROLE_CONFIG } from "./mock-data"
 
@@ -68,8 +68,13 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "view_sops", "query_ai", "manage_training", "view_compliance",
     "create_proposal",
   ],
+  // review_proposal deliberately excluded: clinical_staff is blocked from
+  // /proposals and /committee entirely, but holding this permission let a
+  // clinical user who followed their own dashboard's "My Open Proposals"
+  // link vote on it anyway at /proposals/[id] - an inconsistency, not an
+  // intended capability. create_proposal (raising a concern) stays.
   clinical_staff: [
-    "view_sops", "query_ai", "create_proposal", "review_proposal",
+    "view_sops", "query_ai", "create_proposal",
     "acknowledge_sop", "complete_training",
   ],
 }
@@ -79,7 +84,12 @@ const RoleContext = createContext<RoleContextValue | null>(null)
 export function RoleProvider({ children }: { children: React.ReactNode }) {
   const [role, setRoleState] = useState<UserRole>("clinical_staff")
 
-  useEffect(() => {
+  // useLayoutEffect, not useEffect: this still renders "clinical_staff"
+  // first (matching SSR, so no hydration mismatch), but corrects it
+  // synchronously before the browser paints rather than after - so a
+  // saved system_admin/educator/governance_compliance role no longer
+  // flashes one frame of the clinical_staff dashboard on every reload.
+  useLayoutEffect(() => {
     const saved = localStorage.getItem("meridian-demo-role") as UserRole | null
     if (saved && DEMO_USERS.find(u => u.role === saved)) {
       setRoleState(saved)

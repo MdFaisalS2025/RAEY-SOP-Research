@@ -28,7 +28,6 @@ import {
   Activity,
   LogOut,
   ChevronDown,
-  RefreshCw,
   Check,
   Landmark,
   AlertOctagon,
@@ -783,16 +782,14 @@ export function TopNav() {
                         </p>
                       </div>
 
-                      {/* Actions */}
+                      {/* Actions. "Switch Profile" used to live here as a
+                          button that only closed this menu - no role
+                          switch, no navigation. The real role switcher is
+                          the dedicated control right next to this one
+                          (RoleSwitcher, "Switch demo role"), so the entry
+                          was removed rather than wired, to avoid two
+                          controls doing the same job. */}
                       <div className="py-1">
-                        <button
-                          onClick={() => setProfileOpen(false)}
-                          className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-[12px] text-[#334155] dark:text-slate-300 hover:bg-muted dark:hover:bg-white/[0.05] hover:text-foreground dark:hover:text-white transition-colors"
-                        >
-                          <RefreshCw className="w-3.5 h-3.5 text-[#94A3B8] dark:text-slate-500" />
-                          Switch Profile
-                        </button>
-                        <div className="h-px bg-[#EDF1F5] dark:bg-white/[0.06] my-1" />
                         <button
                           onClick={handleSignOut}
                           className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-[12px] text-[#B91C1C] dark:text-red-400 dark:text-red-400 hover:bg-[#FEE2E2] dark:bg-red-500/10 dark:hover:bg-red-500/10 hover:text-[#991B1B] dark:hover:text-red-300 transition-colors"

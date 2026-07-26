@@ -137,14 +137,15 @@ export function VoiceRecorder({ onTranscript }: VoiceRecorderProps) {
   }
 
   function goToConfirmation(text: string) {
+    // Previously fell back to a fabricated sample question
+    // ("What are the steps for sepsis management?") when nothing was
+    // heard, which rendered as if it were the user's real transcript.
+    // Leave the transcript genuinely empty instead - the amber "No
+    // speech was detected" copy below already explains why, and "Use
+    // This" is already disabled while the field is empty.
     const cleaned = text.trim()
-    if (cleaned) {
-      setTranscript(cleaned)
-      setIsBrowserSpeech(true)
-    } else {
-      setTranscript("What are the steps for sepsis management?")
-      setIsBrowserSpeech(false)
-    }
+    setTranscript(cleaned)
+    setIsBrowserSpeech(!!cleaned)
     setState("confirming")
   }
 

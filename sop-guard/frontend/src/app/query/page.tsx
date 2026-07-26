@@ -807,6 +807,10 @@ export default function QueryPage() {
     setStreamingText("")
     setRevealedText("")
     try { localStorage.removeItem(CHAT_SESSION_KEY) } catch { /* ignore */ }
+    // The submitted->empty-state transition remounts the composer (same
+    // reason as the effect above), so put focus back on it explicitly
+    // rather than leaving it stranded on the button just clicked.
+    requestAnimationFrame(() => textareaRef.current?.focus())
   }
 
   // Cancels the in-flight generation. Whatever text had streamed in so far
@@ -1008,6 +1012,23 @@ export default function QueryPage() {
     el.style.height = `${Math.min(el.scrollHeight, 200)}px`
   }, [query])
 
+  // The composer is one JSX value (`composer` below) rendered into two
+  // mutually-exclusive parent trees - the centered empty-state block and
+  // the sticky footer - so React unmounts/remounts it, and the textarea,
+  // the moment the first message flips `submitted` from false to true.
+  // That silently drops keyboard focus after the very first send. Put it
+  // back on the newly-mounted textarea rather than restructuring the two
+  // layouts into one (a bigger, riskier change for a one-line symptom).
+  useEffect(() => {
+    if (submitted) textareaRef.current?.focus()
+  }, [submitted])
+
+  // Focus the composer on first load too, like Claude/ChatGPT - a fresh
+  // visit should be ready to type immediately.
+  useEffect(() => {
+    textareaRef.current?.focus()
+  }, [])
+
   const canSend = !!query.trim() && !loading && !(phi?.has_phi && !phiAcknowledged)
 
   const composer = (
@@ -1017,13 +1038,20 @@ export default function QueryPage() {
         aria-label={submitted ? "Ask a follow-up question" : "Ask about a protocol or procedure"}
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSubmit() } }}
+        onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); handleSubmit() } }}
         placeholder={submitted ? "Ask a follow-up…" : "Ask about a protocol or procedure…"}
         rows={1}
         className="w-full bg-transparent border-0 px-4 pt-3.5 pb-1 resize-none focus:outline-none focus:ring-0 text-foreground placeholder:text-subtle caret-[#0B6BCB] text-base max-h-[200px] overflow-y-auto"
       />
       <div className="flex items-center justify-end gap-1.5 px-2.5 pb-2.5">
-        {voiceInputEnabled && <VoiceRecorder onTranscript={(t) => { setQuery(t) }} />}
+        {voiceInputEnabled && (
+          <VoiceRecorder onTranscript={(t) => {
+            // Append to, rather than replace, anything already typed -
+            // voice input is a second way to add to the question, not a
+            // reset of it.
+            setQuery(q => (q.trim() ? `${q.trim()} ${t}` : t))
+          }} />
+        )}
         <button
           onClick={loading ? handleStop : () => handleSubmit()}
           disabled={loading ? false : !canSend}
@@ -1178,7 +1206,7 @@ export default function QueryPage() {
               <SafetyNote className="mt-2" />
               <div className="mt-4 flex gap-2 overflow-x-auto pb-2 scrollbar-thin sm:flex-wrap sm:justify-center">
                 {suggestedQueries.map((q) => (
-                  <button key={q} onClick={() => setQuery(q)}
+                  <button key={q} onClick={() => handleSubmit(q)}
                     className="px-3 py-1.5 rounded-lg bg-muted text-sm text-muted-foreground hover:text-foreground border border-border transition-colors whitespace-nowrap shrink-0 sm:whitespace-normal sm:shrink">
                     {q}
                   </button>

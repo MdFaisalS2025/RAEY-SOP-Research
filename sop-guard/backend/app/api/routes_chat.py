@@ -11,7 +11,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.db import get_db
@@ -61,6 +61,7 @@ def _message_to_dict(m: ChatMessageRecord) -> dict:
         "role": m.role,
         "content": m.content,
         "citations": m.citations or [],
+        "extra": m.extra or {},
         "created_at": m.created_at.isoformat() if m.created_at else "",
     }
 
@@ -77,6 +78,44 @@ async def create_session(req: Optional[ChatSessionCreate] = None, db: AsyncSessi
         "title": session.title,
         "created_at": session.created_at.isoformat() if session.created_at else "",
     }
+
+
+@router.get("/api/chat/sessions")
+async def list_sessions(limit: int = 50, db: AsyncSession = Depends(get_db)):
+    """List chat sessions, most recent first, for the conversation sidebar.
+    Sessions with zero messages (created but abandoned - e.g. the request
+    that would have sent the first message failed) are left out rather
+    than shown as an empty, unopenable row."""
+    sessions = (await db.execute(
+        select(ChatSessionRecord).order_by(ChatSessionRecord.created_at.desc()).limit(limit)
+    )).scalars().all()
+    result = []
+    for s in sessions:
+        count = (await db.execute(
+            select(func.count(ChatMessageRecord.id)).where(ChatMessageRecord.session_id == s.id)
+        )).scalar_one()
+        if count == 0:
+            continue
+        result.append({
+            "id": s.id,
+            "title": s.title,
+            "created_at": s.created_at.isoformat() if s.created_at else "",
+            "message_count": count,
+        })
+    return {"sessions": result}
+
+
+@router.delete("/api/chat/sessions/{session_id}")
+async def delete_session(session_id: int, db: AsyncSession = Depends(get_db)):
+    """Delete a chat session and its messages (cascade)."""
+    session = (await db.execute(
+        select(ChatSessionRecord).where(ChatSessionRecord.id == session_id)
+    )).scalar_one_or_none()
+    if not session:
+        raise HTTPException(status_code=404, detail=f"Chat session {session_id} not found.")
+    await db.delete(session)
+    await db.commit()
+    return {"deleted": True}
 
 
 @router.get("/api/chat/sessions/{session_id}")
@@ -132,18 +171,42 @@ async def _build_context(session_id: int, db: AsyncSession) -> tuple[list[ChatMe
 
 async def _persist_chat_messages(
     session: ChatSessionRecord, session_id: int, req: ChatMessageCreate,
-    history: list[ChatMessageRecord], answer: str, citations: list, db: AsyncSession,
+    history: list[ChatMessageRecord], result, db: AsyncSession,
 ) -> tuple[Optional[int], Optional[int]]:
     """Best-effort persistence of the user + assistant messages. Never
-    raises - the answer has already been generated."""
+    raises - the answer has already been generated.
+
+    `result` is the QueryResponse the pipeline produced - beyond the
+    answer text and citations, its route/generation_mode/confidence_tier/
+    followup_questions/verification_result are saved into the assistant
+    message's `extra` column so a page reload can restore the full
+    answer (caption line, follow-up chips, Trust panel) instead of
+    falling back to blank defaults - see get_session's use of this."""
     user_msg_id = None
     assistant_msg_id = None
     try:
+        verification_result = None
+        if getattr(result, "verification_result", None) is not None:
+            try:
+                verification_result = result.verification_result.model_dump()
+            except AttributeError:
+                verification_result = result.verification_result
+        extra = {
+            "route": getattr(result, "route", ""),
+            "generation_mode": getattr(result, "generation_mode", ""),
+            "confidence": getattr(result, "confidence", None),
+            "confidence_tier": getattr(result, "confidence_tier", ""),
+            "numeric_verification": getattr(result, "numeric_verification", None),
+            "followup_questions": getattr(result, "followup_questions", []),
+            "verification_result": verification_result,
+            "abstained": getattr(result, "abstained", False),
+        }
         user_msg = ChatMessageRecord(
             session_id=session_id, role="user", content=req.content, citations=[]
         )
         assistant_msg = ChatMessageRecord(
-            session_id=session_id, role="assistant", content=answer, citations=citations or [],
+            session_id=session_id, role="assistant", content=result.answer,
+            citations=result.inline_citations or [], extra=extra,
         )
         db.add(user_msg)
         db.add(assistant_msg)
@@ -216,7 +279,7 @@ async def post_message(
         )
 
     user_msg_id, assistant_msg_id = await _persist_chat_messages(
-        session, session_id, req, history, result.answer, result.inline_citations, db
+        session, session_id, req, history, result, db
     )
     result.answer_id = await log_query_result(db, req.content, result)
 
@@ -257,7 +320,7 @@ async def post_message_stream(
 
     async def _finalize(result):
         user_msg_id, assistant_msg_id = await _persist_chat_messages(
-            session, session_id, req, history, result.answer, result.inline_citations, db
+            session, session_id, req, history, result, db
         )
         result.answer_id = await log_query_result(db, req.content, result)
         payload = json.loads(result.model_dump_json())

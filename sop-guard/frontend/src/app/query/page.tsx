@@ -9,6 +9,9 @@ import {
   RotateCcw,
   ShieldAlert,
   Square,
+  Pencil,
+  MessageSquare,
+  Trash2,
 } from "lucide-react"
 import { type InlineCitation } from "@/components/query/citation-chip"
 import { AnswerRenderer } from "@/components/query/answer-renderer"
@@ -319,6 +322,58 @@ function AnswerSkeleton() {
   )
 }
 
+// A sent question, with a hover-revealed Edit affordance (Claude/ChatGPT
+// pattern) - editing and saving discards this message and everything
+// after it, then resubmits the edited text as a new turn, exactly like
+// asking again with a corrected question.
+function UserMessageBubble({ content, onEdit }: { content: string; onEdit: (newText: string) => void }) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState(content)
+  const taRef = useRef<HTMLTextAreaElement | null>(null)
+  useEffect(() => { if (editing) { taRef.current?.focus(); taRef.current?.select() } }, [editing])
+
+  if (editing) {
+    return (
+      <div className="w-full max-w-[85%] sm:max-w-[65%] ml-auto">
+        <textarea
+          ref={taRef}
+          aria-label="Edit question"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") { setEditing(false); setDraft(content) }
+            if (e.key === "Enter" && !e.shiftKey && draft.trim()) { e.preventDefault(); setEditing(false); onEdit(draft.trim()) }
+          }}
+          rows={Math.min(8, draft.split("\n").length + 1)}
+          className="w-full px-4 py-2.5 rounded-2xl border border-[#0B6BCB]/40 bg-card text-[15px] leading-relaxed text-foreground resize-none focus:outline-none"
+        />
+        <div className="flex justify-end gap-2 mt-1.5">
+          <button onClick={() => { setEditing(false); setDraft(content) }}
+            className="text-xs font-medium px-2.5 py-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+            Cancel
+          </button>
+          <button onClick={() => { setEditing(false); onEdit(draft.trim()) }} disabled={!draft.trim()}
+            className="text-xs font-medium px-3 py-1.5 rounded-lg bg-[#0B6BCB] hover:bg-[#0959AC] text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+            Save &amp; Submit
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="group flex items-center gap-1 justify-end">
+      <button onClick={() => setEditing(true)} title="Edit and resend" aria-label="Edit and resend"
+        className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted shrink-0">
+        <Pencil className="w-3.5 h-3.5" />
+      </button>
+      <div className="max-w-[85%] sm:max-w-[65%] px-4 py-2.5 rounded-2xl rounded-br-md bg-[#0B6BCB]/[0.08] border border-[#0B6BCB]/15 text-[15px] leading-relaxed text-foreground whitespace-pre-wrap">
+        {content}
+      </div>
+    </div>
+  )
+}
+
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 let messageCounter = 0
@@ -352,6 +407,13 @@ export default function QueryPage() {
   const [queryHistory, setQueryHistory] = useState<Array<{ query: string; confidence: number; type: string; timestamp: number }>>([])
   const [showHistory, setShowHistory] = useState(false)
   const historyRef = useRef<HTMLDivElement>(null)
+  // Past conversations (distinct from the query-only History popover
+  // above) - opening one loads its full thread via loadSession, closing
+  // the gap where History only ever filled the composer with a past
+  // question rather than actually reopening a conversation.
+  const [showConversations, setShowConversations] = useState(false)
+  const [conversations, setConversations] = useState<Array<{ id: number; title: string; created_at: string; message_count: number }> | null>(null)
+  const conversationsRef = useRef<HTMLDivElement>(null)
   // Respects the Voice Input toggle on Settings ("meridian-settings" in
   // localStorage) - that toggle previously had no consumer anywhere, so
   // turning it off did nothing. Defaults to on (matches the toggle's
@@ -531,50 +593,61 @@ export default function QueryPage() {
     try { localStorage.setItem(READING_LEVEL_KEY, v) } catch { /* ignore */ }
   }
 
-  // Restore chat session on mount
-  useEffect(() => {
-    const sid = sessionStorage.getItem(CHAT_SESSION_KEY)
-    if (!sid) return
-    fetch(`/api/chat/sessions/${sid}`)
+  // Loads a chat session's full message history, non-lossy: each
+  // assistant message is rehydrated through the same mapResponse() used
+  // for a live answer (backed by the `extra` column persisted at
+  // generation time - see routes_chat.py's _persist_chat_messages) rather
+  // than filling in blank defaults, so the Version History link,
+  // generation-mode tag, follow-up chips and Trust panel contents all
+  // survive a reload instead of silently vanishing.
+  const loadSession = (sid: string): Promise<boolean> => {
+    return fetch(`/api/chat/sessions/${sid}`)
       .then(r => { if (!r.ok) throw new Error(); return r.json() })
       .then((session: any) => {
-        if (!Array.isArray(session?.messages)) return
-        const restored: ChatMessage[] = session.messages.map((m: any) => {
-          if (m.role === "user") return { id: nextId(), role: "user" as const, content: String(m.content ?? "") }
-          return {
-            id: nextId(),
-            role: "assistant" as const,
-            data: {
-              query: "",
-              answer: String(m.content ?? ""),
-              verification: emptyVerification(),
-              sources: [],
-              reasoning: "",
-              faithfulness: null,
-              sopConflicts: [],
-              inlineCitations: mapCitations(m.citations),
-              followupQuestions: [],
-              abstained: /not covered in the available SOPs/i.test(String(m.content ?? "")),
-              generationMode: null,
-              responseTimeMs: null,
-              answerId: m.answer_id != null ? String(m.answer_id) : null,
-              entities: {},
-              answeredAt: m.created_at ? new Date(m.created_at).getTime() : Date.now(),
-            },
+        if (!Array.isArray(session?.messages)) return false
+        const restored: ChatMessage[] = []
+        let pendingQuery = ""
+        for (const m of session.messages) {
+          if (m.role === "user") {
+            pendingQuery = String(m.content ?? "")
+            restored.push({ id: nextId(), role: "user" as const, content: pendingQuery })
+            continue
           }
-        })
-        // Backfill assistant query text from preceding user message
-        for (let i = 0; i < restored.length; i++) {
-          const m = restored[i]
-          if (m.role === "assistant" && i > 0) {
-            const prev = restored[i - 1]
-            if (prev.role === "user") m.data.query = prev.content
+          const extra = (m.extra && typeof m.extra === "object") ? m.extra : {}
+          const synthetic = {
+            answer: m.content ?? "",
+            confidence: extra.confidence,
+            verification_result: extra.verification_result ?? null,
+            retrieved_chunks: [],
+            reasoning_trace: [],
+            sop_conflicts: [],
+            inline_citations: m.citations ?? [],
+            followup_questions: extra.followup_questions ?? [],
+            abstained: extra.abstained ?? /not covered in the available SOPs/i.test(String(m.content ?? "")),
+            route: extra.route ?? "sop_library",
+            generation_mode: extra.generation_mode ?? "",
+            answer_id: null,
+            entities: {},
+            confidence_tier: extra.confidence_tier ?? "",
+            numeric_verification: extra.numeric_verification ?? null,
           }
+          const data = mapResponse(pendingQuery, synthetic, m.created_at ? new Date(m.created_at).getTime() : Date.now())
+          data.answeredAt = m.created_at ? new Date(m.created_at).getTime() : Date.now()
+          restored.push({ id: nextId(), role: "assistant" as const, data })
         }
         setMessages(restored)
         setSessionId(sid)
+        return true
       })
-      .catch(() => { sessionStorage.removeItem(CHAT_SESSION_KEY) })
+      .catch(() => false)
+  }
+
+  // Restore chat session on mount
+  useEffect(() => {
+    const sid = localStorage.getItem(CHAT_SESSION_KEY)
+    if (!sid) return
+    loadSession(sid).then(ok => { if (!ok) localStorage.removeItem(CHAT_SESSION_KEY) })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Track whether the reader is already near the bottom, so a new answer
@@ -682,6 +755,42 @@ export default function QueryPage() {
     }
   }, [showHistory])
 
+  // Click-outside/Escape close for the Conversations popover, and a fresh
+  // fetch each time it opens (a session finished elsewhere - or deleted -
+  // since the last open shouldn't show stale data).
+  useEffect(() => {
+    if (!showConversations) return
+    fetch("/api/chat/sessions")
+      .then(r => { if (!r.ok) throw new Error(); return r.json() })
+      .then(d => setConversations(Array.isArray(d?.sessions) ? d.sessions : []))
+      .catch(() => setConversations([]))
+    const handleClickOutside = (e: MouseEvent) => {
+      if (conversationsRef.current && !conversationsRef.current.contains(e.target as Node)) setShowConversations(false)
+    }
+    const handleKeyDown = (e: KeyboardEvent) => { if (e.key === "Escape") setShowConversations(false) }
+    document.addEventListener("mousedown", handleClickOutside)
+    document.addEventListener("keydown", handleKeyDown)
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+      document.removeEventListener("keydown", handleKeyDown)
+    }
+  }, [showConversations])
+
+  const handleOpenConversation = async (id: number) => {
+    setShowConversations(false)
+    const ok = await loadSession(String(id))
+    if (ok) { try { localStorage.setItem(CHAT_SESSION_KEY, String(id)) } catch { /* ignore */ } }
+  }
+
+  const handleDeleteConversation = async (id: number, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setConversations(prev => prev ? prev.filter(c => c.id !== id) : prev)
+    try {
+      await fetch(`/api/chat/sessions/${id}`, { method: "DELETE" })
+    } catch { /* best-effort - it'll reappear on next open if this failed */ }
+    if (sessionId === String(id)) resetConversation()
+  }
+
   const allHistory = [
     ...queryHistory,
     ...serverHistory
@@ -697,7 +806,7 @@ export default function QueryPage() {
     setLoading(false)
     setStreamingText("")
     setRevealedText("")
-    try { sessionStorage.removeItem(CHAT_SESSION_KEY) } catch { /* ignore */ }
+    try { localStorage.removeItem(CHAT_SESSION_KEY) } catch { /* ignore */ }
   }
 
   // Cancels the in-flight generation. Whatever text had streamed in so far
@@ -705,6 +814,25 @@ export default function QueryPage() {
   // there is no retry chain after a user-initiated stop.
   const handleStop = () => {
     abortControllerRef.current?.abort()
+  }
+
+  // Discards the latest answer and asks the same question again.
+  const handleRegenerate = (q: string) => {
+    if (loading) return
+    setMessages(prev => prev.slice(0, -1))
+    handleSubmit(q, true)
+  }
+
+  // Edit-and-resend: drops the edited message and everything after it
+  // (its old answer, and any later turns that were built on top of it),
+  // then resubmits the edited text as a fresh question.
+  const handleEditResend = (messageId: string, newText: string) => {
+    if (!newText || loading) return
+    setMessages(prev => {
+      const idx = prev.findIndex(m => m.id === messageId)
+      return idx === -1 ? prev : prev.slice(0, idx)
+    })
+    handleSubmit(newText, true)
   }
 
   const handleSubmit = async (overrideQuery?: string, skipPhiGate = false) => {
@@ -758,7 +886,7 @@ export default function QueryPage() {
           if (created?.id == null) throw new Error("bad session response")
           sid = String(created.id)
           setSessionId(sid)
-          try { sessionStorage.setItem(CHAT_SESSION_KEY, sid) } catch { /* ignore */ }
+          try { localStorage.setItem(CHAT_SESSION_KEY, sid) } catch { /* ignore */ }
         }
         response = await streamSSE(
           `/api/chat/sessions/${sid}/messages/stream`,
@@ -941,6 +1069,51 @@ export default function QueryPage() {
                 effect only attached while open, plain conditional render -
                 no AnimatePresence/exit) instead of the old full-width inline
                 card that pushed the whole thread down when opened. */}
+            <div className="relative" ref={conversationsRef}>
+              <button onClick={() => setShowConversations(!showConversations)}
+                className={cn("inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-colors",
+                  showConversations ? "bg-[#0B6BCB]/10 text-[#0B6BCB]" : "text-muted-foreground hover:text-foreground hover:bg-muted")}
+                title="Past conversations" aria-expanded={showConversations} aria-haspopup="menu">
+                <MessageSquare className="w-4 h-4" />
+                Conversations
+              </button>
+              {showConversations && (
+                <motion.div initial={{ opacity: 0, y: -6, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }}
+                  className="absolute right-0 top-full mt-1.5 z-30 w-80 max-w-[calc(100vw-2rem)] p-4 rounded-2xl bg-card border border-border shadow-lg">
+                  <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                    <MessageSquare className="w-4 h-4 text-[#0B6BCB]" />
+                    Conversations
+                  </h3>
+                  {conversations === null ? (
+                    <p className="text-sm text-muted-foreground py-4 text-center">Loading…</p>
+                  ) : conversations.length === 0 ? (
+                    <p className="text-sm text-muted-foreground py-4 text-center">No saved conversations yet - ask a question to start one.</p>
+                  ) : (
+                    <div className="space-y-1 max-h-80 overflow-y-auto">
+                      {conversations.map((c) => (
+                        <div key={c.id}
+                          onClick={() => handleOpenConversation(c.id)}
+                          role="button" tabIndex={0}
+                          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleOpenConversation(c.id) } }}
+                          className={cn("w-full text-left p-2.5 rounded-xl hover:bg-muted border border-transparent hover:border-border transition-all cursor-pointer flex items-center gap-2 group",
+                            sessionId === String(c.id) && "bg-[#0B6BCB]/[0.06] border-[#0B6BCB]/20")}>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm truncate">{c.title || "New conversation"}</p>
+                            <p className="text-xs text-muted-foreground">{Math.ceil(c.message_count / 2)} {c.message_count === 2 ? "turn" : "turns"}</p>
+                          </div>
+                          <button
+                            onClick={(e) => handleDeleteConversation(c.id, e)}
+                            title="Delete conversation" aria-label={`Delete conversation: ${c.title || "New conversation"}`}
+                            className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity p-1.5 rounded-lg text-muted-foreground hover:text-[#B91C1C] dark:hover:text-red-400 hover:bg-[#FEE2E2] dark:hover:bg-red-500/10 shrink-0">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </div>
             <div className="relative" ref={historyRef}>
               <button onClick={() => setShowHistory(!showHistory)}
                 className={cn("inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-colors",
@@ -1014,10 +1187,8 @@ export default function QueryPage() {
           {messages.map((m) => {
             if (m.role === "user") {
               return (
-                <div key={m.id} id={`msg-${m.id}`} className="flex justify-end scroll-mt-20">
-                  <div className="max-w-[85%] sm:max-w-[65%] px-4 py-2.5 rounded-2xl rounded-br-md bg-[#0B6BCB]/[0.08] border border-[#0B6BCB]/15 text-[15px] leading-relaxed text-foreground">
-                    {m.content}
-                  </div>
+                <div key={m.id} id={`msg-${m.id}`} className="scroll-mt-20">
+                  <UserMessageBubble content={m.content} onEdit={(newText) => handleEditResend(m.id, newText)} />
                 </div>
               )
             }
@@ -1027,6 +1198,7 @@ export default function QueryPage() {
                 data={m.data}
                 onFollowup={(q) => handleSubmit(q)}
                 onRetry={m.data.error ? () => handleSubmit(m.data.query) : undefined}
+                onRegenerate={m.id === lastAssistantId && !m.data.error && !m.data.stopped ? () => handleRegenerate(m.data.query) : undefined}
                 readingLevel={readingLevel}
                 onReadingLevelChange={changeReadingLevel}
                 isLatest={m.id === lastAssistantId}

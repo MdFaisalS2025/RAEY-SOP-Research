@@ -313,6 +313,12 @@ class ChatMessageRecord(Base):
     role = Column(String(16), nullable=False)  # 'user' | 'assistant'
     content = Column(Text, default="")
     citations = Column(JSON, default=list)
+    # Assistant-only: route/generation_mode/confidence_tier/confidence/
+    # numeric_redaction_applied/followup_questions/verification_result -
+    # everything a page reload needs to restore the answer's caption line,
+    # follow-up chips and Trust panel without falling back to blank
+    # defaults. See routes_chat.py's _persist_chat_messages.
+    extra = Column(JSON, default=dict)
     created_at = Column(DateTime, default=_utcnow)
 
     session = relationship("ChatSessionRecord", back_populates="messages")

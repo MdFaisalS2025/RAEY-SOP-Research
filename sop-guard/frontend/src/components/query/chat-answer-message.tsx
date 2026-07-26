@@ -17,7 +17,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import {
   ShieldCheck, AlertTriangle, FileText, ExternalLink, GitCompare, History,
   BookOpen, Download, Printer, Flag, PlusCircle, HelpCircle, ChevronDown, ChevronUp,
-  Link2, Check, Loader2, CheckCircle2, ClipboardEdit, Search, Building2, RotateCcw, Square,
+  Link2, Check, Loader2, CheckCircle2, ClipboardEdit, Search, Building2, RotateCcw, Square, Copy,
 } from "lucide-react"
 import { type InlineCitation } from "@/components/query/citation-chip"
 import { cn } from "@/lib/utils"
@@ -220,6 +220,7 @@ export function ChatAnswerMessage({
   data,
   onFollowup,
   onRetry,
+  onRegenerate,
   readingLevel,
   onReadingLevelChange,
   isLatest,
@@ -228,6 +229,10 @@ export function ChatAnswerMessage({
   onFollowup: (q: string) => void
   /** Resubmits data.query. Only meaningful when data.error is set. */
   onRetry?: () => void
+  /** Discards this answer and asks the same question again. Only offered
+   * on the latest answer - Claude/ChatGPT scope regenerate the same way,
+   * since regenerating an earlier turn would orphan everything after it. */
+  onRegenerate?: () => void
   readingLevel: ReadingLevel
   onReadingLevelChange: (v: ReadingLevel) => void
   isLatest: boolean
@@ -319,17 +324,26 @@ export function ChatAnswerMessage({
     router.push(`/proposals?new=1&sop=${encodeURIComponent(primarySopId)}&title=${encodeURIComponent(title)}&summary=${encodeURIComponent(summary)}`)
   }
 
+  // Unconditional - always copies the answer text itself, promoted to a
+  // primary toolbar button. This used to only exist as a side effect of
+  // "Copy Link" silently falling back to copying text when no answerId
+  // was set, buried as the 4th item of an 11-item overflow menu.
+  const handleCopyAnswer = async () => {
+    try {
+      await navigator.clipboard.writeText(data.answer)
+      setCopiedLink("answer")
+      toast({ description: "Answer copied to clipboard", variant: "success" })
+      setTimeout(() => setCopiedLink(null), 2000)
+    } catch {
+      toast({ description: "Couldn't copy to clipboard", variant: "error" })
+    }
+  }
+
   const handleCopyLink = async () => {
     try {
-      if (data.answerId) {
-        await navigator.clipboard.writeText(`${window.location.origin}/answers/${data.answerId}`)
-        setCopiedLink("link")
-        toast({ description: "Link copied to clipboard", variant: "success" })
-      } else {
-        await navigator.clipboard.writeText(data.answer)
-        setCopiedLink("answer")
-        toast({ description: "Answer copied to clipboard", variant: "success" })
-      }
+      await navigator.clipboard.writeText(`${window.location.origin}/answers/${data.answerId}`)
+      setCopiedLink("link")
+      toast({ description: "Link copied to clipboard", variant: "success" })
       setTimeout(() => setCopiedLink(null), 2000)
     } catch {
       toast({ description: "Couldn't copy to clipboard", variant: "error" })
@@ -661,15 +675,17 @@ export function ChatAnswerMessage({
               // utilities -> external hand-offs -> Flag Issue last (see
               // plan Phase K.3).
               primary={[
+                { key: "copy-answer", label: copiedLink === "answer" ? "Copied" : "Copy", icon: copiedLink === "answer" ? Check : Copy, onClick: handleCopyAnswer },
                 ...(primarySopId ? [{ key: "source", label: "View SOP Source", icon: FileText, onClick: () => router.push(libraryDeepLink(primarySopId, primaryInternalCitation?.snippet, primaryInternalCitation?.section_title)) }] : []),
                 ...(primarySopId ? [{ key: "comparison", label: "Compare with Clinical Evidence", icon: GitCompare, onClick: () => setActiveDrawer("comparison"), active: activeDrawer === "comparison" }] : []),
                 ...(hasPermission("create_proposal") ? [{ key: "proposal", label: "Create Update Proposal", icon: PlusCircle, onClick: () => router.push(`/proposals?new=1&sop=${encodeURIComponent(firstCitation)}&query=${encodeURIComponent(data.query)}`) }] : []),
               ]}
               secondary={[
+                ...(onRegenerate ? [{ key: "regenerate", label: "Regenerate", icon: RotateCcw, onClick: onRegenerate }] : []),
                 { key: "evidence", label: "External Evidence", icon: BookOpen, onClick: () => setActiveDrawer("evidence"), active: activeDrawer === "evidence", count: data.sources.length + data.inlineCitations.filter((c) => c.is_external).length || undefined },
                 ...(primarySopId ? [{ key: "versions", label: "Version History", icon: History, onClick: () => setActiveDrawer("versions"), active: activeDrawer === "versions" }] : []),
                 { key: "trust", label: "Trust Details", icon: ShieldCheck, onClick: () => setActiveDrawer("trust"), active: activeDrawer === "trust" },
-                { key: "copy", label: copiedLink === "link" ? "Link copied" : copiedLink === "answer" ? "Copied" : "Copy Link", icon: copiedLink ? Check : Link2, onClick: handleCopyLink },
+                ...(data.answerId ? [{ key: "copy-link", label: copiedLink === "link" ? "Link copied" : "Copy Link", icon: copiedLink === "link" ? Check : Link2, onClick: handleCopyLink }] : []),
                 { key: "export", label: "Export Answer", icon: Download, onClick: handleExportJson },
                 { key: "print", label: "Print Report", icon: Printer, onClick: handlePrintReport },
                 {

@@ -144,6 +144,12 @@ async def init_db() -> None:
         "ALTER TABLE query_log_records ADD COLUMN prompt_tokens INTEGER",
         "ALTER TABLE query_log_records ADD COLUMN completion_tokens INTEGER",
         "ALTER TABLE query_log_records ADD COLUMN total_tokens INTEGER",
+        # Non-lossy chat reload (N-B.9): without this, restoring a chat
+        # session after a page reload had to fall back to blank defaults
+        # for route/generation_mode/confidence_tier/followup_questions/
+        # verification_result, silently dropping the Version History link,
+        # generation-mode tag, follow-up chips and Trust panel contents.
+        "ALTER TABLE chat_message_records ADD COLUMN extra JSON",
     ):
         try:
             from sqlalchemy import text

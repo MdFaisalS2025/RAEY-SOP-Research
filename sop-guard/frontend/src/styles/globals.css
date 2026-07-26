@@ -123,9 +123,13 @@
     @apply border-border;
   }
 
-  html {
-    scroll-behavior: smooth;
-  }
+  /* No global `scroll-behavior: smooth` - it silently overrode every
+     `scrollIntoView({behavior:"auto"})` call site (per spec, "auto" means
+     "use the element's CSS scroll-behavior"), which turned Ask Meridian's
+     per-token follow-scroll into a competing, never-finishing glide and
+     masked a real layout-collapse bug as a scroll-timing one. Call sites
+     that want an animated scroll now request `behavior:"smooth"`
+     explicitly (see query/page.tsx, chat-answer-message.tsx). */
 
   body {
     @apply bg-background text-foreground;

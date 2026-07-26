@@ -375,6 +375,12 @@ export default function QueryPage() {
   const prevMessageCountRef = useRef(0)
   const streamingTextRef = useRef("")
   const revealedTextRef = useRef("")
+  // Sticky composer + the growing skeleton/streaming-answer placeholder -
+  // both are measured to reserve scroll room per turn (see the spacer
+  // effect below) instead of the hardcoded pixel guess this replaced.
+  const composerWrapRef = useRef<HTMLDivElement | null>(null)
+  const growingContentRef = useRef<HTMLDivElement | null>(null)
+  const [spacerPx, setSpacerPx] = useState(0)
   useEffect(() => { streamingTextRef.current = streamingText }, [streamingText])
   useEffect(() => { revealedTextRef.current = revealedText }, [revealedText])
 
@@ -562,17 +568,25 @@ export default function QueryPage() {
   }, [])
 
   // Track whether the reader is already near the bottom, so a new answer
-  // never yanks them away from something they scrolled up to read.
+  // never yanks them away from something they scrolled up to read. The
+  // threshold is the sticky composer's real height (not a pixel guess) -
+  // a guess smaller than the composer could read "near bottom" as false
+  // even while the composer is fully visible, silently disabling the
+  // follow-scroll below.
   useEffect(() => {
-    const NEAR_BOTTOM_PX = 120
     const updateNearBottom = () => {
       const scrollable = document.documentElement
+      const composerH = composerWrapRef.current?.offsetHeight ?? 160
       wasNearBottomRef.current =
-        window.innerHeight + window.scrollY >= scrollable.scrollHeight - NEAR_BOTTOM_PX
+        window.innerHeight + window.scrollY >= scrollable.scrollHeight - composerH - 24
     }
     updateNearBottom()
     window.addEventListener("scroll", updateNearBottom, { passive: true })
-    return () => window.removeEventListener("scroll", updateNearBottom)
+    window.addEventListener("resize", updateNearBottom)
+    return () => {
+      window.removeEventListener("scroll", updateNearBottom)
+      window.removeEventListener("resize", updateNearBottom)
+    }
   }, [])
 
   // Auto-scroll only when the user submits a genuinely new question (not
@@ -597,14 +611,50 @@ export default function QueryPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages.length])
 
-  // Gentle follow-scroll while an answer is streaming in - but only when
-  // the reader is already at the bottom (same wasNearBottomRef gate as the
-  // new-question scroll above), so someone who has scrolled up to reread
-  // an earlier answer is never yanked back down mid-generation.
+  // Reserves scroll room for the turn currently in flight, so the document
+  // never gets SHORTER while the reader is scrolled to (or past) its
+  // current bottom - that shrink-while-pinned-to-bottom is what forces the
+  // browser to clamp scrollY, which reads as the page jumping up. The
+  // skeleton (~300px) is much taller than the first sliver of streamed
+  // text (~27px), so without a reserved spacer, the token that ends the
+  // skeleton is exactly the moment the page used to jump.
+  //
+  // spacerPx tops up whatever the growing skeleton/streaming placeholder
+  // is short of one full viewport (minus the sticky composer), so the
+  // combined height never drops below what it was when the turn started,
+  // and shrinks to 0 automatically once the real answer grows past that.
+  useEffect(() => {
+    if (!loading) { setSpacerPx(0); return }
+    const el = growingContentRef.current
+    if (!el) return
+    const recompute = () => {
+      const composerH = composerWrapRef.current?.offsetHeight ?? 0
+      const needed = window.innerHeight - composerH
+      setSpacerPx(Math.max(0, needed - el.offsetHeight))
+    }
+    recompute()
+    const ro = new ResizeObserver(recompute)
+    ro.observe(el)
+    window.addEventListener("resize", recompute)
+    return () => {
+      ro.disconnect()
+      window.removeEventListener("resize", recompute)
+    }
+  }, [loading])
+
+  // Gentle follow-scroll while an answer is streaming in - but only once
+  // the growing content has actually outgrown the reserved spacer (i.e.
+  // it would overflow the viewport), and only when the reader is already
+  // at the bottom. With the spacer above holding position steady for
+  // normal-length answers, this now only fires for genuinely long ones,
+  // and uses an explicit instant jump rather than relying on `scroll-
+  // behavior: smooth` (removed globally - see globals.css), which used to
+  // turn every 40ms reveal tick into a competing, never-finishing glide.
   useEffect(() => {
     if (!loading || !revealedText || !wasNearBottomRef.current) return
-    threadEndRef.current?.scrollIntoView({ behavior: "auto", block: "end" })
-  }, [revealedText, loading])
+    if (spacerPx > 0) return
+    threadEndRef.current?.scrollIntoView({ behavior: "instant", block: "end" })
+  }, [revealedText, loading, spacerPx])
 
   // Click-outside/Escape close for the History popover (role-switcher.tsx /
   // answer-action-toolbar.tsx pattern), only attached while open.
@@ -930,7 +980,7 @@ export default function QueryPage() {
                 onFollowup={(q) => handleSubmit(q)}
                 readingLevel={readingLevel}
                 onReadingLevelChange={changeReadingLevel}
-                isLatest={m.id === lastAssistantId && !loading}
+                isLatest={m.id === lastAssistantId}
               />
             )
           })}
@@ -952,7 +1002,16 @@ export default function QueryPage() {
               message, the prose doesn't jump position or padding - only
               the caption line, source strip, and toolbar are new. */}
           {loading && (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <motion.div
+              ref={growingContentRef}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              // Belt-and-braces alongside the spacer below: never render
+              // shorter than the skeleton itself, so even the one frame
+              // before the ResizeObserver's first measurement can't shrink
+              // the document out from under a reader pinned to the bottom.
+              style={{ minHeight: 320 }}
+            >
               {revealedText ? (
                 <div className="px-1">
                   <AnswerRenderer text={revealedText} citations={[]} streaming />
@@ -963,6 +1022,13 @@ export default function QueryPage() {
               )}
             </motion.div>
           )}
+          {/* Tops up the space below the growing placeholder above to a
+              full viewport (minus the composer) so the newest question can
+              reach the top of the viewport and STAY there as the real
+              answer fills in - see the spacerPx effect for the full
+              rationale. Shrinks to 0 automatically once the answer is long
+              enough to need no help. */}
+          {loading && spacerPx > 0 && <div aria-hidden="true" style={{ height: spacerPx }} />}
           <div ref={threadEndRef} />
           <span role="status" aria-live="polite" className="sr-only">{completionAnnouncement}</span>
         </div>
@@ -972,7 +1038,7 @@ export default function QueryPage() {
             instead of scrolling away above the messages it's about to add
             to. */}
         {submitted && (
-          <div className="sticky bottom-0 mt-6 pt-4 pb-4 border-t border-border bg-background/95 backdrop-blur-sm">
+          <div ref={composerWrapRef} className="sticky bottom-0 mt-6 pt-4 pb-4 border-t border-border bg-background/95 backdrop-blur-sm">
             {composer}
             <SafetyNote className="mt-2" />
           </div>

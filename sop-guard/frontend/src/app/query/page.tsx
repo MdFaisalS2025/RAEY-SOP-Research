@@ -816,11 +816,13 @@ export default function QueryPage() {
     abortControllerRef.current?.abort()
   }
 
-  // Discards the latest answer and asks the same question again.
+  // Discards the latest answer and asks the same question again -
+  // without re-appending the question itself (it's already in the
+  // thread; only the answer to it is being replaced).
   const handleRegenerate = (q: string) => {
     if (loading) return
     setMessages(prev => prev.slice(0, -1))
-    handleSubmit(q, true)
+    handleSubmit(q, true, true)
   }
 
   // Edit-and-resend: drops the edited message and everything after it
@@ -835,7 +837,11 @@ export default function QueryPage() {
     handleSubmit(newText, true)
   }
 
-  const handleSubmit = async (overrideQuery?: string, skipPhiGate = false) => {
+  // `skipUserMessage` is Regenerate's escape hatch: it needs everything
+  // else handleSubmit does (PHI gate bypassed, generate, finalize) but
+  // must NOT append a new user bubble - the question was already asked,
+  // regenerate is only replacing the answer to it.
+  const handleSubmit = async (overrideQuery?: string, skipPhiGate = false, skipUserMessage = false) => {
     const q = (overrideQuery ?? query).trim()
     if (!q || loading) return
 
@@ -851,7 +857,7 @@ export default function QueryPage() {
     }
 
     setQuery("")
-    setMessages(prev => [...prev, { id: nextId(), role: "user", content: q }])
+    if (!skipUserMessage) setMessages(prev => [...prev, { id: nextId(), role: "user", content: q }])
     setLoading(true)
     setStreamingText("")
     setRevealedText("")

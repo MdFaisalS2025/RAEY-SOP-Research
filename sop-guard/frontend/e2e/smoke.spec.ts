@@ -20,8 +20,12 @@ test.describe("core query flow", () => {
   test("asking a question returns a sourced answer", async ({ page }) => {
     await loginAsDemoUser(page, "Sarah Mitchell")
     await page.goto("/query")
+    // Suggested-query buttons submit immediately on click (see the O-N-B
+    // small-fixes chat work), so there's no separate composer/Enter step
+    // here anymore - this test previously targeted a placeholder string
+    // ("ask a clinical sop question") the composer hasn't used since the
+    // J-A composer rebuild, so it was failing before this fix.
     await page.getByRole("button", { name: "What is the maximum norepinephrine dose?" }).click()
-    await page.getByPlaceholder(/ask a clinical sop question/i).press("Enter")
     await expect(page.getByText(/sources/i).first()).toBeVisible({ timeout: 15_000 })
   })
 })

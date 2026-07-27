@@ -4,6 +4,7 @@ import { useEffect } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { motion } from "framer-motion"
 import { TopNav } from "./topnav"
+import { FocusBar } from "./focus-bar"
 import { CommandPalette } from "./command-palette"
 import { Toaster } from "@/components/ui/toaster"
 import { useAuth } from "@/lib/auth-context"
@@ -59,7 +60,22 @@ function usePageTitle(pathname: string) {
   }, [pathname])
 }
 
-export default function AppShell({ children }: { children: React.ReactNode }) {
+export default function AppShell({
+  children,
+  chrome = "full",
+  chromeActions,
+}: {
+  children: React.ReactNode
+  // "minimal" swaps the full TopNav for the slim FocusBar (see /query's
+  // focus mode). Auth redirect, page title, density, command palette and
+  // toaster are unaffected either way - only the visual chrome changes.
+  chrome?: "full" | "minimal"
+  // Page-owned controls rendered on the right of FocusBar (e.g. /query's
+  // New chat / Conversations / History). A slot, not props threaded
+  // through AppShell, so chat state stays in the page that owns it and
+  // AppShell learns nothing about chat.
+  chromeActions?: React.ReactNode
+}) {
   const auth = useAuth()
   const { setRole } = useRole()
   const router = useRouter()
@@ -114,7 +130,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <TopNav />
+      {chrome === "minimal" ? <FocusBar actions={chromeActions} /> : <TopNav />}
 
       <motion.main
         id="main-content"

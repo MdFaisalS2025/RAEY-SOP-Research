@@ -312,6 +312,19 @@
       animation: none;
     }
   }
+
+  /* Ask Meridian's post-answer scroll-spacer collapse (query/page.tsx) -
+     eases the reserved room down instead of snapping it to 0, so a reader
+     pinned to the bottom sees the viewport glide up in sync rather than
+     jump in one frame. */
+  .spacer-collapse {
+    transition: height 300ms ease-out;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .spacer-collapse {
+      transition: none;
+    }
+  }
 }
 
 @layer base {

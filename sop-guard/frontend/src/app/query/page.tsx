@@ -438,6 +438,11 @@ export default function QueryPage() {
   // effect below) instead of the hardcoded pixel guess this replaced.
   const composerWrapRef = useRef<HTMLDivElement | null>(null)
   const growingContentRef = useRef<HTMLDivElement | null>(null)
+  // Points at the real, finalized latest-assistant-message wrapper - used
+  // by the spacer effect below to measure the settle transition the
+  // instant `loading` flips false, when growingContentRef's placeholder
+  // has just been swapped out for this real content.
+  const lastMessageRef = useRef<HTMLDivElement | null>(null)
   const [spacerPx, setSpacerPx] = useState(0)
   useEffect(() => { streamingTextRef.current = streamingText }, [streamingText])
   useEffect(() => { revealedTextRef.current = revealedText }, [revealedText])
@@ -698,23 +703,47 @@ export default function QueryPage() {
   // useLayoutEffect, not useEffect: recompute() must land before the
   // browser paints the first frame of a new turn, so there's never a
   // paint where the spacer hasn't caught up yet.
+  //
+  // On the loading:true -> false transition specifically: the placeholder
+  // (growingContentRef) is unmounted and replaced by the real, finalized
+  // message in the same commit. This used to just zero the spacer
+  // outright - but a short final answer can be well under one viewport,
+  // so dropping straight to 0 could still shrink the document while the
+  // reader is pinned to the bottom (the exact clamp-jump this spacer
+  // exists to prevent, just moved to a different moment). Instead,
+  // recompute against the real message's actual height first (so the
+  // invariant holds continuously through the swap, with no collapse at
+  // all), then let the now-unneeded reserved room collapse on a short
+  // delay. The CSS transition on the spacer div (below) turns that
+  // collapse into a gentle glide instead of a snap, so if the reader is
+  // still pinned to the bottom the viewport eases up in sync rather than
+  // jumping.
   useLayoutEffect(() => {
-    if (!loading) { setSpacerPx(0); return }
-    const el = growingContentRef.current
-    if (!el) return
-    const recompute = () => {
-      const composerH = composerWrapRef.current?.offsetHeight ?? 0
-      const needed = window.innerHeight - composerH
-      setSpacerPx(Math.max(0, needed - el.offsetHeight))
+    if (loading) {
+      const el = growingContentRef.current
+      if (!el) return
+      const recompute = () => {
+        const composerH = composerWrapRef.current?.offsetHeight ?? 0
+        const needed = window.innerHeight - composerH
+        setSpacerPx(Math.max(0, needed - el.offsetHeight))
+      }
+      recompute()
+      const ro = new ResizeObserver(recompute)
+      ro.observe(el)
+      window.addEventListener("resize", recompute)
+      return () => {
+        ro.disconnect()
+        window.removeEventListener("resize", recompute)
+      }
     }
-    recompute()
-    const ro = new ResizeObserver(recompute)
-    ro.observe(el)
-    window.addEventListener("resize", recompute)
-    return () => {
-      ro.disconnect()
-      window.removeEventListener("resize", recompute)
-    }
+
+    const el = lastMessageRef.current
+    if (!el) { setSpacerPx(0); return }
+    const composerH = composerWrapRef.current?.offsetHeight ?? 0
+    const needed = window.innerHeight - composerH
+    setSpacerPx(Math.max(0, needed - el.offsetHeight))
+    const settle = setTimeout(() => setSpacerPx(0), 250)
+    return () => clearTimeout(settle)
   }, [loading])
 
   // Gentle follow-scroll while an answer is streaming in - but only once
@@ -1224,17 +1253,23 @@ export default function QueryPage() {
                 </div>
               )
             }
+            const isLatest = m.id === lastAssistantId
             return (
-              <ChatAnswerMessage
-                key={m.id}
-                data={m.data}
-                onFollowup={(q) => handleSubmit(q)}
-                onRetry={m.data.error ? () => handleSubmit(m.data.query) : undefined}
-                onRegenerate={m.id === lastAssistantId && !m.data.error && !m.data.stopped ? () => handleRegenerate(m.data.query) : undefined}
-                readingLevel={readingLevel}
-                onReadingLevelChange={changeReadingLevel}
-                isLatest={m.id === lastAssistantId}
-              />
+              // The ref only matters for the latest message (see the
+              // spacer effect's settle branch, which measures it the
+              // instant `loading` flips false) - harmless no-op for
+              // every earlier message.
+              <div key={m.id} ref={isLatest ? lastMessageRef : undefined}>
+                <ChatAnswerMessage
+                  data={m.data}
+                  onFollowup={(q) => handleSubmit(q)}
+                  onRetry={m.data.error ? () => handleSubmit(m.data.query) : undefined}
+                  onRegenerate={isLatest && !m.data.error && !m.data.stopped ? () => handleRegenerate(m.data.query) : undefined}
+                  readingLevel={readingLevel}
+                  onReadingLevelChange={changeReadingLevel}
+                  isLatest={isLatest}
+                />
+              </div>
             )
           })}
 
@@ -1276,13 +1311,20 @@ export default function QueryPage() {
               )}
             </motion.div>
           )}
-          {/* Tops up the space below the growing placeholder above to a
-              full viewport (minus the composer) so the newest question can
-              reach the top of the viewport and STAY there as the real
-              answer fills in - see the spacerPx effect for the full
-              rationale. Shrinks to 0 automatically once the answer is long
-              enough to need no help. */}
-          {loading && spacerPx > 0 && <div aria-hidden="true" style={{ height: spacerPx }} />}
+          {/* Tops up the space below the growing placeholder/finalized
+              answer to a full viewport (minus the composer) so the newest
+              question can reach the top of the viewport and STAY there as
+              the real answer fills in - see the spacerPx effect for the
+              full rationale. Not gated on `loading` (it used to be) - it
+              also renders briefly right after an answer finishes, to
+              measure the real content instead of collapsing blind. The
+              transition turns that post-answer collapse into a gentle
+              glide: if the reader is still pinned to the bottom, the
+              viewport eases up in sync with the shrink instead of
+              snapping in one frame. */}
+          {spacerPx > 0 && (
+            <div aria-hidden="true" className="spacer-collapse" style={{ height: spacerPx }} />
+          )}
           <div ref={threadEndRef} />
           <span role="status" aria-live="polite" className="sr-only">{completionAnnouncement}</span>
         </div>

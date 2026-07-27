@@ -4,7 +4,6 @@ import { useEffect } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { motion } from "framer-motion"
 import { TopNav } from "./topnav"
-import { OnboardingTour } from "./onboarding"
 import { CommandPalette } from "./command-palette"
 import { Toaster } from "@/components/ui/toaster"
 import { useAuth } from "@/lib/auth-context"
@@ -127,7 +126,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       >
         {children}
       </motion.main>
-      <OnboardingTour />
       {auth.isAuthenticated && <CommandPalette />}
       <Toaster />
     </div>

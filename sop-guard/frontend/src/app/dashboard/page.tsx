@@ -29,7 +29,6 @@ import {
 } from "lucide-react"
 import { useRole } from "@/lib/role-context"
 import AppShell from "@/components/layout/app-shell"
-import { FirstRunDemo } from "@/components/layout/first-run-demo"
 import { IllustrativeNote } from "@/components/ui/illustrative-note"
 import {
   MOCK_SOPS,
@@ -1744,7 +1743,6 @@ export default function DashboardPage() {
   return (
     <AppShell>
     <div className="bg-background px-4 md:px-6 lg:px-8 py-6">
-      <FirstRunDemo />
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="space-y-3">

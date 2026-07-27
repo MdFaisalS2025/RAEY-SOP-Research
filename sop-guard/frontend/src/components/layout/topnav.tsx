@@ -13,8 +13,6 @@ import {
   Settings,
   Shield,
   Search,
-  Moon,
-  Sun,
   Menu,
   X,
   AlertTriangle,
@@ -44,8 +42,10 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { RoleSwitcher } from "@/components/layout/role-switcher"
+import { ThemeToggle } from "@/components/layout/theme-toggle"
+import { ProfileMenu } from "@/components/layout/profile-menu"
 import { useAuth } from "@/lib/auth-context"
-import { useRole, ROLE_HIERARCHY } from "@/lib/role-context"
+import { useRole } from "@/lib/role-context"
 import { useRouter } from "next/navigation"
 import type { UserRole, NotificationItem } from "@/lib/governance-types"
 
@@ -188,20 +188,6 @@ function desktopGroupsForRole(role: UserRole): NavGroup[] {
     .filter((g) => g.items.length > 0)
 }
 
-const ROLE_AVATAR_COLORS: Record<UserRole, { bg: string; text: string }> = {
-  clinical_staff: { bg: "bg-blue-500/20", text: "text-blue-300" },
-  governance_compliance: { bg: "bg-emerald-500/20", text: "text-emerald-300" },
-  educator: { bg: "bg-pink-500/20", text: "text-pink-300" },
-  system_admin: { bg: "bg-gray-500/20", text: "text-gray-300" },
-}
-
-const ROLE_LABELS: Record<UserRole, string> = {
-  clinical_staff: "Clinical Staff",
-  governance_compliance: "Governance & Compliance",
-  educator: "Educator / Trainer",
-  system_admin: "System Admin",
-}
-
 export function TopNav() {
   const pathname = usePathname()
   const auth = useAuth()
@@ -209,11 +195,9 @@ export function TopNav() {
   const desktopGroups = desktopGroupsForRole(role)
   const mobileGroups = groupsForRole(role)
   const router = useRouter()
-  const [isDark, setIsDark] = useState(true)
   const [backendUp, setBackendUp] = useState<boolean | null>(null)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [notifOpen, setNotifOpen] = useState(false)
-  const [profileOpen, setProfileOpen] = useState(false)
   const [openGroup, setOpenGroup] = useState<string | null>(null)
   const [notifications, setNotifications] = useState<LiveNotificationItem[]>([])
   const [notifLive, setNotifLive] = useState(false)
@@ -222,7 +206,6 @@ export function TopNav() {
   const [showLegend, setShowLegend] = useState(false)
   const groupNavRef = useRef<HTMLDivElement>(null)
   const notifRef = useRef<HTMLDivElement>(null)
-  const profileRef = useRef<HTMLDivElement>(null)
 
   const unreadCount = notifications.filter((n) => !n.read).length
 
@@ -326,14 +309,8 @@ export function TopNav() {
   }
 
   useEffect(() => {
-    const html = document.documentElement
-    setIsDark(html.classList.contains("dark"))
-  }, [])
-
-  useEffect(() => {
     setMobileOpen(false)
     setNotifOpen(false)
-    setProfileOpen(false)
     setOpenGroup(null)
   }, [pathname])
 
@@ -373,40 +350,10 @@ export function TopNav() {
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [notifOpen])
 
-  useEffect(() => {
-    if (!profileOpen) return
-    const handleClickOutside = (e: MouseEvent) => {
-      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
-        setProfileOpen(false)
-      }
-    }
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setProfileOpen(false)
-    }
-    document.addEventListener("mousedown", handleClickOutside)
-    document.addEventListener("keydown", handleKeyDown)
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-      document.removeEventListener("keydown", handleKeyDown)
-    }
-  }, [profileOpen])
-
-  const toggleTheme = () => {
-    const html = document.documentElement
-    if (html.classList.contains("dark")) {
-      html.classList.remove("dark")
-      setIsDark(false)
-      localStorage.setItem("meridian-theme", "light")
-    } else {
-      html.classList.add("dark")
-      setIsDark(true)
-      localStorage.setItem("meridian-theme", "dark")
-    }
-  }
-
+  // Sign-out for the mobile nav menu, which renders its own row outside
+  // ProfileMenu's dropdown. Desktop sign-out lives inside ProfileMenu now.
   const handleSignOut = () => {
     auth.logout()
-    setProfileOpen(false)
     router.push("/login?signedOut=1")
   }
 
@@ -738,103 +685,11 @@ export function TopNav() {
             {/* Role Switcher */}
             <RoleSwitcher />
 
-            {/* Theme toggle */}
-            <button
-              onClick={toggleTheme}
-              aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-              className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted dark:hover:bg-white/[0.05] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/50 dark:focus-visible:ring-[#00E5FF]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-              title={isDark ? "Switch to light mode" : "Switch to dark mode"}
-            >
-              {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-            </button>
-
-            {/* User avatar + profile dropdown */}
-            {auth.user && (() => {
-              const colors = ROLE_AVATAR_COLORS[auth.user.role]
-              const level = ROLE_HIERARCHY[auth.user.role]
-              return (
-                <div ref={profileRef} className="relative">
-                  <button
-                    onClick={() => setProfileOpen((v) => !v)}
-                    aria-label="Open profile menu"
-                    aria-expanded={profileOpen}
-                    className="flex items-center gap-1.5 p-1 rounded-lg hover:bg-muted dark:hover:bg-white/[0.05] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0B6BCB]/50"
-                  >
-                    <div
-                      className={cn(
-                        "flex items-center justify-center w-8 h-8 rounded-lg text-[11px] font-bold shrink-0 select-none",
-                        colors.bg,
-                        colors.text
-                      )}
-                    >
-                      {auth.user.initials}
-                    </div>
-                    <span className="hidden xl:block text-[12px] text-[#64748B] dark:text-slate-400 font-medium max-w-[80px] truncate">
-                      {auth.user.name.split(" ").slice(-1)[0]}
-                    </span>
-                    <ChevronDown
-                      className={cn(
-                        "hidden xl:block w-3.5 h-3.5 text-[#94A3B8] dark:text-slate-500 transition-transform duration-200",
-                        profileOpen && "rotate-180"
-                      )}
-                    />
-                  </button>
-
-                  {/* Profile dropdown */}
-                  {profileOpen && (
-                    <div className="absolute right-0 top-full mt-1.5 z-50 w-[220px] bg-card dark:bg-[#0d1516] border border-[#E2E8F0] dark:border-white/[0.08] rounded-xl shadow-md dark:shadow-2xl dark:shadow-black/50 overflow-hidden py-1">
-                      {/* User info */}
-                      <div className="px-3 py-2.5 border-b border-[#EDF1F5] dark:border-white/[0.06]">
-                        <div className="flex items-center gap-2.5 mb-1.5">
-                          <div
-                            className={cn(
-                              "flex items-center justify-center w-9 h-9 rounded-lg text-[12px] font-bold shrink-0",
-                              colors.bg,
-                              colors.text
-                            )}
-                          >
-                            {auth.user.initials}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-[12px] font-semibold text-[#1A2332] dark:text-white truncate">{auth.user.name}</p>
-                            <span
-                              className={cn(
-                                "inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded-md mt-0.5",
-                                colors.bg,
-                                colors.text
-                              )}
-                            >
-                              {ROLE_LABELS[auth.user.role]}
-                            </span>
-                          </div>
-                        </div>
-                        <p className="text-[10px] text-[#64748B] dark:text-slate-500">
-                          Access Level {level} of 4
-                          {level === 4 ? " - Full platform control" : level === 1 ? " - Basic access" : ""}
-                        </p>
-                      </div>
-
-                      {/* Actions. "Switch Profile" used to live here as a
-                          button that only closed this menu - no role
-                          switch, no navigation. The real role switcher is
-                          the dedicated control right next to this one
-                          (RoleSwitcher, "Switch demo role"), so the entry
-                          was removed rather than wired, to avoid two
-                          controls doing the same job. */}
-                      <div className="py-1">
-                        <button
-                          onClick={handleSignOut}
-                          className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-[12px] text-[#B91C1C] dark:text-red-400 dark:text-red-400 hover:bg-[#FEE2E2] dark:bg-red-500/10 dark:hover:bg-red-500/10 hover:text-[#991B1B] dark:hover:text-red-300 transition-colors"
-                        >
-                          <LogOut className="w-3.5 h-3.5" />
-                          Sign Out
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )
-            })()}
+            {/* Theme toggle + profile menu - extracted (O2.3) so FocusBar
+                (the slim /query chrome) can reuse the exact same
+                theme-persistence and avatar/sign-out logic. */}
+            <ThemeToggle />
+            <ProfileMenu />
 
             {/* Mobile hamburger */}
             <button

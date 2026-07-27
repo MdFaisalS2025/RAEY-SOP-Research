@@ -265,6 +265,53 @@
   .interactive-card {
     @apply transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:shadow-black/5 dark:hover:shadow-[#00E5FF]/5 hover:border-[#0B6BCB]/30 active:scale-[0.99] active:translate-y-0;
   }
+
+  /* Copilot-style loading sweep for the Ask Meridian loading indicator: a
+     light band travels across the phrase text itself (background-clip:text)
+     rather than a shimmering block placeholder for content that isn't
+     coming. Declared directly with `animation:` (not via the `animate-
+     shimmer` utility class) so the prefers-reduced-motion override below
+     wins on plain source order instead of fighting utility specificity. */
+  .text-shimmer {
+    background-image: linear-gradient(
+      90deg,
+      hsl(var(--muted-foreground)) 0%,
+      hsl(var(--muted-foreground)) 40%,
+      hsl(var(--foreground)) 50%,
+      hsl(var(--muted-foreground)) 60%,
+      hsl(var(--muted-foreground)) 100%
+    );
+    background-size: 200% 100%;
+    background-repeat: no-repeat;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 2s linear infinite;
+  }
+
+  .loading-dot {
+    animation: pulse-soft 2s ease-in-out infinite;
+  }
+
+  /* No sweep, no pulse, and critically no transparent text - both `color`
+     and `-webkit-text-fill-color` must be reset together, because WebKit
+     ignores `color` once `-webkit-text-fill-color: transparent` has been
+     set. Skipping either half leaves the loading phrase invisible: the
+     gradient half in most browsers, the color half in Safari specifically. */
+  @media (prefers-reduced-motion: reduce) {
+    .text-shimmer {
+      animation: none;
+      background-image: none;
+      -webkit-background-clip: border-box;
+      background-clip: border-box;
+      color: hsl(var(--muted-foreground));
+      -webkit-text-fill-color: hsl(var(--muted-foreground));
+    }
+    .loading-dot {
+      animation: none;
+    }
+  }
 }
 
 @layer base {

@@ -21,7 +21,6 @@ import AppShell from "@/components/layout/app-shell"
 import { SafetyNote } from "@/components/ui/safety-note"
 import { VoiceRecorder } from "@/components/voice/voice-recorder"
 import { cn } from "@/lib/utils"
-import { Card } from "@/components/ui/card"
 
 const suggestedQueries = [
 "What are the steps for sepsis management?",
@@ -273,51 +272,38 @@ function mapResponse(query: string, response: any, startedAt: number): Assistant
 
 // ─── Badges and small components ─────────────────────────────────────────────
 
-// Pulsing placeholder shaped like the answer card that's about to arrive
-// (heading, a few text lines, a couple of step rows) - a quiet shimmer
-// reads as "the answer is forming" without the theatrics of a fake
-// progress checklist, since a self-hosted model can take 30-50s per
-// answer and a step-by-step list of internal pipeline stages doesn't
-// actually tell the reader anything useful about that wait. A single
-// rotating status line above it gives a sense of progress without
-// exposing pipeline internals - closer to ChatGPT/Claude/Copilot's "..."
-// than a research prototype's stage-by-stage trace.
+// A single quiet line - a pulsing dot plus a rotating status phrase, in the
+// same idiom as Claude/ChatGPT/Copilot - instead of a full card-shaped
+// skeleton. The old skeleton (a bordered Card with 8 shimmer bars and 3
+// avatar rows, ~320px tall) was meant to read as "the answer is forming"
+// but at that size it read as a large empty box. A step-by-step trace of
+// internal pipeline stages wouldn't tell the reader anything useful about
+// a 30-50s wait either, so this stays a single rotating line, just smaller.
 const LOADING_PHRASES = ["Searching approved SOPs…", "Reviewing clinical evidence…", "Preparing answer…"]
 
-function AnswerSkeleton() {
+function AnswerLoadingIndicator() {
   const [phraseIndex, setPhraseIndex] = useState(0)
   useEffect(() => {
-    const t = setInterval(() => setPhraseIndex((i) => Math.min(i + 1, LOADING_PHRASES.length - 1)), 1800)
-    return () => clearInterval(t)
-  }, [])
+    // Chained setTimeout, not setInterval: LOADING_PHRASES is a one-way
+    // progression (there's nothing to cycle back to), so the timer should
+    // stop once it reaches the last phrase instead of firing forever.
+    if (phraseIndex >= LOADING_PHRASES.length - 1) return
+    const t = setTimeout(() => setPhraseIndex((i) => i + 1), 1800)
+    return () => clearTimeout(t)
+  }, [phraseIndex])
   return (
     <>
-      {/* Sibling to the aria-hidden shimmer below, not nested inside it -
+      {/* Sibling to the aria-hidden visual below, not nested inside it -
           screen readers get the phase text ("Searching approved SOPs…" etc.)
-          without the decorative pulsing shapes being announced. */}
+          without the decorative dot/shimmer being announced. */}
       <span role="status" aria-live="polite" className="sr-only">{LOADING_PHRASES[phraseIndex]}</span>
-      <Card padding="lg" className="sm:p-8 shadow-sm space-y-4" aria-hidden="true">
-        <p className="text-sm text-muted-foreground">{LOADING_PHRASES[phraseIndex]}</p>
-        <div className="space-y-4 animate-pulse">
-          <div className="h-4 w-2/5 rounded bg-muted" />
-          <div className="space-y-2">
-            <div className="h-3 w-full rounded bg-muted" />
-            <div className="h-3 w-11/12 rounded bg-muted" />
-            <div className="h-3 w-4/5 rounded bg-muted" />
-          </div>
-          <div className="space-y-3 pt-2">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="flex items-start gap-3">
-                <div className="w-7 h-7 rounded-full bg-muted shrink-0" />
-                <div className="flex-1 space-y-1.5 pt-1">
-                  <div className="h-3 w-full rounded bg-muted" />
-                  <div className="h-3 w-2/3 rounded bg-muted" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </Card>
+      {/* px-1 matches the streaming shell below (and ChatAnswerMessage's
+          answer body) so the phrase and the first token share a left edge -
+          nothing shifts horizontally when this is replaced. */}
+      <div className="flex items-center gap-2 px-1 py-1" aria-hidden="true">
+        <span className="loading-dot w-1.5 h-1.5 rounded-full bg-[#0B6BCB] shrink-0" />
+        <span className="text-shimmer text-sm leading-5">{LOADING_PHRASES[phraseIndex]}</span>
+      </div>
     </>
   )
 }
@@ -697,16 +683,22 @@ export default function QueryPage() {
   // Reserves scroll room for the turn currently in flight, so the document
   // never gets SHORTER while the reader is scrolled to (or past) its
   // current bottom - that shrink-while-pinned-to-bottom is what forces the
-  // browser to clamp scrollY, which reads as the page jumping up. The
-  // skeleton (~300px) is much taller than the first sliver of streamed
-  // text (~27px), so without a reserved spacer, the token that ends the
-  // skeleton is exactly the moment the page used to jump.
+  // browser to clamp scrollY, which reads as the page jumping up.
   //
-  // spacerPx tops up whatever the growing skeleton/streaming placeholder
-  // is short of one full viewport (minus the sticky composer), so the
-  // combined height never drops below what it was when the turn started,
-  // and shrinks to 0 automatically once the real answer grows past that.
-  useEffect(() => {
+  // spacerPx tops up whatever the growing loading-indicator/streaming
+  // placeholder is short of one full viewport (minus the sticky composer),
+  // so the combined height never drops below what it was when the turn
+  // started, and shrinks to 0 automatically once the real answer grows
+  // past that. Now that the loading indicator (~28px) is roughly the same
+  // height as the first sliver of streamed text (~27px), the skeleton-to-
+  // stream transition itself no longer collapses the document by any
+  // meaningful amount - this spacer's remaining job is long answers
+  // outgrowing the reserved room, not masking a height cliff.
+  //
+  // useLayoutEffect, not useEffect: recompute() must land before the
+  // browser paints the first frame of a new turn, so there's never a
+  // paint where the spacer hasn't caught up yet.
+  useLayoutEffect(() => {
     if (!loading) { setSpacerPx(0); return }
     const el = growingContentRef.current
     if (!el) return
@@ -1242,30 +1234,31 @@ export default function QueryPage() {
 
           {/* Inline placeholder where the next answer will appear. Once
               real tokens start arriving from the model, the growing text
-              itself is the progress signal; before that, a quiet shimmer
-              shaped like the answer that's coming - no fake step
-              checklist. No AnimatePresence/exit here on purpose: an
-              exit-animated node that doesn't unmount cleanly (seen live -
-              the skeleton stayed mounted after `loading` had already gone
-              false, per the Send button's own icon state) leaves a
-              permanent ghost placeholder under a completed answer. A plain
-              conditional removes the node the instant loading flips, so
-              correctness doesn't depend on the exit transition completing.
-              The streaming shell (`px-1`, no card border/shadow) matches
-              ChatAnswerMessage's answer body exactly, so when `loading`
-              flips false and this placeholder is replaced by the real
-              message, the prose doesn't jump position or padding - only
-              the caption line, source strip, and toolbar are new. */}
+              itself is the progress signal; before that, a single quiet
+              loading line - no card, no fake step checklist. No
+              AnimatePresence/exit here on purpose: an exit-animated node
+              that doesn't unmount cleanly (seen live - the indicator stayed
+              mounted after `loading` had already gone false, per the Send
+              button's own icon state) leaves a permanent ghost placeholder
+              under a completed answer. A plain conditional removes the
+              node the instant loading flips, so correctness doesn't depend
+              on the exit transition completing. The streaming shell
+              (`px-1`, no card border/shadow) matches ChatAnswerMessage's
+              answer body exactly, so when `loading` flips false and this
+              placeholder is replaced by the real message, the prose
+              doesn't jump position or padding - only the caption line,
+              source strip, and toolbar are new.
+              No `minHeight` on this wrapper (there used to be one, pinned
+              to the old skeleton's ~320px) - the loading indicator and the
+              first sliver of streamed text are now close enough in height
+              that there's nothing left to reserve against; see the
+              spacerPx effect above for what actually guards the scroll
+              position. */}
           {loading && (
             <motion.div
               ref={growingContentRef}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              // Belt-and-braces alongside the spacer below: never render
-              // shorter than the skeleton itself, so even the one frame
-              // before the ResizeObserver's first measurement can't shrink
-              // the document out from under a reader pinned to the bottom.
-              style={{ minHeight: 320 }}
             >
               {revealedText ? (
                 <div className="px-1">
@@ -1273,7 +1266,7 @@ export default function QueryPage() {
                   <span className="inline-block w-1.5 h-4 ml-0.5 bg-[#0B6BCB] animate-pulse align-text-bottom" />
                 </div>
               ) : (
-                <AnswerSkeleton />
+                <AnswerLoadingIndicator />
               )}
             </motion.div>
           )}

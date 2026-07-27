@@ -1081,116 +1081,118 @@ export default function QueryPage() {
     </div>
   )
 
-  return (
-    <AppShell>
-      <div className="p-4 sm:p-6 max-w-4xl mx-auto w-full">
-        {/* Slim header - just page identity + the two thread-management
-            actions. The old Viewer role chip duplicated the profile menu
-            already in the top nav, so it's gone rather than repeated. */}
-        <div className="mb-2 flex items-center justify-between gap-3">
-          <h1 className="text-base font-semibold text-foreground">Ask Meridian</h1>
-          <div className="flex items-center gap-1">
-            {/* Floating popover (role-switcher.tsx / answer-action-toolbar.tsx
-                pattern: relative container + ref, click-outside/Escape
-                effect only attached while open, plain conditional render -
-                no AnimatePresence/exit) instead of the old full-width inline
-                card that pushed the whole thread down when opened. */}
-            <div className="relative" ref={conversationsRef}>
-              <button onClick={() => setShowConversations(!showConversations)}
-                className={cn("inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-colors",
-                  showConversations ? "bg-[#0B6BCB]/10 text-[#0B6BCB]" : "text-muted-foreground hover:text-foreground hover:bg-muted")}
-                title="Past conversations" aria-expanded={showConversations} aria-haspopup="menu">
-                <MessageSquare className="w-4 h-4" />
-                Conversations
-              </button>
-              {showConversations && (
-                <motion.div initial={{ opacity: 0, y: -6, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }}
-                  className="absolute right-0 top-full mt-1.5 z-30 w-80 max-w-[calc(100vw-2rem)] p-4 rounded-2xl bg-card border border-border shadow-lg">
-                  <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                    <MessageSquare className="w-4 h-4 text-[#0B6BCB]" />
-                    Conversations
-                  </h3>
-                  {conversations === null ? (
-                    <p className="text-sm text-muted-foreground py-4 text-center">Loading…</p>
-                  ) : conversations.length === 0 ? (
-                    <p className="text-sm text-muted-foreground py-4 text-center">No saved conversations yet - ask a question to start one.</p>
-                  ) : (
-                    <div className="space-y-1 max-h-80 overflow-y-auto">
-                      {conversations.map((c) => (
-                        <div key={c.id}
-                          onClick={() => handleOpenConversation(c.id)}
-                          role="button" tabIndex={0}
-                          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleOpenConversation(c.id) } }}
-                          className={cn("w-full text-left p-2.5 rounded-xl hover:bg-muted border border-transparent hover:border-border transition-all cursor-pointer flex items-center gap-2 group",
-                            sessionId === String(c.id) && "bg-[#0B6BCB]/[0.06] border-[#0B6BCB]/20")}>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm truncate">{c.title || "New conversation"}</p>
-                            <p className="text-xs text-muted-foreground">{Math.ceil(c.message_count / 2)} {c.message_count === 2 ? "turn" : "turns"}</p>
-                          </div>
-                          <button
-                            onClick={(e) => handleDeleteConversation(c.id, e)}
-                            title="Delete conversation" aria-label={`Delete conversation: ${c.title || "New conversation"}`}
-                            className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity p-1.5 rounded-lg text-muted-foreground hover:text-[#B91C1C] dark:hover:text-red-400 hover:bg-[#FEE2E2] dark:hover:bg-red-500/10 shrink-0">
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ))}
+  // Focus-mode chrome (see AppShell's chrome="minimal"): New chat,
+  // Conversations and History used to live in this page's own header row
+  // under the full TopNav. That row is gone - these same controls (moved
+  // verbatim, including their popovers' click-outside/Escape effects,
+  // which live in refs/effects elsewhere in this component and are
+  // untouched by this move) now render inside FocusBar's slim bar instead.
+  const chromeActions = (
+    <div className="flex items-center gap-1">
+      <button onClick={resetConversation}
+        className="inline-flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+        title="Start a new conversation">
+        <RotateCcw className="w-4 h-4" />
+        <span className="hidden sm:inline">New chat</span>
+      </button>
+      <div className="relative" ref={conversationsRef}>
+        <button onClick={() => setShowConversations(!showConversations)}
+          className={cn("inline-flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-sm font-medium transition-colors",
+            showConversations ? "bg-[#0B6BCB]/10 text-[#0B6BCB]" : "text-muted-foreground hover:text-foreground hover:bg-muted")}
+          title="Past conversations" aria-expanded={showConversations} aria-haspopup="menu">
+          <MessageSquare className="w-4 h-4" />
+          <span className="hidden sm:inline">Conversations</span>
+        </button>
+        {showConversations && (
+          <motion.div initial={{ opacity: 0, y: -6, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }}
+            className="absolute right-0 top-full mt-1.5 z-30 w-80 max-w-[calc(100vw-2rem)] p-4 rounded-2xl bg-card border border-border shadow-lg">
+            <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+              <MessageSquare className="w-4 h-4 text-[#0B6BCB]" />
+              Conversations
+            </h3>
+            {conversations === null ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">Loading…</p>
+            ) : conversations.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">No saved conversations yet - ask a question to start one.</p>
+            ) : (
+              <div className="space-y-1 max-h-80 overflow-y-auto">
+                {conversations.map((c) => (
+                  <div key={c.id}
+                    onClick={() => handleOpenConversation(c.id)}
+                    role="button" tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleOpenConversation(c.id) } }}
+                    className={cn("w-full text-left p-2.5 rounded-xl hover:bg-muted border border-transparent hover:border-border transition-all cursor-pointer flex items-center gap-2 group",
+                      sessionId === String(c.id) && "bg-[#0B6BCB]/[0.06] border-[#0B6BCB]/20")}>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm truncate">{c.title || "New conversation"}</p>
+                      <p className="text-xs text-muted-foreground">{Math.ceil(c.message_count / 2)} {c.message_count === 2 ? "turn" : "turns"}</p>
                     </div>
-                  )}
-                </motion.div>
-              )}
-            </div>
-            <div className="relative" ref={historyRef}>
-              <button onClick={() => setShowHistory(!showHistory)}
-                className={cn("inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-colors",
-                  showHistory ? "bg-[#0B6BCB]/10 text-[#0B6BCB]" : "text-muted-foreground hover:text-foreground hover:bg-muted")}
-                title="Query history" aria-expanded={showHistory} aria-haspopup="menu">
-                <History className="w-4 h-4" />
-                History
-              </button>
-              {showHistory && allHistory.length > 0 && (
-                <motion.div initial={{ opacity: 0, y: -6, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }}
-                  className="absolute right-0 top-full mt-1.5 z-30 w-80 max-w-[calc(100vw-2rem)] p-4 rounded-2xl bg-card border border-border shadow-lg">
-                  <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                    <History className="w-4 h-4 text-[#0B6BCB]" />
-                    Recent Queries
-                  </h3>
-                  <div className="space-y-2 max-h-80 overflow-y-auto">
-                    {allHistory.map((h) => (
-                      <button key={h.timestamp} onClick={() => { setQuery(h.query); setShowHistory(false) }}
-                        className="w-full text-left p-2.5 rounded-xl hover:bg-muted border border-transparent hover:border-border transition-all group">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm truncate flex-1 mr-3">{h.query}</span>
-                          <span className={cn("text-xs font-mono shrink-0", h.confidence >= 0.7 ? "text-[#15803D] dark:text-green-400" : h.confidence >= 0.5 ? "text-[#B45309] dark:text-amber-400" : "text-[#B91C1C] dark:text-red-400")}>
-                            {Math.round(h.confidence * 100)}%
-                          </span>
-                        </div>
-                      </button>
-                    ))}
+                    <button
+                      onClick={(e) => handleDeleteConversation(c.id, e)}
+                      title="Delete conversation" aria-label={`Delete conversation: ${c.title || "New conversation"}`}
+                      className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity p-1.5 rounded-lg text-muted-foreground hover:text-[#B91C1C] dark:hover:text-red-400 hover:bg-[#FEE2E2] dark:hover:bg-red-500/10 shrink-0">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
-                </motion.div>
-              )}
-            </div>
-            {submitted && (
-              <button onClick={resetConversation}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                title="Start a new conversation">
-                <RotateCcw className="w-4 h-4" />
-                New conversation
-              </button>
+                ))}
+              </div>
             )}
-          </div>
-        </div>
+          </motion.div>
+        )}
+      </div>
+      <div className="relative" ref={historyRef}>
+        <button onClick={() => setShowHistory(!showHistory)}
+          className={cn("inline-flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-sm font-medium transition-colors",
+            showHistory ? "bg-[#0B6BCB]/10 text-[#0B6BCB]" : "text-muted-foreground hover:text-foreground hover:bg-muted")}
+          title="Query history" aria-expanded={showHistory} aria-haspopup="menu">
+          <History className="w-4 h-4" />
+          <span className="hidden sm:inline">History</span>
+        </button>
+        {showHistory && allHistory.length > 0 && (
+          <motion.div initial={{ opacity: 0, y: -6, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }}
+            className="absolute right-0 top-full mt-1.5 z-30 w-80 max-w-[calc(100vw-2rem)] p-4 rounded-2xl bg-card border border-border shadow-lg">
+            <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+              <History className="w-4 h-4 text-[#0B6BCB]" />
+              Recent Queries
+            </h3>
+            <div className="space-y-2 max-h-80 overflow-y-auto">
+              {allHistory.map((h) => (
+                <button key={h.timestamp} onClick={() => { setQuery(h.query); setShowHistory(false) }}
+                  className="w-full text-left p-2.5 rounded-xl hover:bg-muted border border-transparent hover:border-border transition-all group">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm truncate flex-1 mr-3">{h.query}</span>
+                    <span className={cn("text-xs font-mono shrink-0", h.confidence >= 0.7 ? "text-[#15803D] dark:text-green-400" : h.confidence >= 0.5 ? "text-[#B45309] dark:text-amber-400" : "text-[#B91C1C] dark:text-red-400")}>
+                      {Math.round(h.confidence * 100)}%
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </div>
+    </div>
+  )
 
+  return (
+    <AppShell chrome="minimal" chromeActions={chromeActions}>
+      <div className="p-4 sm:p-6 max-w-4xl mx-auto w-full">
         {/* Empty state - greeting, composer, and suggested prompts as one
             vertically-centered block (Claude-style), instead of the
             composer pinned at the very top with a lone title stranded in
-            the empty space below it. */}
+            the empty space below it. min-h accounts for FocusBar's 52px
+            (vs. the old ~106px TopNav+header combo) plus this container's
+            own p-4/sm:p-6 padding, so the block still centers in the
+            actual remaining viewport instead of sitting high with dead
+            space below it. */}
         {!submitted && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-            className="min-h-[65vh] flex flex-col items-center justify-center gap-6">
+            className="min-h-[calc(100dvh-52px-2rem)] sm:min-h-[calc(100dvh-52px-3rem)] flex flex-col items-center justify-center gap-6">
             <div className="text-center">
-              <h2 className="text-3xl font-semibold text-foreground">Ask Meridian</h2>
+              {/* Real h1 now that the page header row (which held one) is
+                  gone - promoted from h2 rather than adding a second,
+                  duplicate heading. */}
+              <h1 className="text-3xl font-semibold text-foreground">Ask Meridian</h1>
               <p className="text-sm text-muted-foreground mt-1.5">Search approved SOPs and clinical evidence.</p>
             </div>
             <div className="w-full">
@@ -1207,6 +1209,10 @@ export default function QueryPage() {
             </div>
           </motion.div>
         )}
+
+        {/* The empty-state h1 above unmounts once submitted - this keeps
+            the document outline valid without a second visible heading. */}
+        {submitted && <h1 className="sr-only">Ask Meridian</h1>}
 
         {/* Conversation Thread */}
         <div className="space-y-5">
@@ -1288,7 +1294,12 @@ export default function QueryPage() {
         {submitted && (
           <div ref={composerWrapRef} className="sticky bottom-0 mt-6 pt-4 pb-4 border-t border-border bg-background/95 backdrop-blur-sm">
             {composer}
-            <SafetyNote className="mt-2" />
+            {/* Quieter here than the empty-state instance above (still a
+                safety disclosure, not decoration - kept, just smaller and
+                centered so it reads as a footnote once a conversation is
+                already under way rather than competing with the composer
+                for attention on every turn). */}
+            <SafetyNote className="mt-1.5 text-[11px] text-center" />
           </div>
         )}
       </div>

@@ -129,8 +129,8 @@ export function TrendsContent() {
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-start gap-3">
-          <div className="w-9 h-9 rounded-xl bg-[#0B6BCB]/10 flex items-center justify-center shrink-0">
-            <TrendingUp className="w-4.5 h-4.5 text-[#0B6BCB]" />
+          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+            <TrendingUp className="w-4.5 h-4.5 text-primary" />
           </div>
           <div>
             <h2 className="text-base font-semibold text-foreground">Metric Trends</h2>
@@ -162,7 +162,7 @@ export function TrendsContent() {
         <Card padding="none" className="p-10 text-center space-y-2">
           <Camera className="w-8 h-8 mx-auto text-muted-foreground opacity-40" />
           <p className="text-sm text-muted-foreground">No snapshots recorded yet.</p>
-          <p className="text-xs text-muted-foreground">Click "Record Snapshot" to establish the first baseline - each one takes a minute or two, since it runs every eval harness once.</p>
+          <p className="text-xs text-muted-foreground">Each snapshot takes a minute or two, since it runs every eval harness once.</p>
         </Card>
       ) : (
         <>
@@ -170,7 +170,7 @@ export function TrendsContent() {
             <TrendChart snapshots={snapshots} />
             <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-3 pt-3 border-t border-border">
               {TRACKED_METRICS.map((m) => (
-                <span key={m.key} className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                <span key={m.key} className="inline-flex items-center gap-1.5 text-11 text-muted-foreground">
                   <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: m.color }} />
                   {m.label}
                 </span>
@@ -192,7 +192,7 @@ export function TrendsContent() {
           <Card padding="none" className="overflow-x-auto">
             <table className="w-full text-sm min-w-[720px]">
               <thead>
-                <tr className="border-b border-border text-left text-[11px] uppercase tracking-wide text-muted-foreground">
+                <tr className="border-b border-border text-left text-11 uppercase tracking-wide text-muted-foreground">
                   <th className="px-4 py-2.5 font-medium">Recorded</th>
                   <th className="px-4 py-2.5 font-medium">Label</th>
                   <th className="px-4 py-2.5 font-medium">SOPs</th>
@@ -210,10 +210,10 @@ export function TrendsContent() {
                     <td className="px-4 py-2.5 text-muted-foreground">{s.corpus_sop_count}</td>
                     <td className="px-4 py-2.5">
                       <span className={cn(
-                        "px-2 py-0.5 rounded-full text-[11px] font-medium border",
+                        "px-2 py-0.5 rounded-full text-11 font-medium border",
                         s.generation_mode === "mock" || s.generation_mode === "mock_fallback" || s.generation_mode === "no_generation"
                           ? "bg-muted text-muted-foreground border-border"
-                          : "bg-[#0B6BCB]/10 text-[#0B6BCB] border-[#0B6BCB]/30"
+                          : "bg-primary/10 text-primary border-primary/30"
                       )}>
                         {s.generation_mode}
                       </span>

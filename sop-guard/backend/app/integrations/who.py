@@ -33,11 +33,26 @@ def _first_value(metadata: dict[str, Any], key: str) -> str:
     return ""
 
 
+#: WHO IRIS is a general institutional document repository - technical
+#: reports, regional annual reports, and fact sheets sit in the same
+#: `dc.type` vocabulary as actual guidelines. Only the literal guideline
+#: types below grade as "Guideline"; everything else (the vast majority of
+#: the repository) gets "" and grades "Unknown" via grade_evidence,
+#: correctly dropping below the Strong/Moderate bar that selects
+#: guideline-comparison reference material.
+_GUIDELINE_TYPES = {"guideline", "guidelines", "who guideline", "recommendation", "recommendations"}
+
+
+def _study_type_for(dc_type: str) -> str:
+    return "Guideline" if dc_type.strip().lower() in _GUIDELINE_TYPES else ""
+
+
 def _parse_object(obj: dict[str, Any]) -> dict[str, Any]:
     indexable = ((obj.get("_embedded") or {}).get("indexableObject") or {})
     metadata = indexable.get("metadata") or {}
     handle = indexable.get("handle") or ""
     pub_date = _first_value(metadata, "dc.date.issued")
+    dc_type = _first_value(metadata, "dc.type")
 
     return {
         "title": _first_value(metadata, "dc.title"),
@@ -48,8 +63,8 @@ def _parse_object(obj: dict[str, Any]) -> dict[str, Any]:
         "pmid": handle,
         "url": f"https://iris.who.int/handle/{handle}" if handle else "https://iris.who.int",
         "source_type": "who",
-        "pub_types": [],
-        "study_type": "Guideline",
+        "pub_types": [dc_type] if dc_type else [],
+        "study_type": _study_type_for(dc_type),
     }
 
 

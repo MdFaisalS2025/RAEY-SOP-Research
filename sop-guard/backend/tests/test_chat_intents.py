@@ -33,7 +33,7 @@ async def _seed_sepsis_sop(session_factory):
             version="2.1",
             raw_text="",
             structured_json={
-                "steps": [{"step": i + 1, "action": step}
+                "steps": [{"step": i + 1, "action": step["text"]}
                           for i, step in enumerate(REFERENCE_PROTOCOLS["SOP-ICU-001"]["steps"])]
             },
         )
@@ -113,7 +113,17 @@ async def test_version_history_question_routes_to_chat_intent(client_with_sop):
     assert "no generation model used" in payload["reasoning_trace"][-1]
 
 
-async def test_comparison_question_routes_to_chat_intent(client_with_sop):
+async def test_comparison_question_routes_to_chat_intent(client_with_sop, monkeypatch):
+    # Live guideline retrieval is tried first for every SOP (Q3.6) - disable
+    # it so this test deterministically exercises the curated fallback path
+    # instead of depending on whatever a live search happens to find for
+    # "Sepsis Management Protocol" at test-run time.
+    async def fake_no_guideline(sop_id, sop_title, internal_steps, sim_fn=None):
+        return None
+
+    import app.services.sop_comparison as sop_comparison_mod
+    monkeypatch.setattr(sop_comparison_mod, "compare_sop_to_guideline", fake_no_guideline)
+
     client = client_with_sop
     session_id = await _new_session(client)
 

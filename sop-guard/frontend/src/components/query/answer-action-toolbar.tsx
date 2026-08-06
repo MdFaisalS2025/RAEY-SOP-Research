@@ -27,21 +27,20 @@ function PrimaryButton({ action }: { action: ToolbarAction }) {
     <button
       onClick={action.onClick}
       disabled={action.disabled}
-      title={action.label}
       aria-label={action.label}
       aria-pressed={action.active}
       className={cn(
-        "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0B6BCB]/40",
+        "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-label font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
         action.active
-          ? "bg-[#0B6BCB]/10 dark:bg-[#00E5FF]/10 text-[#0B6BCB] dark:text-[#00E5FF]"
+          ? "bg-primary/10 text-primary"
           : "text-muted-foreground hover:text-foreground hover:bg-muted"
       )}
     >
       <Icon className="w-3.5 h-3.5 shrink-0" />
       {action.label}
       {action.count !== undefined && action.count > 0 && (
-        <span className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full bg-muted text-[10px] font-semibold text-muted-foreground">
+        <span className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full bg-muted text-marker font-semibold text-muted-foreground">
           {action.count}
         </span>
       )}
@@ -57,14 +56,14 @@ function MoreMenuItem({ action, onAfterClick }: { action: ToolbarAction; onAfter
       onClick={() => { action.onClick(); onAfterClick() }}
       disabled={action.disabled}
       className={cn(
-        "w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left transition-colors disabled:opacity-40 disabled:cursor-not-allowed",
-        action.active ? "text-[#0B6BCB] dark:text-[#00E5FF] bg-[#0B6BCB]/[0.06]" : "text-foreground hover:bg-muted"
+        "w-full flex items-center gap-2.5 px-3 py-2 text-chat text-left transition-colors disabled:opacity-40 disabled:cursor-not-allowed",
+        action.active ? "text-primary bg-primary/[0.06]" : "text-foreground hover:bg-muted"
       )}
     >
       <Icon className="w-4 h-4 shrink-0 text-muted-foreground" />
       <span className="flex-1 truncate">{action.label}</span>
       {action.count !== undefined && action.count > 0 && (
-        <span className="text-xs text-muted-foreground">{action.count}</span>
+        <span className="text-meta text-muted-foreground">{action.count}</span>
       )}
     </button>
   )
@@ -143,7 +142,7 @@ export function AnswerActionToolbar({ primary, secondary }: { primary: ToolbarAc
               aria-label="More actions"
               initial={{ opacity: 0, y: -6, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              className="absolute z-20 left-0 top-full mt-1.5 w-64 rounded-xl bg-card border border-border shadow-lg overflow-hidden py-1"
+              className="absolute z-20 right-0 sm:right-auto sm:left-0 top-full mt-1.5 w-64 max-w-[calc(100vw-1.5rem)] rounded-xl bg-card border border-border shadow-lg overflow-hidden py-1"
             >
               {secondary.map((a) => (
                 <MoreMenuItem key={a.key} action={a} onAfterClick={close} />

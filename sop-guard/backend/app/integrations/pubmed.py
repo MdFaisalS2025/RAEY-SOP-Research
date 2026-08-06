@@ -33,12 +33,12 @@ _TTL_SECONDS = 3600  # 1 hour
 _cache: dict[str, tuple[float, list[dict[str, Any]]]] = {}
 
 
-def _cache_key(term: str, max_results: int) -> str:
-    return f"{term.strip().lower()}|{max_results}"
+def _cache_key(term: str, max_results: int, publication_types: tuple[str, ...] = (), min_year: int | None = None) -> str:
+    return f"{term.strip().lower()}|{max_results}|{','.join(publication_types)}|{min_year or ''}"
 
 
-def _cache_get(term: str, max_results: int) -> list[dict[str, Any]] | None:
-    key = _cache_key(term, max_results)
+def _cache_get(term: str, max_results: int, publication_types: tuple[str, ...] = (), min_year: int | None = None) -> list[dict[str, Any]] | None:
+    key = _cache_key(term, max_results, publication_types, min_year)
     entry = _cache.get(key)
     if entry is None:
         return None
@@ -49,8 +49,8 @@ def _cache_get(term: str, max_results: int) -> list[dict[str, Any]] | None:
     return records
 
 
-def _cache_set(term: str, max_results: int, records: list[dict[str, Any]]) -> None:
-    _cache[_cache_key(term, max_results)] = (time.time(), records)
+def _cache_set(term: str, max_results: int, records: list[dict[str, Any]], publication_types: tuple[str, ...] = (), min_year: int | None = None) -> None:
+    _cache[_cache_key(term, max_results, publication_types, min_year)] = (time.time(), records)
 
 
 def _format_authors(author_list: list[dict[str, Any]] | None) -> str:
@@ -167,22 +167,41 @@ def parse_esummary(payload: dict[str, Any]) -> list[dict[str, Any]]:
     return records
 
 
-async def search_pubmed(term: str, max_results: int = 5) -> list[dict[str, Any]]:
+async def search_pubmed(
+    term: str,
+    max_results: int = 5,
+    publication_types: tuple[str, ...] = (),
+    min_year: int | None = None,
+) -> list[dict[str, Any]]:
     """
     Search PubMed for `term` and return up to `max_results` normalized records.
 
     Each record: title, authors, journal, pub_date, pmid, url, source_type.
     Returns [] on empty term or ANY failure. Never raises.
-    """
+
+    `publication_types`/`min_year` are optional PubMed field-tag filters
+    (e.g. `("guideline", "practice guideline", "meta-analysis")`,
+    `min_year=2015`) appended to the query term as `AND (...[pt])` /
+    `AND ("YYYY"[dp] : "3000"[dp])` clauses - used by guideline_finder.py to
+    narrow the general evidence search toward structured guidance
+    specifically. Both default to unset (no behavior change for existing
+    callers) and are orthogonal to the deliberate no-sort choice below."""
     term = (term or "").strip()
     if not term:
         return []
 
     max_results = max(1, min(int(max_results or 5), 20))
 
-    cached = _cache_get(term, max_results)
+    cached = _cache_get(term, max_results, publication_types, min_year)
     if cached is not None:
         return cached
+
+    query = term
+    if publication_types:
+        pt_clause = " OR ".join(f'"{pt}"[pt]' for pt in publication_types)
+        query = f"{query} AND ({pt_clause})"
+    if min_year:
+        query = f'{query} AND ("{min_year}"[dp] : "3000"[dp])'
 
     try:
         async with httpx.AsyncClient(timeout=_TIMEOUT, headers=DEFAULT_HEADERS) as client:
@@ -191,7 +210,7 @@ async def search_pubmed(term: str, max_results: int = 5) -> list[dict[str, Any]]
                 f"{_EUTILS_BASE}/esearch.fcgi",
                 params={
                     "db": "pubmed",
-                    "term": term,
+                    "term": query,
                     "retmax": max_results,
                     "retmode": "json",
                     # Deliberately NOT sorting by pub_date: with a small
@@ -212,7 +231,7 @@ async def search_pubmed(term: str, max_results: int = 5) -> list[dict[str, Any]]
                 search_data.get("esearchresult", {}).get("idlist", [])
             )
             if not id_list:
-                _cache_set(term, max_results, [])
+                _cache_set(term, max_results, [], publication_types, min_year)
                 return []
 
             # 2. esummary: PMIDs -> metadata
@@ -247,7 +266,7 @@ async def search_pubmed(term: str, max_results: int = 5) -> list[dict[str, Any]]
                 for r in records:
                     r["abstract"] = ""
 
-        _cache_set(term, max_results, records)
+        _cache_set(term, max_results, records, publication_types, min_year)
         return records
     except Exception as e:  # noqa: BLE001 - deliberately swallow all failures
         logger.warning(f"PubMed lookup failed for term '{term}': {e}")

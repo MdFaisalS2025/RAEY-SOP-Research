@@ -74,6 +74,16 @@ def build_numbered_context(chunks: list[dict], max_chars: int = 4000) -> tuple[s
             "effective_date": chunk.get("effective_date", ""),
             "review_date": chunk.get("review_date", ""),
             "status": chunk.get("status", "active"),
+            # Exact character offsets for citation deep-linking (Phase P3).
+            # Preserve None as-is - never fabricate an offset.
+            "char_start": chunk.get("char_start"),
+            "char_end": chunk.get("char_end"),
+            "offset_source": chunk.get("offset_source", ""),
+            # Verbatim head of raw_text at the stored span - the frontend's
+            # purpose-built check for whether these offsets still point at
+            # the same text (Phase Q2.1; never derived from `snippet`
+            # above, which is title-prefixed for section chunks).
+            "offset_anchor": chunk.get("offset_anchor") or "",
         })
 
     return "\n".join(context_parts), citation_records
@@ -97,6 +107,31 @@ def build_numbered_texts(chunks: list[dict]) -> dict[int, str]:
         number += 1
         texts[number] = chunk.get("text", chunk.get("chunk_text", "")) or ""
     return texts
+
+
+def build_numbered_spans(chunks: list[dict]) -> dict[int, dict]:
+    """Same dedup + numbering order as build_numbered_context/
+    build_numbered_texts, but returns each chunk's whole-chunk character
+    offsets plus its SOP's full raw_text, keyed by citation number - the
+    inputs narrow_citation_spans needs to map a narrowed sentence back to
+    real document offsets. Kept separate from build_numbered_texts because
+    raw_text (a whole SOP document) is much larger than a single chunk's
+    text and only narrow_citation_spans needs it."""
+    spans: dict[int, dict] = {}
+    seen: set[str] = set()
+    number = 0
+    for chunk in chunks:
+        cid = _chunk_id(chunk)
+        if cid in seen:
+            continue
+        seen.add(cid)
+        number += 1
+        spans[number] = {
+            "char_start": chunk.get("char_start"),
+            "char_end": chunk.get("char_end"),
+            "raw_text": chunk.get("sop_raw_text") or "",
+        }
+    return spans
 
 
 _MARKER_RE = re.compile(r"\[(\d+)\]")
@@ -189,7 +224,7 @@ def auto_insert_citations(
     Server-side safety net for citation coverage: for any substantive
     sentence that has NO [N] marker at all, find the source chunk it's
     most semantically similar to (same matching approach and threshold as
-    faithfulness_nli.check_faithfulness_semantic) and insert that
+    faithfulness_semantic.check_faithfulness_semantic) and insert that
     citation number - rather than depending on the model to reliably
     follow the "cite inline as [1], [2]" prompt instruction, which smaller
     local models in particular skip on a large fraction of answers.
@@ -263,6 +298,123 @@ def auto_insert_citations(
     for pos, num in sorted(insertions, key=lambda p: p[0], reverse=True):
         result = f"{result[:pos]} [{num}]{result[pos:]}"
     return result
+
+
+_PASSAGE_SIM_THRESHOLD = 0.55  # same bar as faithfulness_semantic's _SUPPORTED_THRESHOLD
+
+
+def narrow_citation_spans(
+    answer: str,
+    citation_records: list[dict],
+    numbered_chunk_texts: dict[int, str],
+    numbered_spans: dict[int, dict],
+    sim_fn,
+) -> None:
+    """
+    Mutates `citation_records` in place, adding passage_start/passage_end/
+    passage_basis/passage_similarity to each record - narrows a citation's
+    highlight from the whole chunk span (up to ~2000 chars) down to the
+    specific sentence within it that the answer actually used, addressing
+    "SOPs will be huge with long texts, show exactly which part is being
+    referenced" (Q2.6).
+
+    Never a guess: every record gets passage_start=None/passage_basis=""
+    by default, and those stay unset whenever there's no sim_fn, the
+    chunk has no offsets (char_start/char_end/raw_text), or no chunk
+    sentence clears _PASSAGE_SIM_THRESHOLD against the answer sentence(s)
+    that cited it. In every one of those cases the existing whole-chunk
+    char_start/char_end (never touched here) remains the honest fallback
+    highlight - narrowing is additive, not a replacement.
+    """
+    for rec in citation_records:
+        rec["passage_start"] = None
+        rec["passage_end"] = None
+        rec["passage_basis"] = ""
+        rec["passage_similarity"] = None
+
+    if not sim_fn or not answer:
+        return
+
+    # Reuse the same find-in-original-text + read-trailing-marker approach
+    # as attach_citation_numbers/auto_insert_citations above, so this is
+    # robust to exactly how the naive sentence splitter fragments the
+    # marker away from the sentence it belongs to.
+    cited_sentences: dict[int, list[str]] = {}
+    search_from = 0
+    for raw_sent in _split_sentences_for_citation(answer):
+        sent = _TRAILING_MARKERS_RE.sub("", raw_sent).strip()
+        if not sent:
+            continue
+        idx = answer.find(sent, search_from)
+        if idx == -1:
+            continue
+        end = idx + len(sent)
+        search_from = end
+
+        nums: set[int] = set()
+        inline = _MARKER_RE.search(sent)
+        if inline:
+            nums.add(int(inline.group(1)))
+        trailing = _TRAILING_MARKERS_RE.match(answer[end:end + 40])
+        if trailing:
+            nums |= {int(n) for n in re.findall(r"\d+", trailing.group(0))}
+        if not nums:
+            continue
+
+        clean_sent = _MARKER_RE.sub("", sent).strip()
+        if not clean_sent:
+            continue
+        for n in nums:
+            cited_sentences.setdefault(n, []).append(clean_sent)
+
+    by_number = {rec["number"]: rec for rec in citation_records}
+    for num, answer_sents in cited_sentences.items():
+        rec = by_number.get(num)
+        span = numbered_spans.get(num)
+        chunk_text = numbered_chunk_texts.get(num)
+        if rec is None or not span or not chunk_text:
+            continue
+        char_start, char_end = span.get("char_start"), span.get("char_end")
+        raw_text = span.get("raw_text")
+        if char_start is None or char_end is None or not raw_text:
+            continue
+
+        candidates = _split_sentences_for_citation(chunk_text)
+        if not candidates:
+            continue
+
+        best_sentence, best_sim = None, 0.0
+        for a_sent in answer_sents:
+            for c_sent in candidates:
+                if len(c_sent) < 15:
+                    continue
+                try:
+                    sim = float(sim_fn(a_sent, c_sent))
+                except Exception:
+                    sim = 0.0
+                if sim > best_sim:
+                    best_sim, best_sentence = sim, c_sent
+
+        if best_sentence is None or best_sim < _PASSAGE_SIM_THRESHOLD:
+            continue
+
+        # Bounded to the chunk's own span so a sentence that happens to
+        # repeat elsewhere in the document can't relocate the highlight.
+        # Deliberately an exact substring match, not a fuzzy one: for
+        # step_anchor chunks (Q2.2) `best_sentence` is itself a paraphrase
+        # of the real raw_text wording, so this legitimately misses and
+        # falls through to no narrowing (the whole-chunk highlight stays)
+        # rather than risk a fuzzy match confidently landing on the wrong
+        # words. Verbatim/offset section chunks (Q2.1, the majority case)
+        # match exactly here.
+        idx = raw_text.find(best_sentence, char_start, char_end)
+        if idx == -1:
+            continue
+
+        rec["passage_start"] = idx
+        rec["passage_end"] = idx + len(best_sentence)
+        rec["passage_basis"] = "sentence_semantic"
+        rec["passage_similarity"] = round(best_sim, 3)
 
 
 def citation_coverage(answer: str) -> float:

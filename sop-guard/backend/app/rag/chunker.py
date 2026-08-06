@@ -11,6 +11,160 @@ from datetime import datetime
 from app.rag.entity_graph import DRUG_LEXICON, CONDITION_LEXICON
 from app.rag.clinical_terms import ABBREVIATIONS
 
+# Shared with _extract_section_chunks (which builds section chunks from
+# these same boundaries) and _section_heading_at (which looks up which
+# section a given char offset falls inside, for step chunks - see
+# _locate_step_by_number).
+_SECTION_HEADING_PATTERN = re.compile(
+    r"(?:^|\n)(\d+\.\s+[A-Z].*|[A-Z][A-Z\s]{4,60}(?:\n)|(?:Section|SECTION)\s+\d+.*)",
+    re.MULTILINE,
+)
+
+
+def _locate_span(raw_text: str, needle: str) -> tuple[int | None, int | None, str]:
+    """Locate `needle` inside `raw_text`, for citation deep-linking offsets.
+
+    Never fabricates: returns (None, None, "") rather than guessing. Tries
+    an exact substring match first ("verbatim"), then a whitespace-
+    normalized search ("normalized") for text that differs only in
+    line-wrapping/spacing, via an index map back to the original string.
+    """
+    if not needle:
+        return None, None, ""
+
+    idx = raw_text.find(needle)
+    if idx != -1:
+        return idx, idx + len(needle), "verbatim"
+
+    # Whitespace-normalized fallback: collapse runs of whitespace to a
+    # single space in both strings, search in the normalized text, then
+    # map the match position back to the original raw_text index via a
+    # position map built alongside the normalization.
+    norm_chars: list[str] = []
+    index_map: list[int] = []  # index_map[i] = original raw_text index of norm_chars[i]
+    prev_was_space = False
+    for i, ch in enumerate(raw_text):
+        if ch.isspace():
+            if not prev_was_space:
+                norm_chars.append(" ")
+                index_map.append(i)
+            prev_was_space = True
+        else:
+            norm_chars.append(ch)
+            index_map.append(i)
+            prev_was_space = False
+    normalized = "".join(norm_chars)
+
+    norm_needle = re.sub(r"\s+", " ", needle).strip()
+    if not norm_needle:
+        return None, None, ""
+
+    norm_idx = normalized.find(norm_needle)
+    if norm_idx == -1:
+        return None, None, ""
+
+    start = index_map[norm_idx]
+    norm_end = norm_idx + len(norm_needle) - 1
+    if norm_end >= len(index_map):
+        norm_end = len(index_map) - 1
+    end = index_map[norm_end] + 1
+    return start, end, "normalized"
+
+
+_ANCHOR_LEN = 160
+
+
+def _anchor_for(raw_text: str, start: int | None, end: int | None) -> str:
+    """Verbatim head of raw_text[start:end], so the frontend can verify a
+    stored offset still points at the same text before trusting it.
+
+    Always derived from raw_text - never from a chunk's display text, which
+    is title-prefixed for section chunks (see _extract_section_chunks) and
+    would make that check fail on every correctly-located section offset.
+    """
+    if start is None or end is None:
+        return ""
+    return raw_text[start:min(end, start + _ANCHOR_LEN)]
+
+
+_STEP_ANCHOR_MIN_CONTAINMENT = 0.60
+
+_CONTAINMENT_STOPWORDS = {
+    "the", "and", "for", "with", "into", "from", "that", "this", "then",
+    "should", "shall", "must", "when", "than", "within", "over", "under",
+    "not", "are", "was", "were", "has", "have", "had", "can", "will",
+    "step", "using",
+}
+
+
+def _containment_tokens(text: str) -> set[str]:
+    return {w for w in re.findall(r"[a-z0-9]{3,}", (text or "").lower()) if w not in _CONTAINMENT_STOPWORDS}
+
+
+def _containment(a: str, b: str) -> float:
+    """Fraction of `a`'s significant word tokens present in `b` -
+    asymmetric on purpose. Used to gate step-number anchoring, where `a`
+    is a compressed paraphrase (the structured extraction's step text)
+    and `b` is the longer raw block it's being anchored to: the question
+    is "does b cover a", not "are a and b interchangeable". A symmetric
+    metric like Jaccard collapses on exactly that length difference - a
+    difflib.SequenceMatcher prototype of this gate produced wrong spans
+    at scores that would otherwise pass, because it penalized the
+    paraphrase for being shorter than the block containing it."""
+    ta = _containment_tokens(a)
+    if not ta:
+        return 0.0
+    tb = _containment_tokens(b)
+    return len(ta & tb) / len(ta)
+
+
+def _locate_step_by_number(raw_text: str, step_num: Any, step_text: str) -> tuple[int | None, int | None, str]:
+    """Anchor a paraphrased step to the SOP's own "Step N:" marker in
+    raw_text - not a text-similarity guess, a structural fact about the
+    document's own numbering. Gated by _containment so a mismatched or
+    reordered SOP still returns NULL rather than confidently pointing at
+    the wrong step.
+
+    Calibrated against the demo corpus (219 step pairs, hand-inspected):
+    correct anchors have median containment 0.90 (p5 0.625); wrong
+    anchors have median 0.0 (p95 0.333, max 0.667). The 0.60 threshold
+    recovers ~211/216 previously-unlocatable step chunks at a measured
+    false-positive rate of 0.5%; 0.50 trades a small FP-rate increase for
+    slightly higher recall, 0.70 trades recall for zero measured FPs.
+    """
+    if not step_text:
+        return None, None, ""
+    pattern = re.compile(
+        rf"(?m)^[ \t]*Step[ \t]+{re.escape(str(step_num))}[:.\)][ \t]*"
+        rf"(?:.+(?:\n(?![ \t]*Step[ \t]+\d)(?!\s*$).+)*)"
+    )
+    m = pattern.search(raw_text)
+    if not m:
+        return None, None, ""
+    if _containment(step_text, m.group(0)) < _STEP_ANCHOR_MIN_CONTAINMENT:
+        return None, None, ""
+    return m.start(), m.end(), "step_anchor"
+
+
+def _section_heading_at(raw_text: str, offset: int | None) -> str | None:
+    """Which section heading (using the same boundary pattern
+    _extract_section_chunks builds section chunks from) contains
+    raw_text[offset]? None if offset is None or no section heading
+    matches - callers fall back to a generic label in that case, since a
+    step outside any recognized section shouldn't be given a fabricated
+    section_title."""
+    if offset is None:
+        return None
+    matches = list(_SECTION_HEADING_PATTERN.finditer(raw_text))
+    if not matches:
+        return None
+    for i, m in enumerate(matches):
+        start = m.start(1)
+        end = matches[i + 1].start(1) if i + 1 < len(matches) else len(raw_text)
+        if start <= offset < end:
+            return m.group(1).strip()[:100]
+    return None
+
 
 def _sop_level_entities(raw_text: str) -> list[str]:
     """Drug/condition entities present anywhere in the SOP's full text, not
@@ -79,6 +233,11 @@ def create_sop_chunks(
         "text": summary,
         "step_order": None,
         "tokens": _estimate_tokens(summary),
+        # Assembled from scattered lines - no single contiguous span exists.
+        "char_start": None,
+        "char_end": None,
+        "offset_source": "",
+        "offset_anchor": "",
     })
 
     # 2. Step chunks - one per procedure step, grouped when sequential
@@ -95,15 +254,38 @@ def create_sop_chunks(
             if not step_text:
                 continue
             full_text = f"Step {step_num}: {step_text}"
+            # Search on the raw step text, not the synthesized "Step N: "
+            # prefix (which the source SOP text rarely spells out
+            # verbatim), then widen backward over a literal step prefix
+            # if the raw text happens to have one right before it.
+            step_start, step_end, step_offset_source = _locate_span(raw_text, step_text)
+            if step_start is not None:
+                for prefix in (f"Step {step_num}: ", f"Step {step_num}:", f"{step_num}. ", f"{step_num}: "):
+                    if raw_text[max(0, step_start - len(prefix)):step_start] == prefix:
+                        step_start -= len(prefix)
+                        break
+            else:
+                # step_text is usually an editorial paraphrase of the raw
+                # SOP text (structured_json is hand-authored/LLM-extracted,
+                # not a verbatim slice), so an exact/whitespace-normalized
+                # search often can't find it. Anchor to the document's own
+                # "Step N:" numbering instead - a structural fact, not a
+                # text-similarity guess (see _locate_step_by_number).
+                step_start, step_end, step_offset_source = _locate_step_by_number(raw_text, step_num, step_text)
+            step_section_title = _section_heading_at(raw_text, step_start) or "Procedure Steps"
             chunks.append({
                 **base_meta,
                 "chunk_id": f"{sop_id}_step_{step_num}",
                 "chunk_type": "step",
                 "section_id": "procedure",
-                "section_title": "Procedure Steps",
+                "section_title": step_section_title,
                 "text": full_text,
                 "step_order": step_num,
                 "tokens": _estimate_tokens(full_text),
+                "char_start": step_start,
+                "char_end": step_end,
+                "offset_source": step_offset_source,
+                "offset_anchor": _anchor_for(raw_text, step_start, step_end),
             })
 
         # Also create a combined steps chunk (parent)
@@ -128,6 +310,10 @@ def create_sop_chunks(
             "text": all_steps_text.strip(),
             "step_order": None,
             "tokens": _estimate_tokens(all_steps_text),
+            "char_start": None,
+            "char_end": None,
+            "offset_source": "",
+            "offset_anchor": "",
         })
 
     # 3. Threshold chunks - one per entry (mirrors step chunking below),
@@ -177,6 +363,13 @@ def create_sop_chunks(
                 "text": text,
                 "step_order": None,
                 "tokens": _estimate_tokens(text),
+                # Assembled/reworded from structured extraction (parameter
+                # label, expansion, action all synthesized) - not a
+                # contiguous span in raw_text.
+                "char_start": None,
+                "char_end": None,
+                "offset_source": "",
+                "offset_anchor": "",
             })
 
         # Combined chunk (parent) - same backwards-compatible "value:
@@ -202,6 +395,10 @@ def create_sop_chunks(
             "text": threshold_text.strip(),
             "step_order": None,
             "tokens": _estimate_tokens(threshold_text),
+            "char_start": None,
+            "char_end": None,
+            "offset_source": "",
+            "offset_anchor": "",
         })
 
     # 4. Contraindication chunks
@@ -228,6 +425,10 @@ def create_sop_chunks(
             "text": contra_text.strip(),
             "step_order": None,
             "tokens": _estimate_tokens(contra_text),
+            "char_start": None,
+            "char_end": None,
+            "offset_source": "",
+            "offset_anchor": "",
         })
 
     # 5. Section chunks - extract sections from raw text
@@ -245,6 +446,10 @@ def create_sop_chunks(
             "text": raw_text,
             "step_order": None,
             "tokens": _estimate_tokens(raw_text),
+            "char_start": 0,
+            "char_end": len(raw_text),
+            "offset_source": "whole_doc",
+            "offset_anchor": _anchor_for(raw_text, 0, len(raw_text)),
         })
 
     return chunks
@@ -273,22 +478,23 @@ def _extract_section_chunks(raw_text: str, sop_id: str, base_meta: dict) -> list
     """Split document into section-based chunks."""
     chunks = []
 
-    # Find section boundaries
-    section_pattern = re.compile(
-        r"(?:^|\n)(\d+\.\s+[A-Z].*|[A-Z][A-Z\s]{4,60}(?:\n)|(?:Section|SECTION)\s+\d+.*)",
-        re.MULTILINE
-    )
-
-    matches = list(section_pattern.finditer(raw_text))
+    # Find section boundaries (shared pattern - see _section_heading_at,
+    # which looks up which of these same boundaries a given offset falls
+    # inside for step chunks).
+    matches = list(_SECTION_HEADING_PATTERN.finditer(raw_text))
 
     if not matches:
         # No sections found - create paragraph chunks as fallback
         return _paragraph_chunks(raw_text, sop_id, base_meta)
 
     for i, match in enumerate(matches):
-        section_title = match.group(0).strip()
-        start = match.start()
-        end = matches[i + 1].start() if i + 1 < len(matches) else len(raw_text)
+        # match.start(1)/group(1), not match.start(0)/group(0) - the
+        # regex's leading (?:^|\n) is one character earlier than the
+        # section title actually starts, which threw every section's
+        # offsets off by one against raw_text.
+        section_title = match.group(1).strip()
+        start = match.start(1)
+        end = matches[i + 1].start(1) if i + 1 < len(matches) else len(raw_text)
         section_text = raw_text[start:end].strip()
 
         if len(section_text) < 20:
@@ -306,6 +512,10 @@ def _extract_section_chunks(raw_text: str, sop_id: str, base_meta: dict) -> list
             "text": full_text[:2000],  # Cap section chunk size
             "step_order": None,
             "tokens": _estimate_tokens(full_text[:2000]),
+            "char_start": start,
+            "char_end": end,
+            "offset_source": "verbatim",
+            "offset_anchor": _anchor_for(raw_text, start, end),
         })
 
     return chunks
@@ -323,6 +533,7 @@ def _paragraph_chunks(raw_text: str, sop_id: str, base_meta: dict) -> list[dict]
         if not para:
             continue
         if len(current) + len(para) > 1200 and current:
+            para_start, para_end, para_offset_source = _locate_span(raw_text, current.strip())
             chunks.append({
                 **base_meta,
                 "chunk_id": f"{sop_id}_para_{idx}",
@@ -332,6 +543,10 @@ def _paragraph_chunks(raw_text: str, sop_id: str, base_meta: dict) -> list[dict]
                 "text": f"{base_meta['sop_title']}:\n{current.strip()}",
                 "step_order": None,
                 "tokens": _estimate_tokens(current),
+                "char_start": para_start,
+                "char_end": para_end,
+                "offset_source": para_offset_source,
+                "offset_anchor": _anchor_for(raw_text, para_start, para_end),
             })
             idx += 1
             current = para
@@ -339,6 +554,7 @@ def _paragraph_chunks(raw_text: str, sop_id: str, base_meta: dict) -> list[dict]
             current = f"{current}\n{para}" if current else para
 
     if current.strip():
+        _para_start, _para_end, _para_offset_source = _locate_span(raw_text, current.strip())
         chunks.append({
             **base_meta,
             "chunk_id": f"{sop_id}_para_{idx}",
@@ -348,6 +564,10 @@ def _paragraph_chunks(raw_text: str, sop_id: str, base_meta: dict) -> list[dict]
             "text": f"{base_meta['sop_title']}:\n{current.strip()}",
             "step_order": None,
             "tokens": _estimate_tokens(current),
+            "char_start": _para_start,
+            "char_end": _para_end,
+            "offset_source": _para_offset_source,
+            "offset_anchor": _anchor_for(raw_text, _para_start, _para_end),
         })
 
     return chunks

@@ -309,7 +309,7 @@ function TestCard({ test }: { test: AdversarialTest }) {
       {/* Expand / collapse full response */}
       <button
         onClick={() => setExpanded((v) => !v)}
-        className="flex items-center gap-1.5 text-xs text-subtle hover:text-[#0B6BCB] transition-colors"
+        className="flex items-center gap-1.5 text-xs text-subtle hover:text-primary transition-colors"
       >
         {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
         {expanded ? "Collapse" : "View Full Response (Coming Soon)"}
@@ -380,7 +380,7 @@ export function AdversarialContent() {
         {/* ── Header ── */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
           <div className="flex flex-wrap items-start gap-3 mb-3">
-            <div className="w-11 h-11 rounded-2xl bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 flex items-center justify-center shrink-0">
+            <div className={cn(toneChip.danger, "w-11 h-11 rounded-2xl flex items-center justify-center shrink-0")}>
               <ShieldAlert className="w-5 h-5 text-[#B91C1C] dark:text-red-400" />
             </div>
             <div className="flex-1 min-w-0">
@@ -392,7 +392,7 @@ export function AdversarialContent() {
             <button
               onClick={handleRunTestSuite}
               disabled={loadingBenchmark}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 text-[#0B6BCB] hover:bg-[#0B6BCB]/20 transition-colors text-sm font-medium disabled:opacity-60"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 border border-primary/30 text-primary hover:bg-primary/20 transition-colors text-sm font-medium disabled:opacity-60"
             >
               {loadingBenchmark ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
               {loadingBenchmark ? "Running..." : "Run Live Verifier Benchmark"}
@@ -418,7 +418,7 @@ export function AdversarialContent() {
             { label: "Partial", value: partialCount, color: "text-[#B45309] dark:text-amber-400" },
             { label: "Failing", value: failCount, color: "text-[#B91C1C] dark:text-red-400" },
           ].map((s) => (
-            <div key={s.label} className="p-4 rounded-2xl bg-card border border-[#0B6BCB]/10 text-center">
+            <div key={s.label} className="p-4 rounded-2xl bg-card border border-primary/10 text-center">
               <p className={cn("text-3xl font-bold", s.color)}>{s.value}</p>
               <p className="text-xs text-subtle mt-1">{s.label}</p>
             </div>
@@ -439,7 +439,7 @@ export function AdversarialContent() {
               className={cn(
                 "px-3 py-1.5 rounded-xl text-xs font-medium transition-colors border",
                 activeCategory === cat
-                  ? "bg-[#0B6BCB]/10 border-[#0B6BCB]/30 text-[#0B6BCB]"
+                  ? "bg-primary/10 border-primary/30 text-primary"
                   : "bg-card border-border text-muted-foreground hover:text-foreground hover:border-input"
               )}
             >
@@ -467,24 +467,24 @@ export function AdversarialContent() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="rounded-2xl bg-card border border-[#0B6BCB]/10 p-6 space-y-4"
+          className="rounded-2xl bg-card border border-primary/10 p-6 space-y-4"
         >
           <div className="flex items-center justify-between flex-wrap gap-2">
             <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
-              <FlaskConical className="w-4 h-4 text-[#0B6BCB]" />
+              <FlaskConical className="w-4 h-4 text-primary" />
               Live Verifier Benchmark
             </h2>
-            <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30">
+            <span className={cn(toneChip.success, "px-2 py-0.5 rounded text-10 font-semibold")}>
               REAL BACKEND DATA
             </span>
           </div>
 
           {!benchmark && !loadingBenchmark && !benchmarkError && (
             <p className="text-sm text-muted-foreground">
-              Click &quot;Run Live Verifier Benchmark&quot; above to run the procedural faithfulness verifier
-              against the real 120-case perturbation benchmark (17 hand-written + 103 programmatically-generated
-              threshold/sequence/contraindication violations), including a second-opinion comparison against the
-              NLI-lite verifier.
+              The procedural faithfulness verifier runs against the real perturbation benchmark
+              (17 hand-written threshold/sequence/contraindication violations plus a programmatically-generated
+              set that scales with the current SOP corpus), including a second-opinion comparison against
+              the NLI-lite verifier.
             </p>
           )}
 
@@ -509,15 +509,15 @@ export function AdversarialContent() {
                   <p className="text-xs text-subtle mt-0.5">Test Cases</p>
                 </div>
                 <div className="p-3 rounded-xl bg-muted border border-border text-center">
-                  <p className="text-2xl font-bold text-[#0B6BCB]">{Math.round(benchmark.sensitivity * 100)}%</p>
+                  <p className="text-2xl font-bold text-primary">{Math.round(benchmark.sensitivity * 100)}%</p>
                   <p className="text-xs text-subtle mt-0.5">Sensitivity</p>
                 </div>
                 <div className="p-3 rounded-xl bg-muted border border-border text-center">
-                  <p className="text-2xl font-bold text-[#0B6BCB]">{Math.round(benchmark.specificity * 100)}%</p>
+                  <p className="text-2xl font-bold text-primary">{Math.round(benchmark.specificity * 100)}%</p>
                   <p className="text-xs text-subtle mt-0.5">Specificity</p>
                 </div>
                 <div className="p-3 rounded-xl bg-muted border border-border text-center">
-                  <p className="text-2xl font-bold text-[#0B6BCB]">{Math.round(benchmark.pairwise_separation * 100)}%</p>
+                  <p className="text-2xl font-bold text-primary">{Math.round(benchmark.pairwise_separation * 100)}%</p>
                   <p className="text-xs text-subtle mt-0.5">Pairwise Separation</p>
                 </div>
               </div>
@@ -570,11 +570,11 @@ export function AdversarialContent() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="rounded-2xl bg-card border border-[#0B6BCB]/10 p-6 space-y-5"
+          className="rounded-2xl bg-card border border-primary/10 p-6 space-y-5"
         >
           <div>
             <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
-              <FlaskConical className="w-4 h-4 text-[#0B6BCB]" />
+              <FlaskConical className="w-4 h-4 text-primary" />
               Illustrative Failure-Mode Categories
             </h2>
             <p className="text-xs text-subtle mt-1">
@@ -607,7 +607,7 @@ export function AdversarialContent() {
             <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Key Findings</p>
 
             <div className="space-y-2">
-              <div className="flex items-start gap-3 p-3 rounded-xl bg-[#DCFCE7] dark:bg-green-500/10 border border-[#BBF7D0] dark:border-green-500/30">
+              <div className={cn(toneChip.success, "flex items-start gap-3 p-3 rounded-xl")}>
                 <CheckCircle2 className="w-4 h-4 text-[#15803D] dark:text-green-400 shrink-0 mt-0.5" />
                 <div>
                   <p className="text-xs font-semibold text-[#15803D] dark:text-green-400 mb-0.5">Strong</p>
@@ -615,7 +615,7 @@ export function AdversarialContent() {
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 p-3 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30">
+              <div className={cn(toneChip.warning, "flex items-start gap-3 p-3 rounded-xl")}>
                 <AlertCircle className="w-4 h-4 text-[#B45309] dark:text-amber-400 shrink-0 mt-0.5" />
                 <div>
                   <p className="text-xs font-semibold text-[#B45309] dark:text-amber-400 mb-0.5">Partial / Needs Work</p>
@@ -623,7 +623,7 @@ export function AdversarialContent() {
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 p-3 rounded-xl bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30">
+              <div className={cn(toneChip.danger, "flex items-start gap-3 p-3 rounded-xl")}>
                 <XCircle className="w-4 h-4 text-[#B91C1C] dark:text-red-400 shrink-0 mt-0.5" />
                 <div>
                   <p className="text-xs font-semibold text-[#B91C1C] dark:text-red-400 mb-0.5">Weak / Failure Mode</p>
@@ -649,7 +649,7 @@ export function AdversarialContent() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.25 }}
-          className="flex items-start gap-3 px-4 py-3 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 text-xs"
+          className={cn(toneChip.warning, "flex items-start gap-3 px-4 py-3 rounded-xl text-xs")}
         >
           <Info className="w-4 h-4 shrink-0 mt-0.5 text-[#B45309] dark:text-amber-400" />
           <span>

@@ -29,6 +29,23 @@ _TIMEOUT = 6.0
 _cache = TTLCache(ttl_seconds=3600)
 
 
+#: The Content Syndication API's `type` field spans everything CDC tags
+#: for syndication - real clinical guidance ("Guideline", "Recommendation")
+#: alongside syndicated widgets, campaign pages, and images that carry no
+#: clinical authority. Only the former should grade as a guideline; every
+#: object was hardcoded "study_type": "Guideline" is checked against the
+#: literal item type instead, so a syndication widget lands as "" (grades
+#: "Unknown" via grade_evidence, correctly dropping below the Strong/
+#: Moderate bar that selects guideline-comparison reference material)
+#: rather than "Strong".
+_GUIDELINE_TYPES = {"guideline", "recommendation", "guidance"}
+
+
+def _study_type_for(item: dict[str, Any]) -> str:
+    item_type = str(item.get("type") or "").strip().lower()
+    return "Guideline" if item_type in _GUIDELINE_TYPES else ""
+
+
 def _parse_item(item: dict[str, Any]) -> dict[str, Any]:
     pub_date = (item.get("dateOfSourceModification") or item.get("dateOfSourceCreation") or "").strip()
     url = item.get("sourceURL") or item.get("resourceURL") or "https://www.cdc.gov"
@@ -42,7 +59,7 @@ def _parse_item(item: dict[str, Any]) -> dict[str, Any]:
         "url": url,
         "source_type": "cdc",
         "pub_types": [item.get("type")] if item.get("type") else [],
-        "study_type": "Guideline",
+        "study_type": _study_type_for(item),
     }
 
 

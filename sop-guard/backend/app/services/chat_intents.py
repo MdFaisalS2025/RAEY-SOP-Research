@@ -112,10 +112,11 @@ async def try_comparison_answer(
     or no meaningful comparison could be built (e.g. no strong/moderate
     external evidence found for the topic)."""
     from app.services.sop_comparison import (
-        compare_sop_to_reference, compare_sop_to_dynamic_evidence, REFERENCE_PROTOCOLS,
+        compare_sop_to_reference, compare_sop_to_dynamic_evidence, compare_sop_to_guideline,
+        REFERENCE_PROTOCOLS, internal_steps_from,
     )
     from app.integrations.evidence_registry import search_all as search_external_evidence
-    from app.rag.faithfulness_nli import get_similarity_fn
+    from app.rag.faithfulness_semantic import get_similarity_fn
 
     identified = _identify_top_sop(retriever, query)
     if identified is None:
@@ -125,12 +126,21 @@ async def try_comparison_answer(
     sop = (await db.execute(select(SOP).where(SOP.sop_id == sop_id))).scalar_one_or_none()
     if sop is None:
         return None
-    internal_steps = [s.get("action", "") for s in (sop.structured_json or {}).get("steps", [])]
+    internal_steps = internal_steps_from(sop.structured_json)
     sim_fn = get_similarity_fn()
 
-    if sop_id in REFERENCE_PROTOCOLS:
+    # Same primary/fallback order as the "Compare with Clinical Evidence"
+    # endpoint (routes_comparison.py): live guideline retrieval first for
+    # every SOP, then the curated offline fallback (only for the one SOP
+    # with a stored transcription), then comparing against evidence titles
+    # only as a last resort.
+    try:
+        result = await compare_sop_to_guideline(sop_id, sop_title, internal_steps, sim_fn=sim_fn)
+    except Exception:
+        result = None
+    if result is None and sop_id in REFERENCE_PROTOCOLS:
         result = compare_sop_to_reference(sop_id, internal_steps, sim_fn=sim_fn)
-    else:
+    if result is None:
         try:
             evidence_records = await search_external_evidence(sop_title, max_results=15)
         except Exception:
@@ -142,7 +152,7 @@ async def try_comparison_answer(
 
     summary = result["summary"]
     lines = [
-        f"Based on comparing {sop_title} (v{sop.version}) with {result['reference_source'].get('name', 'external evidence')}:\n",
+        f"Based on comparing {sop_title} (v{sop.version}) with {result['reference_label']}:\n",
         f"Overall alignment: {summary['overall_alignment']}",
         f"- {summary['match_count']} of {summary['total_reference_steps']} reference points fully match the current SOP.",
     ]

@@ -47,11 +47,11 @@ const SOURCE_LABEL: Record<string, string> = {
 type EvidenceGrade = "Strong" | "Moderate" | "Limited" | "Research Only" | "Outdated" | "Unknown"
 
 const GRADE_STYLE: Record<EvidenceGrade, string> = {
-  "Strong": "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30",
-  "Moderate": "bg-[#0B6BCB]/10 text-[#0B6BCB] border-[#0B6BCB]/30",
-  "Limited": "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30",
+  "Strong": "bg-ok-soft text-ok-soft-fg border-ok-soft-border",
+  "Moderate": "bg-primary/10 text-primary border-primary/30",
+  "Limited": "bg-warn-soft text-warn-soft-fg border-warn-soft-border",
   "Research Only": "bg-card text-muted-foreground border-input",
-  "Outdated": "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30",
+  "Outdated": "bg-danger-soft text-danger-soft-fg border-danger-soft-border",
   "Unknown": "bg-muted text-subtle border-border",
 }
 
@@ -154,14 +154,14 @@ function AgreementMeter({ results }: { results: EvidenceRecord[] }) {
         <span className="text-[10px] text-subtle">title-wording heuristic</span>
       </div>
       <div className="flex h-2 rounded-full overflow-hidden bg-border">
-        {yes > 0 && <div className="bg-[#15803D] dark:bg-green-500" style={{ width: `${pct(yes)}%` }} title={`${yes} supportive`} />}
+        {yes > 0 && <div className="bg-success" style={{ width: `${pct(yes)}%` }} title={`${yes} supportive`} />}
         {unclear > 0 && <div className="bg-[#94A3B8]" style={{ width: `${pct(unclear)}%` }} title={`${unclear} unclear`} />}
-        {no > 0 && <div className="bg-[#B91C1C] dark:bg-red-500" style={{ width: `${pct(no)}%` }} title={`${no} refuting`} />}
+        {no > 0 && <div className="bg-destructive" style={{ width: `${pct(no)}%` }} title={`${no} refuting`} />}
       </div>
       <div className="flex items-center gap-3 mt-1.5 text-[10px] text-muted-foreground">
-        <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#15803D] dark:bg-green-500" />Yes ({yes})</span>
+        <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-success" />Yes ({yes})</span>
         <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#94A3B8]" />Unclear ({unclear})</span>
-        <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#B91C1C] dark:bg-red-500" />No ({no})</span>
+        <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-destructive" />No ({no})</span>
       </div>
     </div>
   )
@@ -233,10 +233,10 @@ export function EvidencePanel({ entities, queryText, variant = "card" }: { entit
       {variant === "card" && (
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-semibold flex items-center gap-2">
-            <BookOpen className="w-4 h-4 text-[#0B6BCB]" />
+            <BookOpen className="w-4 h-4 text-primary" />
             External Evidence
           </h3>
-          <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30">
+          <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-ok-soft text-ok-soft-fg border border-ok-soft-border">
             LIVE · SORTED BY EVIDENCE GRADE
           </span>
         </div>
@@ -258,7 +258,7 @@ export function EvidencePanel({ entities, queryText, variant = "card" }: { entit
               onClick={() => toggleSource(s)}
               className={`px-2 py-0.5 rounded-full text-[10px] font-medium border transition-colors ${
                 activeSources.has(s)
-                  ? "bg-[#0B6BCB]/10 text-[#0B6BCB] border-[#0B6BCB]/30"
+                  ? "bg-primary/10 text-primary border-primary/30"
                   : "bg-muted text-subtle border-border"
               }`}
             >
@@ -297,7 +297,7 @@ export function EvidencePanel({ entities, queryText, variant = "card" }: { entit
             return (
               <div key={`${r.source_type}-${r.pmid}`} className="flex gap-3 p-3 rounded-xl bg-muted border border-border">
                 <div className="w-7 h-7 rounded-lg bg-card border border-border flex items-center justify-center shrink-0 mt-0.5">
-                  <Icon className="w-3.5 h-3.5 text-[#0B6BCB] dark:text-[#00E5FF]" />
+                  <Icon className="w-3.5 h-3.5 text-primary" />
                 </div>
                 <div className="min-w-0 flex-1 space-y-1.5">
                   <div className="flex items-center gap-1.5 flex-wrap">
@@ -311,12 +311,12 @@ export function EvidencePanel({ entities, queryText, variant = "card" }: { entit
                       {gradeEvidence(r)}
                     </span>
                     {r.stance === "yes" && (
-                      <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30">
+                      <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium bg-ok-soft text-ok-soft-fg border border-ok-soft-border">
                         Supports
                       </span>
                     )}
                     {r.stance === "no" && (
-                      <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30">
+                      <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium bg-danger-soft text-danger-soft-fg border border-danger-soft-border">
                         Refutes
                       </span>
                     )}
@@ -337,7 +337,7 @@ export function EvidencePanel({ entities, queryText, variant = "card" }: { entit
                         href={r.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-[11px] text-[#0B6BCB] dark:text-[#00E5FF] hover:underline"
+                        className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline"
                       >
                         View source
                         <ExternalLink className="w-3 h-3" />
@@ -355,7 +355,7 @@ export function EvidencePanel({ entities, queryText, variant = "card" }: { entit
           {visibleResults.length > COLLAPSED_COUNT && (
             <button
               onClick={() => setExpanded((v) => !v)}
-              className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-[12px] font-medium text-[#0B6BCB] hover:bg-[#0B6BCB]/5 transition-colors"
+              className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-[12px] font-medium text-primary hover:bg-primary/5 transition-colors"
             >
               {expanded ? (
                 <>Show fewer <ChevronUp className="w-3.5 h-3.5" /></>

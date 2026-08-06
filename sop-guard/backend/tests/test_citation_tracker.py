@@ -20,6 +20,27 @@ def test_numbering_sequential():
     assert "[1]" in context and "[2]" in context
 
 
+def test_citation_records_carry_offset_fields_when_present():
+    chunks = _chunks()
+    chunks[0]["char_start"] = 10
+    chunks[0]["char_end"] = 45
+    chunks[0]["offset_source"] = "verbatim"
+    _, records = build_numbered_context(chunks)
+    assert records[0]["char_start"] == 10
+    assert records[0]["char_end"] == 45
+    assert records[0]["offset_source"] == "verbatim"
+
+
+def test_citation_records_preserve_none_offsets_without_fabricating():
+    # Real chunks (e.g. summary/step_sequence) never set char_start/end -
+    # the records must carry None through, never coerce to 0.
+    _, records = build_numbered_context(_chunks())
+    for r in records:
+        assert r["char_start"] is None
+        assert r["char_end"] is None
+        assert r["offset_source"] == ""
+
+
 def test_dedupe_identical_chunks():
     chunks = _chunks()
     # Duplicate the first chunk exactly.

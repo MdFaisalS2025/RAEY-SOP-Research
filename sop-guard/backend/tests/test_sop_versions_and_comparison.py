@@ -9,12 +9,14 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 import app.models.models  # noqa: F401 - register models on Base
 from app.main import app as fastapi_app
 from app.database.db import Base, get_db
-from app.models.models import SOP, SOPVersionRecord
+from app.models.models import SOP, SOPVersionRecord, StaffUser
+from app.services.auth import get_current_user
 from app.services.sop_comparison import (
     compare_sop_to_reference,
     compare_sop_to_dynamic_evidence,
     build_dynamic_reference_items,
     REFERENCE_PROTOCOLS,
+    _run_comparison,
 )
 
 
@@ -25,7 +27,7 @@ def test_returns_none_for_sop_without_reference_protocol():
 
 
 def test_exact_match_classified_as_match():
-    reference_step = REFERENCE_PROTOCOLS["SOP-ICU-001"]["steps"][0]  # "Screen for suspected sepsis"
+    reference_step = REFERENCE_PROTOCOLS["SOP-ICU-001"]["steps"][0]["text"]  # "Screen for suspected sepsis"
     result = compare_sop_to_reference("SOP-ICU-001", [reference_step])
     row = result["rows"][0]
     assert row["status"] == "match"
@@ -41,13 +43,97 @@ def test_unrelated_internal_steps_classified_as_missing():
 
 def test_full_bundle_coverage_is_aligned():
     steps = REFERENCE_PROTOCOLS["SOP-ICU-001"]["steps"]
-    result = compare_sop_to_reference("SOP-ICU-001", list(steps))
+    result = compare_sop_to_reference("SOP-ICU-001", [s["text"] for s in steps])
     assert result["summary"]["match_count"] == len(steps)
     assert result["summary"]["overall_alignment"] == "Aligned"
 
 
+# ─── Weighted overall_alignment (Q3.5) ──────────────────────────────────────
+# Replaces the old boolean cascade (any missing -> Needs Review, any partial
+# -> Partially Aligned, else Aligned), which made 8/9 match + 1 missing
+# indistinguishable from 0/9 match + 9 missing and required a perfect sweep
+# to ever reach "Aligned".
+
+def _items(*grades_and_texts):
+    """Build reference_items for _run_comparison directly - grades_and_texts
+    is (grade, text) pairs. Uses exact-text internal steps so lexical
+    matching (no sim_fn) scores every pair 1.0 (a match), keeping the test
+    only about the alignment-score math, not the matcher."""
+    return [{"text": t, "grade": g, "source_name": "", "source_type": "", "url": "", "pub_date": ""}
+            for g, t in grades_and_texts]
+
+
+def test_one_low_grade_missing_does_not_force_needs_review():
+    """The scenario the boolean cascade couldn't express: 8/9 Strong-grade
+    matches plus one Limited-grade miss used to read identically to 0/9
+    matching (both "any missing -> Needs Review"). Weighted, a single
+    Limited-grade gap barely moves the score (8.0/8.4 = 0.952) and must not
+    trigger the same alarm level as a comparison with nothing right."""
+    matched_steps = [f"step {i}" for i in range(8)]
+    items = _items(*[("Strong", s) for s in matched_steps], ("Limited", "an unrelated low-grade point"))
+    result = _run_comparison("SOP-TEST", matched_steps, items, sim_fn=None, mode="dynamic", reference_source=None)
+    assert result["summary"]["missing_count"] == 1
+    assert result["summary"]["match_count"] == 8
+    assert result["summary"]["alignment_score"] == pytest.approx(8 / 8.4, abs=0.01)
+    assert result["summary"]["overall_alignment"] == "Aligned"
+
+
+def test_one_strong_grade_missing_forces_needs_review_regardless_of_ratio():
+    """The hard override: even with a high weighted ratio, one Strong-grade
+    reference point genuinely missing from the SOP must still surface as
+    Needs Review - a good average can't hide a guideline-grade gap."""
+    matched_steps = [f"step {i}" for i in range(9)]
+    items = _items(*[("Strong", s) for s in matched_steps], ("Strong", "a genuinely missing strong point"))
+    result = _run_comparison("SOP-TEST", matched_steps, items, sim_fn=None, mode="dynamic", reference_source=None)
+    assert result["summary"]["missing_count"] == 1
+    assert result["summary"]["overall_alignment"] == "Needs Review"
+
+
+def test_zero_of_nine_matching_is_needs_review():
+    """0/9 matching must still land on Needs Review - the low end of the
+    old cascade's behavior is preserved, just no longer indistinguishable
+    from the 8/9 case above."""
+    items = _items(*[("Strong", f"reference point {i}") for i in range(9)])
+    result = _run_comparison("SOP-TEST", ["a completely unrelated internal step"], items, sim_fn=None, mode="dynamic", reference_source=None)
+    assert result["summary"]["match_count"] == 0
+    assert result["summary"]["overall_alignment"] == "Needs Review"
+
+
+def test_summary_tiles_reconcile_to_their_own_denominators():
+    """Each side's tile counts must sum exactly to that side's own total -
+    the old four-tile layout mixed a reference-side denominator with an
+    internal-side one as if they shared one."""
+    matched_steps = ["antibiotics within one hour", "measure lactate level"]
+    extra_internal = "an SOP step with no reference counterpart at all xyz"
+    items = _items(("Strong", "antibiotics within one hour"), ("Strong", "measure lactate level"),
+                   ("Strong", "a reference point missing from the sop"))
+    result = _run_comparison("SOP-TEST", matched_steps + [extra_internal], items, sim_fn=None, mode="dynamic", reference_source=None)
+    summary = result["summary"]
+    ref = summary["reference_side"]
+    assert ref["match"] + ref["partial"] + ref["missing"] == ref["total"]
+    sop = summary["sop_side"]
+    assert sop["covered"] + sop["weakly_related"] + sop["sop_only"] == sop["total"]
+
+
+def test_weakly_related_steps_no_longer_silently_dropped():
+    """Regression for the old 0.40-0.50 dead zone: an internal step whose
+    best reference-side score sits between the sop_only and partial
+    thresholds used to appear in no list and no count at all."""
+    # "fluid resuscitation" shares exactly one significant word ("fluid")
+    # with "iv fluid bolus protocol" under lexical scoring - containment
+    # 1/2 = 0.5, which is >= the lexical sop_only threshold (0.25) and
+    # < the partial threshold (0.35)... use a pair calibrated to land in
+    # the dead zone specifically for the lexical metric used here (no sim_fn).
+    dead_zone_step = "administer fluid resuscitation now"
+    items = _items(("Strong", "fluid status"))
+    result = _run_comparison("SOP-TEST", [dead_zone_step], items, sim_fn=None, mode="dynamic", reference_source=None)
+    sop = result["summary"]["sop_side"]
+    accounted_for = sop["covered"] + sop["weakly_related"] + sop["sop_only"]
+    assert accounted_for == sop["total"] == 1
+
+
 def test_sop_only_step_flagged_when_unrelated_to_any_reference_step():
-    steps = list(REFERENCE_PROTOCOLS["SOP-ICU-001"]["steps"])
+    steps = [s["text"] for s in REFERENCE_PROTOCOLS["SOP-ICU-001"]["steps"]]
     steps.append("Document patient consent for central line placement.")
     result = compare_sop_to_reference("SOP-ICU-001", steps)
     assert "Document patient consent for central line placement." in result["sop_only_steps"]
@@ -130,7 +216,17 @@ async def client(tmp_path):
                 await session.rollback()
                 raise
 
+    # POST /api/activity and the gap-report create/send-to-committee routes
+    # now require a session (Phase T2) - fixed-identity override, this
+    # suite is about SOP versions/comparison/gap-reports, not auth.
+    async def _override_current_user() -> StaffUser:
+        return StaffUser(
+            id=1, staff_id="test-admin", name="Test Admin", role="system_admin",
+            department="Test", title="Test", password_hash="",
+        )
+
     fastapi_app.dependency_overrides[get_db] = _override_get_db
+    fastapi_app.dependency_overrides[get_current_user] = _override_current_user
     async with TestSession() as session:
         session.add(SOP(
             sop_id="SOP-ICU-001", title="Sepsis Management Protocol", department="ICU",
@@ -160,6 +256,7 @@ async def client(tmp_path):
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
     fastapi_app.dependency_overrides.pop(get_db, None)
+    fastapi_app.dependency_overrides.pop(get_current_user, None)
     await engine.dispose()
 
 
@@ -205,11 +302,22 @@ async def test_version_diff_404_for_unknown_from_version(client):
     assert resp.status_code == 404
 
 
-async def test_protocol_comparison_endpoint_returns_available_result(client):
+async def test_protocol_comparison_endpoint_returns_available_result(client, monkeypatch):
+    # Live guideline retrieval is tried first for every SOP (Q3.6), even
+    # SOP-ICU-001 which has a stored offline-fallback bundle - disable it
+    # here so this test deterministically exercises the curated fallback
+    # path rather than depending on whatever a live search happens to find.
+    async def fake_no_guideline(sop_id, sop_title, internal_steps, sim_fn=None):
+        return None
+
+    import app.api.routes_comparison as routes_comparison
+    monkeypatch.setattr(routes_comparison, "compare_sop_to_guideline", fake_no_guideline)
+
     resp = await client.get("/api/sops/SOP-ICU-001/protocol-comparison")
     assert resp.status_code == 200, resp.text
     data = resp.json()
     assert data["available"] is True
+    assert data["mode"] == "curated"
     assert data["summary"]["total_reference_steps"] == len(REFERENCE_PROTOCOLS["SOP-ICU-001"]["steps"])
 
 
@@ -258,6 +366,126 @@ async def test_protocol_comparison_dynamic_mode_unavailable_when_no_strong_evide
     assert resp.status_code == 200, resp.text
     data = resp.json()
     assert data["available"] is False
+
+
+# ─── internal_steps_from() key-shape regression ─────────────────────────────
+# routes_comparison.py and chat_intents.py previously read step.get("action"),
+# which only matches the hand-authored demo shape. structure_sop()'s real
+# extractor (sop_structurer.py) emits {"step_number", "text"} - so every
+# uploaded SOP silently compared against a list of empty strings and always
+# came back "Needs Review" regardless of content.
+
+def test_internal_steps_from_handles_action_key():
+    from app.services.sop_comparison import internal_steps_from
+    assert internal_steps_from({"steps": [{"step": 1, "action": "Measure lactate"}]}) == ["Measure lactate"]
+
+
+def test_internal_steps_from_handles_text_key():
+    from app.services.sop_comparison import internal_steps_from
+    assert internal_steps_from({"steps": [{"step_number": 1, "text": "Measure lactate"}]}) == ["Measure lactate"]
+
+
+def test_internal_steps_from_drops_blank_steps():
+    from app.services.sop_comparison import internal_steps_from
+    assert internal_steps_from({"steps": [{"step_number": 1, "text": "  "}, {"step_number": 2, "text": "Real step"}]}) == ["Real step"]
+
+
+def test_internal_steps_from_handles_missing_structured_json():
+    from app.services.sop_comparison import internal_steps_from
+    assert internal_steps_from(None) == []
+
+
+async def test_protocol_comparison_endpoint_matches_real_upload_step_shape(client, monkeypatch):
+    # SOP-GEN-002's fixture uses the hand-authored {"action": ...} shape.
+    # Confirm the {"text": ...} shape structure_sop() actually produces on
+    # a real upload also compares correctly, not against empty strings.
+    async def fake_search(term, max_results=15):
+        return [{
+            "title": "Verify two patient identifiers before transfusion",
+            "study_type": "Practice Guideline", "trust_tier": None,
+            "pub_date_parsed": "2023-01-01", "pub_date": "2023-01-01",
+            "source_type": "who", "journal": "", "url": "https://example.com/guideline",
+        }]
+
+    async def fake_no_guideline(sop_id, sop_title, internal_steps, sim_fn=None):
+        return None
+
+    import app.api.routes_comparison as routes_comparison
+    monkeypatch.setattr(routes_comparison, "search_external_evidence", fake_search)
+    # This test targets the title-based dynamic fallback specifically -
+    # disable the guideline-retrieval path (tried first, see
+    # routes_comparison.py) so the assertion below doesn't depend on
+    # whatever a live PubMed/Europe PMC search happens to return for
+    # "IV Line Insertion Protocol" at test-run time.
+    monkeypatch.setattr(routes_comparison, "compare_sop_to_guideline", fake_no_guideline)
+
+    # Insert an SOP whose structured_json uses the real-upload key shape,
+    # through the same overridden session the client fixture wired up.
+    async for session in fastapi_app.dependency_overrides[get_db]():
+        session.add(SOP(
+            sop_id="SOP-GEN-003", title="IV Line Insertion Protocol", department="General",
+            version="1.0", structured_json={"steps": [
+                {"step_number": 1, "text": "Verify two patient identifiers before transfusion"},
+            ]},
+        ))
+        await session.commit()
+        break
+
+    resp = await client.get("/api/sops/SOP-GEN-003/protocol-comparison")
+    assert resp.status_code == 200, resp.text
+    data = resp.json()
+    assert data["available"] is True
+    assert data["rows"][0]["status"] == "match"
+
+
+# ─── chat_intents.try_comparison_answer() crash regression ─────────────────
+# reference_source is None for every SOP except the one curated bundle
+# (SOP-ICU-001), and the chat-intent path used to do
+# result["reference_source"].get("name", ...) unconditionally - an
+# AttributeError on every dynamic-mode comparison reached through chat.
+
+async def test_try_comparison_answer_dynamic_mode_does_not_crash(client, monkeypatch):
+    from app.services import chat_intents
+    from app.services.chat_intents import try_comparison_answer
+
+    async def fake_search(term, max_results=15):
+        return [{
+            "title": "Verify two patient identifiers before transfusion",
+            "study_type": "Practice Guideline", "trust_tier": None,
+            "pub_date_parsed": "2023-01-01", "pub_date": "2023-01-01",
+            "source_type": "who", "journal": "", "url": "https://example.com/guideline",
+        }]
+
+    # search_external_evidence is imported locally inside try_comparison_answer
+    # (from app.integrations.evidence_registry import search_all as
+    # search_external_evidence), so it must be patched at its source module -
+    # patching the chat_intents module attribute wouldn't be seen.
+    import app.integrations.evidence_registry as evidence_registry
+    monkeypatch.setattr(evidence_registry, "search_all", fake_search)
+
+    async def fake_no_guideline(sop_id, sop_title, internal_steps, sim_fn=None):
+        return None
+    # compare_sop_to_guideline is imported locally inside try_comparison_answer
+    # (same reason as search_external_evidence above) - patch it at its
+    # source module so this test doesn't depend on live network results.
+    import app.services.sop_comparison as sop_comparison_mod
+    monkeypatch.setattr(sop_comparison_mod, "compare_sop_to_guideline", fake_no_guideline)
+
+    class _FakeRetriever:
+        pass
+
+    def fake_identify(retriever, query):
+        return ("SOP-GEN-002", "Blood Transfusion Protocol", 0.9)
+
+    monkeypatch.setattr(chat_intents, "_identify_top_sop", fake_identify)
+
+    async for session in fastapi_app.dependency_overrides[get_db]():
+        response = await try_comparison_answer(session, _FakeRetriever(), "compare the transfusion SOP with current evidence")
+        break
+
+    assert response is not None
+    assert "high-grade external source" in response.answer
+    assert "Blood Transfusion Protocol" in response.answer
 
 
 async def test_gap_report_create_list_and_send_to_committee(client):

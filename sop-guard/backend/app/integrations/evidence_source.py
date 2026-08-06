@@ -157,7 +157,7 @@ def pick_supporting_excerpt(abstract: str, term: str, max_chars: int = 240) -> s
     return truncated + "..."
 
 
-def clean_search_term(term: str, max_words: int = 8) -> str:
+def clean_search_term(term: str, max_words: int = 8, preserve_domain_terms: bool = False) -> str:
     """Turn a raw user question into a compact keyword search term for the
     external provider APIs. Strips question phrasing, function words, and
     query-parser-breaking punctuation, preserving clinical content words in
@@ -167,12 +167,26 @@ def clean_search_term(term: str, max_words: int = 8) -> str:
     Only for building the API request - relevance gating (is_title_relevant,
     the cross-encoder) still runs against the user's original question,
     which those judges handle better than a stripped keyword bag.
+
+    `preserve_domain_terms=True` keeps "protocol"/"guideline"/"procedure"/
+    "policy" and their plurals in the output - words _SEARCH_TERM_DROP
+    otherwise strips as noise for a general evidence search, but which are
+    exactly the words that matter when the caller (guideline_finder.py) is
+    specifically SEEKING a guideline document rather than looking up a
+    clinical fact. General evidence search (evidence_registry.search_all)
+    is unaffected - this only changes behavior for callers that opt in.
     """
     if not term:
         return ""
+    drop_words = _SEARCH_TERM_DROP
+    if preserve_domain_terms:
+        drop_words = _SEARCH_TERM_DROP - {
+            "protocol", "protocols", "procedure", "procedures", "policy",
+            "guideline", "guidelines",
+        }
     cleaned = _QUERY_BREAKING.sub(" ", term.lower())
     words = re.findall(r"[a-z0-9][a-z0-9\-]*", cleaned)
-    kept = [w for w in words if len(w) >= 3 and w not in _SEARCH_TERM_DROP]
+    kept = [w for w in words if len(w) >= 3 and w not in drop_words]
     # de-dup preserving order
     seen: set[str] = set()
     deduped = [w for w in kept if not (w in seen or seen.add(w))]

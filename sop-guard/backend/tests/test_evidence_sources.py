@@ -97,6 +97,36 @@ async def test_europepmc_graceful_on_failure(monkeypatch):
     assert await europepmc.search_europepmc("sepsis") == []
 
 
+async def test_europepmc_real_guideline_pub_type_grades_strong(monkeypatch):
+    """Regression for Q3.3: study_type used to be hardcoded "Journal
+    Article" (or "Preprint"), discarding the real pubTypeList this API
+    already returns and already parses into `pub_types` - so a genuine
+    "Guideline"/"Meta-Analysis"/"Systematic Review" record could never be
+    recognized as one."""
+    from app.integrations.evidence_source import grade_evidence
+
+    payload = {"resultList": {"result": [
+        {"id": "1", "title": "Sepsis management guideline", "authorString": "A B",
+         "journalTitle": "JAMA", "firstPublicationDate": "2023-01-01",
+         "pubTypeList": {"pubType": ["Journal Article", "Practice Guideline"]}},
+    ]}}
+    monkeypatch.setattr(europepmc.httpx, "AsyncClient", _fake_client(payload))
+    records = await europepmc.search_europepmc("sepsis", max_results=5)
+    assert records[0]["study_type"] == "Practice Guideline"
+    assert grade_evidence(records[0]) == "Strong"
+
+
+async def test_europepmc_plain_journal_article_does_not_grade_strong(monkeypatch):
+    payload = {"resultList": {"result": [
+        {"id": "1", "title": "A case series", "authorString": "A B",
+         "journalTitle": "JAMA", "firstPublicationDate": "2023-01-01",
+         "pubTypeList": {"pubType": ["Journal Article"]}},
+    ]}}
+    monkeypatch.setattr(europepmc.httpx, "AsyncClient", _fake_client(payload))
+    records = await europepmc.search_europepmc("sepsis", max_results=5)
+    assert records[0]["study_type"] == ""
+
+
 async def test_cdc_parses(monkeypatch):
     payload = {"results": [
         {"title": "Sepsis prevention guidance", "sourceURL": "https://cdc.gov/x",
@@ -112,6 +142,34 @@ async def test_cdc_parses(monkeypatch):
 async def test_cdc_graceful_on_failure(monkeypatch):
     monkeypatch.setattr(cdc.httpx, "AsyncClient", _failing_client())
     assert await cdc.search_cdc("sepsis") == []
+
+
+async def test_cdc_syndication_widget_does_not_grade_strong(monkeypatch):
+    """Regression for Q3.3: every Content Syndication item used to be
+    hardcoded study_type="Guideline" regardless of its own `type` field, so
+    a syndicated widget/campaign page graded identically to real clinical
+    guidance - and Strong/Moderate is exactly the filter that selects
+    dynamic-mode comparison reference material."""
+    from app.integrations.evidence_source import grade_evidence
+
+    payload = {"results": [
+        {"title": "Handwashing campaign widget", "sourceURL": "https://cdc.gov/widget",
+         "dateOfSourceModification": "2024-02-01", "resourceId": "w1", "type": "Widget"}
+    ]}
+    monkeypatch.setattr(cdc.httpx, "AsyncClient", _fake_client(payload))
+    records = await cdc.search_cdc("handwashing")
+    assert records[0]["study_type"] == ""
+    assert grade_evidence(records[0]) != "Strong"
+
+
+async def test_cdc_real_guideline_type_grades_strong(monkeypatch):
+    payload = {"results": [
+        {"title": "Sepsis prevention guidance", "sourceURL": "https://cdc.gov/x",
+         "dateOfSourceModification": "2024-02-01", "resourceId": "abc", "type": "Guideline"}
+    ]}
+    monkeypatch.setattr(cdc.httpx, "AsyncClient", _fake_client(payload))
+    records = await cdc.search_cdc("sepsis")
+    assert records[0]["study_type"] == "Guideline"
 
 
 async def test_who_parses(monkeypatch):
@@ -141,6 +199,49 @@ async def test_who_parses(monkeypatch):
     assert len(records) == 1
     assert records[0]["title"] == "WHO sepsis guideline"
     assert records[0]["source_type"] == "who"
+
+
+async def test_who_non_guideline_type_does_not_grade_strong(monkeypatch):
+    """Regression for Q3.3: dc.type used to be ignored and every WHO IRIS
+    record was hardcoded study_type="Guideline" - which via grade_evidence
+    made every regional annual report / technical document grade Strong,
+    the same filter that selects guideline-comparison reference material."""
+    from app.integrations.evidence_source import grade_evidence
+
+    payload = {
+        "_embedded": {"searchResult": {"_embedded": {"objects": [{
+            "_embedded": {"indexableObject": {
+                "handle": "10665/999",
+                "metadata": {
+                    "dc.title": [{"value": "WHO regional annual report 2023"}],
+                    "dc.date.issued": [{"value": "2023-05-01"}],
+                    "dc.type": [{"value": "Annual report"}],
+                },
+            }}
+        }]}}}
+    }
+    monkeypatch.setattr(who.httpx, "AsyncClient", _fake_client(payload))
+    records = await who.search_who("sepsis")
+    assert records[0]["study_type"] == ""
+    assert grade_evidence(records[0]) != "Strong"
+
+
+async def test_who_real_guideline_type_grades_strong(monkeypatch):
+    payload = {
+        "_embedded": {"searchResult": {"_embedded": {"objects": [{
+            "_embedded": {"indexableObject": {
+                "handle": "10665/123",
+                "metadata": {
+                    "dc.title": [{"value": "WHO sepsis guideline"}],
+                    "dc.date.issued": [{"value": "2023-05-01"}],
+                    "dc.type": [{"value": "Guideline"}],
+                },
+            }}
+        }]}}}
+    }
+    monkeypatch.setattr(who.httpx, "AsyncClient", _fake_client(payload))
+    records = await who.search_who("sepsis")
+    assert records[0]["study_type"] == "Guideline"
 
 
 async def test_who_graceful_on_malformed_shape(monkeypatch):
@@ -173,6 +274,42 @@ async def test_clinicaltrials_parses(monkeypatch):
 async def test_clinicaltrials_graceful_on_failure(monkeypatch):
     monkeypatch.setattr(clinicaltrials.httpx, "AsyncClient", _failing_client())
     assert await clinicaltrials.search_clinicaltrials("sepsis") == []
+
+
+async def test_clinicaltrials_recruitment_status_is_not_a_study_design(monkeypatch):
+    """Regression for Q3.3: overallStatus ("Recruiting") used to be put
+    directly in the study_type column next to real study designs. A
+    recruiting observational trial must not be classified as a design
+    grade_evidence's _MODERATE_STUDY_TYPES would credit."""
+    payload = {"studies": [{
+        "protocolSection": {
+            "identificationModule": {"nctId": "NCT002", "briefTitle": "Observational cohort"},
+            "statusModule": {"lastUpdatePostDateStruct": {"date": "2024-04-01"}, "overallStatus": "RECRUITING"},
+            "designModule": {"studyType": "OBSERVATIONAL"},
+            "sponsorCollaboratorsModule": {"leadSponsor": {"name": "Test Hospital"}},
+        }
+    }]}
+    monkeypatch.setattr(clinicaltrials.httpx, "AsyncClient", _fake_client(payload))
+    records = await clinicaltrials.search_clinicaltrials("sepsis")
+    assert records[0]["study_type"] == "Observational Study"
+    assert records[0]["recruitment_status"] == "Recruiting"
+
+
+async def test_clinicaltrials_randomized_interventional_grades_moderate(monkeypatch):
+    from app.integrations.evidence_source import grade_evidence
+
+    payload = {"studies": [{
+        "protocolSection": {
+            "identificationModule": {"nctId": "NCT003", "briefTitle": "RCT of drug X"},
+            "statusModule": {"lastUpdatePostDateStruct": {"date": "2024-04-01"}, "overallStatus": "COMPLETED"},
+            "designModule": {"studyType": "INTERVENTIONAL", "designInfo": {"allocation": "RANDOMIZED"}},
+            "sponsorCollaboratorsModule": {"leadSponsor": {"name": "Test Hospital"}},
+        }
+    }]}
+    monkeypatch.setattr(clinicaltrials.httpx, "AsyncClient", _fake_client(payload))
+    records = await clinicaltrials.search_clinicaltrials("sepsis")
+    assert records[0]["study_type"] == "Randomized Controlled Trial"
+    assert grade_evidence(records[0]) == "Moderate"
 
 
 async def test_registry_merges_and_sorts_by_recency(monkeypatch):

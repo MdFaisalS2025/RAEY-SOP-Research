@@ -31,10 +31,29 @@ _TIMEOUT = 6.0
 _cache = TTLCache(ttl_seconds=3600)
 
 
+def _study_type_for(design: dict[str, Any]) -> str:
+    """`overallStatus` (recruitment status: Recruiting/Completed/...) is not
+    a study design and grading a trial's design off it was wrong - it put
+    "Recruiting"/"Completed" in the same column real study designs occupy.
+    designModule.studyType + designInfo.allocation are the API's actual
+    design fields; derive from those instead, matching
+    grade_evidence's _MODERATE_STUDY_TYPES vocabulary so an interventional
+    RCT still grades Moderate and everything else falls through to the
+    "clinicaltrials" source_type's Research Only default."""
+    study_type = (design.get("studyType") or "").strip().upper()
+    allocation = ((design.get("designInfo") or {}).get("allocation") or "").strip().upper()
+    if study_type == "INTERVENTIONAL":
+        return "Randomized Controlled Trial" if allocation == "RANDOMIZED" else "Clinical Trial"
+    if study_type == "OBSERVATIONAL":
+        return "Observational Study"
+    return ""
+
+
 def _parse_study(study: dict[str, Any]) -> dict[str, Any]:
     protocol = study.get("protocolSection") or {}
     ident = protocol.get("identificationModule") or {}
     status = protocol.get("statusModule") or {}
+    design = protocol.get("designModule") or {}
     sponsor = (protocol.get("sponsorCollaboratorsModule") or {}).get("leadSponsor") or {}
 
     nct_id = ident.get("nctId", "")
@@ -52,7 +71,13 @@ def _parse_study(study: dict[str, Any]) -> dict[str, Any]:
         "url": f"https://clinicaltrials.gov/study/{nct_id}" if nct_id else "https://clinicaltrials.gov",
         "source_type": "clinicaltrials",
         "pub_types": [overall_status] if overall_status else [],
-        "study_type": overall_status.replace("_", " ").title() or "Clinical Trial",
+        "study_type": _study_type_for(design),
+        # Recruitment status (Recruiting/Completed/Terminated/...) - kept
+        # separate from study_type now that the latter is a real design
+        # classification. Not consumed by grade_evidence; available for
+        # display so a card can still show "Recruiting" etc. without it
+        # masquerading as a study design.
+        "recruitment_status": overall_status.replace("_", " ").title(),
     }
 
 

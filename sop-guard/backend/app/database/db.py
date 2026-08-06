@@ -76,7 +76,7 @@ async def init_db() -> None:
             OverrideRecord, CreditRecord,
             IncidentRecord, CAPARecord, ExceptionRecord,
             SOPVersionRecord, SOPGapReportRecord,
-            EvalSnapshotRecord,
+            EvalSnapshotRecord, StaffUser,
         )
         await conn.run_sync(Base.metadata.create_all)
 
@@ -150,6 +150,20 @@ async def init_db() -> None:
         # verification_result, silently dropping the Version History link,
         # generation-mode tag, follow-up chips and Trust panel contents.
         "ALTER TABLE chat_message_records ADD COLUMN extra JSON",
+        # Citation deep-linking (Phase P3): exact character offsets into
+        # the SOP's raw_text, so clicking a citation can open the SOP at
+        # the precise line instead of a view-time text match against the
+        # wrong paragraph. NULL-able, no default - see models.py.
+        "ALTER TABLE sop_chunks ADD COLUMN char_start INTEGER",
+        "ALTER TABLE sop_chunks ADD COLUMN char_end INTEGER",
+        "ALTER TABLE sop_chunks ADD COLUMN offset_source VARCHAR(24) DEFAULT ''",
+        # Phase Q2.1: the offset sanity check used to compare stored offsets
+        # against the citation's display snippet, which is title-prefixed
+        # for section chunks - so it rejected every correct section offset.
+        # offset_anchor is a verbatim, un-prefixed slice of raw_text at the
+        # stored span, purpose-built for that check. NULL-able, no default -
+        # see models.py.
+        "ALTER TABLE sop_chunks ADD COLUMN offset_anchor TEXT",
     ):
         try:
             from sqlalchemy import text

@@ -22,6 +22,16 @@ tiktoken>=0.5.0
 pytest>=7.4.0
 pytest-asyncio>=0.23.0
 
+# --- Real authentication (Phase S: app/services/auth.py) ---
+# Replaces the prior fully client-side "auth" (a hardcoded frontend user
+# array + a spoofable localStorage flag) with password hashing + signed,
+# httpOnly-cookie JWT sessions verified server-side on every request.
+# bcrypt used directly (not via passlib): passlib 1.7.4's bcrypt handler
+# reads bcrypt.__about__.__version__, which bcrypt>=4.1 removed - passlib
+# is unmaintained against modern bcrypt and raises on every hash() call.
+bcrypt>=4.0.0
+pyjwt>=2.8.0
+
 # --- Real RAGAS evaluation (app/evaluation/ragas_real.py) ---
 # Judge LLM is our own self-hosted Ollama model (langchain-ollama), and
 # embeddings are local sentence-transformers (langchain-huggingface) - no

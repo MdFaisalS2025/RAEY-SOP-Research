@@ -59,6 +59,21 @@ class SOPChunk(Base):
     chunk_type = Column(String(32), default="section")
     chunk_index = Column(Integer, default=0)
     embedding_id = Column(String(128), default="")
+    # Exact character offsets into the SOP's raw_text, for citation
+    # deep-linking to the precise passage. Nullable with no default -
+    # NULL must stay distinguishable from 0 (a chunk that starts at the
+    # very beginning of the document). offset_source records how the
+    # offsets were derived ("verbatim", "normalized", "whole_doc",
+    # "step_anchor" - see chunker._locate_step_by_number) or "" when no
+    # offsets could be located.
+    char_start = Column(Integer, nullable=True)
+    char_end = Column(Integer, nullable=True)
+    offset_source = Column(String(24), default="")
+    # Verbatim head of raw_text[char_start:char_end] (see chunker._anchor_for),
+    # stored so the frontend can verify these offsets still point at the same
+    # text before trusting them - never derived from chunk_text, which is
+    # title-prefixed for section chunks and would make every such check fail.
+    offset_anchor = Column(Text, nullable=True)
 
     sop = relationship("SOP", back_populates="chunks")
 
@@ -531,4 +546,31 @@ class SOPGapReportRecord(Base):
     recommended_committee = Column(String(256), default="")
     recommended_action = Column(Text, default="")
     status = Column(String(32), default="open")  # open | sent_to_committee | closed
+    created_at = Column(DateTime, default=_utcnow)
+
+
+class StaffUser(Base):
+    """
+    Real, server-verified identity (Phase S). Replaces the old fully
+    client-side "auth" (a hardcoded frontend array + a localStorage flag
+    manipulable in devtools) with an actual password-checked, JWT-sessioned
+    account. staff_id is the public login handle (kept as "u1".."u4" for the
+    4 demo personas so existing frontend mock-data cross-references -
+    committee rosters, proposal `initiated_by`, etc. - stay valid without
+    a broader data migration).
+
+    role uses the same 4-value vocabulary as the frontend's UserRole
+    (governance_types.ts) - NOT the old, unused admin/editor/viewer set
+    services/permissions.py used, which never matched anything the
+    frontend actually sent.
+    """
+    __tablename__ = "staff_users"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    staff_id = Column(String(64), unique=True, nullable=False, index=True)
+    name = Column(String(256), nullable=False)
+    role = Column(String(32), nullable=False)  # clinical_staff | educator | governance_compliance | system_admin
+    department = Column(String(128), default="")
+    title = Column(String(256), default="")
+    password_hash = Column(String(256), nullable=False)
     created_at = Column(DateTime, default=_utcnow)

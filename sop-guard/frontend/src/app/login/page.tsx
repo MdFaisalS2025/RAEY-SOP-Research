@@ -3,19 +3,20 @@
 import { useState, useEffect, FormEvent, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
-import { CheckCircle2, LogIn } from "lucide-react"
+import { CheckCircle2, LogIn, AlertTriangle } from "lucide-react"
 import { SafetyNote } from "@/components/ui/safety-note"
 import { useAuth } from "@/lib/auth-context"
 import { DEMO_USERS } from "@/lib/mock-data"
 import { ROLE_HIERARCHY } from "@/lib/role-context"
 import { cn } from "@/lib/utils"
+import { toneChip } from "@/components/ui/tone"
 import type { UserRole } from "@/lib/governance-types"
 
 const ROLE_COLORS: Record<UserRole, { bg: string; text: string; border: string }> = {
   system_admin:           { bg: "bg-muted",   text: "text-muted-foreground", border: "border-input" },
   governance_compliance:  { bg: "bg-[#DCFCE7] dark:bg-green-500/10",   text: "text-[#15803D] dark:text-green-400", border: "border-[#BBF7D0] dark:border-green-500/30" },
   educator:               { bg: "bg-muted",   text: "text-muted-foreground", border: "border-input" },
-  clinical_staff:         { bg: "bg-[#0B6BCB]/10 dark:bg-[#00E5FF]/10", text: "text-[#0B6BCB] dark:text-[#00E5FF]", border: "border-[#0B6BCB]/30 dark:border-[#00E5FF]/30" },
+  clinical_staff:         { bg: "bg-primary/10", text: "text-primary", border: "border-primary/30" },
 }
 
 const ROLE_LABELS: Record<UserRole, string> = {
@@ -50,9 +51,30 @@ function LoginPageInner() {
   const [error, setError] = useState("")
   const [formLoading, setFormLoading] = useState(false)
   const [signedOut, setSignedOut] = useState(false)
+  const [demoLoadingId, setDemoLoadingId] = useState<string | null>(null)
+  const [backendStatus, setBackendStatus] = useState<"checking" | "online" | "offline">("checking")
 
   useEffect(() => {
     document.title = "Sign In | Meridian"
+  }, [])
+
+  // The status pill used to be a hardcoded "Systems Operational" string,
+  // rendered regardless of whether the backend was actually reachable -
+  // the same fake-status pattern flagged elsewhere in the app (e.g. the
+  // old /admin systemStatus). GET /api/health is unauthenticated, so it
+  // can be probed before login.
+  useEffect(() => {
+    let cancelled = false
+    fetch("/api/health")
+      .then((res) => {
+        if (!cancelled) setBackendStatus(res.ok ? "online" : "offline")
+      })
+      .catch(() => {
+        if (!cancelled) setBackendStatus("offline")
+      })
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   // Show signed-out banner when redirected with ?signedOut=1
@@ -68,8 +90,7 @@ function LoginPageInner() {
     e.preventDefault()
     setError("")
     setFormLoading(true)
-    await new Promise((r) => setTimeout(r, 300))
-    const result = auth.login(staffId.trim(), password)
+    const result = await auth.login(staffId.trim(), password)
     if (result.success) {
       router.push("/dashboard")
     } else {
@@ -78,9 +99,16 @@ function LoginPageInner() {
     }
   }
 
-  const handleDemoLogin = (userId: string) => {
-    auth.loginAsDemo(userId)
-    router.push("/dashboard")
+  const handleDemoLogin = async (userId: string) => {
+    setError("")
+    setDemoLoadingId(userId)
+    const result = await auth.loginAsDemo(userId)
+    if (result.success) {
+      router.push("/dashboard")
+    } else {
+      setError(result.error ?? "Invalid credentials")
+      setDemoLoadingId(null)
+    }
   }
 
   return (
@@ -96,14 +124,14 @@ function LoginPageInner() {
       >
         {/* Radial glow */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-[#0B6BCB]/5 dark:bg-[#00E5FF]/5 blur-3xl" />
+          <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-primary/5 blur-3xl" />
         </div>
 
         <div className="relative flex flex-col h-full px-10 py-12">
           {/* Logo */}
           <div className="flex items-center gap-3 mb-10">
-            <div className="flex items-center justify-center w-11 h-11 rounded-xl bg-[#0B6BCB]/10 dark:bg-[#00E5FF]/10 border border-[#0B6BCB]/20 dark:border-[#00E5FF]/25">
-              <svg viewBox="0 0 24 24" className="w-6 h-6 text-[#0B6BCB] dark:text-[#00E5FF]" fill="none">
+            <div className="flex items-center justify-center w-11 h-11 rounded-xl bg-primary/10 border border-primary/20">
+              <svg viewBox="0 0 24 24" className="w-6 h-6 text-primary" fill="none">
                 <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.6" />
                 <path d="M3 12h18" stroke="currentColor" strokeWidth="1.6" />
                 <path d="M12 3c2.8 2.4 4.4 5.6 4.4 9s-1.6 6.6-4.4 9c-2.8-2.4-4.4-5.6-4.4-9s1.6-6.6 4.4-9Z" stroke="currentColor" strokeWidth="1.3" />
@@ -117,7 +145,7 @@ function LoginPageInner() {
             <h1 className="text-2xl font-semibold text-foreground leading-tight mb-2">
               Clinical SOP Intelligence Platform
             </h1>
-            <p className="text-sm text-[#0B6BCB] dark:text-[#00E5FF] font-medium tracking-wide">
+            <p className="text-sm text-primary font-medium tracking-wide">
               Ask. Verify. Improve.
             </p>
           </div>
@@ -126,7 +154,7 @@ function LoginPageInner() {
           <ul className="flex flex-col gap-3 mb-8">
             {FEATURES.map((feat) => (
               <li key={feat} className="flex items-start gap-3">
-                <CheckCircle2 className="w-5 h-5 text-[#0B6BCB] dark:text-[#00E5FF] shrink-0 mt-0.5" />
+                <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                 <span className="text-sm text-muted-foreground leading-relaxed">{feat}</span>
               </li>
             ))}
@@ -143,8 +171,8 @@ function LoginPageInner() {
         <div className="w-full max-w-[540px]">
           {/* Mobile logo */}
           <div className="flex items-center gap-2.5 mb-8 lg:hidden">
-            <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-[#0B6BCB]/10 dark:bg-[#00E5FF]/10 border border-[#0B6BCB]/20 dark:border-[#00E5FF]/25">
-              <svg viewBox="0 0 24 24" className="w-5 h-5 text-[#0B6BCB] dark:text-[#00E5FF]" fill="none">
+            <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10 border border-primary/20">
+              <svg viewBox="0 0 24 24" className="w-5 h-5 text-primary" fill="none">
                 <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.6" />
                 <path d="M3 12h18" stroke="currentColor" strokeWidth="1.6" />
                 <path d="M12 3c2.8 2.4 4.4 5.6 4.4 9s-1.6 6.6-4.4 9c-2.8-2.4-4.4-5.6-4.4-9s1.6-6.6 4.4-9Z" stroke="currentColor" strokeWidth="1.3" />
@@ -159,7 +187,7 @@ function LoginPageInner() {
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="flex items-center gap-2.5 mb-5 px-4 py-3 rounded-xl bg-[#DCFCE7] dark:bg-green-500/10 border border-[#BBF7D0] dark:border-green-500/30 text-[#15803D] dark:text-green-400 text-sm font-medium"
+              className={cn(toneChip.success, "flex items-center gap-2.5 mb-5 px-4 py-3 rounded-xl text-sm font-medium")}
             >
               <CheckCircle2 className="w-4 h-4 shrink-0" />
               You have been signed out.
@@ -172,10 +200,17 @@ function LoginPageInner() {
               <h2 className="text-3xl font-bold text-foreground mb-1.5">Welcome back</h2>
               <p className="text-muted-foreground text-sm">Sign in to Meridian</p>
             </div>
-            <span className="inline-flex items-center gap-1.5 mt-1 px-2.5 py-1 rounded-full bg-[#DCFCE7] dark:bg-green-500/10 border border-[#BBF7D0] dark:border-green-500/30 text-[#15803D] dark:text-green-400 text-[10px] font-semibold shrink-0">
-              <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
-              Systems Operational
-            </span>
+            {backendStatus === "offline" ? (
+              <span className={cn(toneChip.danger, "inline-flex items-center gap-1.5 mt-1 px-2.5 py-1 rounded-full text-10 font-semibold shrink-0")}>
+                <AlertTriangle className="w-2.5 h-2.5 shrink-0" />
+                Backend Unreachable
+              </span>
+            ) : (
+              <span className={cn(toneChip.success, "inline-flex items-center gap-1.5 mt-1 px-2.5 py-1 rounded-full text-10 font-semibold shrink-0")}>
+                <span className={cn("w-1.5 h-1.5 rounded-full bg-current", backendStatus === "checking" ? "animate-pulse" : undefined)} />
+                {backendStatus === "checking" ? "Checking status..." : "Systems Operational"}
+              </span>
+            )}
           </div>
 
           {/* Login form */}
@@ -224,7 +259,7 @@ function LoginPageInner() {
             <button
               type="submit"
               disabled={formLoading}
-              className="flex items-center justify-center gap-2 bg-[#0B6BCB] dark:bg-[#00E5FF] hover:bg-[#0959AC] dark:hover:bg-[#00c4d9] disabled:opacity-60 disabled:cursor-not-allowed text-white dark:text-[#0A0C10] font-semibold rounded-lg px-4 py-3 w-full transition-colors mt-1"
+              className="flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover disabled:opacity-60 disabled:cursor-not-allowed text-primary-foreground font-semibold rounded-lg px-4 py-3 w-full transition-colors mt-1"
             >
               <LogIn className="w-4 h-4" />
               {formLoading ? "Signing in..." : "Sign In"}
@@ -251,7 +286,7 @@ function LoginPageInner() {
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.06, duration: 0.3 }}
-                  className="flex flex-col gap-2 p-3 rounded-xl bg-card border border-border shadow-sm hover:border-[#0B6BCB]/30 dark:hover:border-[#00E5FF]/30 hover:shadow-md transition-all duration-200 group"
+                  className="flex flex-col gap-2 p-3 rounded-xl bg-card border border-border shadow-sm hover:border-primary/30 hover:shadow-md transition-all duration-200 group"
                 >
                   <div className="flex items-start gap-2.5">
                     {/* Initials avatar */}
@@ -266,11 +301,11 @@ function LoginPageInner() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-xs font-semibold text-foreground truncate">{demoUser.name}</p>
-                      <p className={cn("text-[10px] font-medium truncate", colors.text)}>
+                      <p className={cn("text-10 font-medium truncate", colors.text)}>
                         {ROLE_LABELS[demoUser.role]}
                       </p>
                       {/* Access level badge */}
-                      <p className="text-[9px] text-subtle mt-0.5">
+                      <p className="text-9 text-subtle mt-0.5">
                         {isHighest
                           ? `Level ${MAX_LEVEL} - Highest access`
                           : isLowest
@@ -281,9 +316,10 @@ function LoginPageInner() {
                   </div>
                   <button
                     onClick={() => handleDemoLogin(demoUser.id)}
-                    className="w-full text-[11px] font-semibold py-1.5 rounded-lg bg-[#0B6BCB]/10 dark:bg-[#00E5FF]/10 text-[#0B6BCB] dark:text-[#00E5FF] hover:bg-[#0B6BCB]/20 dark:hover:bg-[#00E5FF]/20 hover:text-[#0959AC] dark:hover:text-[#00E5FF] transition-colors"
+                    disabled={demoLoadingId !== null}
+                    className="w-full text-11 font-semibold py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary-hover disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
                   >
-                    Enter
+                    {demoLoadingId === demoUser.id ? "Signing in..." : "Enter"}
                   </button>
                 </motion.div>
               )
@@ -300,7 +336,7 @@ export default function LoginPage() {
     <Suspense
       fallback={
         <div className="min-h-screen bg-background flex items-center justify-center">
-          <div className="w-8 h-8 rounded-full border-2 border-[#0B6BCB]/20 border-t-[#0B6BCB] animate-spin" />
+          <div className="w-8 h-8 rounded-full border-2 border-primary/20 border-t-[#0B6BCB] animate-spin" />
         </div>
       }
     >

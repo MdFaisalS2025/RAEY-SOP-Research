@@ -1,80 +1,113 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect } from "react"
-import type { DemoUser } from "./governance-types"
+import type { DemoUser, UserRole } from "./governance-types"
 import { DEMO_USERS } from "./mock-data"
 
 interface AuthContextValue {
   user: DemoUser | null
   isAuthenticated: boolean
   loading: boolean
-  login: (userId: string, password: string) => { success: boolean; error?: string }
-  loginAsDemo: (userId: string) => void
-  logout: () => void
+  login: (staffId: string, password: string) => Promise<{ success: boolean; error?: string }>
+  loginAsDemo: (staffId: string) => Promise<{ success: boolean; error?: string }>
+  logout: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-const AUTH_STORAGE_KEY = "meridian-auth-user"
+// Documented demo password (see backend/app/demo_data/demo_staff_users.py) -
+// used only by the login page's quick-access cards, which submit it through
+// the real /api/auth/login endpoint rather than bypassing auth.
+const DEMO_PASSWORD = "demo1234"
+
+interface MeResponse {
+  staff_id: string
+  name: string
+  role: string
+  department: string
+  title: string
+}
+
+function toDemoUser(me: MeResponse): DemoUser {
+  // The 4 seeded staff_ids (u1-u4) match DEMO_USERS 1:1 - reuse its
+  // initials there so the avatar keeps rendering "SM"/"MC"/etc. rather
+  // than a computed fallback. A staff_id outside that set (a future
+  // real account) still works, just with computed initials.
+  const known = DEMO_USERS.find((u) => u.id === me.staff_id)
+  const initials =
+    known?.initials ??
+    me.name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((w) => w[0]?.toUpperCase() ?? "")
+      .join("")
+
+  return {
+    id: me.staff_id,
+    name: me.name,
+    role: me.role as UserRole,
+    department: me.department,
+    title: me.title,
+    initials,
+  }
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<DemoUser | null>(null)
   const [loading, setLoading] = useState(true)
 
-  // Rehydrate from localStorage on mount
+  // Rehydrate identity from the httpOnly session cookie on mount - there is
+  // no client-readable session state to check first, so this always makes
+  // one request.
   useEffect(() => {
-    try {
-      const storedId = localStorage.getItem(AUTH_STORAGE_KEY)
-      if (storedId) {
-        const found = DEMO_USERS.find((u) => u.id === storedId)
-        if (found) {
-          setUser(found)
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await fetch("/api/auth/me")
+        if (res.ok) {
+          const me: MeResponse = await res.json()
+          if (!cancelled) setUser(toDemoUser(me))
         }
+      } catch {
+        // Backend unreachable - treat as signed out rather than blocking the app.
+      } finally {
+        if (!cancelled) setLoading(false)
       }
-    } catch {
-      // ignore
-    } finally {
-      setLoading(false)
+    })()
+    return () => {
+      cancelled = true
     }
   }, [])
 
-  const login = (userId: string, password: string): { success: boolean; error?: string } => {
-    const found = DEMO_USERS.find((u) => u.id === userId)
-    if (!found) {
-      return { success: false, error: "Invalid credentials" }
-    }
-    const deptPassword = found.department.toLowerCase().replace(/\s+/g, "")
-    if (password !== "demo1234" && password !== deptPassword) {
-      return { success: false, error: "Invalid credentials" }
-    }
-    setUser(found)
+  const login = async (staffId: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
-      localStorage.setItem(AUTH_STORAGE_KEY, found.id)
-    } catch {
-      // ignore
-    }
-    return { success: true }
-  }
-
-  const loginAsDemo = (userId: string) => {
-    const found = DEMO_USERS.find((u) => u.id === userId)
-    if (found) {
-      setUser(found)
-      try {
-        localStorage.setItem(AUTH_STORAGE_KEY, found.id)
-      } catch {
-        // ignore
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ staff_id: staffId, password }),
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => null)
+        return { success: false, error: body?.detail ?? "Invalid credentials" }
       }
+      const me: MeResponse = await res.json()
+      setUser(toDemoUser(me))
+      return { success: true }
+    } catch {
+      return { success: false, error: "Could not reach the server. Please try again." }
     }
   }
 
-  const logout = () => {
-    setUser(null)
+  const loginAsDemo = (staffId: string) => login(staffId, DEMO_PASSWORD)
+
+  const logout = async () => {
     try {
-      localStorage.removeItem(AUTH_STORAGE_KEY)
+      await fetch("/api/auth/logout", { method: "POST" })
     } catch {
-      // ignore
+      // Best-effort - clear local state regardless so the UI reflects signed-out.
     }
+    setUser(null)
   }
 
   return (

@@ -15,7 +15,7 @@ from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.database.db import init_db, async_session
-from app.api import routes_query, routes_sops, routes_feedback, routes_voice, routes_evaluation, routes_activity, routes_evidence, routes_governance, routes_chat, routes_cds, routes_overrides, routes_credits, routes_analytics, routes_smart, routes_capa, routes_exceptions, routes_settings, routes_sop_versions, routes_comparison, routes_gap_reports, routes_privacy, routes_human_eval
+from app.api import routes_query, routes_sops, routes_feedback, routes_voice, routes_evaluation, routes_activity, routes_evidence, routes_governance, routes_chat, routes_cds, routes_overrides, routes_credits, routes_analytics, routes_smart, routes_capa, routes_exceptions, routes_settings, routes_sop_versions, routes_comparison, routes_gap_reports, routes_privacy, routes_human_eval, routes_auth
 
 
 async def _load_demo_data() -> None:
@@ -30,7 +30,9 @@ async def _load_demo_data() -> None:
         count = (await session.execute(select(func.count(SOP.id)))).scalar() or 0
         if count > 0:
             await _seed_demo_activity_if_empty()
+            await _seed_demo_staff_users_if_empty()
             await _backfill_review_dates(session)
+            await _backfill_chunk_offsets(session)
             return
 
         for data in DEMO_SOPS:
@@ -67,6 +69,10 @@ async def _load_demo_data() -> None:
                     chunk_text=ch.get("text", ""),
                     chunk_type=ch.get("chunk_type", "section"),
                     chunk_index=idx_counter,
+                    char_start=ch.get("char_start"),
+                    char_end=ch.get("char_end"),
+                    offset_source=ch.get("offset_source", ""),
+                    offset_anchor=ch.get("offset_anchor", ""),
                 ))
                 idx_counter += 1
 
@@ -74,6 +80,33 @@ async def _load_demo_data() -> None:
         print(f"[Meridian] Loaded {len(DEMO_SOPS)} demo SOPs.")
 
     await _seed_demo_activity_if_empty()
+    await _seed_demo_staff_users_if_empty()
+
+
+async def _seed_demo_staff_users_if_empty() -> None:
+    """
+    Seed the 4 demo login accounts (Phase S) with real bcrypt-hashed
+    passwords, once. Persisted like SOPs (not in-memory like the activity
+    log), so this is gated on the staff_users table being empty rather than
+    running unconditionally every startup.
+    """
+    from sqlalchemy import select, func
+    from app.models.models import StaffUser
+    from app.demo_data.demo_staff_users import DEMO_STAFF_USERS
+    from app.services.auth import hash_password
+
+    async with async_session() as session:
+        count = (await session.execute(select(func.count(StaffUser.id)))).scalar() or 0
+        if count > 0:
+            return
+        for u in DEMO_STAFF_USERS:
+            session.add(StaffUser(
+                staff_id=u["staff_id"], name=u["name"], role=u["role"],
+                department=u.get("department", ""), title=u.get("title", ""),
+                password_hash=hash_password(u["password"]),
+            ))
+        await session.commit()
+        print(f"[Meridian] Seeded {len(DEMO_STAFF_USERS)} demo staff accounts.")
 
 
 async def _seed_demo_activity_if_empty() -> None:
@@ -137,6 +170,110 @@ async def _backfill_review_dates(session) -> None:
         if not sop.review_date and sop.sop_id in review_dates_by_sop_id:
             sop.review_date = review_dates_by_sop_id[sop.sop_id]
             changed = True
+
+    if changed:
+        await session.commit()
+
+
+async def _backfill_chunk_offsets(session) -> None:
+    """
+    Fill char_start/char_end/offset_source/offset_anchor on existing
+    SOPChunk rows that predate those columns, or that predate the
+    offset_anchor column specifically (Phase Q2.1).
+
+    Mirrors _backfill_review_dates' pattern for the same reason: the
+    SQLite file persists across restarts, so these columns are added by
+    the ALTER TABLE migrations in db.py with no value, and only the
+    SOP-count-based seed path above computes them - a path that's skipped
+    whenever SOPs already exist. Without this, citation deep-linking would
+    silently degrade to the "no offsets" rung of the honesty ladder
+    forever on any already-seeded database, even though the feature looks
+    fine in the UI (it just falls back to snippet/section matching).
+
+    Re-runs create_sop_chunks per SOP and matches its output back onto the
+    persisted rows by (chunk_type, section_title, chunk_text[:80]) - the
+    same identity a chunk_id would give if migrating between chunk sets
+    were in scope, but simpler since we're only filling in offsets on rows
+    that already exist. Idempotent and additive: a row is only a
+    candidate while offset_source == "" or offset_anchor is still NULL
+    (checked with IS, not falsy, so a genuinely anchorless row - offsets
+    that legitimately couldn't be located - isn't rescanned forever).
+    """
+    from sqlalchemy import select, or_
+    from app.models.models import SOP, SOPChunk
+    from app.rag.chunker import create_sop_chunks
+
+    sops = (await session.execute(select(SOP))).scalars().all()
+    if not sops:
+        return
+
+    changed = False
+    for sop in sops:
+        chunks = (await session.execute(
+            select(SOPChunk).where(
+                SOPChunk.sop_id == sop.id,
+                or_(SOPChunk.offset_source == "", SOPChunk.offset_anchor.is_(None)),
+            )
+        )).scalars().all()
+        if not chunks:
+            continue
+
+        structured = sop.structured_json or {}
+        recomputed = create_sop_chunks(
+            raw_text=sop.raw_text,
+            structured=structured,
+            sop_id=sop.sop_id,
+            sop_title=sop.title,
+            department=sop.department,
+            version=sop.version,
+            status="active",
+            effective_date=sop.effective_date or "",
+            review_date=sop.review_date or "",
+        )
+        # Key on (chunk_type, chunk_text[:80]) only - NOT section_title.
+        # Phase Q2.2 made step chunks' section_title reflect the raw
+        # text's own enclosing heading (previously a hardcoded constant),
+        # so a persisted row's section_title and the freshly recomputed
+        # chunk's section_title now legitimately differ for the exact
+        # rows this backfill exists to fix. Keying on section_title would
+        # make every one of those rows fail to match and silently stay
+        # unbackfilled forever. chunk_text[:80] is unique enough per SOP
+        # in this corpus without it.
+        by_key: dict[tuple[str, str], dict] = {}
+        for ch in recomputed:
+            key = (ch.get("chunk_type", ""), (ch.get("text", "") or "")[:80])
+            by_key.setdefault(key, ch)
+
+        for row in chunks:
+            key = (row.chunk_type or "", (row.chunk_text or "")[:80])
+            match = by_key.get(key)
+            if not match:
+                continue
+            char_start = match.get("char_start")
+            char_end = match.get("char_end")
+            offset_source = match.get("offset_source", "")
+            offset_anchor = match.get("offset_anchor", "")
+            if offset_source:
+                row.char_start = char_start
+                row.char_end = char_end
+                row.offset_source = offset_source
+                row.offset_anchor = offset_anchor
+                # Also refresh section_title - the step-anchor rung now
+                # computes a real enclosing-section heading instead of
+                # the old hardcoded "Procedure Steps" constant, and a
+                # stale section_title would still show the wrong header
+                # in the citation panel even with a correct highlight.
+                new_section_title = match.get("section_title")
+                if new_section_title:
+                    row.section_title = new_section_title
+                changed = True
+            elif row.offset_anchor is None:
+                # No offsets exist for this chunk (a genuinely anchorless
+                # type, or a step whose paraphrase still can't be located)
+                # - record that with "" rather than NULL so this row stops
+                # being rescanned on every future backfill run.
+                row.offset_anchor = ""
+                changed = True
 
     if changed:
         await session.commit()
@@ -376,6 +513,7 @@ async def add_research_disclaimer(request: Request, call_next):
 
 
 # Routers
+app.include_router(routes_auth.router)
 app.include_router(routes_query.router)
 app.include_router(routes_sops.router)
 app.include_router(routes_feedback.router)

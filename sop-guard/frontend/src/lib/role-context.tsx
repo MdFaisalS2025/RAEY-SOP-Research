@@ -1,13 +1,13 @@
 "use client"
 
-import { createContext, useContext, useState, useLayoutEffect } from "react"
+import { createContext, useContext } from "react"
 import type { UserRole, DemoUser } from "./governance-types"
 import { DEMO_USERS, ROLE_CONFIG } from "./mock-data"
+import { useAuth } from "./auth-context"
 
 interface RoleContextValue {
   currentUser: DemoUser
   role: UserRole
-  setRole: (role: UserRole) => void
   roleConfig: typeof ROLE_CONFIG[UserRole]
   hasPermission: (permission: Permission) => boolean
   hierarchyLevel: number
@@ -36,6 +36,7 @@ export type Permission =
   | "acknowledge_sop"
   | "complete_training"
   | "manage_acknowledgments"
+  | "manage_quality"
 
 // Hierarchy levels: system_admin=4 (highest) down to clinical_staff=1 (lowest)
 export const ROLE_HIERARCHY: Record<UserRole, number> = {
@@ -57,12 +58,13 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "manage_training", "view_legal", "export_reports", "emergency_override",
     "manage_committee", "view_all_departments", "configure_system",
     "acknowledge_sop", "complete_training", "manage_acknowledgments",
+    "manage_quality",
   ],
   governance_compliance: [
     "view_sops", "query_ai", "create_proposal", "review_proposal",
     "vote_committee", "publish_sop", "view_audit", "manage_committee",
     "view_compliance", "view_legal", "legal_review", "export_reports",
-    "view_all_departments", "manage_acknowledgments",
+    "view_all_departments", "manage_acknowledgments", "manage_quality",
   ],
   educator: [
     "view_sops", "query_ai", "manage_training", "view_compliance",
@@ -82,26 +84,21 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
 const RoleContext = createContext<RoleContextValue | null>(null)
 
 export function RoleProvider({ children }: { children: React.ReactNode }) {
-  const [role, setRoleState] = useState<UserRole>("clinical_staff")
+  // role is a pure projection of the authenticated identity - not
+  // independent state. There used to be a parallel useState seeded from
+  // localStorage["meridian-demo-role"], settable via an exported `setRole`
+  // that any component could call with no re-authentication. The protected
+  // backend endpoints never trusted that state (they check the JWT), so it
+  // granted no real privilege - but it was the same class of gap Phase S
+  // existed to eliminate, and removing it outright is cheaper than relying
+  // on AppShell's sync effect to coincidentally correct it every render.
+  // "Switching role" is now only possible by actually logging in as a
+  // different demo user (RoleSwitcher -> loginAsDemo), which updates
+  // auth.user and therefore this derived value automatically.
+  const auth = useAuth()
+  const role: UserRole = auth.user?.role ?? "clinical_staff"
 
-  // useLayoutEffect, not useEffect: this still renders "clinical_staff"
-  // first (matching SSR, so no hydration mismatch), but corrects it
-  // synchronously before the browser paints rather than after - so a
-  // saved system_admin/educator/governance_compliance role no longer
-  // flashes one frame of the clinical_staff dashboard on every reload.
-  useLayoutEffect(() => {
-    const saved = localStorage.getItem("meridian-demo-role") as UserRole | null
-    if (saved && DEMO_USERS.find(u => u.role === saved)) {
-      setRoleState(saved)
-    }
-  }, [])
-
-  const setRole = (newRole: UserRole) => {
-    setRoleState(newRole)
-    localStorage.setItem("meridian-demo-role", newRole)
-  }
-
-  const currentUser = DEMO_USERS.find(u => u.role === role) ?? DEMO_USERS[0]
+  const currentUser: DemoUser = auth.user ?? DEMO_USERS[0]
   const roleConfig = ROLE_CONFIG[role]
   const hierarchyLevel = ROLE_HIERARCHY[role]
 
@@ -109,7 +106,7 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
     ROLE_PERMISSIONS[role].includes(permission)
 
   return (
-    <RoleContext.Provider value={{ currentUser, role, setRole, roleConfig, hasPermission, hierarchyLevel }}>
+    <RoleContext.Provider value={{ currentUser, role, roleConfig, hasPermission, hierarchyLevel }}>
       {children}
     </RoleContext.Provider>
   )

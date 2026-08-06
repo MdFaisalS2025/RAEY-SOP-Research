@@ -17,7 +17,9 @@ import {
 } from "lucide-react"
 import AppShell from "@/components/layout/app-shell"
 import { SafetyNote } from "@/components/ui/safety-note"
+import { IllustrativeNote } from "@/components/ui/illustrative-note"
 import { cn } from "@/lib/utils"
+import { toneChip } from "@/components/ui/tone"
 import { useRole } from "@/lib/role-context"
 import { AdversarialContent } from "@/components/evaluation/adversarial-content"
 import { TrendsContent } from "@/components/evaluation/trends-content"
@@ -78,6 +80,7 @@ interface AblationResult {
   reranker_off: { avg_top1_relevance: number }
   order_change_rate: number
   top3_order_changed: number
+  metric_caveat?: string
   error?: string
 }
 
@@ -125,7 +128,7 @@ interface RagasRealResult {
 }
 
 const CHUNK_COLORS: Record<string, string> = {
-  step: "bg-[#0B6BCB]",
+  step: "bg-primary",
   section: "bg-[#94A3B8]",
   step_sequence: "bg-[#0D9488]",
   threshold: "bg-[#B45309]",
@@ -141,8 +144,8 @@ function fade(delay = 0) {
 function SectionTitle({ icon: Icon, title, subtitle }: { icon: React.ElementType; title: string; subtitle?: string }) {
   return (
     <div className="flex items-center gap-3 mb-5">
-      <div className="w-9 h-9 rounded-xl bg-[#0B6BCB]/10 flex items-center justify-center shrink-0">
-        <Icon className="w-4.5 h-4.5 text-[#0B6BCB]" />
+      <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+        <Icon className="w-4.5 h-4.5 text-primary" />
       </div>
       <div>
         <h2 className="text-base font-semibold text-foreground">{title}</h2>
@@ -160,12 +163,12 @@ function StatTile({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.08 + i * 0.04 }}
-      className="p-5 rounded-2xl bg-card border border-[#0B6BCB]/10 hover:border-[#0B6BCB]/30 transition-colors"
+      className="p-5 rounded-2xl bg-card border border-primary/10 hover:border-primary/30 transition-colors"
     >
-      <div className="w-8 h-8 rounded-lg bg-[#0B6BCB]/10 flex items-center justify-center mb-3">
-        <Icon className="w-4 h-4 text-[#0B6BCB]" />
+      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
+        <Icon className="w-4 h-4 text-primary" />
       </div>
-      <p className="text-3xl font-bold mb-1 text-[#0B6BCB]">{value}</p>
+      <p className="text-3xl font-bold mb-1 text-primary">{value}</p>
       <p className="text-sm font-medium text-foreground mb-1">{label}</p>
       <p className="text-xs text-subtle">{description}</p>
     </motion.div>
@@ -272,8 +275,8 @@ export default function EvaluationPage() {
         {/* ── Header ── */}
         <motion.div {...fade(0)}>
           <div className="flex flex-wrap items-start gap-3 mb-2">
-            <div className="w-12 h-12 rounded-2xl bg-[#0B6BCB]/10 flex items-center justify-center shrink-0">
-              <FlaskConical className="w-6 h-6 text-[#0B6BCB]" />
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+              <FlaskConical className="w-6 h-6 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
               <h1 className="text-2xl font-bold text-foreground">Research Evaluation Dashboard</h1>
@@ -289,8 +292,8 @@ export default function EvaluationPage() {
           {/* Badges */}
           <div className="flex flex-wrap gap-2 mt-3">
             {llmStatus && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 text-[#0B6BCB] text-xs font-medium">
-                <span className={cn("w-1.5 h-1.5 rounded-full", llmStatus.available ? "bg-green-500" : "bg-[#0B6BCB]")} />
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/30 text-primary text-xs font-medium">
+                <span className={cn("w-1.5 h-1.5 rounded-full", llmStatus.available ? "bg-green-500" : "bg-primary")} />
                 {llmStatus.mode === "mock" ? "Mock generation (no live LLM configured)" : `${llmStatus.provider} / ${llmStatus.model}`}
               </span>
             )}
@@ -298,7 +301,7 @@ export default function EvaluationPage() {
 
           <SafetyNote className="mt-3" />
 
-          <div className="mt-4 flex items-start gap-2 px-4 py-3 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 text-xs">
+          <div className={cn(toneChip.warning, "mt-4 flex items-start gap-2 px-4 py-3 rounded-xl text-xs")}>
             <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-[#B45309] dark:text-amber-400" />
             <span>
               Every number on this page is computed live against the current SOP corpus and pipeline - there is no
@@ -320,7 +323,7 @@ export default function EvaluationPage() {
               onClick={() => setTab(t.key)}
               className={cn(
                 "flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors",
-                tab === t.key ? "bg-card text-[#0B6BCB] shadow-sm" : "text-muted-foreground hover:text-foreground"
+                tab === t.key ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
               )}
             >
               <t.icon className="w-4 h-4" />
@@ -392,6 +395,11 @@ export default function EvaluationPage() {
                   description={`Verifier catch rate across ${adversarial?.total_tests ?? 0} adversarial test cases`}
                 />
               </div>
+              {ragasSummary?.aggregate.faithfulness_note && (
+                <div className="mt-4">
+                  <IllustrativeNote detail={ragasSummary.aggregate.faithfulness_note} />
+                </div>
+              )}
             </motion.div>
 
             {/* ── Section 1b: Real RAGAS ── */}
@@ -409,7 +417,7 @@ export default function EvaluationPage() {
                 <button
                   onClick={() => loadRagasReal(true)}
                   disabled={ragasRealLoading}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-[#0B6BCB]/30 text-[#0B6BCB] hover:bg-[#0B6BCB]/5 transition-colors disabled:opacity-50 shrink-0"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-primary/30 text-primary hover:bg-primary/5 transition-colors disabled:opacity-50 shrink-0"
                 >
                   {ragasRealLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
                   {ragasReal ? "Re-run" : "Run Real RAGAS"}
@@ -461,27 +469,27 @@ export default function EvaluationPage() {
             {/* ── Section 2: Retrieval Ablation ── */}
             <motion.div {...fade(0.1)}>
               <SectionTitle icon={BarChart3} title="Retrieval Ablation: Reranker On vs Off" subtitle="Same retriever, same query set - only the heuristic reranker toggles" />
-              <div className="rounded-2xl bg-card border border-[#0B6BCB]/10 overflow-hidden">
+              <div className="rounded-2xl bg-card border border-primary/10 overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-border">
                         <th className="text-left py-3.5 px-5 text-muted-foreground font-medium text-xs uppercase tracking-wide">Metric</th>
-                        <th className="py-3.5 px-4 text-center text-[#0B6BCB] font-semibold text-xs uppercase tracking-wide border-l-2 border-[#0B6BCB]/30 bg-[#0B6BCB]/5">Reranker On</th>
+                        <th className="py-3.5 px-4 text-center text-primary font-semibold text-xs uppercase tracking-wide border-l-2 border-primary/30 bg-primary/5">Reranker On</th>
                         <th className="py-3.5 px-4 text-center text-muted-foreground font-medium text-xs uppercase tracking-wide">Reranker Off</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr className="border-b border-border last:border-0">
                         <td className="py-3 px-5 text-foreground font-medium">Avg Top-1 Relevance</td>
-                        <td className="py-3 px-4 text-center font-bold border-l-2 border-[#0B6BCB]/30 bg-[#0B6BCB]/5 text-[#0B6BCB]">
+                        <td className="py-3 px-4 text-center font-bold border-l-2 border-primary/30 bg-primary/5 text-primary">
                           {ablation?.reranker_on.avg_top1_relevance.toFixed(3) ?? "-"}
                         </td>
                         <td className="py-3 px-4 text-center text-muted-foreground">{ablation?.reranker_off.avg_top1_relevance.toFixed(3) ?? "-"}</td>
                       </tr>
                       <tr>
                         <td className="py-3 px-5 text-foreground font-medium">Top-3 Order Change Rate</td>
-                        <td className="py-3 px-4 text-center font-bold border-l-2 border-[#0B6BCB]/30 bg-[#0B6BCB]/5 text-[#0B6BCB]" colSpan={2}>
+                        <td className="py-3 px-4 text-center font-bold border-l-2 border-primary/30 bg-primary/5 text-primary" colSpan={2}>
                           {ablation ? `${(ablation.order_change_rate * 100).toFixed(0)}% of queries (${ablation.top3_order_changed}/${ablation.queries_compared})` : "-"}
                         </td>
                       </tr>
@@ -489,14 +497,19 @@ export default function EvaluationPage() {
                   </table>
                 </div>
               </div>
+              {ablation?.metric_caveat && (
+                <div className="mt-4">
+                  <IllustrativeNote detail={ablation.metric_caveat} />
+                </div>
+              )}
             </motion.div>
 
             {/* ── Section 3: Query Type Breakdown ── */}
             <motion.div {...fade(0.12)}>
               <SectionTitle icon={BarChart3} title="Query Category Breakdown" subtitle="Faithfulness and citation coverage averaged per category, from the last live eval run" />
-              <div className="rounded-2xl bg-card border border-[#0B6BCB]/10 p-5 space-y-4">
+              <div className="rounded-2xl bg-card border border-primary/10 p-5 space-y-4">
                 <div className="flex gap-5 text-xs text-muted-foreground mb-2">
-                  <span className="flex items-center gap-1.5"><span className="w-3 h-2 rounded-sm bg-[#0B6BCB] inline-block" /> Faithfulness</span>
+                  <span className="flex items-center gap-1.5"><span className="w-3 h-2 rounded-sm bg-primary inline-block" /> Faithfulness</span>
                   <span className="flex items-center gap-1.5"><span className="w-3 h-2 rounded-sm bg-[#0D9488] inline-block" /> Citation Coverage</span>
                 </div>
                 {byCategory.length === 0 && <p className="text-xs text-subtle">No per-query data available yet.</p>}
@@ -505,13 +518,13 @@ export default function EvaluationPage() {
                     <div className="flex items-center justify-between text-xs">
                       <span className="font-mono text-foreground w-40 shrink-0">{row.type} <span className="text-subtle">(n={row.n})</span></span>
                       <div className="flex gap-4 text-muted-foreground">
-                        <span className="text-[#0B6BCB] font-medium">{row.faithfulness != null ? row.faithfulness.toFixed(2) : "N/A"}</span>
+                        <span className="text-primary font-medium">{row.faithfulness != null ? row.faithfulness.toFixed(2) : "N/A"}</span>
                         <span className="text-muted-foreground font-medium">{row.coverage.toFixed(2)}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="flex-1 h-2 rounded-full bg-muted">
-                        <div className="h-full rounded-full bg-[#0B6BCB] transition-all duration-700" style={{ width: `${(row.faithfulness ?? 0) * 100}%` }} />
+                        <div className="h-full rounded-full bg-primary transition-all duration-700" style={{ width: `${(row.faithfulness ?? 0) * 100}%` }} />
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -528,21 +541,21 @@ export default function EvaluationPage() {
             <motion.div {...fade(0.14)}>
               <SectionTitle icon={ShieldAlert} title="Adversarial Verifier Benchmark" subtitle="Can the verifier tell a correct answer from a deliberately wrong one, on the same question?" />
               <div className="grid grid-cols-3 gap-4">
-                <div className="p-4 rounded-xl bg-card border border-[#0B6BCB]/10 text-center">
-                  <p className="text-2xl font-bold text-[#0B6BCB]">{adversarial ? adversarial.sensitivity.toFixed(2) : "-"}</p>
+                <div className="p-4 rounded-xl bg-card border border-primary/10 text-center">
+                  <p className="text-2xl font-bold text-primary">{adversarial ? adversarial.sensitivity.toFixed(2) : "-"}</p>
                   <p className="text-xs text-muted-foreground mt-1">Sensitivity</p>
                 </div>
-                <div className="p-4 rounded-xl bg-card border border-[#0B6BCB]/10 text-center">
-                  <p className="text-2xl font-bold text-[#0B6BCB]">{adversarial ? adversarial.specificity.toFixed(2) : "-"}</p>
+                <div className="p-4 rounded-xl bg-card border border-primary/10 text-center">
+                  <p className="text-2xl font-bold text-primary">{adversarial ? adversarial.specificity.toFixed(2) : "-"}</p>
                   <p className="text-xs text-muted-foreground mt-1">Specificity</p>
                 </div>
-                <div className="p-4 rounded-xl bg-card border border-[#0B6BCB]/10 text-center">
-                  <p className="text-2xl font-bold text-[#0B6BCB]">{adversarial ? adversarial.pairwise_separation.toFixed(2) : "-"}</p>
+                <div className="p-4 rounded-xl bg-card border border-primary/10 text-center">
+                  <p className="text-2xl font-bold text-primary">{adversarial ? adversarial.pairwise_separation.toFixed(2) : "-"}</p>
                   <p className="text-xs text-muted-foreground mt-1">Pairwise Separation</p>
                 </div>
               </div>
-              <div className="flex items-start gap-3 px-4 py-3 mt-4 rounded-xl bg-[#0B6BCB]/5 border border-[#0B6BCB]/15 text-foreground text-xs">
-                <Info className="w-4 h-4 shrink-0 text-[#0B6BCB] mt-0.5" />
+              <div className="flex items-start gap-3 px-4 py-3 mt-4 rounded-xl bg-primary/5 border border-primary/15 text-foreground text-xs">
+                <Info className="w-4 h-4 shrink-0 text-primary mt-0.5" />
                 <span>
                   Sensitivity alone is a misleading headline metric - a verifier that flags every answer scores 100%
                   sensitivity while providing no signal. Specificity and pairwise separation show whether it can
@@ -555,7 +568,7 @@ export default function EvaluationPage() {
             {/* ── Section 5: Chunk Type Distribution ── */}
             <motion.div {...fade(0.16)}>
               <SectionTitle icon={Target} title="Retrieval Architecture: Chunk Type Distribution" subtitle={`${chunkDist?.total_chunks ?? 0} chunks across the current live SOP corpus`} />
-              <div className="rounded-2xl bg-card border border-[#0B6BCB]/10 p-5">
+              <div className="rounded-2xl bg-card border border-primary/10 p-5">
                 <div className="space-y-3">
                   {(chunkDist?.distribution ?? []).map((chunk, i) => (
                     <motion.div key={chunk.type} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.18 + i * 0.04 }} className="flex items-center gap-3">
@@ -567,7 +580,7 @@ export default function EvaluationPage() {
                     </motion.div>
                   ))}
                   {(!chunkDist || chunkDist.distribution.length === 0) && (
-                    <p className="text-xs text-subtle">No chunks in the corpus yet - upload an SOP to populate this.</p>
+                    <p className="text-xs text-subtle">No chunks in the corpus yet.</p>
                   )}
                 </div>
               </div>
@@ -575,12 +588,12 @@ export default function EvaluationPage() {
 
             {/* ── Section 6: Evaluation Methodology ── */}
             <motion.div {...fade(0.18)}>
-              <div className="rounded-2xl bg-card border border-[#0B6BCB]/10 p-5">
+              <div className="rounded-2xl bg-card border border-primary/10 p-5">
                 <button
                   onClick={() => setShowMethodology((v) => !v)}
-                  className="flex items-center gap-2 text-sm font-semibold text-foreground mb-1 hover:text-[#0B6BCB] transition-colors w-full text-left"
+                  className="flex items-center gap-2 text-sm font-semibold text-foreground mb-1 hover:text-primary transition-colors w-full text-left"
                 >
-                  <Info className="w-4 h-4 text-[#0B6BCB]" />
+                  <Info className="w-4 h-4 text-primary" />
                   Evaluation Methodology Note
                   <span className="ml-auto text-xs text-subtle">{showMethodology ? "hide" : "show"}</span>
                 </button>
@@ -608,13 +621,6 @@ export default function EvaluationPage() {
                 )}
               </div>
             </motion.div>
-
-            {ragasSummary?.aggregate.faithfulness_note && (
-              <motion.div {...fade(0.19)} className="flex items-start gap-2 px-4 py-3 rounded-xl bg-muted/30 border border-border text-xs text-muted-foreground">
-                <Info className="w-4 h-4 shrink-0 mt-0.5" />
-                <span>{ragasSummary.aggregate.faithfulness_note}</span>
-              </motion.div>
-            )}
 
             <motion.div {...fade(0.2)} className="text-center text-xs text-subtle pb-4">
               All metrics computed live from the current pipeline and SOP corpus · Not from real clinical queries

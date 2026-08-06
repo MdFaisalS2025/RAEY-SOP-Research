@@ -103,8 +103,8 @@ export default function UploadPage() {
 
         {/* Header */}
         <div className="flex items-center gap-3 mb-8">
-          <div className="w-12 h-12 rounded-2xl bg-[#0B6BCB]/10 flex items-center justify-center">
-            <Upload className="w-6 h-6 text-[#0B6BCB]" />
+          <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+            <Upload className="w-6 h-6 text-primary" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-foreground">Upload SOP</h1>
@@ -135,13 +135,12 @@ export default function UploadPage() {
               className={cn(
                 "flex flex-col items-center justify-center p-16 rounded-2xl border-2 border-dashed cursor-pointer transition-all",
                 dragOver
-                  ? "border-[#0B6BCB] bg-[#0B6BCB]/5"
-                  : "border-border hover:border-[#0B6BCB]/40 bg-card"
+                  ? "border-primary bg-primary/5"
+                  : "border-border hover:border-primary/40 bg-card"
               )}
             >
               <Upload className="w-12 h-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-1">Drop your SOP file here</h3>
-              <p className="text-sm text-muted-foreground mb-4">or click to browse</p>
               <p className="text-xs text-muted-foreground">Supports PDF, DOCX, TXT</p>
             </motion.div>
           )}
@@ -149,8 +148,8 @@ export default function UploadPage() {
           {state === "selected" && selectedFile && (
             <motion.div key="selected" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-4">
               <Card padding="sm" className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-[#0B6BCB]/10 flex items-center justify-center">
-                  <File className="w-6 h-6 text-[#0B6BCB]" />
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <File className="w-6 h-6 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{selectedFile.name}</p>
@@ -167,11 +166,11 @@ export default function UploadPage() {
           {(state === "uploading" || state === "processing") && (
             <motion.div key="progress" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-6 rounded-2xl bg-card border border-border">
               <div className="flex items-center gap-3 mb-4">
-                <File className="w-5 h-5 text-[#0B6BCB]" />
+                <File className="w-5 h-5 text-primary" />
                 <span className="text-sm font-medium">{selectedFile?.name}</span>
               </div>
               <div className="w-full h-2 rounded-full bg-muted overflow-hidden mb-2">
-                <motion.div className="h-full rounded-full bg-[#0B6BCB]" animate={{ width: `${progress}%` }} />
+                <motion.div className="h-full rounded-full bg-primary" animate={{ width: `${progress}%` }} />
               </div>
               <p className="text-xs text-muted-foreground">
                 {state === "uploading" ? `Uploading... ${progress}%` : "Processing & extracting content..."}
@@ -201,7 +200,7 @@ export default function UploadPage() {
                   <CheckCircle2 className="w-6 h-6 text-green-400" />
                   <h3 className="text-lg font-semibold">Processing Complete</h3>
                 </div>
-                <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                   {Object.entries(result).map(([label, value]) => (
                     <div key={label}>
                       <p className="text-xs text-muted-foreground capitalize">{label}</p>
@@ -213,7 +212,7 @@ export default function UploadPage() {
                   <button onClick={reset} className="press flex-1 py-2.5 rounded-xl border border-border text-sm font-medium hover:bg-muted transition-colors">
                     Upload Another
                   </button>
-                  <Link href="/library" className="press flex-1 py-2.5 rounded-xl bg-[#0B6BCB] hover:bg-[#0959AC] text-white text-sm font-medium transition-colors flex items-center justify-center gap-1.5">
+                  <Link href="/library" className="press flex-1 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-primary-foreground text-sm font-medium transition-colors flex items-center justify-center gap-1.5">
                     View in Library <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>

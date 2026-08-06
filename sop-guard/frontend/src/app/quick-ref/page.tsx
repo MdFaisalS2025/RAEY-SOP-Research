@@ -11,6 +11,8 @@ import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { SafetyNote } from "@/components/ui/safety-note"
 import { ErrorState } from "@/components/ui/error-state"
 import { Card } from "@/components/ui/card"
+import { cn } from "@/lib/utils"
+import { toneChip } from "@/components/ui/tone"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ""
 
@@ -57,22 +59,22 @@ function QuickRefCard({ sop, index }: { sop: RealSOP; index: number }) {
       className="rounded-2xl bg-card border border-border shadow-sm p-5 flex flex-col gap-3 print:break-inside-avoid print:shadow-none"
     >
       <div>
-        <p className="text-[10px] font-mono text-muted-foreground">{sop.sop_id} - v{sop.version}</p>
+        <p className="text-10 font-mono text-muted-foreground">{sop.sop_id} - v{sop.version}</p>
         <h3 className="text-sm font-semibold leading-tight mt-0.5">{sop.title}</h3>
-        <p className="text-[10px] text-muted-foreground mt-0.5">{sop.department} - Effective {sop.effective_date}</p>
+        <p className="text-10 text-muted-foreground mt-0.5">{sop.department} - Effective {sop.effective_date}</p>
       </div>
 
       <ul className="space-y-1.5">
         {keyPoints.map((point, i) => (
           <li key={i} className="flex items-start gap-2 text-xs text-foreground/80">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#0B6BCB] shrink-0 mt-1.5" />
+            <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0 mt-1.5" />
             {point}
           </li>
         ))}
       </ul>
 
       {emergencyThreshold && (
-        <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30">
+        <div className={cn(toneChip.danger, "flex items-start gap-2 px-3 py-2 rounded-lg")}>
           <AlertTriangle className="w-3.5 h-3.5 text-[#B91C1C] dark:text-red-400 shrink-0 mt-0.5" />
           <p className="text-xs text-[#B91C1C] dark:text-red-400 font-medium">{emergencyThreshold}</p>
         </div>
@@ -81,7 +83,7 @@ function QuickRefCard({ sop, index }: { sop: RealSOP; index: number }) {
       <div className="flex items-center gap-2 pt-1 border-t border-border">
         <Link
           href={`/library`}
-          className="flex items-center gap-1 text-[11px] text-[#0B6BCB] hover:text-[#0B6BCB] transition-colors"
+          className="flex items-center gap-1 text-11 text-primary hover:text-primary transition-colors"
         >
           <ExternalLink className="w-3 h-3" />
           View Full SOP
@@ -89,7 +91,7 @@ function QuickRefCard({ sop, index }: { sop: RealSOP; index: number }) {
         <span className="text-subtle">|</span>
         <button
           onClick={() => window.print()}
-          className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+          className="flex items-center gap-1 text-11 text-muted-foreground hover:text-foreground transition-colors"
         >
           <Printer className="w-3 h-3" />
           Print
@@ -156,8 +158,8 @@ export default function QuickRefPage() {
 
         <div className="flex items-start justify-between gap-4 print:hidden">
           <div className="flex items-start gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-[#0B6BCB]/10 flex items-center justify-center shrink-0">
-              <BookOpen className="w-6 h-6 text-[#0B6BCB]" />
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+              <BookOpen className="w-6 h-6 text-primary" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-foreground">Quick Reference Cards</h1>
@@ -185,7 +187,7 @@ export default function QuickRefPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search cards by keyword, SOP ID, department..."
-              className="w-full rounded-xl bg-muted border border-border pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/40 placeholder:text-muted-foreground"
+              className="w-full rounded-xl bg-muted border border-border pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary/40 placeholder:text-muted-foreground"
             />
           </div>
           <div className="relative">
@@ -194,7 +196,7 @@ export default function QuickRefPage() {
               aria-label="Filter by department"
               value={dept}
               onChange={(e) => setDept(e.target.value)}
-              className="rounded-xl bg-muted border border-border pl-9 pr-8 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/40 appearance-none"
+              className="rounded-xl bg-muted border border-border pl-9 pr-8 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary/40 appearance-none"
             >
               {departments.map((d) => (
                 <option key={d} value={d}>{d}</option>

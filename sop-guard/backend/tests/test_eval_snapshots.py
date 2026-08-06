@@ -16,7 +16,8 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 import app.models.models  # noqa: F401 - register models on Base
 from app.main import app as fastapi_app
 from app.database.db import Base, get_db
-from app.models.models import SOP, SOPChunk
+from app.models.models import SOP, SOPChunk, StaffUser
+from app.services.auth import get_current_user
 
 
 @pytest.fixture
@@ -36,11 +37,22 @@ async def client(tmp_path):
                 await session.rollback()
                 raise
 
+    # /api/evaluation/snapshot* is nav-gated to system_admin (Phase T2) -
+    # fixed-identity override, this suite is about snapshot persistence,
+    # not auth.
+    async def _override_current_user() -> StaffUser:
+        return StaffUser(
+            id=1, staff_id="test-admin", name="Test Admin", role="system_admin",
+            department="Test", title="Test", password_hash="",
+        )
+
     fastapi_app.dependency_overrides[get_db] = _override_get_db
+    fastapi_app.dependency_overrides[get_current_user] = _override_current_user
     transport = ASGITransport(app=fastapi_app)
     async with AsyncClient(transport=transport, base_url="http://test", timeout=60.0) as ac:
         yield ac
     fastapi_app.dependency_overrides.pop(get_db, None)
+    fastapi_app.dependency_overrides.pop(get_current_user, None)
     await engine.dispose()
 
 

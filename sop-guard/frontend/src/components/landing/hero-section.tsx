@@ -28,7 +28,7 @@ const WORKFLOW_STEPS = [
 function Wordmark() {
   return (
     <div className="flex items-center gap-2.5">
-      <svg viewBox="0 0 24 24" className="w-6 h-6 text-[#0B6BCB] dark:text-[#00E5FF]" fill="none">
+      <svg viewBox="0 0 24 24" className="w-6 h-6 text-primary" fill="none">
         <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.6" />
         <path d="M3 12h18" stroke="currentColor" strokeWidth="1.6" />
         <path d="M12 3c2.8 2.4 4.4 5.6 4.4 9s-1.6 6.6-4.4 9c-2.8-2.4-4.4-5.6-4.4-9s1.6-6.6 4.4-9Z" stroke="currentColor" strokeWidth="1.3" />
@@ -45,13 +45,13 @@ function AmbientOrbs() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
       <motion.div
-        className="absolute w-[420px] h-[420px] rounded-full blur-[100px] bg-[#0B6BCB] dark:bg-[#00E5FF] opacity-[0.08] dark:opacity-[0.06]"
+        className="absolute w-[420px] h-[420px] rounded-full blur-[100px] bg-primary opacity-[0.08] dark:opacity-[0.06]"
         style={{ top: "-8%", right: "8%" }}
         animate={{ x: [0, 30, -10, 0], y: [0, -20, 15, 0] }}
         transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
-        className="absolute w-[300px] h-[300px] rounded-full blur-[90px] bg-[#0B6BCB] dark:bg-[#00E5FF] opacity-[0.06] dark:opacity-[0.05]"
+        className="absolute w-[300px] h-[300px] rounded-full blur-[90px] bg-primary opacity-[0.06] dark:opacity-[0.05]"
         style={{ bottom: "0%", right: "22%" }}
         animate={{ x: [0, -25, 15, 0], y: [0, 20, -10, 0] }}
         transition={{ duration: 24, repeat: Infinity, ease: "easeInOut", delay: 2 }}
@@ -115,7 +115,7 @@ export function HeroSection() {
                 >
                   {WORKFLOW_STEPS.map((s) => (
                     <div key={s.label} className="flex items-center gap-2.5 text-sm">
-                      <s.icon className="w-4 h-4 text-[#0B6BCB] dark:text-[#00E5FF] shrink-0" />
+                      <s.icon className="w-4 h-4 text-primary shrink-0" />
                       <span className="font-semibold text-foreground">{s.label}</span>
                       <span className="text-muted-foreground">— {s.detail}</span>
                     </div>

@@ -24,7 +24,9 @@ from app.models.models import (
     QueryLogRecord,
     NotificationRecord,
     SOP,
+    StaffUser,
 )
+from app.services.auth import get_current_user, require_permission
 from app.services.text_diff import compute_word_diff, diff_stats
 from app.services.change_impact import assess_change_impact
 from app.services.signature_chain import GENESIS_HASH, compute_content_hash, verify_chain
@@ -196,13 +198,20 @@ async def list_proposals(
 
 
 @router.post("/api/governance/proposals", response_model=ProposalResponse)
-async def create_proposal(req: ProposalCreate, db: AsyncSession = Depends(get_db)):
+async def create_proposal(
+    req: ProposalCreate,
+    db: AsyncSession = Depends(get_db),
+    user: StaffUser = Depends(require_permission("create_proposal")),
+):
     proposal = ProposalRecord(
         title=req.title,
         affected_sop_id=req.affected_sop_id,
         department=req.department,
         priority=req.priority,
-        initiated_by=req.initiated_by,
+        # The authenticated identity, not whatever the request body claims
+        # (Phase S) - initiated_by used to be a free-text field any caller
+        # could set to any name.
+        initiated_by=req.initiated_by or user.name,
         ai_summary=req.ai_summary,
         legal_review_required="true" if req.legal_review_required else "false",
         payload=req.payload or {},
@@ -236,7 +245,10 @@ async def get_proposal(proposal_id: int, db: AsyncSession = Depends(get_db)):
 
 @router.put("/api/governance/proposals/{proposal_id}/schedule", response_model=ProposalResponse)
 async def schedule_proposal_effective_date(
-    proposal_id: int, req: ProposalScheduleUpdate, db: AsyncSession = Depends(get_db)
+    proposal_id: int,
+    req: ProposalScheduleUpdate,
+    db: AsyncSession = Depends(get_db),
+    user: StaffUser = Depends(require_permission("review_proposal")),
 ):
     """
     Set (or clear, with "") when an approved proposal's change actually
@@ -367,7 +379,11 @@ async def get_proposal_impact(proposal_id: int, db: AsyncSession = Depends(get_d
 
 
 @router.delete("/api/governance/proposals/{proposal_id}")
-async def delete_proposal(proposal_id: int, db: AsyncSession = Depends(get_db)):
+async def delete_proposal(
+    proposal_id: int,
+    db: AsyncSession = Depends(get_db),
+    user: StaffUser = Depends(require_permission("manage_committee")),
+):
     proposal = (await db.execute(
         select(ProposalRecord).where(ProposalRecord.id == proposal_id)
     )).scalar_one_or_none()
@@ -378,7 +394,12 @@ async def delete_proposal(proposal_id: int, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/api/governance/proposals/{proposal_id}/vote", response_model=ProposalResponse)
-async def cast_vote(proposal_id: int, req: VoteCreate, db: AsyncSession = Depends(get_db)):
+async def cast_vote(
+    proposal_id: int,
+    req: VoteCreate,
+    db: AsyncSession = Depends(get_db),
+    user: StaffUser = Depends(require_permission("vote_committee")),
+):
     if req.vote not in _VALID_VOTES:
         raise HTTPException(
             status_code=400,
@@ -392,10 +413,15 @@ async def cast_vote(proposal_id: int, req: VoteCreate, db: AsyncSession = Depend
     if not proposal:
         raise HTTPException(status_code=404, detail=f"Proposal {proposal_id} not found.")
 
+    # Identity comes ONLY from the verified session, never the request
+    # body (Phase S) - user_id/user_name used to be plain client-supplied
+    # strings, so any caller could cast a vote attributed to anyone (a
+    # body fallback would still allow that whenever the field was filled
+    # in, so it's not honored at all here).
     vote = VoteRecord(
         proposal_id=proposal_id,
-        user_id=req.user_id,
-        user_name=req.user_name,
+        user_id=user.staff_id,
+        user_name=user.name,
         vote=req.vote,
         notes=req.notes,
     )
@@ -443,7 +469,8 @@ async def list_attestations(
 
 @router.post("/api/governance/attestations", response_model=AttestationResponse)
 async def create_attestation(
-    req: AttestationCreate, request: Request, db: AsyncSession = Depends(get_db)
+    req: AttestationCreate, request: Request, db: AsyncSession = Depends(get_db),
+    user: StaffUser = Depends(get_current_user),
 ):
     """
     Records a Part-11-styled e-signature: the meaning of the signature is
@@ -455,14 +482,24 @@ async def create_attestation(
     (app/services/signature_chain.py) before being persisted. There is no
     update/delete endpoint for this table - once signed, a record is only
     ever appended to, never edited.
+
+    "Already being logged in" (Phase S) is now a real, server-verified
+    fact rather than an assumption - user_id/user_name/user_role/
+    department are taken from the authenticated session, not the request
+    body, so the re-typed-name second factor is checked against a real
+    identity instead of whatever name the client happened to send.
     """
     if not req.second_factor_confirmation.strip():
         raise HTTPException(status_code=400, detail="second_factor_confirmation is required to sign.")
-    if req.second_factor_confirmation.strip().lower() != (req.user_name or "").strip().lower():
+    if req.second_factor_confirmation.strip().lower() != user.name.strip().lower():
         raise HTTPException(
             status_code=400,
             detail="second_factor_confirmation must match your full name exactly to confirm your identity.",
         )
+    req.user_id = user.staff_id
+    req.user_name = user.name
+    req.user_role = user.role
+    req.department = req.department or user.department
 
     ip = request.client.host if request.client else ""
     attested_at = datetime.now(timezone.utc)
@@ -650,7 +687,11 @@ async def list_notifications(
 
 
 @router.post("/api/notifications/{notification_id}/read")
-async def mark_notification_read(notification_id: int, db: AsyncSession = Depends(get_db)):
+async def mark_notification_read(
+    notification_id: int,
+    db: AsyncSession = Depends(get_db),
+    user: StaffUser = Depends(get_current_user),
+):
     result = await db.execute(
         select(NotificationRecord).where(NotificationRecord.id == notification_id)
     )
@@ -663,7 +704,10 @@ async def mark_notification_read(notification_id: int, db: AsyncSession = Depend
 
 
 @router.post("/api/notifications/read-all")
-async def mark_all_notifications_read(db: AsyncSession = Depends(get_db)):
+async def mark_all_notifications_read(
+    db: AsyncSession = Depends(get_db),
+    user: StaffUser = Depends(get_current_user),
+):
     result = await db.execute(select(NotificationRecord).where(NotificationRecord.read == False))  # noqa: E712
     rows = result.scalars().all()
     for r in rows:

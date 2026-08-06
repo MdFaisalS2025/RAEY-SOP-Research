@@ -7,6 +7,8 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 import app.models.models  # noqa: F401 - register models on Base
 from app.main import app as fastapi_app
 from app.database.db import Base, get_db
+from app.models.models import StaffUser
+from app.services.auth import get_current_user
 from app.rag import entity_graph
 
 
@@ -27,11 +29,34 @@ async def client(tmp_path):
                 await session.rollback()
                 raise
 
+    # Predates Phase S - trust the identity fields the test itself put in
+    # the request body (same pattern as test_attestation_signature.py's
+    # fixture), since this suite is about change-impact assessment, not
+    # auth. clinical_staff default carries create_proposal, so the
+    # proposal-creation call below still succeeds unpatched.
+    from fastapi import Request
+
+    async def _override_current_user(request: Request) -> StaffUser:
+        try:
+            body = await request.json()
+        except Exception:
+            body = {}
+        return StaffUser(
+            id=1,
+            staff_id=body.get("user_id") or "test-user",
+            name=body.get("user_name") or "Test User",
+            role=body.get("user_role") or "clinical_staff",
+            department=body.get("department") or "",
+            password_hash="",
+        )
+
     fastapi_app.dependency_overrides[get_db] = _override_get_db
+    fastapi_app.dependency_overrides[get_current_user] = _override_current_user
     transport = ASGITransport(app=fastapi_app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
     fastapi_app.dependency_overrides.pop(get_db, None)
+    fastapi_app.dependency_overrides.pop(get_current_user, None)
     await engine.dispose()
 
 

@@ -11,6 +11,7 @@ import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { SafetyNote } from "@/components/ui/safety-note"
 import { ErrorState } from "@/components/ui/error-state"
 import { cn } from "@/lib/utils"
+import { toneChip } from "@/components/ui/tone"
 import type { AuditEntry, AuditEventType } from "@/lib/governance-types"
 import { useRole } from "@/lib/role-context"
 import { downloadCSV } from "@/lib/csv-export"
@@ -71,10 +72,10 @@ function formatTimestamp(ts: string) {
 }
 
 function eventBadgeClass(eventType: AuditEventType) {
-  if (eventType.startsWith("sop_")) return "bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30"
+  if (eventType.startsWith("sop_")) return "bg-primary/10 text-primary border border-primary/30"
   if (eventType.startsWith("proposal_") || eventType.startsWith("committee_")) return "bg-card text-muted-foreground border border-input"
-  if (eventType.startsWith("training_") || eventType.startsWith("acknowledgment_")) return "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30"
-  if (eventType.startsWith("legal_")) return "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30"
+  if (eventType.startsWith("training_") || eventType.startsWith("acknowledgment_")) return toneChip.success
+  if (eventType.startsWith("legal_")) return toneChip.warning
   if (eventType.startsWith("ai_")) return "bg-card text-muted-foreground border border-input"
   // admin, user_login, export_generated, cross_reference
   return "bg-card text-muted-foreground border border-input"
@@ -190,7 +191,7 @@ export default function AuditPage() {
   }, [auditEntries])
 
   const stats = [
-    { label: "Events Today", value: String(eventsToday), color: "text-[#0B6BCB]" },
+    { label: "Events Today", value: String(eventsToday), color: "text-primary" },
     { label: "Total Events", value: String(auditEntries.length), color: "text-foreground" },
     { label: "Event Types", value: String(uniqueEventTypes.length), color: "text-muted-foreground" },
     { label: "Last Export", value: exportState === "success" ? "Just now" : "Not yet exported", color: "text-[#15803D] dark:text-green-400" },
@@ -204,8 +205,8 @@ export default function AuditPage() {
 
         {/* Header */}
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-[#0B6BCB]/10 flex items-center justify-center">
-            <Shield className="w-6 h-6 text-[#0B6BCB]" />
+          <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+            <Shield className="w-6 h-6 text-primary" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-foreground">Audit Trail</h1>
@@ -216,7 +217,7 @@ export default function AuditPage() {
         <SafetyNote />
 
         {/* JCI note */}
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 text-[#0B6BCB] text-sm">
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary/10 border border-primary/30 text-primary text-sm">
           <Shield className="w-4 h-4 shrink-0" />
           <span>Audit records are timestamp-verified. Suitable for regulatory inspection and JCI accreditation review.</span>
         </div>
@@ -246,14 +247,14 @@ export default function AuditPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search events, users, resources..."
-              className="w-full pl-9 pr-3 py-2 rounded-xl bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-[#0B6BCB]/30"
+              className="w-full pl-9 pr-3 py-2 rounded-xl bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/30"
             />
           </div>
           <select
             aria-label="Filter by event type"
             value={eventTypeFilter}
             onChange={(e) => setEventTypeFilter(e.target.value)}
-            className="px-3 py-2 rounded-xl bg-card border border-border text-sm text-foreground focus:outline-none focus:border-[#0B6BCB]/30"
+            className="px-3 py-2 rounded-xl bg-card border border-border text-sm text-foreground focus:outline-none focus:border-primary/30"
           >
             <option value="all">All Event Types</option>
             {uniqueEventTypes.map((t) => (
@@ -264,7 +265,7 @@ export default function AuditPage() {
             aria-label="Filter by role"
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
-            className="px-3 py-2 rounded-xl bg-card border border-border text-sm text-foreground focus:outline-none focus:border-[#0B6BCB]/30"
+            className="px-3 py-2 rounded-xl bg-card border border-border text-sm text-foreground focus:outline-none focus:border-primary/30"
           >
             <option value="all">All Roles</option>
             {uniqueRoles.map((r) => (
@@ -279,7 +280,7 @@ export default function AuditPage() {
                 className={cn(
                   "px-3 py-2 text-xs font-medium transition-colors",
                   dateRange === range
-                    ? "bg-[#0B6BCB]/10 text-[#0B6BCB]"
+                    ? "bg-primary/10 text-primary"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
@@ -377,7 +378,7 @@ export default function AuditPage() {
                               <div className="space-y-2">
                                 <p><span className="text-muted-foreground">Resource ID:</span> <span className="text-foreground font-mono">{event.affected_resource_id}</span></p>
                                 {event.evidence_references && event.evidence_references.length > 0 && (
-                                  <p><span className="text-muted-foreground">Evidence:</span> <span className="text-[#0B6BCB]">{event.evidence_references.join(", ")}</span></p>
+                                  <p><span className="text-muted-foreground">Evidence:</span> <span className="text-primary">{event.evidence_references.join(", ")}</span></p>
                                 )}
                                 {event.compliance_impact && (
                                   <p><span className="text-muted-foreground">Compliance Impact:</span> <span className="text-[#B45309] dark:text-amber-400">{event.compliance_impact}</span></p>
@@ -402,7 +403,7 @@ export default function AuditPage() {
                 <tr>
                   <td colSpan={7} className="p-8 text-center text-muted-foreground text-sm">
                     {auditEntries.length === 0
-                      ? "No activity has been logged yet - query or edit an SOP to generate audit events."
+                      ? "No activity has been logged yet."
                       : "No audit events match your filters."}
                   </td>
                 </tr>
@@ -428,8 +429,8 @@ export default function AuditPage() {
               className={cn(
                 "flex items-center gap-2 px-8 py-3 rounded-xl text-sm font-semibold transition-all",
                 exportState === "success"
-                  ? "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30"
-                  : "bg-[#0B6BCB] hover:bg-[#0959AC] text-white"
+                  ? toneChip.success
+                  : "bg-primary hover:bg-primary-hover text-primary-foreground"
               )}
             >
               {exportState === "loading" && <Loader2 className="w-4 h-4 animate-spin" />}

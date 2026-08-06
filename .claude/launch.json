@@ -4,14 +4,14 @@
     {
       "name": "frontend",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--prefix", "sop-guard/frontend"],
-      "port": 3000
+      "runtimeArgs": ["run", "dev", "--prefix", "sop-guard/frontend", "--", "-p", "3001"],
+      "port": 3001
     },
     {
       "name": "backend",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "uvicorn", "app.main:app", "--reload", "--port", "8000", "--app-dir", "sop-guard/backend"],
-      "port": 8000
+      "runtimeArgs": ["-m", "uvicorn", "app.main:app", "--reload", "--port", "8010", "--app-dir", "sop-guard/backend"],
+      "port": 8010
     }
   ]
 }

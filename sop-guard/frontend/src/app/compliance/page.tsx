@@ -13,6 +13,7 @@ import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { SafetyNote } from "@/components/ui/safety-note"
 import { cn } from "@/lib/utils"
+import { toneChip } from "@/components/ui/tone"
 import { MOCK_COMPLIANCE, MOCK_SOPS, MOCK_DASHBOARD_STATS } from "@/lib/mock-data"
 import { useRole } from "@/lib/role-context"
 import { downloadCSV } from "@/lib/csv-export"
@@ -56,9 +57,9 @@ function progressColor(score: number) {
 }
 
 const statusLabel: Record<string, { label: string; className: string }> = {
-  needs_update: { label: "Needs Update", className: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30" },
-  under_review: { label: "Under Review", className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30" },
-  approved: { label: "Approved", className: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30" },
+  needs_update: { label: "Needs Update", className: toneChip.danger },
+  under_review: { label: "Under Review", className: toneChip.warning },
+  approved: { label: "Approved", className: toneChip.success },
   draft: { label: "Draft", className: "bg-card text-muted-foreground border border-input" },
 }
 
@@ -129,10 +130,10 @@ function CertificateModal({
         {/* Certificate header */}
         <div className="bg-card border-b border-border px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Shield className="w-5 h-5 text-[#0B6BCB]" />
-            <span className="font-mono text-xs text-[#0B6BCB] uppercase tracking-widest">Meridian Attestation Certificate</span>
+            <Shield className="w-5 h-5 text-primary" />
+            <span className="font-mono text-xs text-primary uppercase tracking-widest">Meridian Attestation Certificate</span>
           </div>
-          <button onClick={onClose} aria-label="Close certificate" className="text-muted-foreground hover:text-[#0B6BCB] transition-colors">
+          <button onClick={onClose} aria-label="Close certificate" className="text-muted-foreground hover:text-primary transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -153,7 +154,7 @@ function CertificateModal({
           <div className="border-t border-border pt-4">
             <p className="text-xs text-subtle uppercase tracking-widest mb-1">Has read, acknowledged, and agreed to comply with:</p>
             <p className="text-foreground font-medium">{sopTitle}</p>
-            <span className="inline-block mt-1 px-2 py-0.5 rounded bg-[#0B6BCB]/10 text-[#0B6BCB] text-xs border border-[#0B6BCB]/30">
+            <span className="inline-block mt-1 px-2 py-0.5 rounded bg-primary/10 text-primary text-xs border border-primary/30">
               Version {record.sop_version || "?"}
             </span>
           </div>
@@ -191,7 +192,7 @@ function CertificateModal({
           </button>
           <button
             onClick={onClose}
-            className="text-xs px-4 py-1.5 rounded-lg bg-[#0B6BCB]/10 text-[#0B6BCB] hover:bg-[#0B6BCB]/20 transition-colors border border-[#0B6BCB]/30"
+            className="text-xs px-4 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors border border-primary/30"
           >
             Close
           </button>
@@ -268,28 +269,28 @@ function TestAttestationModal({
       >
         <div className="bg-card border-b border-border px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Shield className="w-5 h-5 text-[#0B6BCB]" />
+            <Shield className="w-5 h-5 text-primary" />
             <span className="font-semibold text-sm">Attest to a SOP</span>
           </div>
-          <button onClick={onClose} aria-label="Close attestation flow" className="text-muted-foreground hover:text-[#0B6BCB] transition-colors">
+          <button onClick={onClose} aria-label="Close attestation flow" className="text-muted-foreground hover:text-primary transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
 
         <div className="px-6 py-5 space-y-4">
           {!sop ? (
-            <p className="text-sm text-muted-foreground">No SOPs available to attest to yet - upload one first.</p>
+            <p className="text-sm text-muted-foreground">No SOPs available to attest to yet.</p>
           ) : !attested ? (
             <>
               <p className="text-sm text-foreground">
                 You are about to attest to{" "}
                 <span className="font-semibold text-foreground">{sop.title}</span>{" "}
-                version <span className="text-[#0B6BCB] font-mono">{sop.version || "1"}</span>.
+                version <span className="text-primary font-mono">{sop.version || "1"}</span>.
               </p>
 
               {error && <p className="text-xs text-red-400">{error}</p>}
 
-              <div className="rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 p-4 text-xs text-[#B45309] dark:text-amber-400 leading-relaxed">
+              <div className={cn(toneChip.warning, "rounded-xl p-4 text-xs leading-relaxed")}>
                 <p className="font-semibold mb-1">Legal Statement</p>
                 <p>
                   By clicking Attest, I confirm I have read, understood, and will comply with this policy
@@ -298,22 +299,23 @@ function TestAttestationModal({
                 </p>
               </div>
 
-              <div className="rounded-xl bg-[#0B6BCB]/[0.06] border border-[#0B6BCB]/20 p-4 text-xs text-[#0B6BCB] leading-relaxed">
+              <div className="rounded-xl bg-primary/[0.06] border border-primary/20 p-4 text-xs text-primary leading-relaxed">
                 <p className="font-semibold mb-1">Meaning of this signature</p>
                 <p>{SIGNATURE_MEANING}</p>
               </div>
 
               <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                <label htmlFor="attestation-name-confirmation" className="text-xs font-medium text-muted-foreground mb-1 block">
                   Type your full name to confirm your identity: <span className="font-semibold text-foreground">{currentUser.name}</span>
                 </label>
                 <input
+                  id="attestation-name-confirmation"
                   value={nameConfirmation}
                   onChange={(e) => setNameConfirmation(e.target.value)}
                   placeholder="Type your full name exactly"
-                  className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm focus:outline-none focus:border-[#0B6BCB]/50"
+                  className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm focus:outline-none focus:border-primary/50"
                 />
-                <p className="text-[11px] text-subtle mt-1">
+                <p className="text-11 text-subtle mt-1">
                   A second identification step at the moment of signing, separate from being logged in.
                 </p>
               </div>
@@ -352,18 +354,18 @@ function TestAttestationModal({
                 </div>
                 <div className="flex justify-between">
                   <span className="text-subtle">Version</span>
-                  <span className="text-[#0B6BCB] font-mono">{sop.version || "1"}</span>
+                  <span className="text-primary font-mono">{sop.version || "1"}</span>
                 </div>
                 {result?.content_hash && (
                   <div className="pt-1.5 mt-1.5 border-t border-border">
                     <span className="text-subtle block mb-0.5">Tamper-evidence hash (chained to prior signature)</span>
-                    <span className="text-foreground font-mono text-[10px] break-all">{result.content_hash}</span>
+                    <span className="text-foreground font-mono text-10 break-all">{result.content_hash}</span>
                   </div>
                 )}
               </div>
               <button
                 onClick={onClose}
-                className="w-full py-2.5 rounded-xl bg-[#0B6BCB]/10 text-[#0B6BCB] hover:bg-[#0B6BCB]/20 font-medium text-sm transition-colors border border-[#0B6BCB]/30"
+                className="w-full py-2.5 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 font-medium text-sm transition-colors border border-primary/30"
               >
                 Close
               </button>
@@ -401,8 +403,8 @@ function ChainIntegrityBadge() {
         title={detail}
         className={cn(
           "flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors",
-          state === "intact" && "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30",
-          state === "broken" && "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30",
+          state === "intact" && toneChip.success,
+          state === "broken" && toneChip.danger,
           (state === "idle" || state === "checking" || state === "error") && "bg-muted text-muted-foreground border-border",
         )}
       >
@@ -491,7 +493,7 @@ function AcknowledgmentsTab() {
   ]
 
   const attestationStats = [
-    { label: "Total Attestations", value: attestations.length, color: "text-[#0B6BCB]" },
+    { label: "Total Attestations", value: attestations.length, color: "text-primary" },
     { label: "With Timestamp + IP", value: attestations.filter((a) => a.ip_address && a.attested_at).length, color: "text-[#15803D] dark:text-green-400" },
     { label: "Distinct SOPs Attested", value: new Set(attestations.map((a) => a.sop_id)).size, color: "text-[#15803D] dark:text-green-400" },
     { label: "Exportable for Litigation", value: "Yes", color: "text-[#15803D] dark:text-green-400" },
@@ -519,7 +521,7 @@ function AcknowledgmentsTab() {
         )}
       </AnimatePresence>
 
-      <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 text-sm">
+      <div className={cn(toneChip.warning, "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm")}>
         <AlertTriangle className="w-4 h-4 shrink-0" />
         <span>Showing illustrative department-compliance data, not wired to a live tracking system. The Staff Attestation Records below are real.</span>
       </div>
@@ -583,7 +585,7 @@ function AcknowledgmentsTab() {
                   <p className="text-muted-foreground">Acks Overdue</p>
                 </div>
                 <div className="rounded-lg bg-muted p-1.5 text-center">
-                  <p className="font-semibold text-[#0B6BCB]">{dept.training_completion_rate}%</p>
+                  <p className="font-semibold text-primary">{dept.training_completion_rate}%</p>
                   <p className="text-muted-foreground">Training</p>
                 </div>
                 <div className="rounded-lg bg-muted p-1.5 text-center">
@@ -597,7 +599,7 @@ function AcknowledgmentsTab() {
               </div>
               <div className="flex items-center justify-between pt-1">
                 <p className="text-xs text-muted-foreground">Last audit: {dept.last_audit_date}</p>
-                <button className="text-xs text-[#0B6BCB] hover:text-[#0B6BCB] transition-colors font-medium">
+                <button className="text-xs text-primary hover:text-primary transition-colors font-medium">
                   View Details &rarr;
                 </button>
               </div>
@@ -639,7 +641,7 @@ function AcknowledgmentsTab() {
                   <td className="p-4 text-muted-foreground text-xs">{sop.owner}</td>
                   <td className="p-4">
                     <div className="flex items-center gap-2">
-                      <button className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-[#0B6BCB]/10 text-[#0B6BCB] hover:bg-[#0B6BCB]/20 transition-colors">
+                      <button className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
                         <Eye className="w-3 h-3" /> View SOP
                       </button>
                       <button className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-muted text-muted-foreground hover:bg-[#E2E8F0] transition-colors">
@@ -659,14 +661,14 @@ function AcknowledgmentsTab() {
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Shield className="w-5 h-5 text-[#0B6BCB]" />
+            <Shield className="w-5 h-5 text-primary" />
             <h2 className="text-lg font-semibold">Staff Attestation Records</h2>
           </div>
           <div className="flex items-center gap-2">
             <ChainIntegrityBadge />
             <button
               onClick={() => setShowTestModal(true)}
-              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-[#0B6BCB]/10 text-[#0B6BCB] hover:bg-[#0B6BCB]/20 transition-colors border border-[#0B6BCB]/30 font-medium"
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors border border-primary/30 font-medium"
             >
               <Plus className="w-3.5 h-3.5" /> Attest to a SOP
             </button>
@@ -676,8 +678,8 @@ function AcknowledgmentsTab() {
               className={cn(
                 "flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-colors border font-medium",
                 exportState === "success"
-                  ? "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30"
-                  : "bg-[#0B6BCB] hover:bg-[#0959AC] text-white border-transparent"
+                  ? toneChip.success
+                  : "bg-primary hover:bg-primary-hover text-primary-foreground border-transparent"
               )}
             >
               {exportState === "loading" && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
@@ -760,7 +762,7 @@ function AcknowledgmentsTab() {
                   <tr key={rec.id} className="border-b border-border hover:bg-[#F8FAFC] transition-colors">
                     <td className="p-4">
                       <p className="font-medium text-foreground">{rec.user_name}</p>
-                      <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded bg-muted text-muted-foreground text-[10px] border border-border">
+                      <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded bg-muted text-muted-foreground text-10 border border-border">
                         {roleLabel[rec.user_role] ?? rec.user_role}
                       </span>
                     </td>
@@ -771,7 +773,7 @@ function AcknowledgmentsTab() {
                       </p>
                     </td>
                     <td className="p-4">
-                      <span className="px-2 py-0.5 rounded bg-[#0B6BCB]/10 text-[#0B6BCB] text-xs border border-[#0B6BCB]/30 font-mono">
+                      <span className="px-2 py-0.5 rounded bg-primary/10 text-primary text-xs border border-primary/30 font-mono">
                         v{rec.sop_version || "?"}
                       </span>
                     </td>
@@ -841,22 +843,22 @@ function expiryStatus(days: number): ExpiryStatus {
 const EXPIRY_STATUS_META: Record<ExpiryStatus, { label: string; badgeClass: string; rowClass: string }> = {
   expired: {
     label: "EXPIRED",
-    badgeClass: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30",
+    badgeClass: toneChip.danger,
     rowClass: "border-l-2 border-[#B91C1C]",
   },
   due_soon: {
     label: "DUE SOON",
-    badgeClass: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30",
+    badgeClass: toneChip.warning,
     rowClass: "border-l-2 border-[#B45309]",
   },
   upcoming: {
     label: "UPCOMING",
-    badgeClass: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30",
+    badgeClass: toneChip.warning,
     rowClass: "border-l-2 border-[#B45309]",
   },
   current: {
     label: "CURRENT",
-    badgeClass: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30",
+    badgeClass: toneChip.success,
     rowClass: "border-l-2 border-[#15803D]",
   },
 }
@@ -887,11 +889,11 @@ function getAlertTier(days: number): AlertTier {
 
 const ALERT_TIER_META: Record<AlertTier, { label: string; badgeClass: string }> = {
   current: { label: "Current", badgeClass: "bg-card text-muted-foreground border border-input" },
-  owner_notified: { label: "Owner Notified", badgeClass: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30" },
-  dept_notified: { label: "Dept Head Notified", badgeClass: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30" },
-  compliance_notified: { label: "Compliance Notified", badgeClass: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30" },
-  cmo_escalation: { label: "CMO Escalation", badgeClass: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30" },
-  expired_frozen: { label: "EXPIRED - SOP Frozen", badgeClass: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30" },
+  owner_notified: { label: "Owner Notified", badgeClass: toneChip.warning },
+  dept_notified: { label: "Dept Head Notified", badgeClass: toneChip.warning },
+  compliance_notified: { label: "Compliance Notified", badgeClass: toneChip.danger },
+  cmo_escalation: { label: "CMO Escalation", badgeClass: toneChip.danger },
+  expired_frozen: { label: "EXPIRED - SOP Frozen", badgeClass: toneChip.danger },
 }
 
 const ESCALATION_STEPS = [
@@ -950,7 +952,7 @@ function ReviewsTab() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 text-[#0959AC] text-sm">
+      <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-primary/10 border border-primary/30 text-primary-hover text-sm">
         <FileText className="w-4 h-4 shrink-0 mt-0.5" />
         <span>
           <strong>Regulatory Basis:</strong> TJC Standard LD.04.03.07 requires that all policies are reviewed at least every 3 years.
@@ -992,7 +994,7 @@ function ReviewsTab() {
             return (
               <div key={step.tier} className="flex flex-col items-center gap-2 min-w-[100px] flex-1 z-10">
                 <p className={cn(
-                  "text-[10px] font-semibold text-center whitespace-nowrap",
+                  "text-10 font-semibold text-center whitespace-nowrap",
                   isActive ? step.textColor : "text-muted-foreground"
                 )}>
                   {step.label}
@@ -1006,7 +1008,7 @@ function ReviewsTab() {
                   <span className={cn("text-xs font-bold", isActive ? "text-white" : "text-subtle")}>{i + 1}</span>
                 </div>
                 <p className={cn(
-                  "text-[10px] text-center leading-tight",
+                  "text-10 text-center leading-tight",
                   isActive ? "text-foreground font-semibold" : "text-muted-foreground"
                 )}>
                   {step.action}
@@ -1070,10 +1072,10 @@ function ReviewsTab() {
                 <div className="flex flex-col md:flex-row md:items-center gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start gap-2 mb-1 flex-wrap">
-                      <span className={cn("px-2 py-0.5 rounded-full text-[11px] font-semibold tracking-wide shrink-0", meta.badgeClass)}>
+                      <span className={cn("px-2 py-0.5 rounded-full text-11 font-semibold tracking-wide shrink-0", meta.badgeClass)}>
                         {meta.label}
                       </span>
-                      <span className={cn("px-2 py-0.5 rounded text-[11px] font-medium shrink-0", tierMeta.badgeClass)}>
+                      <span className={cn("px-2 py-0.5 rounded text-11 font-medium shrink-0", tierMeta.badgeClass)}>
                         {tierMeta.label}
                       </span>
                       <p className="font-medium text-sm leading-snug truncate">{sop.title}</p>
@@ -1105,7 +1107,7 @@ function ReviewsTab() {
                     <div className="flex items-center gap-2">
                       <Link
                         href="/proposals"
-                        className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-[#0B6BCB]/10 text-[#0B6BCB] hover:bg-[#0B6BCB]/20 transition-colors font-medium"
+                        className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors font-medium"
                       >
                         Initiate Review <ArrowRight className="w-3 h-3" />
                       </Link>
@@ -1130,7 +1132,7 @@ function ReviewsTab() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
           {(["expired", "due_soon", "upcoming", "current"] as ExpiryStatus[]).map((s) => (
             <div key={s} className="flex items-center gap-2">
-              <span className={cn("px-2 py-0.5 rounded-full text-[11px] font-semibold", EXPIRY_STATUS_META[s].badgeClass)}>
+              <span className={cn("px-2 py-0.5 rounded-full text-11 font-semibold", EXPIRY_STATUS_META[s].badgeClass)}>
                 {EXPIRY_STATUS_META[s].label}
               </span>
               <span className="text-muted-foreground">
@@ -1151,7 +1153,7 @@ function ReviewsTab() {
           <div className="flex items-center gap-2 py-2 border-b border-border">
             <span className="w-40 shrink-0 text-foreground font-medium">Alert recipients:</span>
             <span>Configured in</span>
-            <Link href="/admin" className="text-[#0B6BCB] hover:text-[#0959AC] underline">/admin</Link>
+            <Link href="/admin" className="text-primary hover:text-primary-hover underline">/admin</Link>
           </div>
           <div className="flex items-center gap-2 py-2 border-b border-border">
             <span className="w-40 shrink-0 text-foreground font-medium">Email notifications:</span>
@@ -1193,8 +1195,8 @@ export default function CompliancePage() {
 
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-[#0B6BCB]/10 flex items-center justify-center">
-              <CheckCircle className="w-6 h-6 text-[#0B6BCB]" />
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+              <CheckCircle className="w-6 h-6 text-primary" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-foreground">Compliance</h1>
@@ -1212,7 +1214,7 @@ export default function CompliancePage() {
               onClick={() => setTab(t.key)}
               className={cn(
                 "flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors",
-                tab === t.key ? "bg-card text-[#0B6BCB] shadow-sm" : "text-muted-foreground hover:text-foreground"
+                tab === t.key ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
               )}
             >
               <t.icon className="w-4 h-4" />

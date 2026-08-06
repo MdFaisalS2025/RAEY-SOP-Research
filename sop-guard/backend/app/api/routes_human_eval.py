@@ -15,22 +15,32 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.database.db import get_db
-from app.models.models import HumanEvalRating
+from app.models.models import HumanEvalRating, StaffUser
 from app.schemas.schemas import (
     HumanEvalRatingRequest,
     HumanEvalRatingResponse,
     HumanEvalRatingItem,
     HumanEvalRatingListResponse,
 )
+from app.services.auth import require_permission
 
 router = APIRouter(tags=["Human Evaluation"])
 
+# Nav-gated to system_admin + governance_compliance (see topnav.tsx) - the
+# same manage_quality boundary as feedback triage and CAPA review.
+_REQUIRE_HUMAN_EVAL = require_permission("manage_quality")
+
 
 @router.post("/api/human-eval/ratings", response_model=HumanEvalRatingResponse)
-async def submit_rating(req: HumanEvalRatingRequest, db: AsyncSession = Depends(get_db)):
+async def submit_rating(
+    req: HumanEvalRatingRequest,
+    db: AsyncSession = Depends(get_db),
+    user: StaffUser = Depends(_REQUIRE_HUMAN_EVAL),
+):
     rating = HumanEvalRating(
-        evaluator_role=req.evaluator_role,
-        evaluator_name=req.evaluator_name,
+        # Always the session's real identity, never client-supplied.
+        evaluator_role=user.role,
+        evaluator_name=user.name,
         item_id=req.item_id,
         correctness=req.correctness,
         completeness=req.completeness,
@@ -43,7 +53,11 @@ async def submit_rating(req: HumanEvalRatingRequest, db: AsyncSession = Depends(
 
 
 @router.get("/api/human-eval/ratings", response_model=HumanEvalRatingListResponse)
-async def list_ratings(limit: int = 200, db: AsyncSession = Depends(get_db)):
+async def list_ratings(
+    limit: int = 200,
+    db: AsyncSession = Depends(get_db),
+    user: StaffUser = Depends(_REQUIRE_HUMAN_EVAL),
+):
     rows = (await db.execute(
         select(HumanEvalRating).order_by(HumanEvalRating.created_at.desc()).limit(limit)
     )).scalars().all()
@@ -64,14 +78,16 @@ async def list_ratings(limit: int = 200, db: AsyncSession = Depends(get_db)):
 
 
 @router.delete("/api/human-eval/ratings")
-async def clear_my_ratings(evaluator_name: str, db: AsyncSession = Depends(get_db)):
+async def clear_my_ratings(
+    db: AsyncSession = Depends(get_db),
+    user: StaffUser = Depends(_REQUIRE_HUMAN_EVAL),
+):
     """Backs the page's "Restart" action - only clears this evaluator's own
-    ratings (matched by name), never the whole table, so one rater
-    restarting can't silently wipe another rater's real submitted data."""
-    if not evaluator_name:
-        raise HTTPException(status_code=400, detail="evaluator_name is required.")
+    ratings (matched by the session's real name, never a client-supplied
+    one), never the whole table, so one rater restarting can't silently
+    wipe another rater's real submitted data."""
     rows = (await db.execute(
-        select(HumanEvalRating).where(HumanEvalRating.evaluator_name == evaluator_name)
+        select(HumanEvalRating).where(HumanEvalRating.evaluator_name == user.name)
     )).scalars().all()
     for r in rows:
         await db.delete(r)

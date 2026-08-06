@@ -12,8 +12,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, delete
 
 from app.database.db import get_db
-from app.models.models import SOP, SOPChunk, SOPUpdate
-from app.services.permissions import get_user_role, require_permission
+from app.models.models import SOP, SOPChunk, SOPUpdate, StaffUser
+from app.services.auth import require_permission
 from app.services.activity import log_activity, purge_activity_for_sop
 from app.schemas.schemas import (
     SOPResponse, SOPDetailResponse, SOPListResponse,
@@ -105,6 +105,10 @@ async def upload_sop(
     title: str = Form(""),
     department: str = Form("General"),
     db: AsyncSession = Depends(get_db),
+    # upload/page.tsx gates this to system_admin exactly (role !== "system_admin"),
+    # stricter than publish_sop (which governance_compliance also holds) -
+    # configure_system is the exact existing permission matching that boundary.
+    user: StaffUser = Depends(require_permission("configure_system")),
 ):
     """Upload a PDF, DOCX, or TXT file as a new SOP."""
     if not file.filename:
@@ -153,7 +157,12 @@ async def upload_sop(
             sop_id=sop.id,
             section_title=ch.get("section_title", ""),
             chunk_text=ch.get("text", ""),
+            chunk_type=ch.get("chunk_type", "section"),
             chunk_index=idx,
+            char_start=ch.get("char_start"),
+            char_end=ch.get("char_end"),
+            offset_source=ch.get("offset_source", ""),
+            offset_anchor=ch.get("offset_anchor", ""),
         ))
 
     return SOPUploadResponse(
@@ -268,11 +277,13 @@ async def get_versions(sop_id: str, db: AsyncSession = Depends(get_db)):
 @router.post("/api/sops")
 async def create_sop(
     body: dict,
-    role: str = Depends(get_user_role),
+    user: StaffUser = Depends(require_permission("publish_sop")),
     db: AsyncSession = Depends(get_db),
 ):
-    """Create a new SOP (admin or editor only)."""
-    require_permission(role, "create")
+    """Create a new SOP. Requires the publish_sop permission, verified
+    server-side against the authenticated session (Phase S) - not the
+    request-body role string every route used to trust at face value."""
+    role = user.role
 
     sop_id = body.get("sop_id") or f"SOP-{body.get('department', 'GEN')[:3].upper()}-{uuid.uuid4().hex[:6].upper()}"
     title = body.get("title", "Untitled SOP")
@@ -326,7 +337,12 @@ async def create_sop(
                 sop_id=sop.id,
                 section_title=ch.get("section_title", ""),
                 chunk_text=ch.get("text", ""),
+                chunk_type=ch.get("chunk_type", "section"),
                 chunk_index=idx,
+                char_start=ch.get("char_start"),
+                char_end=ch.get("char_end"),
+                offset_source=ch.get("offset_source", ""),
+                offset_anchor=ch.get("offset_anchor", ""),
             ))
 
     log_activity("sop_created", sop_id=sop.sop_id, sop_title=title, user_role=role)
@@ -345,11 +361,11 @@ async def create_sop(
 async def update_sop(
     sop_id: str,
     body: dict,
-    role: str = Depends(get_user_role),
+    user: StaffUser = Depends(require_permission("publish_sop")),
     db: AsyncSession = Depends(get_db),
 ):
-    """Update an existing SOP (admin or editor only)."""
-    require_permission(role, "edit")
+    """Update an existing SOP. Requires the publish_sop permission."""
+    role = user.role
 
     sop = (await db.execute(
         select(SOP).where(SOP.sop_id == sop_id)
@@ -386,11 +402,13 @@ async def update_sop(
 async def delete_sop(
     sop_id: str,
     permanent: bool = False,
-    role: str = Depends(get_user_role),
+    user: StaffUser = Depends(require_permission("archive_sop")),
     db: AsyncSession = Depends(get_db),
 ):
-    """Archive or permanently delete an SOP (admin only)."""
-    require_permission(role, "delete")
+    """Archive or permanently delete an SOP. Requires the archive_sop
+    permission - system_admin and governance_compliance only (see
+    services/auth.py's ROLE_PERMISSIONS)."""
+    role = user.role
 
     sop = (await db.execute(
         select(SOP).where(SOP.sop_id == sop_id)

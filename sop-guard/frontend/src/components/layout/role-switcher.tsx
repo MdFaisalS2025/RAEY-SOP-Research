@@ -9,8 +9,8 @@ import { cn } from "@/lib/utils"
 import type { UserRole } from "@/lib/governance-types"
 
 const ROLE_TEXT_COLORS: Record<UserRole, string> = {
-  clinical_staff: "text-[#0B6BCB]",
-  governance_compliance: "text-[#15803D] dark:text-green-400",
+  clinical_staff: "text-primary",
+  governance_compliance: "text-ok-soft-fg",
   educator: "text-muted-foreground",
   system_admin: "text-muted-foreground",
 }
@@ -28,7 +28,7 @@ const SORTED_DEMO_USERS = [...DEMO_USERS].sort(
 )
 
 export function RoleSwitcher() {
-  const { role, currentUser, setRole } = useRole()
+  const { role, currentUser } = useRole()
   const { loginAsDemo } = useAuth()
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -51,9 +51,10 @@ export function RoleSwitcher() {
     }
   }, [open])
 
-  const handleSwitch = (user: typeof DEMO_USERS[0]) => {
-    loginAsDemo(user.id)
-    setRole(user.role)
+  const handleSwitch = async (user: typeof DEMO_USERS[0]) => {
+    // role derives from auth.user (see role-context.tsx) - a real login is
+    // the only way to change it now, so this is the whole switch.
+    await loginAsDemo(user.id)
     setOpen(false)
   }
 
@@ -67,26 +68,26 @@ export function RoleSwitcher() {
           "flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-all duration-200",
           "bg-card border shadow-sm hover:bg-muted",
           open
-            ? "border-[#0B6BCB]/40"
-            : "border-border hover:border-[#0B6BCB]/30",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0B6BCB]/50"
+            ? "border-primary/40"
+            : "border-border hover:border-primary/30",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
         )}
       >
         {/* Initials avatar */}
         <div
           className={cn(
-            "w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0",
-            "bg-[#0B6BCB] border border-[#0959AC]"
+            "w-7 h-7 rounded-full flex items-center justify-center text-11 font-bold text-primary-foreground shrink-0",
+            "bg-primary border border-primary-hover"
           )}
         >
           {currentUser.initials}
         </div>
         {/* Name + role */}
         <div className="hidden sm:flex flex-col items-start leading-none gap-0.5">
-          <span className="text-[12px] font-medium text-foreground whitespace-nowrap max-w-[100px] truncate">
+          <span className="text-12 font-medium text-foreground whitespace-nowrap max-w-[100px] truncate">
             {currentUser.name.split(" ").slice(-1)[0]}
           </span>
-          <span className={cn("text-[10px] font-semibold uppercase tracking-wide", ROLE_TEXT_COLORS[role])}>
+          <span className={cn("text-10 font-semibold uppercase tracking-wide", ROLE_TEXT_COLORS[role])}>
             {ROLE_CONFIG[role].label}
           </span>
         </div>
@@ -108,7 +109,7 @@ export function RoleSwitcher() {
           )}
         >
           <div className="px-3 py-2 border-b border-border">
-            <p className="text-[10px] text-subtle uppercase tracking-widest font-semibold">
+            <p className="text-10 text-subtle uppercase tracking-widest font-semibold">
               Switch Profile - Sorted by Access Level
             </p>
           </div>
@@ -122,11 +123,11 @@ export function RoleSwitcher() {
                 className={cn(
                   "w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors duration-150",
                   "hover:bg-muted focus-visible:outline-none focus-visible:bg-muted",
-                  isActive && "bg-[#0B6BCB]/10 border-l-2 border-[#0B6BCB]"
+                  isActive && "bg-primary/10 border-l-2 border-primary"
                 )}
               >
                 {/* Level badge */}
-                <span className="text-[9px] font-mono text-subtle w-4 shrink-0 text-right">
+                <span className="text-9 font-mono text-subtle w-4 shrink-0 text-right">
                   {level}
                 </span>
                 {/* Colored dot */}
@@ -141,16 +142,16 @@ export function RoleSwitcher() {
                 <div className="flex flex-col leading-none gap-0.5 min-w-0 flex-1">
                   <span
                     className={cn(
-                      "text-[12px] font-semibold",
-                      isActive ? "text-[#0B6BCB]" : "text-foreground"
+                      "text-12 font-semibold",
+                      isActive ? "text-primary" : "text-foreground"
                     )}
                   >
                     {ROLE_CONFIG[user.role].label}
                   </span>
-                  <span className="text-[10px] text-muted-foreground truncate">{user.name}</span>
+                  <span className="text-10 text-muted-foreground truncate">{user.name}</span>
                 </div>
                 {isActive && (
-                  <Check className="w-3.5 h-3.5 text-[#0B6BCB] shrink-0 ml-auto" />
+                  <Check className="w-3.5 h-3.5 text-primary shrink-0 ml-auto" />
                 )}
               </button>
             )

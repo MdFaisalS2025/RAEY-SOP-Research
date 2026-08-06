@@ -103,11 +103,11 @@ const agents: AgentDetail[] = [
 ]
 
 const colorMap: Record<string, { bg: string; border: string; text: string; highlight: string }> = {
-  blue: { bg: "bg-[#0B6BCB]/10", border: "border-blue-500/30", text: "text-[#0B6BCB]", highlight: "bg-[#0B6BCB]/10" },
+  blue: { bg: "bg-primary/10", border: "border-blue-500/30", text: "text-primary", highlight: "bg-primary/10" },
   purple: { bg: "bg-[#0D9488]/10", border: "border-purple-500/30", text: "text-[#0D9488]", highlight: "bg-[#0D9488]/10" },
   amber: { bg: "bg-amber-500/10", border: "border-amber-500/30", text: "text-amber-400", highlight: "bg-amber-500/20" },
   red: { bg: "bg-red-500/10", border: "border-red-500/30", text: "text-red-400", highlight: "bg-red-500/20" },
-  teal: { bg: "bg-[#0B6BCB]/10", border: "border-[#0B6BCB]/30", text: "text-[#0B6BCB]", highlight: "bg-[#0B6BCB]/10" },
+  teal: { bg: "bg-primary/10", border: "border-primary/30", text: "text-primary", highlight: "bg-primary/10" },
   green: { bg: "bg-green-500/10", border: "border-green-500/30", text: "text-green-400", highlight: "bg-green-500/20" },
 }
 
@@ -130,7 +130,7 @@ const demoTrace = [
 function MetricCard({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="p-4 rounded-xl bg-muted/30 dark:bg-white/[0.03] border border-border dark:border-white/[0.06] text-center">
-      <p className="text-2xl font-bold text-[#0B6BCB] dark:text-[#0B6BCB]">{value}</p>
+      <p className="text-2xl font-bold text-primary">{value}</p>
       <p className="text-xs text-muted-foreground mt-1">{label}</p>
     </div>
   )
@@ -187,7 +187,7 @@ export default function ArchitecturePage() {
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <h2 className="text-lg font-semibold mb-1">Query Pipeline</h2>
-          <p className="text-sm text-muted-foreground">Each question flows through six stages. Click any stage to see details.</p>
+          <p className="text-sm text-muted-foreground">Each question flows through six stages.</p>
         </motion.div>
 
         {/* Pipeline */}
@@ -305,7 +305,7 @@ export default function ArchitecturePage() {
                 transition={{ duration: 0.3, ease: "easeOut" }}
                 className="flex items-start gap-3 p-3 rounded-xl bg-card border border-border"
               >
-                <span className="text-xs font-mono font-bold text-[#0B6BCB] w-24 shrink-0 pt-0.5">
+                <span className="text-xs font-mono font-bold text-primary w-24 shrink-0 pt-0.5">
                   {step.stage}
                 </span>
                 <span className="text-sm text-muted-foreground">{step.text}</span>

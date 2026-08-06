@@ -10,6 +10,8 @@ import {
 import AppShell from "@/components/layout/app-shell"
 import { SafetyNote } from "@/components/ui/safety-note"
 import { Skeleton } from "@/components/ui/skeleton"
+import { cn } from "@/lib/utils"
+import { toneChip } from "@/components/ui/tone"
 import { AccessRestricted } from "@/components/ui/access-restricted"
 import { useRole } from "@/lib/role-context"
 import { Card } from "@/components/ui/card"
@@ -41,8 +43,8 @@ const demoSOPUsage = [
 /* ─── Helpers ─── */
 
 const actionIcon: Record<string, React.ReactNode> = {
-  sop_viewed: <Eye className="w-4 h-4 text-[#0B6BCB]" />,
-  query_submitted: <Search className="w-4 h-4 text-[#0B6BCB]" />,
+  sop_viewed: <Eye className="w-4 h-4 text-primary" />,
+  query_submitted: <Search className="w-4 h-4 text-primary" />,
   source_clicked: <Link className="w-4 h-4 text-[#0D9488]" />,
   sop_uploaded: <Upload className="w-4 h-4 text-[#15803D] dark:text-green-400" />,
   feedback_submitted: <MessageSquare className="w-4 h-4 text-[#B45309] dark:text-amber-400" />,
@@ -58,12 +60,12 @@ const actionLabel: Record<string, string> = {
 
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
-    new: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30",
-    reviewed: "bg-[#0B6BCB]/10 text-[#0B6BCB] border-[#0B6BCB]/30",
-    resolved: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30",
+    new: toneChip.warning,
+    reviewed: "bg-primary/10 text-primary border-primary/30",
+    resolved: toneChip.success,
   }
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${styles[status] || styles.new}`}>
+    <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border", styles[status] || styles.new)}>
       {status}
     </span>
   )
@@ -71,13 +73,13 @@ function StatusBadge({ status }: { status: string }) {
 
 function TypeBadge({ type }: { type: string }) {
   const styles: Record<string, string> = {
-    unsafe: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30",
-    incorrect: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30",
+    unsafe: toneChip.danger,
+    incorrect: toneChip.warning,
     missing: "bg-[#0D9488]/10 text-[#0D9488] border-[#0D9488]/30",
     "low confidence": "bg-card text-muted-foreground border-input",
   }
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${styles[type] || styles.missing}`}>
+    <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border", styles[type] || styles.missing)}>
       {type}
     </span>
   )
@@ -253,9 +255,9 @@ export default function FeedbackPage() {
   const feedbackTotal = (feedbackCounts.positive || 0) + (feedbackCounts.negative || 0)
 
   const summaryCards = [
-    { label: "Total Queries", value: String(totalQueries), icon: Search, color: "text-[#0B6BCB]" },
+    { label: "Total Queries", value: String(totalQueries), icon: Search, color: "text-primary" },
     { label: "Avg Confidence", value: `${(avgConfidence * 100).toFixed(0)}%`, icon: TrendingUp, color: "text-[#15803D] dark:text-green-400" },
-    { label: "SOPs Viewed", value: String(sopsViewed), icon: Eye, color: "text-[#0B6BCB]" },
+    { label: "SOPs Viewed", value: String(sopsViewed), icon: Eye, color: "text-primary" },
     { label: "Feedback Items", value: String(feedbackTotal), icon: MessageSquare, color: "text-[#0D9488]" },
   ]
 
@@ -264,7 +266,7 @@ export default function FeedbackPage() {
       <div className="p-6 max-w-6xl mx-auto space-y-6">
         {/* Demo notice */}
         {isDemo && (
-          <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 text-sm">
+          <div className={cn(toneChip.warning, "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm")}>
             <AlertTriangle className="w-4 h-4 shrink-0" />
             <span>Backend unavailable -- showing demo data for demonstration purposes.</span>
           </div>
@@ -334,7 +336,7 @@ export default function FeedbackPage() {
                       {item.status === "new" ? (
                         <button
                           onClick={() => handleMarkReviewed(item.id)}
-                          className="press inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#0B6BCB]/10 text-[#0B6BCB] text-xs font-medium hover:bg-[#0B6BCB]/20 transition-colors border border-[#0B6BCB]/30"
+                          className="press inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors border border-primary/30"
                         >
                           <CheckCircle2 className="w-3 h-3" />
                           Mark Reviewed
@@ -353,7 +355,7 @@ export default function FeedbackPage() {
         {/* ─── Section 3: Recent Activity ─── */}
         <div className="p-5 rounded-2xl bg-card dark:bg-white/[0.03] backdrop-blur-sm border border-border dark:border-white/[0.06]">
           <div className="flex items-center gap-2 mb-4">
-            <Activity className="w-4 h-4 text-[#0B6BCB]" />
+            <Activity className="w-4 h-4 text-primary" />
             <h3 className="text-sm font-semibold text-foreground">Recent Activity</h3>
           </div>
 
@@ -398,7 +400,7 @@ export default function FeedbackPage() {
         {/* ─── Section 4: Most Viewed SOPs ─── */}
         <div className="p-5 rounded-2xl bg-card dark:bg-white/[0.03] backdrop-blur-sm border border-border dark:border-white/[0.06]">
           <div className="flex items-center gap-2 mb-4">
-            <FileText className="w-4 h-4 text-[#0B6BCB]" />
+            <FileText className="w-4 h-4 text-primary" />
             <h3 className="text-sm font-semibold text-foreground">Most Viewed SOPs</h3>
           </div>
 
@@ -408,7 +410,7 @@ export default function FeedbackPage() {
                 key={sop.sop_id || sop.title || idx}
                 className="interactive-card flex items-center gap-4 p-3 rounded-xl bg-muted/30 dark:bg-white/[0.02] border border-border dark:border-white/[0.04] hover:bg-muted/50 dark:hover:bg-white/[0.04] transition-colors"
               >
-                <div className="w-7 h-7 rounded-full bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 flex items-center justify-center text-xs font-bold text-[#0B6BCB] shrink-0">
+                <div className="w-7 h-7 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center text-xs font-bold text-primary shrink-0">
                   {idx + 1}
                 </div>
                 <div className="flex-1 min-w-0">

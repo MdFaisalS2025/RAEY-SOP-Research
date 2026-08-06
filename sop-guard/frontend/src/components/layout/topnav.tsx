@@ -352,8 +352,8 @@ export function TopNav() {
 
   // Sign-out for the mobile nav menu, which renders its own row outside
   // ProfileMenu's dropdown. Desktop sign-out lives inside ProfileMenu now.
-  const handleSignOut = () => {
-    auth.logout()
+  const handleSignOut = async () => {
+    await auth.logout()
     router.push("/login?signedOut=1")
   }
 
@@ -368,8 +368,8 @@ export function TopNav() {
       : "Connecting..."
 
   const priorityColors: Record<string, string> = {
-    urgent: "text-[#B91C1C] dark:text-red-400 dark:text-red-400",
-    high: "text-[#B45309] dark:text-amber-400 dark:text-amber-400",
+    urgent: "text-danger-soft-fg",
+    high: "text-warn-soft-fg",
     normal: "text-[#334155] dark:text-slate-300",
     low: "text-[#64748B] dark:text-slate-400",
   }
@@ -382,7 +382,7 @@ export function TopNav() {
     <header className="sticky top-0 z-[55] flex flex-col bg-background isolate">
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-[#0B6BCB] focus:text-white focus:text-sm focus:font-medium"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-primary focus:text-primary-foreground focus:text-sm focus:font-medium"
       >
         Skip to main content
       </a>
@@ -392,12 +392,12 @@ export function TopNav() {
         <div className="flex items-center gap-2 px-4 lg:px-6 h-14 lg:h-16">
           {/* Logo + brand */}
           <Link href="/dashboard" className="flex items-center gap-2.5 shrink-0 group">
-            <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-[#0B6BCB]/10 dark:bg-[#00E5FF]/15 dark:glow-cyan transition-all duration-200 group-hover:scale-105">
-              <Shield className="w-5 h-5 text-[#0B6BCB] dark:text-[#00E5FF]" />
+            <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10 dark:glow-accent transition-all duration-200 group-hover:scale-105">
+              <Shield className="w-5 h-5 text-primary" />
             </div>
             <div className="hidden sm:flex flex-col leading-none">
               <span className="text-base font-bold text-[#1A2332] dark:text-white tracking-tight">Meridian</span>
-              <span className="text-[9px] text-[#0B6BCB]/70 dark:text-[#00E5FF]/70 font-medium tracking-widest uppercase">
+              <span className="text-9 text-primary/70 font-medium tracking-widest uppercase">
                 Clinical Command
               </span>
             </div>
@@ -416,19 +416,19 @@ export function TopNav() {
                     title={item.label}
                     aria-current={active ? "page" : undefined}
                     className={cn(
-                      "relative flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-[13px] font-medium whitespace-nowrap transition-all duration-200",
-                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0B6BCB]/50 dark:focus-visible:ring-[#00E5FF]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                      "relative flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-13 font-medium whitespace-nowrap transition-all duration-200",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                       isPrimary
-                        ? "bg-[#0B6BCB] dark:bg-[#00E5FF] text-white dark:text-[#0A0C10] hover:bg-[#0959AC] dark:hover:bg-[#00c4d9]"
+                        ? "bg-primary text-primary-foreground hover:bg-primary-hover"
                         : active
-                        ? "bg-[#0B6BCB]/10 text-[#0B6BCB] dark:text-[#00E5FF] dark:glow-cyan"
+                        ? "bg-primary/10 text-primary dark:glow-accent"
                         : "text-[#64748B] dark:text-slate-400 hover:text-foreground dark:hover:text-white hover:bg-muted dark:hover:bg-white/5"
                     )}
                   >
                     <item.icon className="w-4 h-4 shrink-0" />
                     <span className="hidden xl:inline">{item.label}</span>
                     {active && !isPrimary && (
-                      <div className="absolute left-2 right-2 -bottom-[1px] h-[2px] rounded-full bg-[#0B6BCB] dark:bg-[#00E5FF]" />
+                      <div className="absolute left-2 right-2 -bottom-[1px] h-[2px] rounded-full bg-primary" />
                     )}
                   </Link>
                 )
@@ -455,17 +455,17 @@ export function TopNav() {
                       title={item.label}
                       aria-current={active ? "page" : undefined}
                       className={cn(
-                        "relative flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-[13px] font-medium whitespace-nowrap transition-all duration-200",
-                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0B6BCB]/50 dark:focus-visible:ring-[#00E5FF]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                        "relative flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-13 font-medium whitespace-nowrap transition-all duration-200",
+                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                         active
-                          ? "bg-[#0B6BCB]/10 text-[#0B6BCB] dark:text-[#00E5FF] dark:glow-cyan"
+                          ? "bg-primary/10 text-primary dark:glow-accent"
                           : "text-[#64748B] dark:text-slate-400 hover:text-foreground dark:hover:text-white hover:bg-muted dark:hover:bg-white/5"
                       )}
                     >
                       <item.icon className="w-4 h-4 shrink-0" />
                       <span className="hidden xl:inline">{item.label}</span>
                       {active && (
-                        <div className="absolute left-2 right-2 -bottom-[1px] h-[2px] rounded-full bg-[#0B6BCB] dark:bg-[#00E5FF]" />
+                        <div className="absolute left-2 right-2 -bottom-[1px] h-[2px] rounded-full bg-primary" />
                       )}
                     </Link>
                   )
@@ -478,10 +478,10 @@ export function TopNav() {
                       aria-expanded={isOpen}
                       aria-haspopup="menu"
                       className={cn(
-                        "relative flex items-center gap-1 px-2.5 py-2 rounded-lg text-[13px] font-medium whitespace-nowrap transition-all duration-200",
-                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0B6BCB]/50 dark:focus-visible:ring-[#00E5FF]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                        "relative flex items-center gap-1 px-2.5 py-2 rounded-lg text-13 font-medium whitespace-nowrap transition-all duration-200",
+                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                         groupActive || isOpen
-                          ? "text-[#0B6BCB] dark:text-[#00E5FF]"
+                          ? "text-primary"
                           : "text-[#64748B] dark:text-slate-400 hover:text-foreground dark:hover:text-white hover:bg-muted dark:hover:bg-white/5"
                       )}
                     >
@@ -493,7 +493,7 @@ export function TopNav() {
                         )}
                       />
                       {groupActive && (
-                        <div className="absolute left-2 right-2 -bottom-[1px] h-[2px] rounded-full bg-[#0B6BCB] dark:bg-[#00E5FF]" />
+                        <div className="absolute left-2 right-2 -bottom-[1px] h-[2px] rounded-full bg-primary" />
                       )}
                     </button>
 
@@ -512,20 +512,20 @@ export function TopNav() {
                               onClick={() => setOpenGroup(null)}
                               aria-current={active ? "page" : undefined}
                               className={cn(
-                                "flex items-center gap-2.5 px-3 py-2 text-[12px] font-medium transition-colors",
+                                "flex items-center gap-2.5 px-3 py-2 text-12 font-medium transition-colors",
                                 active
-                                  ? "text-[#0B6BCB] dark:text-teal-400 bg-[#0B6BCB]/5 dark:bg-transparent"
+                                  ? "text-primary dark:text-teal-400 bg-primary/5 dark:bg-transparent"
                                   : "text-[#334155] dark:text-slate-300 hover:bg-muted dark:hover:bg-white/[0.05] hover:text-foreground dark:hover:text-white"
                               )}
                             >
                               <item.icon
                                 className={cn(
                                   "w-4 h-4 shrink-0",
-                                  active ? "text-[#0B6BCB] dark:text-teal-400" : "text-[#94A3B8] dark:text-slate-500"
+                                  active ? "text-primary dark:text-teal-400" : "text-[#94A3B8] dark:text-slate-500"
                                 )}
                               />
                               <span>{item.label}</span>
-                              {active && <Check className="w-3.5 h-3.5 text-[#0B6BCB] dark:text-teal-400 ml-auto" />}
+                              {active && <Check className="w-3.5 h-3.5 text-primary dark:text-teal-400 ml-auto" />}
                             </Link>
                           )
                         })}
@@ -560,12 +560,11 @@ export function TopNav() {
             <button
               onClick={openCommandPalette}
               aria-label="Open search (Ctrl+K)"
-              title="Search (Ctrl+K)"
-              className="hidden md:flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-[#E2E8F0] dark:border-white/10 bg-card dark:bg-[#11191b] text-[#64748B] dark:text-slate-400 hover:text-foreground dark:hover:text-white hover:border-input transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0B6BCB]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              className="hidden md:flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-[#E2E8F0] dark:border-white/10 bg-card dark:bg-[#11191b] text-[#64748B] dark:text-slate-400 hover:text-foreground dark:hover:text-white hover:border-input transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               <Search className="w-4 h-4" />
-              <span className="text-[12px] font-medium">Search</span>
-              <kbd className="text-[10px] font-medium text-subtle border border-[#E2E8F0] dark:border-white/10 rounded px-1 py-0.5 leading-none">
+              <span className="text-12 font-medium">Search</span>
+              <kbd className="text-10 font-medium text-subtle border border-[#E2E8F0] dark:border-white/10 rounded px-1 py-0.5 leading-none">
                 Ctrl K
               </kbd>
             </button>
@@ -575,11 +574,11 @@ export function TopNav() {
               <button
                 onClick={() => setNotifOpen((v) => !v)}
                 aria-label={`Notifications - ${unreadCount} unread`}
-                className="relative p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted dark:hover:bg-white/[0.05] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/50 dark:focus-visible:ring-[#00E5FF]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                className="relative p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted dark:hover:bg-white/[0.05] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/50 dark:focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 <Bell className="w-5 h-5" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center">
+                  <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-red-500 text-white text-9 font-bold flex items-center justify-center">
                     {unreadCount}
                   </span>
                 )}
@@ -588,10 +587,10 @@ export function TopNav() {
               {notifOpen && (
                 <div className="absolute right-0 top-full mt-1.5 z-50 w-[340px] bg-card dark:bg-[#0d1516] border border-[#E2E8F0] dark:border-white/[0.08] rounded-xl shadow-md dark:shadow-2xl dark:shadow-black/50 overflow-hidden">
                   <div className="px-3 py-2.5 border-b border-[#EDF1F5] dark:border-white/[0.06] flex items-center justify-between">
-                    <span className="text-[12px] font-semibold text-[#1A2332] dark:text-white/80">Notifications</span>
+                    <span className="text-12 font-semibold text-[#1A2332] dark:text-white/80">Notifications</span>
                     <div className="flex items-center gap-2">
                       {unreadCount > 0 && (
-                        <span className="text-[10px] text-[#0B6BCB] dark:text-teal-400">{unreadCount} unread</span>
+                        <span className="text-10 text-primary dark:text-teal-400">{unreadCount} unread</span>
                       )}
                       <div className="relative">
                         <button
@@ -606,7 +605,7 @@ export function TopNav() {
                           <Info className="w-3.5 h-3.5" />
                         </button>
                         {showLegend && (
-                          <div className="absolute right-0 top-full mt-1.5 z-50 w-[220px] p-2.5 rounded-lg bg-[#1A2332] text-white text-[10px] leading-relaxed shadow-md space-y-1.5">
+                          <div className="absolute right-0 top-full mt-1.5 z-50 w-[220px] p-2.5 rounded-lg bg-[#1A2332] text-white text-10 leading-relaxed shadow-md space-y-1.5">
                             <div className="flex items-center gap-1.5">
                               <span className="w-1.5 h-1.5 rounded-full bg-[#94A3B8] shrink-0" />
                               <span>Gray = informational</span>
@@ -635,7 +634,7 @@ export function TopNav() {
                         onClick={() => setNotifOpen(false)}
                         className={cn(
                           "flex flex-col gap-0.5 px-3 py-2.5 border-b border-l-2 border-[#EDF1F5] dark:border-white/[0.04] hover:bg-muted dark:hover:bg-white/[0.04] transition-colors",
-                          !n.read && "bg-[#0B6BCB]/[0.03] dark:bg-white/[0.02]",
+                          !n.read && "bg-primary/[0.03] dark:bg-white/[0.02]",
                           n.effectiveTier === "interruptive" && "border-l-[#DC2626]",
                           n.effectiveTier === "banner" && "border-l-[#F59E0B]",
                           n.effectiveTier === "passive" && "border-l-transparent"
@@ -653,7 +652,7 @@ export function TopNav() {
                           )}
                           <span
                             className={cn(
-                              "text-[12px]",
+                              "text-12",
                               n.effectiveTier === "interruptive" || n.effectiveTier === "banner" ? "font-bold" : "font-semibold",
                               !n.read ? "text-[#1A2332] dark:text-white" : "text-[#64748B] dark:text-white/60",
                               priorityColors[n.priority]
@@ -662,18 +661,18 @@ export function TopNav() {
                             {n.title}
                           </span>
                           {n.effectiveTier === "interruptive" && (
-                            <span className="ml-auto shrink-0 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30">
+                            <span className="ml-auto shrink-0 px-1.5 py-0.5 rounded text-9 font-semibold bg-danger-soft text-danger-soft-fg border border-danger-soft-border">
                               Action needed
                             </span>
                           )}
                         </div>
-                        <p className="text-[11px] text-[#64748B] dark:text-slate-500 line-clamp-2 ml-3.5">{n.description}</p>
+                        <p className="text-11 text-[#64748B] dark:text-slate-500 line-clamp-2 ml-3.5">{n.description}</p>
                       </Link>
                     ))}
                   </div>
                   {budgetExceeded && (
                     <div className="px-3 py-2 border-t border-[#EDF1F5] dark:border-white/[0.06] bg-muted dark:bg-white/[0.03]">
-                      <p className="text-[10px] text-muted-foreground leading-snug">
+                      <p className="text-10 text-muted-foreground leading-snug">
                         Alert volume reduced for this session to reduce interruption fatigue.
                       </p>
                     </div>
@@ -697,7 +696,7 @@ export function TopNav() {
               aria-label={mobileOpen ? "Close navigation menu" : "Open navigation menu"}
               aria-expanded={mobileOpen}
               aria-controls="mobile-nav-menu"
-              className="lg:hidden p-3 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted dark:hover:bg-white/[0.05] transition-all duration-200 ml-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/50 dark:focus-visible:ring-[#00E5FF]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              className="lg:hidden p-3 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted dark:hover:bg-white/[0.05] transition-all duration-200 ml-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/50 dark:focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               title="Menu"
             >
               {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -726,7 +725,7 @@ export function TopNav() {
               <nav aria-label="Mobile navigation" className="flex flex-col gap-0 p-3">
                 {mobileGroups.map((group, gi) => (
                   <div key={group.label} className={cn("flex flex-col gap-0.5", gi > 0 && "mt-3")}>
-                    <p className="text-[10px] text-[#94A3B8] dark:text-slate-500 uppercase tracking-widest font-semibold px-3 py-1">
+                    <p className="text-10 text-[#94A3B8] dark:text-slate-500 uppercase tracking-widest font-semibold px-3 py-1">
                       {group.label}
                     </p>
                     {group.items.map((item) => {
@@ -738,9 +737,9 @@ export function TopNav() {
                           onClick={() => setMobileOpen(false)}
                           aria-current={active ? "page" : undefined}
                           className={cn(
-                            "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0B6BCB]/50 dark:focus-visible:ring-[#00E5FF]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                            "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                             active
-                              ? "bg-[#0B6BCB]/10 text-[#0B6BCB] dark:text-[#00E5FF] dark:glow-cyan"
+                              ? "bg-primary/10 text-primary dark:glow-accent"
                               : "text-[#64748B] dark:text-slate-400 hover:text-foreground dark:hover:text-white hover:bg-muted dark:hover:bg-white/5"
                           )}
                         >
@@ -755,7 +754,7 @@ export function TopNav() {
                 {auth.user && (
                   <button
                     onClick={handleSignOut}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[#B91C1C] dark:text-red-400 dark:text-red-400 hover:bg-[#FEE2E2] dark:bg-red-500/10 dark:hover:bg-red-500/10 transition-colors mt-2"
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-danger-soft-fg hover:bg-danger-soft transition-colors mt-2"
                   >
                     <LogOut className="w-5 h-5 shrink-0" />
                     <span>Sign Out</span>

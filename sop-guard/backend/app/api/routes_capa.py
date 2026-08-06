@@ -18,11 +18,12 @@ from sqlalchemy import select, func
 from sqlalchemy.orm import selectinload
 
 from app.database.db import get_db
-from app.models.models import IncidentRecord, CAPARecord
+from app.models.models import IncidentRecord, CAPARecord, StaffUser
 from app.schemas.schemas import (
     IncidentCreate, IncidentResponse,
     CAPACreate, CAPAUpdate, CAPAResponse,
 )
+from app.services.auth import get_current_user, require_permission
 
 router = APIRouter(tags=["Incidents & CAPA"])
 
@@ -62,14 +63,21 @@ async def list_incidents(
 
 
 @router.post("/api/incidents", response_model=IncidentResponse)
-async def create_incident(req: IncidentCreate, db: AsyncSession = Depends(get_db)):
+async def create_incident(
+    req: IncidentCreate,
+    db: AsyncSession = Depends(get_db),
+    user: StaffUser = Depends(get_current_user),
+):
     incident = IncidentRecord(
         incident_type=req.incident_type,
         title=req.title,
         description=req.description,
         department=req.department,
         severity=req.severity,
-        reporter=req.reporter,
+        # Always the session's real name - never req.reporter, which a
+        # client could set to any string (the same identity-spoofing gap
+        # Phase S6 closed for governance votes).
+        reporter=user.name,
         linked_sop_ids=req.linked_sop_ids or [],
     )
     db.add(incident)
@@ -104,7 +112,12 @@ async def list_capa_for_incident(incident_id: int, db: AsyncSession = Depends(ge
 
 
 @router.post("/api/incidents/{incident_id}/capa", response_model=CAPAResponse)
-async def create_capa(incident_id: int, req: CAPACreate, db: AsyncSession = Depends(get_db)):
+async def create_capa(
+    incident_id: int,
+    req: CAPACreate,
+    db: AsyncSession = Depends(get_db),
+    user: StaffUser = Depends(get_current_user),
+):
     incident = (await db.execute(
         select(IncidentRecord).where(IncidentRecord.id == incident_id)
     )).scalar_one_or_none()
@@ -152,7 +165,12 @@ _VALID_CAPA_STATUSES = {"open", "investigating", "action_planned", "closed"}
 
 
 @router.put("/api/capa/{capa_id}", response_model=CAPAResponse)
-async def update_capa(capa_id: int, req: CAPAUpdate, db: AsyncSession = Depends(get_db)):
+async def update_capa(
+    capa_id: int,
+    req: CAPAUpdate,
+    db: AsyncSession = Depends(get_db),
+    user: StaffUser = Depends(require_permission("manage_quality")),
+):
     capa = (await db.execute(select(CAPARecord).where(CAPARecord.id == capa_id))).scalar_one_or_none()
     if not capa:
         raise HTTPException(status_code=404, detail=f"CAPA {capa_id} not found.")
@@ -174,7 +192,11 @@ async def update_capa(capa_id: int, req: CAPAUpdate, db: AsyncSession = Depends(
 
 
 @router.delete("/api/capa/{capa_id}")
-async def delete_capa(capa_id: int, db: AsyncSession = Depends(get_db)):
+async def delete_capa(
+    capa_id: int,
+    db: AsyncSession = Depends(get_db),
+    user: StaffUser = Depends(require_permission("manage_quality")),
+):
     capa = (await db.execute(select(CAPARecord).where(CAPARecord.id == capa_id))).scalar_one_or_none()
     if not capa:
         raise HTTPException(status_code=404, detail=f"CAPA {capa_id} not found.")

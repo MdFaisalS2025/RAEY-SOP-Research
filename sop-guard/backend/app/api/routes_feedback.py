@@ -9,8 +9,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 
 from app.database.db import get_db
-from app.models.models import Query, Feedback, QueryLogRecord
+from app.models.models import Query, Feedback, QueryLogRecord, StaffUser
 from app.schemas.schemas import FeedbackRequest, FeedbackResponse, AnalyticsResponse, FeedbackItem, FeedbackListResponse
+from app.services.auth import get_current_user, require_permission
 
 router = APIRouter(tags=["Feedback & Analytics"])
 
@@ -24,7 +25,11 @@ _NEEDS_REVIEW_TYPES = _VALID_FEEDBACK_TYPES - {"positive"}
 
 
 @router.post("/api/feedback", response_model=FeedbackResponse)
-async def submit_feedback(req: FeedbackRequest, db: AsyncSession = Depends(get_db)):
+async def submit_feedback(
+    req: FeedbackRequest,
+    db: AsyncSession = Depends(get_db),
+    user: StaffUser = Depends(get_current_user),
+):
     """Submit feedback for a query response."""
     if req.feedback_type not in _VALID_FEEDBACK_TYPES:
         raise HTTPException(status_code=400, detail=f"feedback_type must be one of {sorted(_VALID_FEEDBACK_TYPES)}.")
@@ -70,7 +75,12 @@ async def submit_feedback(req: FeedbackRequest, db: AsyncSession = Depends(get_d
 
 
 @router.get("/api/feedback", response_model=FeedbackListResponse)
-async def list_feedback(needs_review: bool = False, limit: int = 20, db: AsyncSession = Depends(get_db)):
+async def list_feedback(
+    needs_review: bool = False,
+    limit: int = 20,
+    db: AsyncSession = Depends(get_db),
+    user: StaffUser = Depends(require_permission("manage_quality")),
+):
     """Recent feedback rows for the governance Needs Review queue."""
     stmt = select(Feedback).order_by(Feedback.created_at.desc()).limit(limit)
     if needs_review:
@@ -107,7 +117,12 @@ async def list_feedback(needs_review: bool = False, limit: int = 20, db: AsyncSe
 
 
 @router.patch("/api/feedback/{feedback_id}", response_model=FeedbackResponse)
-async def update_feedback_status(feedback_id: int, status: str = "reviewed", db: AsyncSession = Depends(get_db)):
+async def update_feedback_status(
+    feedback_id: int,
+    status: str = "reviewed",
+    db: AsyncSession = Depends(get_db),
+    user: StaffUser = Depends(require_permission("manage_quality")),
+):
     fb = (await db.execute(select(Feedback).where(Feedback.id == feedback_id))).scalar_one_or_none()
     if not fb:
         raise HTTPException(status_code=404, detail=f"Feedback {feedback_id} not found.")
@@ -117,7 +132,10 @@ async def update_feedback_status(feedback_id: int, status: str = "reviewed", db:
 
 
 @router.get("/api/analytics", response_model=AnalyticsResponse)
-async def get_analytics(db: AsyncSession = Depends(get_db)):
+async def get_analytics(
+    db: AsyncSession = Depends(get_db),
+    user: StaffUser = Depends(require_permission("manage_quality")),
+):
     """Return aggregated analytics."""
     # Total queries
     total = (await db.execute(select(func.count(Query.id)))).scalar() or 0

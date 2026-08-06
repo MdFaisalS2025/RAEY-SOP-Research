@@ -10,6 +10,7 @@ import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { SafetyNote } from "@/components/ui/safety-note"
 import { cn } from "@/lib/utils"
+import { toneChip } from "@/components/ui/tone"
 import { MOCK_SOPS } from "@/lib/mock-data"
 import { useRole } from "@/lib/role-context"
 import { ErrorState } from "@/components/ui/error-state"
@@ -88,26 +89,26 @@ function computePatternAlerts(incidents: Incident[]): { id: string; text: string
 const INCIDENT_TYPE_META: Record<string, { label: string; className: string }> = {
   near_miss: {
     label: "Near Miss",
-    className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30",
+    className: toneChip.warning,
   },
   adverse_event: {
     label: "Adverse Event",
-    className: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30",
+    className: toneChip.danger,
   },
   sentinel_event: {
     label: "Sentinel Event",
-    className: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30",
+    className: toneChip.danger,
   },
 }
 
 const SEVERITY_META: Record<string, { label: string; className: string }> = {
   high: {
     label: "High",
-    className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30",
+    className: toneChip.warning,
   },
   critical: {
     label: "Critical",
-    className: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30",
+    className: toneChip.danger,
   },
   medium: {
     label: "Medium",
@@ -126,11 +127,11 @@ const REVIEW_STATUS_META: Record<string, { label: string; className: string }> =
   },
   in_review: {
     label: "In Review",
-    className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30",
+    className: toneChip.warning,
   },
   completed: {
     label: "Completed",
-    className: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30",
+    className: toneChip.success,
   },
 }
 
@@ -221,7 +222,7 @@ function ReportModal({ onClose, onCreated }: ReportModalProps) {
           <div>
             <label htmlFor="incident-type" className="text-xs text-muted-foreground mb-1 block">Incident Type</label>
             <select id="incident-type" value={incidentType} onChange={(e) => setIncidentType(e.target.value)}
-              className="w-full bg-card border border-border rounded-xl px-3 py-2 text-sm text-foreground focus:outline-none focus:border-[#0B6BCB]/50">
+              className="w-full bg-card border border-border rounded-xl px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50">
               <option value="near_miss">Near Miss</option>
               <option value="adverse_event">Adverse Event</option>
               <option value="sentinel_event">Sentinel Event</option>
@@ -231,12 +232,12 @@ function ReportModal({ onClose, onCreated }: ReportModalProps) {
             <div>
               <label htmlFor="incident-reporter" className="text-xs text-muted-foreground mb-1 block">Reported By</label>
               <input id="incident-reporter" value={reporter} onChange={(e) => setReporter(e.target.value)} placeholder="Your name"
-                className="w-full bg-card border border-border rounded-xl px-3 py-2 text-sm text-foreground focus:outline-none focus:border-[#0B6BCB]/50" />
+                className="w-full bg-card border border-border rounded-xl px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50" />
             </div>
             <div>
               <label htmlFor="incident-severity" className="text-xs text-muted-foreground mb-1 block">Severity</label>
               <select id="incident-severity" value={severity} onChange={(e) => setSeverity(e.target.value)}
-                className="w-full bg-card border border-border rounded-xl px-3 py-2 text-sm text-foreground focus:outline-none focus:border-[#0B6BCB]/50">
+                className="w-full bg-card border border-border rounded-xl px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50">
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
                 <option value="high">High</option>
@@ -247,7 +248,7 @@ function ReportModal({ onClose, onCreated }: ReportModalProps) {
           <div>
             <label htmlFor="incident-department" className="text-xs text-muted-foreground mb-1 block">Department</label>
             <select id="incident-department" value={department} onChange={(e) => setDepartment(e.target.value)}
-              className="w-full bg-card border border-border rounded-xl px-3 py-2 text-sm text-foreground focus:outline-none focus:border-[#0B6BCB]/50">
+              className="w-full bg-card border border-border rounded-xl px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50">
               <option>ICU</option>
               <option>Emergency</option>
               <option>Oncology</option>
@@ -264,13 +265,13 @@ function ReportModal({ onClose, onCreated }: ReportModalProps) {
               rows={3}
               value={description} onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe what happened..."
-              className="w-full bg-card border border-border rounded-xl px-3 py-2 text-sm text-foreground focus:outline-none focus:border-[#0B6BCB]/50 resize-none"
+              className="w-full bg-card border border-border rounded-xl px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 resize-none"
             />
           </div>
           <div>
             <label htmlFor="incident-related-sop" className="text-xs text-muted-foreground mb-1 block">Related SOP</label>
             <select id="incident-related-sop" value={relatedSop} onChange={(e) => setRelatedSop(e.target.value)}
-              className="w-full bg-card border border-border rounded-xl px-3 py-2 text-sm text-foreground focus:outline-none focus:border-[#0B6BCB]/50">
+              className="w-full bg-card border border-border rounded-xl px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50">
               <option value="">-- Select SOP (optional) --</option>
               {MOCK_SOPS.map((sop) => (
                 <option key={sop.sop_id} value={sop.sop_id}>
@@ -302,9 +303,9 @@ function ReportModal({ onClose, onCreated }: ReportModalProps) {
 
 const CAPA_STATUS_META: Record<string, { label: string; className: string }> = {
   open: { label: "Open", className: "bg-card text-muted-foreground border border-input" },
-  investigating: { label: "Investigating", className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30" },
-  action_planned: { label: "Action Planned", className: "bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30" },
-  closed: { label: "Closed", className: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30" },
+  investigating: { label: "Investigating", className: toneChip.warning },
+  action_planned: { label: "Action Planned", className: "bg-primary/10 text-primary border border-primary/30" },
+  closed: { label: "Closed", className: toneChip.success },
 }
 
 function CAPAEditor({ capa, onSaved }: { capa: CAPA; onSaved: () => void }) {
@@ -370,7 +371,7 @@ function CAPAEditor({ capa, onSaved }: { capa: CAPA; onSaved: () => void }) {
             {CAPA_STATUS_META[status]?.label}
           </span>
           {capa.linked_proposal_id && (
-            <a href={`/proposals/${capa.linked_proposal_id}`} className="text-xs text-[#0B6BCB] hover:underline inline-flex items-center gap-1">
+            <a href={`/proposals/${capa.linked_proposal_id}`} className="text-xs text-primary hover:underline inline-flex items-center gap-1">
               <ExternalLink className="w-3 h-3" /> Linked Proposal #{capa.linked_proposal_id}
             </a>
           )}
@@ -385,41 +386,41 @@ function CAPAEditor({ capa, onSaved }: { capa: CAPA; onSaved: () => void }) {
       </div>
 
       <div>
-        <label htmlFor={`capa-${capa.id}-root-cause`} className="text-[11px] text-subtle mb-1 block">Root Cause</label>
+        <label htmlFor={`capa-${capa.id}-root-cause`} className="text-11 text-subtle mb-1 block">Root Cause</label>
         <textarea id={`capa-${capa.id}-root-cause`} rows={2} value={rootCause} onChange={(e) => setRootCause(e.target.value)} onBlur={() => save()}
           placeholder="Why did this happen?"
           className="w-full bg-card border border-border rounded-lg px-3 py-2 text-xs text-foreground resize-none" />
       </div>
       <div>
-        <label htmlFor={`capa-${capa.id}-corrective-action`} className="text-[11px] text-subtle mb-1 block">Corrective Action</label>
+        <label htmlFor={`capa-${capa.id}-corrective-action`} className="text-11 text-subtle mb-1 block">Corrective Action</label>
         <textarea id={`capa-${capa.id}-corrective-action`} rows={2} value={correctiveAction} onChange={(e) => setCorrectiveAction(e.target.value)} onBlur={() => save()}
           placeholder="What was done to fix the immediate issue?"
           className="w-full bg-card border border-border rounded-lg px-3 py-2 text-xs text-foreground resize-none" />
       </div>
       <div>
-        <label htmlFor={`capa-${capa.id}-preventive-action`} className="text-[11px] text-subtle mb-1 block">Preventive Action</label>
+        <label htmlFor={`capa-${capa.id}-preventive-action`} className="text-11 text-subtle mb-1 block">Preventive Action</label>
         <textarea id={`capa-${capa.id}-preventive-action`} rows={2} value={preventiveAction} onChange={(e) => setPreventiveAction(e.target.value)} onBlur={() => save()}
           placeholder="What will stop this from happening again? (e.g. an SOP change)"
           className="w-full bg-card border border-border rounded-lg px-3 py-2 text-xs text-foreground resize-none" />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label htmlFor={`capa-${capa.id}-owner`} className="text-[11px] text-subtle mb-1 block">Owner</label>
+          <label htmlFor={`capa-${capa.id}-owner`} className="text-11 text-subtle mb-1 block">Owner</label>
           <input id={`capa-${capa.id}-owner`} value={owner} onChange={(e) => setOwner(e.target.value)} onBlur={() => save()}
             className="w-full bg-card border border-border rounded-lg px-3 py-2 text-xs text-foreground" />
         </div>
         <div>
-          <label htmlFor={`capa-${capa.id}-due-date`} className="text-[11px] text-subtle mb-1 block">Due Date</label>
+          <label htmlFor={`capa-${capa.id}-due-date`} className="text-11 text-subtle mb-1 block">Due Date</label>
           <input id={`capa-${capa.id}-due-date`} type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} onBlur={() => save()}
             className="w-full bg-card border border-border rounded-lg px-3 py-2 text-xs text-foreground" />
         </div>
       </div>
 
       <div className="flex items-center gap-2 pt-1">
-        {saving && <span className="text-[11px] text-subtle flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" /> Saving...</span>}
+        {saving && <span className="text-11 text-subtle flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" /> Saving...</span>}
         {!capa.linked_proposal_id && preventiveAction.trim() && (
           <button onClick={createLinkedProposal} disabled={creatingProposal}
-            className="ml-auto flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-[#0B6BCB]/10 text-[#0B6BCB] hover:bg-[#0B6BCB]/20 border border-[#0B6BCB]/30 transition-colors font-medium disabled:opacity-50">
+            className="ml-auto flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 border border-primary/30 transition-colors font-medium disabled:opacity-50">
             {creatingProposal ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
             Create SOP Change Proposal
           </button>
@@ -527,7 +528,7 @@ function IncidentsTab() {
   const stats = [
     { label: "Total Incidents", value: String(incidents.length), color: "text-[#B91C1C] dark:text-red-400", bg: "bg-[#FEE2E2] dark:bg-red-500/10" },
     { label: "Linked to SOPs", value: String(linkedCount), color: "text-[#B45309] dark:text-amber-400", bg: "bg-[#FEF3C7] dark:bg-amber-500/10" },
-    { label: "CAPA In Progress", value: String(underReviewCount), color: "text-[#0B6BCB]", bg: "bg-[#0B6BCB]/10" },
+    { label: "CAPA In Progress", value: String(underReviewCount), color: "text-primary", bg: "bg-primary/10" },
     { label: "Closed Loop", value: String(closedLoopCount), color: "text-[#15803D] dark:text-green-400", bg: "bg-[#DCFCE7] dark:bg-green-500/10" },
   ]
 
@@ -547,7 +548,7 @@ function IncidentsTab() {
         </p>
         <button
           onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0B6BCB] hover:bg-[#0959AC] text-white text-sm font-semibold transition-colors shrink-0"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-primary-foreground text-sm font-semibold transition-colors shrink-0"
         >
           <Plus className="w-4 h-4" /> Report New Incident
         </button>
@@ -704,7 +705,7 @@ function IncidentsTab() {
                     {inc.linked_sop_ids.map((sopId) => (
                       <span
                         key={sopId}
-                        className="text-xs text-[#0B6BCB] border border-[#0B6BCB]/30 bg-[#0B6BCB]/10 rounded px-2 py-0.5"
+                        className="text-xs text-primary border border-primary/30 bg-primary/10 rounded px-2 py-0.5"
                       >
                         {sopId}
                       </span>
@@ -738,7 +739,7 @@ function IncidentsTab() {
                 <div className="flex items-center gap-2 flex-wrap pt-1">
                   <button
                     onClick={() => toggleExpand(inc.id)}
-                    className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-[#0B6BCB]/10 text-[#0B6BCB] hover:bg-[#0B6BCB]/20 border border-[#0B6BCB]/30 transition-colors font-medium"
+                    className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 border border-primary/30 transition-colors font-medium"
                   >
                     <ClipboardCheck className="w-3 h-3" /> {isExpanded ? "Hide CAPA" : "View / Manage CAPA"}
                   </button>
@@ -759,7 +760,7 @@ function IncidentsTab() {
               initial={{ opacity: 0, x: -8 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.08 }}
-              className="flex items-start gap-3 px-4 py-3 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30"
+              className={cn(toneChip.warning, "flex items-start gap-3 px-4 py-3 rounded-xl")}
             >
               <AlertTriangle className="w-4 h-4 text-[#B45309] dark:text-amber-400 shrink-0 mt-0.5" />
               <p className="text-sm text-[#B45309] dark:text-amber-400">{alert.text}</p>
@@ -802,17 +803,17 @@ interface ExceptionReport {
 }
 
 const EXC_SEVERITY_META: Record<string, { label: string; cls: string }> = {
-  critical: { label: "Critical", cls: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30" },
-  high: { label: "High", cls: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30" },
+  critical: { label: "Critical", cls: toneChip.danger },
+  high: { label: "High", cls: toneChip.warning },
   medium: { label: "Medium", cls: "bg-card text-muted-foreground border border-input" },
-  low: { label: "Low", cls: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30" },
+  low: { label: "Low", cls: toneChip.success },
 }
 
 const EXC_STATUS_META: Record<string, { label: string; cls: string }> = {
-  open: { label: "Open", cls: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30" },
-  under_review: { label: "Under Review", cls: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30" },
-  resolved: { label: "Resolved", cls: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30" },
-  escalated: { label: "Escalated", cls: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30" },
+  open: { label: "Open", cls: toneChip.danger },
+  under_review: { label: "Under Review", cls: toneChip.warning },
+  resolved: { label: "Resolved", cls: toneChip.success },
+  escalated: { label: "Escalated", cls: toneChip.danger },
 }
 
 const DEVIATION_LABELS: Record<string, string> = {
@@ -876,13 +877,13 @@ function ExceptionCard({
     >
       <div className="p-5">
         <div className="flex flex-wrap items-start gap-2 mb-2">
-          <span className={cn("px-2 py-0.5 rounded-full text-[11px] font-semibold tracking-wide", sev.cls)}>
+          <span className={cn("px-2 py-0.5 rounded-full text-11 font-semibold tracking-wide", sev.cls)}>
             {sev.label}
           </span>
-          <span className={cn("px-2 py-0.5 rounded-full text-[11px] font-semibold tracking-wide", st.cls)}>
+          <span className={cn("px-2 py-0.5 rounded-full text-11 font-semibold tracking-wide", st.cls)}>
             {st.label}
           </span>
-          <span className="px-2 py-0.5 rounded-full text-[11px] bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30">
+          <span className="px-2 py-0.5 rounded-full text-11 bg-primary/10 text-primary border border-primary/30">
             {DEVIATION_LABELS[exc.deviation_type] ?? exc.deviation_type}
           </span>
         </div>
@@ -910,14 +911,14 @@ function ExceptionCard({
         <div className="flex flex-wrap gap-3 mt-3">
           <div className={cn("flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border",
             exc.patient_harm
-              ? "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30"
-              : "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30"
+              ? toneChip.danger
+              : toneChip.success
           )}>
             {exc.patient_harm ? <XCircle className="w-3.5 h-3.5" /> : <CheckCircle className="w-3.5 h-3.5" />}
             {exc.patient_harm ? "Patient Harm Reported" : "No Patient Harm"}
           </div>
           {exc.sop_update_required && (
-            <div className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30">
+            <div className={cn(toneChip.warning, "flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg")}>
               <AlertTriangle className="w-3.5 h-3.5" />
               SOP Update Required
             </div>
@@ -926,7 +927,7 @@ function ExceptionCard({
 
         <button
           onClick={() => setExpanded(!expanded)}
-          className="mt-3 flex items-center gap-1 text-xs text-[#0B6BCB] hover:text-[#0959AC] transition-colors"
+          className="mt-3 flex items-center gap-1 text-xs text-primary hover:text-primary-hover transition-colors"
         >
           {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
           {expanded ? "Show less" : "Show details"}
@@ -970,7 +971,7 @@ function ExceptionCard({
                   <button
                     disabled={saving !== null}
                     onClick={() => putUpdate("review", { status: "under_review", reviewed_by: currentUser.name })}
-                    className="text-xs px-3 py-1.5 rounded-lg bg-[#0B6BCB]/10 text-[#0B6BCB] hover:bg-[#0B6BCB]/20 transition-colors font-medium border border-[#0B6BCB]/30 disabled:opacity-50"
+                    className="text-xs px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors font-medium border border-primary/30 disabled:opacity-50"
                   >
                     {saving === "review" ? "Saving..." : "Review"}
                   </button>
@@ -1028,7 +1029,7 @@ function SubmitForm({ onClose, onCreated }: { onClose: () => void; onCreated: (e
         <CheckCircle className="w-10 h-10 text-[#15803D] dark:text-green-400" />
         <p className="text-sm font-medium">Exception report submitted successfully.</p>
         <p className="text-xs text-muted-foreground">It will be reviewed by the Compliance Officer within 24 hours.</p>
-        <button onClick={onClose} className="mt-2 text-xs px-4 py-2 rounded-lg bg-[#0B6BCB] text-white hover:bg-[#0B6BCB] transition-colors">
+        <button onClick={onClose} className="mt-2 text-xs px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary transition-colors">
           Close
         </button>
       </div>
@@ -1078,7 +1079,7 @@ function SubmitForm({ onClose, onCreated }: { onClose: () => void; onCreated: (e
             value={form.sop_id}
             onChange={(e) => set("sop_id", e.target.value)}
             placeholder="e.g. IC-PPE-001"
-            className="w-full rounded-lg bg-muted border border-border px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/60"
+            className="w-full rounded-lg bg-muted border border-border px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/60"
           />
         </div>
         <div>
@@ -1089,7 +1090,7 @@ function SubmitForm({ onClose, onCreated }: { onClose: () => void; onCreated: (e
             value={form.department}
             onChange={(e) => set("department", e.target.value)}
             placeholder="e.g. ICU"
-            className="w-full rounded-lg bg-muted border border-border px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/60"
+            className="w-full rounded-lg bg-muted border border-border px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/60"
           />
         </div>
         <div>
@@ -1100,7 +1101,7 @@ function SubmitForm({ onClose, onCreated }: { onClose: () => void; onCreated: (e
             type="datetime-local"
             value={form.date_of_deviation}
             onChange={(e) => set("date_of_deviation", e.target.value)}
-            className="w-full rounded-lg bg-muted border border-border px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/60"
+            className="w-full rounded-lg bg-muted border border-border px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/60"
           />
         </div>
         <div>
@@ -1110,7 +1111,7 @@ function SubmitForm({ onClose, onCreated }: { onClose: () => void; onCreated: (e
             required
             value={form.severity}
             onChange={(e) => set("severity", e.target.value)}
-            className="w-full rounded-lg bg-card border border-border px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/60"
+            className="w-full rounded-lg bg-card border border-border px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/60"
           >
             <option value="">Select severity...</option>
             <option value="low">Low</option>
@@ -1126,7 +1127,7 @@ function SubmitForm({ onClose, onCreated }: { onClose: () => void; onCreated: (e
             required
             value={form.deviation_type}
             onChange={(e) => set("deviation_type", e.target.value)}
-            className="w-full rounded-lg bg-card border border-border px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/60"
+            className="w-full rounded-lg bg-card border border-border px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/60"
           >
             <option value="">Select type...</option>
             <option value="equipment_unavailable">Equipment Unavailable</option>
@@ -1144,7 +1145,7 @@ function SubmitForm({ onClose, onCreated }: { onClose: () => void; onCreated: (e
             required
             value={form.patient_harm}
             onChange={(e) => set("patient_harm", e.target.value)}
-            className="w-full rounded-lg bg-card border border-border px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/60"
+            className="w-full rounded-lg bg-card border border-border px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/60"
           >
             <option value="">Select...</option>
             <option value="no">No patient harm</option>
@@ -1161,7 +1162,7 @@ function SubmitForm({ onClose, onCreated }: { onClose: () => void; onCreated: (e
           value={form.description}
           onChange={(e) => set("description", e.target.value)}
           placeholder="Describe what happened and why the SOP could not be followed..."
-          className="w-full rounded-lg bg-muted border border-border px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/60 resize-none"
+          className="w-full rounded-lg bg-muted border border-border px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/60 resize-none"
         />
       </div>
       <div>
@@ -1173,7 +1174,7 @@ function SubmitForm({ onClose, onCreated }: { onClose: () => void; onCreated: (e
           value={form.immediate_action_taken}
           onChange={(e) => set("immediate_action_taken", e.target.value)}
           placeholder="Describe what was done to mitigate risk..."
-          className="w-full rounded-lg bg-muted border border-border px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0B6BCB]/60 resize-none"
+          className="w-full rounded-lg bg-muted border border-border px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/60 resize-none"
         />
       </div>
       {error && <p className="text-xs text-[#B91C1C] dark:text-red-400">{error}</p>}
@@ -1230,7 +1231,7 @@ function ExceptionsTab() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 text-sm">
+      <div className={cn(toneChip.warning, "flex items-center gap-2 px-4 py-3 rounded-xl text-sm")}>
         <Clock className="w-4 h-4 shrink-0" />
         <span>
           <strong>Policy Notice:</strong> All deviations from approved SOPs must be documented and reviewed within 24 hours per institutional policy (TJC RC.01.02.01).
@@ -1294,7 +1295,7 @@ function ExceptionsTab() {
             </div>
             <button
               onClick={() => setShowForm(true)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0B6BCB] hover:bg-[#0959AC] text-white text-sm font-semibold transition-colors"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-primary-foreground text-sm font-semibold transition-colors"
             >
               <Plus className="w-4 h-4" />
               New Report
@@ -1358,7 +1359,7 @@ export default function IncidentsPage() {
               onClick={() => setTab(t.key)}
               className={cn(
                 "flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors",
-                tab === t.key ? "bg-card text-[#0B6BCB] shadow-sm" : "text-muted-foreground hover:text-foreground"
+                tab === t.key ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
               )}
             >
               <t.icon className="w-4 h-4" />

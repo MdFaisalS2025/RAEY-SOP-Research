@@ -11,6 +11,7 @@ import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { SafetyNote } from "@/components/ui/safety-note"
 import { ErrorState } from "@/components/ui/error-state"
 import { cn } from "@/lib/utils"
+import { toneChip } from "@/components/ui/tone"
 import { useRole } from "@/lib/role-context"
 import { Card } from "@/components/ui/card"
 
@@ -29,9 +30,9 @@ interface CreditRecord {
 }
 
 const ACTIVITY_CONFIG: Record<ActivityType, { label: string; className: string }> = {
-  scenario_completed: { label: "Scenario Training", className: "bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30" },
-  sop_reviewed: { label: "SOP Reviewed", className: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30" },
-  committee_participation: { label: "Committee Participation", className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30" },
+  scenario_completed: { label: "Scenario Training", className: "bg-primary/10 text-primary border border-primary/30" },
+  sop_reviewed: { label: "SOP Reviewed", className: toneChip.success },
+  committee_participation: { label: "Committee Participation", className: toneChip.warning },
 }
 
 export default function TrainingPage() {
@@ -77,7 +78,7 @@ export default function TrainingPage() {
 
   const stats = [
     { label: "Activities This Month", value: completedThisMonth, icon: TrendingUp, color: "text-[#15803D] dark:text-green-400", bg: "bg-[#DCFCE7] dark:bg-green-500/10" },
-    { label: "Total Activities Logged", value: records.length, icon: BookOpen, color: "text-[#0B6BCB]", bg: "bg-[#0B6BCB]/10" },
+    { label: "Total Activities Logged", value: records.length, icon: BookOpen, color: "text-primary", bg: "bg-primary/10" },
     { label: "Contributing Staff", value: distinctContributors, icon: Users, color: "text-muted-foreground", bg: "bg-muted" },
   ]
 
@@ -91,8 +92,8 @@ export default function TrainingPage() {
         <Breadcrumb items={[{ label: "Training" }]} />
 
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-[#0B6BCB]/10 flex items-center justify-center">
-            <BookOpen className="w-6 h-6 text-[#0B6BCB]" />
+          <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+            <BookOpen className="w-6 h-6 text-primary" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-foreground">Training Center</h1>
@@ -104,12 +105,12 @@ export default function TrainingPage() {
           <SafetyNote />
         </div>
 
-        <div className="px-4 py-3 rounded-xl bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 text-[#0B6BCB] text-sm">
+        <div className="px-4 py-3 rounded-xl bg-primary/10 border border-primary/30 text-primary text-sm">
           <span className="font-semibold">
             {role === "clinical_staff" ? "My Training" : role === "educator" ? "Training Management" : "Training Overview"}
             {": "}
           </span>
-          <span className="text-[#0B6BCB]/80">{roleBannerSubtitle.split(":").slice(1).join(":").trim()}</span>
+          <span className="text-primary/80">{roleBannerSubtitle.split(":").slice(1).join(":").trim()}</span>
         </div>
 
         {loading ? (

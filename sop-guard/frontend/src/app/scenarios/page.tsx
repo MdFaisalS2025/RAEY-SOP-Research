@@ -9,6 +9,7 @@ import {
 import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { cn } from "@/lib/utils"
+import { toneChip } from "@/components/ui/tone"
 import { useRole } from "@/lib/role-context"
 import { Card } from "@/components/ui/card"
 
@@ -499,8 +500,8 @@ export default function ScenariosPage() {
 
         {/* Header */}
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-[#0B6BCB]/10 flex items-center justify-center">
-            <Target className="w-6 h-6 text-[#0B6BCB]" />
+          <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+            <Target className="w-6 h-6 text-primary" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-foreground">Scenario Training</h1>
@@ -509,7 +510,7 @@ export default function ScenariosPage() {
         </div>
 
         {/* Disclaimer */}
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 text-sm">
+        <div className={cn(toneChip.warning, "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm")}>
           <AlertTriangle className="w-4 h-4 shrink-0" />
           <span>Training simulation. Not a substitute for clinical judgment.</span>
         </div>
@@ -527,8 +528,8 @@ export default function ScenariosPage() {
                 className={cn(
                   "flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border text-sm font-medium transition-colors",
                   practiceMode === "guided"
-                    ? "bg-[#0B6BCB] border-[#0B6BCB] text-white"
-                    : "bg-card border-border text-muted-foreground hover:border-[#0B6BCB]"
+                    ? "bg-primary border-primary text-primary-foreground"
+                    : "bg-card border-border text-muted-foreground hover:border-primary"
                 )}
               >
                 <Eye className="w-4 h-4" /> Guided
@@ -538,8 +539,8 @@ export default function ScenariosPage() {
                 className={cn(
                   "flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border text-sm font-medium transition-colors",
                   practiceMode === "blind"
-                    ? "bg-[#0B6BCB] border-[#0B6BCB] text-white"
-                    : "bg-card border-border text-muted-foreground hover:border-[#0B6BCB]"
+                    ? "bg-primary border-primary text-primary-foreground"
+                    : "bg-card border-border text-muted-foreground hover:border-primary"
                 )}
               >
                 <PenLine className="w-4 h-4" /> Blind recall
@@ -558,7 +559,7 @@ export default function ScenariosPage() {
                 <button
                   key={s.id}
                   onClick={() => startScenario(s)}
-                  className="text-left rounded-2xl bg-card border border-border shadow-sm p-5 space-y-3 hover:border-[#0B6BCB] transition-colors"
+                  className="text-left rounded-2xl bg-card border border-border shadow-sm p-5 space-y-3 hover:border-primary transition-colors"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <h3 className="text-sm font-bold text-foreground">{s.title}</h3>
@@ -572,8 +573,8 @@ export default function ScenariosPage() {
                     <span className={cn(
                       "px-2 py-0.5 rounded-full text-xs font-medium border",
                       s.difficulty === "High"
-                        ? "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30"
-                        : "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30"
+                        ? toneChip.danger
+                        : toneChip.warning
                     )}>
                       {s.difficulty}
                     </span>
@@ -605,7 +606,7 @@ export default function ScenariosPage() {
                     key={i}
                     className={cn(
                       "w-2.5 h-2.5 rounded-full",
-                      i < stepIdx ? "bg-[#16A34A]" : i === stepIdx ? "bg-[#0B6BCB]" : "bg-[#E2E8F0]"
+                      i < stepIdx ? "bg-[#16A34A]" : i === stepIdx ? "bg-primary" : "bg-[#E2E8F0]"
                     )}
                   />
                 ))}
@@ -651,7 +652,7 @@ export default function ScenariosPage() {
                       className={cn(
                         "w-full text-left px-4 py-3 rounded-xl border text-sm transition-colors",
                         selected === null
-                          ? "bg-card border-border hover:border-[#0B6BCB] hover:bg-[#0B6BCB]/5"
+                          ? "bg-card border-border hover:border-primary hover:bg-primary/5"
                           : isPicked
                             ? cn(cfg.box, cfg.text, "font-medium")
                             : "bg-card border-border text-muted-foreground opacity-60"
@@ -675,12 +676,12 @@ export default function ScenariosPage() {
                     </p>
                     <p className="text-sm text-foreground">{opt.explanation}</p>
                     <div className="flex items-center justify-between">
-                      <Link href="/library" className="text-xs text-[#0B6BCB] hover:text-[#0959AC] font-medium flex items-center gap-1">
+                      <Link href="/library" className="text-xs text-primary hover:text-primary-hover font-medium flex items-center gap-1">
                         <BookOpen className="w-3.5 h-3.5" /> View SOP
                       </Link>
                       <button
                         onClick={advance}
-                        className="px-4 py-2 rounded-lg text-sm font-medium bg-[#0B6BCB] text-white hover:bg-[#0959AC] transition-colors flex items-center gap-1.5"
+                        className="px-4 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary-hover transition-colors flex items-center gap-1.5"
                       >
                         {stepIdx + 1 >= active.steps.length ? "Finish" : "Next step"}
                         <ArrowRight className="w-4 h-4" />
@@ -725,7 +726,7 @@ export default function ScenariosPage() {
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-foreground">{step.question}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">Your pick: {opt.label}</p>
-                        <p className="text-xs text-[#0B6BCB] mt-0.5">{step.citation}</p>
+                        <p className="text-xs text-primary mt-0.5">{step.citation}</p>
                       </div>
                     </div>
                   )
@@ -734,7 +735,7 @@ export default function ScenariosPage() {
 
               {/* Deviations */}
               {deviations.length > 0 && (
-                <div className="rounded-2xl bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 p-5 space-y-2">
+                <div className={cn(toneChip.danger, "rounded-2xl p-5 space-y-2")}>
                   <h3 className="text-sm font-bold text-[#B91C1C] dark:text-red-400 flex items-center gap-1.5">
                     <AlertTriangle className="w-4 h-4" /> Deviations from protocol
                   </h3>
@@ -750,7 +751,7 @@ export default function ScenariosPage() {
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => startScenario(active)}
-                  className="px-4 py-2 rounded-lg text-sm font-medium bg-[#0B6BCB] text-white hover:bg-[#0959AC] transition-colors flex items-center gap-1.5"
+                  className="px-4 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary-hover transition-colors flex items-center gap-1.5"
                 >
                   <RotateCcw className="w-4 h-4" /> Retry
                 </button>

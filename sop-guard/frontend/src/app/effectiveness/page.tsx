@@ -24,8 +24,8 @@ export default function EffectivenessPage() {
 
         {/* Header */}
         <div className="flex items-start gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-[#0B6BCB]/10 flex items-center justify-center shrink-0">
-            <Activity className="w-6 h-6 text-[#0B6BCB]" />
+          <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+            <Activity className="w-6 h-6 text-primary" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-foreground">SOP Impact</h1>
@@ -36,7 +36,7 @@ export default function EffectivenessPage() {
         </div>
 
         <div className="bg-card border border-border shadow-sm rounded-xl p-5 space-y-3">
-          <div className="flex items-center gap-2 text-[#0B6BCB]">
+          <div className="flex items-center gap-2 text-primary">
             <Database className="w-4 h-4" />
             <span className="text-sm font-medium text-foreground">Connecting governance to outcomes</span>
           </div>

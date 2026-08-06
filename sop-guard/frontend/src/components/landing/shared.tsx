@@ -44,7 +44,7 @@ export function GlassCard({
     <div
       className={cn(
         "relative rounded-2xl border border-border bg-card shadow-sm",
-        glow && "hover:border-[#0B6BCB]/30 dark:hover:border-[#00E5FF]/30 hover:shadow-md transition-all duration-300",
+        glow && "hover:border-primary/30 hover:shadow-md transition-all duration-300",
         className
       )}
     >
@@ -94,7 +94,7 @@ export function MagneticButton({
     "group relative inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full text-[15px] font-semibold transition-colors duration-300 overflow-hidden"
   const styles =
     variant === "primary"
-      ? "bg-[#0B6BCB] dark:bg-[#00E5FF] text-white dark:text-[#04121a] hover:bg-[#0959AC] dark:hover:bg-[#33ebff]"
+      ? "bg-primary text-primary-foreground hover:bg-primary-hover"
       : "border border-border bg-card text-foreground hover:bg-muted"
 
   const inner = <span className="relative z-10 inline-flex items-center gap-2">{children}</span>
@@ -135,9 +135,9 @@ export function SectionKicker({ children }: { children: ReactNode }) {
     <motion.span
       variants={fadeUp}
       custom={0}
-      className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#0B6BCB] dark:text-[#00E5FF] mb-4"
+      className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-primary mb-4"
     >
-      <span className="w-6 h-px bg-[#0B6BCB]/50 dark:bg-[#00E5FF]/50" />
+      <span className="w-6 h-px bg-primary/50" />
       {children}
     </motion.span>
   )

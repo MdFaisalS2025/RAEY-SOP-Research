@@ -13,8 +13,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 
 from app.database.db import get_db
-from app.models.models import CreditRecord
+from app.models.models import CreditRecord, StaffUser
 from app.schemas.schemas import CreditCreate, CreditResponse
+from app.services.auth import get_current_user
 
 router = APIRouter(tags=["Credits"])
 
@@ -22,11 +23,17 @@ _VALID_ACTIVITY_TYPES = {"scenario_completed", "sop_reviewed", "committee_partic
 
 
 @router.post("/api/credits", response_model=CreditResponse)
-async def create_credit(req: CreditCreate, db: AsyncSession = Depends(get_db)):
+async def create_credit(
+    req: CreditCreate,
+    db: AsyncSession = Depends(get_db),
+    user: StaffUser = Depends(get_current_user),
+):
     activity_type = req.activity_type if req.activity_type in _VALID_ACTIVITY_TYPES else "scenario_completed"
     rec = CreditRecord(
-        user_id=req.user_id,
-        user_name=req.user_name,
+        # Always the session's real identity - self-attributed training
+        # credit, never client-supplied.
+        user_id=user.staff_id,
+        user_name=user.name,
         activity_type=activity_type,
         activity_title=req.activity_title,
         credits=req.credits,

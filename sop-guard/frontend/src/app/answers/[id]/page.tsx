@@ -8,6 +8,7 @@ import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { LoadingBlock } from "@/components/ui/loading-block"
 import { cn } from "@/lib/utils"
+import { toneChip } from "@/components/ui/tone"
 
 interface AnswerRecord {
   query: string
@@ -22,20 +23,20 @@ function FaithfulnessBadge({ score }: { score: number | undefined }) {
   const pct = Math.round(score * 100)
   if (score >= 0.85) {
     return (
-      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#15803D] dark:text-green-400 bg-[#DCFCE7] dark:bg-green-500/10 border border-[#BBF7D0] dark:border-green-500/30 rounded-full px-2.5 py-1">
+      <span className={cn(toneChip.success, "inline-flex items-center gap-1.5 text-xs font-medium rounded-full px-2.5 py-1")}>
         <ShieldCheck className="w-3.5 h-3.5" /> High faithfulness ({pct}%)
       </span>
     )
   }
   if (score >= 0.65) {
     return (
-      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#B45309] dark:text-amber-400 bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 rounded-full px-2.5 py-1">
+      <span className={cn(toneChip.warning, "inline-flex items-center gap-1.5 text-xs font-medium rounded-full px-2.5 py-1")}>
         <ShieldAlert className="w-3.5 h-3.5" /> Moderate faithfulness ({pct}%)
       </span>
     )
   }
   return (
-    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#B91C1C] dark:text-red-400 bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 rounded-full px-2.5 py-1">
+    <span className={cn(toneChip.danger, "inline-flex items-center gap-1.5 text-xs font-medium rounded-full px-2.5 py-1")}>
       <ShieldX className="w-3.5 h-3.5" /> Low faithfulness ({pct}%)
     </span>
   )
@@ -55,7 +56,7 @@ function renderAnswerText(text: string) {
     }
     if (/^>\s+/.test(line)) {
       return (
-        <div key={i} className="my-2 px-4 py-2 bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 rounded-lg text-[#B45309] dark:text-amber-400 text-sm">
+        <div key={i} className={cn(toneChip.warning, "my-2 px-4 py-2 rounded-lg text-sm")}>
           {line.replace(/^>\s+/, "")}
         </div>
       )
@@ -111,13 +112,13 @@ export default function AnswerPermalinkPage() {
         )}
 
         {status === "notfound" && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-8 bg-card border border-[#0B6BCB]/20 rounded-xl p-8 text-center shadow-sm">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-8 bg-card border border-primary/20 rounded-xl p-8 text-center shadow-sm">
             <FileQuestion className="w-10 h-10 text-subtle mx-auto mb-3" />
             <p className="text-foreground font-medium mb-1">This answer link is not available</p>
             <p className="text-sm text-muted-foreground mb-5">It may have expired or the link is incorrect.</p>
             <button
               onClick={() => router.push("/query")}
-              className="inline-flex items-center gap-2 text-sm font-medium text-white bg-[#0B6BCB] hover:bg-[#0959AC] rounded-lg px-4 py-2 transition-colors"
+              className="inline-flex items-center gap-2 text-sm font-medium text-primary-foreground bg-primary hover:bg-primary-hover rounded-lg px-4 py-2 transition-colors"
             >
               Ask a new question
             </button>
@@ -134,7 +135,7 @@ export default function AnswerPermalinkPage() {
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
             <button
               onClick={() => router.push("/query")}
-              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-[#0B6BCB] mb-4 transition-colors"
+              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary mb-4 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" /> Back to query
             </button>
@@ -164,13 +165,13 @@ export default function AnswerPermalinkPage() {
               )}
             </div>
 
-            <div className="bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 rounded-xl px-4 py-3 text-sm text-[#B45309] dark:text-amber-400 mb-6">
+            <div className={cn(toneChip.warning, "rounded-xl px-4 py-3 text-sm mb-6")}>
               Shared answer snapshot. Verify against the current SOP before clinical use.
             </div>
 
             <button
               onClick={() => router.push("/query")}
-              className="inline-flex items-center gap-2 text-sm font-medium text-white bg-[#0B6BCB] hover:bg-[#0959AC] rounded-lg px-4 py-2.5 transition-colors"
+              className="inline-flex items-center gap-2 text-sm font-medium text-primary-foreground bg-primary hover:bg-primary-hover rounded-lg px-4 py-2.5 transition-colors"
             >
               <MessageCircle className="w-4 h-4" /> Ask a follow-up
             </button>

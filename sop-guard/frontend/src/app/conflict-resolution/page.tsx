@@ -88,17 +88,17 @@ function ConflictCard({ conflict, index }: { conflict: RealConflict; index: numb
         <div className="grid sm:grid-cols-2 gap-3">
           <div className="rounded-xl bg-muted border border-border p-3 space-y-1">
             <div className="flex items-center gap-1.5">
-              <FileText className="w-3.5 h-3.5 text-[#0B6BCB]" />
+              <FileText className="w-3.5 h-3.5 text-primary" />
               <span className="text-xs font-semibold text-foreground truncate">{conflict.sop_a}</span>
             </div>
-            <p className="text-xs text-muted-foreground">States: <span className="font-mono text-[#0B6BCB]">{conflict.value_a}</span></p>
+            <p className="text-xs text-muted-foreground">States: <span className="font-mono text-primary">{conflict.value_a}</span></p>
           </div>
           <div className="rounded-xl bg-muted border border-border p-3 space-y-1">
             <div className="flex items-center gap-1.5">
-              <FileText className="w-3.5 h-3.5 text-[#0B6BCB]" />
+              <FileText className="w-3.5 h-3.5 text-primary" />
               <span className="text-xs font-semibold text-foreground truncate">{conflict.sop_b}</span>
             </div>
-            <p className="text-xs text-muted-foreground">States: <span className="font-mono text-[#0B6BCB]">{conflict.value_b}</span></p>
+            <p className="text-xs text-muted-foreground">States: <span className="font-mono text-primary">{conflict.value_b}</span></p>
           </div>
         </div>
 
@@ -106,7 +106,7 @@ function ConflictCard({ conflict, index }: { conflict: RealConflict; index: numb
           <div>
             <button
               onClick={() => setExpanded((v) => !v)}
-              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-[#0B6BCB] transition-colors"
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors"
             >
               {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
               {expanded ? "Hide" : "Show"} source context
@@ -114,7 +114,7 @@ function ConflictCard({ conflict, index }: { conflict: RealConflict; index: numb
             {expanded && (
               <div className="mt-2 space-y-2">
                 {conflict.snippets.map((s, i) => (
-                  <blockquote key={i} className="border-l-2 border-[#0B6BCB]/30 pl-3 text-xs text-muted-foreground italic leading-relaxed">
+                  <blockquote key={i} className="border-l-2 border-primary/30 pl-3 text-xs text-muted-foreground italic leading-relaxed">
                     &ldquo;{s}&rdquo;
                   </blockquote>
                 ))}
@@ -139,7 +139,7 @@ function AllConflictsTab({ data, loading, error, refreshing, onRefresh }: {
   const highCount = conflicts.filter((c) => c.severity === "high").length
 
   const stats = [
-    { label: "Conflicts Detected", value: data?.conflict_count ?? 0, color: "text-[#0B6BCB]" },
+    { label: "Conflicts Detected", value: data?.conflict_count ?? 0, color: "text-primary" },
     { label: "Critical", value: criticalCount, color: "text-[#B91C1C] dark:text-red-400" },
     { label: "High", value: highCount, color: "text-[#B45309] dark:text-amber-400" },
     { label: "Entities Scanned", value: data?.entity_count ?? 0, color: "text-muted-foreground" },
@@ -177,8 +177,8 @@ function AllConflictsTab({ data, loading, error, refreshing, onRefresh }: {
             ))}
           </div>
 
-          <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-[#0B6BCB]/5 border border-[#0B6BCB]/15 text-foreground text-xs">
-            <Info className="w-4 h-4 shrink-0 text-[#0B6BCB] mt-0.5" />
+          <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-primary/5 border border-primary/15 text-foreground text-xs">
+            <Info className="w-4 h-4 shrink-0 text-primary mt-0.5" />
             <span>
               Detection scans drug dosages and clinical thresholds (e.g. MAP, norepinephrine rate) mentioned across
               every currently indexed SOP chunk and flags any entity with two or more differing values across
@@ -188,7 +188,7 @@ function AllConflictsTab({ data, loading, error, refreshing, onRefresh }: {
 
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <ShieldAlert className="w-5 h-5 text-[#0B6BCB]" />
+              <ShieldAlert className="w-5 h-5 text-primary" />
               <h2 className="text-lg font-bold text-foreground">Detected Conflicts</h2>
             </div>
 
@@ -277,7 +277,7 @@ function ImpactBySopTab({ conflicts, loading }: { conflicts: RealConflict[]; loa
       ) : (
         <>
           <div>
-            <label className="text-xs text-muted-foreground mb-2 block">Select SOP to analyze</label>
+            <p className="text-xs text-muted-foreground mb-2">Select SOP to analyze</p>
             <div className="flex flex-wrap gap-2">
               {sops.map((sop) => (
                 <button
@@ -286,7 +286,7 @@ function ImpactBySopTab({ conflicts, loading }: { conflicts: RealConflict[]; loa
                   className={cn(
                     "text-xs px-3 py-1.5 rounded-lg border transition-colors font-medium",
                     selectedSopId === sop.sop_id
-                      ? "bg-[#0B6BCB]/10 text-[#0B6BCB] border-[#0B6BCB]/30"
+                      ? "bg-primary/10 text-primary border-primary/30"
                       : "bg-muted text-muted-foreground border-border hover:bg-muted"
                   )}
                 >
@@ -299,21 +299,21 @@ function ImpactBySopTab({ conflicts, loading }: { conflicts: RealConflict[]; loa
           {selectedSop && (
             <div>
               <h2 className="text-lg font-medium text-foreground mb-3">
-                Impact Network - <span className="text-[#0B6BCB]">{selectedSop.title}</span>
+                Impact Network - <span className="text-primary">{selectedSop.title}</span>
               </h2>
 
               <div className="grid md:grid-cols-2 gap-4 items-start">
                 <div>
                   <div className="flex items-center gap-2 mb-2">
-                    <GitBranch className="w-4 h-4 text-[#0B6BCB]" />
-                    <span className="text-sm font-medium text-[#0B6BCB]">Selected SOP</span>
+                    <GitBranch className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-medium text-primary">Selected SOP</span>
                   </div>
-                  <div className="bg-card border-2 border-[#0B6BCB]/50 rounded-xl p-4">
-                    <p className="text-xs font-semibold text-[#0B6BCB] mb-1">{selectedSop.sop_id}</p>
+                  <div className="bg-card border-2 border-primary/50 rounded-xl p-4">
+                    <p className="text-xs font-semibold text-primary mb-1">{selectedSop.sop_id}</p>
                     <p className="text-xs text-foreground font-medium leading-snug">{selectedSop.title}</p>
-                    <p className="text-[10px] text-subtle mt-1">{selectedSop.department}</p>
+                    <p className="text-10 text-subtle mt-1">{selectedSop.department}</p>
                     {affectedSopTitles.length > 0 && (
-                      <div className="mt-3 p-2 rounded-lg bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30">
+                      <div className={cn(toneChip.danger, "mt-3 p-2 rounded-lg")}>
                         <p className="text-xs text-[#B91C1C] dark:text-red-400 font-medium">
                           Conflicts with {affectedSopTitles.length} other SOP{affectedSopTitles.length > 1 ? "s" : ""} on {sharedEntities.length} shared entit{sharedEntities.length > 1 ? "ies" : "y"}
                         </p>
@@ -375,8 +375,8 @@ function ImpactBySopTab({ conflicts, loading }: { conflicts: RealConflict[]; loa
                         className={cn(
                           "text-xs px-2 py-0.5 rounded-full font-medium",
                           c.severity === "critical"
-                            ? "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30"
-                            : "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30"
+                            ? toneChip.danger
+                            : toneChip.warning
                         )}
                       >
                         {c.severity === "critical" ? "Critical" : "High"}
@@ -442,7 +442,7 @@ export default function ConflictResolutionPage() {
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-1">
           <div className="flex items-center gap-3">
-            <GitCompare className="w-7 h-7 text-[#0B6BCB]" />
+            <GitCompare className="w-7 h-7 text-primary" />
             <h1 className="text-2xl font-bold text-foreground">SOP Conflicts &amp; Impact</h1>
           </div>
         </motion.div>
@@ -466,7 +466,7 @@ export default function ConflictResolutionPage() {
               onClick={() => setTab(t.key)}
               className={cn(
                 "flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors",
-                tab === t.key ? "bg-card text-[#0B6BCB] shadow-sm" : "text-muted-foreground hover:text-foreground"
+                tab === t.key ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
               )}
             >
               <t.icon className="w-4 h-4" />

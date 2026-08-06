@@ -5,6 +5,7 @@ Uses the same isolated-DB fixture pattern as test_governance_api.py.
 """
 
 import pytest
+from fastapi import Request
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
@@ -12,6 +13,8 @@ import app.models.models  # noqa: F401 - register models on Base
 from app.main import app as fastapi_app
 from app.database.db import Base, get_db
 from app.api.routes_governance import classify_tier
+from app.models.models import StaffUser
+from app.services.auth import get_current_user
 
 
 @pytest.fixture
@@ -31,11 +34,36 @@ async def client(tmp_path):
                 await session.rollback()
                 raise
 
+    # This suite deliberately posts overrides/credits as several DIFFERENT
+    # identities per test and asserts on those identities appearing in the
+    # results (e.g. leaderboard ranking by user_id) - POST /api/overrides
+    # and POST /api/credits now hard-override user_id/user_name from the
+    # session (Phase T2, same spoofing-prevention rule as governance votes),
+    # so a single fixed-identity override would collapse every call to one
+    # user and break these assertions. Trust the identity fields the test
+    # itself put in the request body instead (same pattern as
+    # test_attestation_signature.py's fixture).
+    async def _override_current_user(request: Request) -> StaffUser:
+        try:
+            body = await request.json()
+        except Exception:
+            body = {}
+        return StaffUser(
+            id=1,
+            staff_id=body.get("user_id") or "test-user",
+            name=body.get("user_name") or "Test User",
+            role=body.get("user_role") or "clinical_staff",
+            department=body.get("department") or "",
+            password_hash="",
+        )
+
     fastapi_app.dependency_overrides[get_db] = _override_get_db
+    fastapi_app.dependency_overrides[get_current_user] = _override_current_user
     transport = ASGITransport(app=fastapi_app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
     fastapi_app.dependency_overrides.pop(get_db, None)
+    fastapi_app.dependency_overrides.pop(get_current_user, None)
     await engine.dispose()
 
 

@@ -12,6 +12,7 @@ import { SafetyNote } from "@/components/ui/safety-note"
 import { AccessRestricted } from "@/components/ui/access-restricted"
 import { useRole } from "@/lib/role-context"
 import { cn } from "@/lib/utils"
+import { toneChip } from "@/components/ui/tone"
 import { ErrorState } from "@/components/ui/error-state"
 import { EmptyState } from "@/components/ui/empty-state"
 import { Card } from "@/components/ui/card"
@@ -58,8 +59,8 @@ function conflictRisk(conflict: RealConflict): RiskLevel {
 }
 
 const RISK_STYLE: Record<RiskLevel, string> = {
-  High: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30",
-  Medium: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30",
+  High: toneChip.danger,
+  Medium: toneChip.warning,
   Low: "bg-muted text-muted-foreground border-border",
 }
 
@@ -89,16 +90,16 @@ function LiteratureCard({ sop, record, index }: { sop: RealSOP; record: PubMedRe
     >
       <div className="p-5 space-y-4">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wide bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30">
+          <span className="px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wide bg-primary/10 text-primary border border-primary/30">
             Live PubMed
           </span>
           {record.study_type && (
-            <span className="px-2 py-0.5 rounded text-xs font-semibold bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30">
+            <span className={cn(toneChip.success, "px-2 py-0.5 rounded text-xs font-semibold")}>
               {record.study_type}
             </span>
           )}
           {record.trust_tier === 1 && (
-            <span className="px-2 py-0.5 rounded text-xs font-semibold bg-[#0B6BCB]/10 dark:bg-[#00E5FF]/10 text-[#0B6BCB] dark:text-[#00E5FF] border border-[#0B6BCB]/30 dark:border-[#00E5FF]/30">
+            <span className="px-2 py-0.5 rounded text-xs font-semibold bg-primary/10 text-primary border border-primary/30">
               {record.journal_display_name ?? record.journal} · Tier 1
             </span>
           )}
@@ -120,7 +121,7 @@ function LiteratureCard({ sop, record, index }: { sop: RealSOP; record: PubMedRe
           <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
             <FileText className="w-3 h-3" /> Monitored for
           </p>
-          <p className="text-xs text-[#0B6BCB]">{sop.title} ({sop.sop_id})</p>
+          <p className="text-xs text-primary">{sop.title} ({sop.sop_id})</p>
         </div>
 
         <div className="flex items-center gap-2 pt-1">
@@ -159,8 +160,8 @@ function ConflictCard({ conflict, index }: { conflict: RealConflict; index: numb
           <span className={cn(
             "px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wide",
             conflict.severity === "critical"
-              ? "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30"
-              : "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30"
+              ? toneChip.danger
+              : toneChip.warning
           )}>
             {conflict.severity} impact
           </span>
@@ -169,7 +170,7 @@ function ConflictCard({ conflict, index }: { conflict: RealConflict; index: numb
           </span>
         </div>
         <h3 className="text-base font-bold text-foreground leading-snug flex items-center gap-2">
-          <GitCompare className="w-4 h-4 text-[#0B6BCB]" /> Internal SOP conflict detected
+          <GitCompare className="w-4 h-4 text-primary" /> Internal SOP conflict detected
         </h3>
         <p className="text-sm text-muted-foreground leading-relaxed">{conflict.message}</p>
         <div className="flex flex-wrap gap-2 text-xs">
@@ -207,7 +208,7 @@ function ReviewCard({ sop, daysUntilDue, index }: { sop: RealSOP; daysUntilDue: 
           </span>
         </div>
         <h3 className="text-base font-bold text-foreground leading-snug flex items-center gap-2">
-          <Clock className="w-4 h-4 text-[#0B6BCB]" /> {sop.title}
+          <Clock className="w-4 h-4 text-primary" /> {sop.title}
         </h3>
         <p className="text-sm text-muted-foreground leading-relaxed">
           {overdue
@@ -318,7 +319,7 @@ export default function EvidenceWatchPage() {
   ).length
 
   const stats = [
-    { label: "SOPs Monitored", value: sopsScanned, icon: Shield, color: "text-[#0B6BCB]" },
+    { label: "SOPs Monitored", value: sopsScanned, icon: Shield, color: "text-primary" },
     { label: "Reviews Due", value: reviewCount, icon: Clock, color: "text-[#B45309] dark:text-amber-400" },
     { label: "High-Risk Items", value: highRiskCount, icon: AlertTriangle, color: "text-[#B91C1C] dark:text-red-400" },
     { label: "External Updates (live)", value: literatureCount, icon: TrendingUp, color: "text-[#15803D] dark:text-green-400" },
@@ -356,8 +357,8 @@ export default function EvidenceWatchPage() {
           className="grid sm:grid-cols-3 gap-3"
         >
           <div className="rounded-xl bg-card border border-border p-4 flex items-start gap-3">
-            <div className="w-8 h-8 rounded-lg bg-[#0B6BCB]/10 flex items-center justify-center shrink-0">
-              <TrendingUp className="w-4 h-4 text-[#0B6BCB]" />
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+              <TrendingUp className="w-4 h-4 text-primary" />
             </div>
             <div>
               <p className="text-xs font-semibold text-foreground">External Literature</p>
@@ -386,7 +387,7 @@ export default function EvidenceWatchPage() {
 
         <motion.div
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-          className="flex items-start gap-3 px-4 py-3 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30"
+          className={cn(toneChip.warning, "flex items-start gap-3 px-4 py-3 rounded-xl")}
         >
           <AlertTriangle className="w-4 h-4 text-[#B45309] dark:text-amber-400 shrink-0 mt-0.5" />
           <div className="text-sm text-[#B45309] dark:text-amber-400">
@@ -427,7 +428,7 @@ export default function EvidenceWatchPage() {
                   onClick={() => setActiveFilter(tab.value)}
                   className={cn(
                     "px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors",
-                    activeFilter === tab.value ? "bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30" : "text-muted-foreground hover:bg-muted"
+                    activeFilter === tab.value ? "bg-primary/10 text-primary border border-primary/30" : "text-muted-foreground hover:bg-muted"
                   )}
                 >
                   {tab.label}
@@ -453,12 +454,12 @@ export default function EvidenceWatchPage() {
               <div className="space-y-4">
                 <Card className="space-y-3">
                   <div className="flex items-center gap-2">
-                    <Shield className="w-4 h-4 text-[#0B6BCB]" />
+                    <Shield className="w-4 h-4 text-primary" />
                     <h3 className="text-sm font-bold text-foreground">Monitored Sources</h3>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {MONITORED_SOURCES.map((name) => (
-                      <span key={name} className="px-2.5 py-1 rounded-full bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 text-xs text-[#0B6BCB]">
+                      <span key={name} className="px-2.5 py-1 rounded-full bg-primary/10 border border-primary/30 text-xs text-primary">
                         {name}
                       </span>
                     ))}

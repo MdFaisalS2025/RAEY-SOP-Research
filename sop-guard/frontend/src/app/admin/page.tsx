@@ -12,6 +12,7 @@ import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { SafetyNote } from "@/components/ui/safety-note"
 import { AccessRestricted } from "@/components/ui/access-restricted"
 import { cn } from "@/lib/utils"
+import { toneChip } from "@/components/ui/tone"
 import { DEMO_USERS } from "@/lib/mock-data"
 import { useRole } from "@/lib/role-context"
 import { ErrorState } from "@/components/ui/error-state"
@@ -139,9 +140,9 @@ export default function AdminPage() {
   }
 
   const statusMeta: Record<EvidenceSource["status"], { label: string; className: string }> = {
-    active: { label: "Live source", className: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30" },
-    mock: { label: "Mock", className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30" },
-    requires_api_key: { label: "Requires API key", className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30" },
+    active: { label: "Live source", className: toneChip.success },
+    mock: { label: "Mock", className: toneChip.warning },
+    requires_api_key: { label: "Requires API key", className: toneChip.warning },
     not_configured: { label: "Not configured", className: "bg-card text-muted-foreground border-input" },
   }
 
@@ -155,8 +156,8 @@ export default function AdminPage() {
 
         {/* Header */}
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-[#0B6BCB]/10 flex items-center justify-center">
-            <Settings className="w-6 h-6 text-[#0B6BCB]" />
+          <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+            <Settings className="w-6 h-6 text-primary" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-foreground">System Administration</h1>
@@ -223,7 +224,7 @@ export default function AdminPage() {
                       <span className={cn(
                         "px-2 py-0.5 rounded-full text-xs font-medium",
                         source.enabled
-                          ? "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30"
+                          ? toneChip.success
                           : "bg-card text-muted-foreground border border-input"
                       )}>
                         {source.enabled ? "Enabled" : "Disabled"}
@@ -236,7 +237,7 @@ export default function AdminPage() {
                         className="flex items-center gap-1.5 text-xs transition-colors"
                       >
                         {source.enabled
-                          ? <ToggleRight className="w-6 h-6 text-[#0B6BCB]" />
+                          ? <ToggleRight className="w-6 h-6 text-primary" />
                           : <ToggleLeft className="w-6 h-6 text-subtle" />}
                       </button>
                     </td>
@@ -269,7 +270,7 @@ export default function AdminPage() {
                     className={cn(
                       "px-4 py-1.5 rounded-lg text-xs font-semibold border transition-colors cursor-not-allowed opacity-50",
                       ssoProtocol === p
-                        ? "bg-[#0B6BCB]/10 text-[#0B6BCB] border-[#0B6BCB]/30"
+                        ? "bg-primary/10 text-primary border-primary/30"
                         : "border-border text-muted-foreground bg-[#F8FAFC]"
                     )}
                     onClick={() => setSSOProtocol(p)}
@@ -569,7 +570,7 @@ export default function AdminPage() {
                   >
                     <td className="p-4">
                       <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-[#0B6BCB]/10 flex items-center justify-center text-xs font-bold text-[#0B6BCB]">
+                        <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
                           {user.initials}
                         </div>
                         <span className="font-medium text-sm">{user.name}</span>
@@ -583,7 +584,7 @@ export default function AdminPage() {
                     <td className="p-4 text-muted-foreground text-xs">{user.department}</td>
                     <td className="p-4 text-muted-foreground text-xs">{user.title}</td>
                     <td className="p-4">
-                      <span className="px-2 py-0.5 rounded-full text-xs bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30">
+                      <span className={cn(toneChip.success, "px-2 py-0.5 rounded-full text-xs")}>
                         Active
                       </span>
                     </td>
@@ -614,10 +615,10 @@ export default function AdminPage() {
                   "w-9 h-9 rounded-xl flex items-center justify-center",
                   item.status === "online" ? "bg-[#DCFCE7] dark:bg-green-500/10" :
                     item.status === "demo" ? "bg-[#FEF3C7] dark:bg-amber-500/10" :
-                    item.status === "checking" ? "bg-[#0B6BCB]/10" : "bg-[#FEE2E2] dark:bg-red-500/10"
+                    item.status === "checking" ? "bg-primary/10" : "bg-[#FEE2E2] dark:bg-red-500/10"
                 )}>
                   {item.status === "checking"
-                    ? <Loader2 className="w-5 h-5 text-[#0B6BCB] animate-spin" />
+                    ? <Loader2 className="w-5 h-5 text-primary animate-spin" />
                     : <item.icon className={cn(
                         "w-5 h-5",
                         item.status === "online" ? "text-[#15803D] dark:text-green-400" :
@@ -630,7 +631,7 @@ export default function AdminPage() {
                       "w-2 h-2 rounded-full",
                       item.status === "online" ? "bg-[#15803D]" :
                         item.status === "demo" ? "bg-[#B45309]" :
-                        item.status === "checking" ? "bg-[#0B6BCB]" : "bg-[#B91C1C]"
+                        item.status === "checking" ? "bg-primary" : "bg-[#B91C1C]"
                     )} />
                     <p className="text-sm font-medium">{item.name}</p>
                   </div>
@@ -640,7 +641,7 @@ export default function AdminPage() {
                   "px-2 py-0.5 rounded-full text-xs font-medium shrink-0",
                   item.status === "online" ? "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400" :
                     item.status === "demo" ? "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400" :
-                    item.status === "checking" ? "bg-[#0B6BCB]/10 text-[#0B6BCB]" : "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400"
+                    item.status === "checking" ? "bg-primary/10 text-primary" : "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400"
                 )}>
                   {item.status === "online" ? "Online" : item.status === "demo" ? "Demo Mode" : item.status === "checking" ? "Checking…" : "Offline"}
                 </span>

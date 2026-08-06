@@ -32,7 +32,7 @@ function Toggle({ on, onClick, disabled = false }: { on: boolean; onClick: () =>
       className={cn(
         "w-11 h-6 rounded-full transition-colors relative shrink-0",
         disabled && "opacity-50 cursor-not-allowed",
-        on ? "bg-[#0B6BCB] dark:bg-[#00E5FF]" : "bg-gray-300 dark:bg-[#11191b] border border-gray-400 dark:border-white/10"
+        on ? "bg-primary" : "bg-gray-300 dark:bg-[#11191b] border border-gray-400 dark:border-white/10"
       )}
     >
       <div className={cn("w-5 h-5 rounded-full bg-card absolute top-0.5 transition-all", on ? "left-[22px]" : "left-0.5")} />
@@ -59,7 +59,7 @@ function ComingSoonRow({ label, description }: { label: string; description: str
         <p className="text-sm font-medium text-foreground">{label}</p>
         <p className="text-xs text-muted-foreground">{description}</p>
       </div>
-      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-muted text-subtle border border-border shrink-0">
+      <span className="px-2 py-0.5 rounded-full text-10 font-semibold bg-muted text-subtle border border-border shrink-0">
         Coming soon
       </span>
     </div>
@@ -95,7 +95,7 @@ function ProviderStatusList() {
         const meta = PROVIDER_STATUS_META[p.status] ?? PROVIDER_STATUS_META.not_configured
         return (
           <span key={p.key}
-            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border ${meta.className}`}
+            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-10 font-medium border ${meta.className}`}
             title={p.notes || `${p.name}: ${meta.label}`}>
             <meta.icon className="w-2.5 h-2.5" />
             {p.name} · {meta.label}
@@ -283,7 +283,7 @@ function SettingsPageInner() {
               className={cn(
                 "inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors",
                 activeTab === tab.id
-                  ? "bg-[#0B6BCB]/10 dark:bg-[#00E5FF]/10 text-[#0B6BCB] dark:text-[#00E5FF] border border-[#0B6BCB]/30 dark:border-[#00E5FF]/30"
+                  ? "bg-primary/10 text-primary border border-primary/30"
                   : "text-muted-foreground hover:bg-muted border border-transparent"
               )}
             >
@@ -325,13 +325,13 @@ function SettingsPageInner() {
                         .then((data) => { setHealthData(data); setBackendStatus("online") })
                         .catch(() => setBackendStatus("offline"))
                     }}
-                    className="ml-auto text-xs text-[#0B6BCB] dark:text-[#00E5FF] hover:underline"
+                    className="ml-auto text-xs text-primary hover:underline"
                   >
                     Refresh
                   </button>
                 </div>
                 {healthData && backendStatus === "online" && (
-                  <div className="grid grid-cols-2 gap-3 pt-2 border-t border-border dark:border-white/[0.06]">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-border dark:border-white/[0.06]">
                     <div>
                       <p className="text-xs text-muted-foreground">LLM Provider</p>
                       <p className="text-sm text-foreground font-medium">{healthData.llm_provider || healthData.provider || "Unknown"}</p>
@@ -357,7 +357,7 @@ function SettingsPageInner() {
                   hospital controls. Patient and query data is never sent to an external API.
                   This is fixed by server configuration, not user-editable here.
                 </p>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <StatusItem label="Provider" value={llmStatus?.provider || "ollama"} />
                   <StatusItem label="Model" value={llmStatus?.model || "llama3.2"} />
                   <StatusItem label="Answer method" value={llmStatus?.available ? "Model-generated" : "Extractive - assembled from cited SOP text"} />
@@ -386,7 +386,7 @@ function SettingsPageInner() {
                     <p className="text-xs text-muted-foreground">Switch from the icon in the top navigation bar</p>
                   </div>
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-muted/50 dark:bg-white/[0.04] border border-border dark:border-white/[0.06] text-foreground">
-                    <Palette className="w-3 h-3 text-[#0B6BCB] dark:text-[#00E5FF]" />
+                    <Palette className="w-3 h-3 text-primary" />
                     {isDark ? "Dark" : "Light"}
                   </span>
                 </div>
@@ -399,10 +399,10 @@ function SettingsPageInner() {
                     <p className="text-xs text-muted-foreground">Adjust spacing on tables and cards</p>
                   </div>
                   <div className="flex rounded-lg border border-border dark:border-white/[0.06] overflow-hidden">
-                    <button onClick={() => setDensity("comfortable")} className={cn("px-3 py-1.5 text-xs font-medium transition-colors", density === "comfortable" ? "bg-[#0B6BCB] dark:bg-[#00E5FF] text-white dark:text-[#0A0C10]" : "bg-transparent text-muted-foreground hover:bg-muted/50")}>
+                    <button onClick={() => setDensity("comfortable")} className={cn("px-3 py-1.5 text-xs font-medium transition-colors", density === "comfortable" ? "bg-primary text-primary-foreground" : "bg-transparent text-muted-foreground hover:bg-muted/50")}>
                       Comfortable
                     </button>
-                    <button onClick={() => setDensity("compact")} className={cn("px-3 py-1.5 text-xs font-medium transition-colors", density === "compact" ? "bg-[#0B6BCB] dark:bg-[#00E5FF] text-white dark:text-[#0A0C10]" : "bg-transparent text-muted-foreground hover:bg-muted/50")}>
+                    <button onClick={() => setDensity("compact")} className={cn("px-3 py-1.5 text-xs font-medium transition-colors", density === "compact" ? "bg-primary text-primary-foreground" : "bg-transparent text-muted-foreground hover:bg-muted/50")}>
                       Compact
                     </button>
                   </div>
@@ -411,7 +411,7 @@ function SettingsPageInner() {
 
               <button
                 onClick={handleSave}
-                className="press w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl bg-[#0B6BCB] dark:bg-[#00E5FF] hover:bg-[#0959AC] dark:hover:bg-[#00c4d9] text-white dark:text-[#0A0C10] font-medium transition-colors"
+                className="press w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl bg-primary hover:bg-primary-hover text-primary-foreground font-medium transition-colors"
               >
                 <Save className="w-4 h-4" />
                 {saved ? "Saved!" : "Save Preferences"}
@@ -428,7 +428,7 @@ function SettingsPageInner() {
                   literature comparison - see the routing architecture on the query page&apos;s trust panel.
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  <span className="px-2.5 py-1 rounded-full bg-[#0B6BCB]/10 dark:bg-[#00E5FF]/10 text-[#0B6BCB] dark:text-[#00E5FF] border border-[#0B6BCB]/30 dark:border-[#00E5FF]/30 text-xs font-semibold">1. SOP Library</span>
+                  <span className="px-2.5 py-1 rounded-full bg-primary/10 text-primary border border-primary/30 text-xs font-semibold">1. SOP Library</span>
                   <span className="px-2.5 py-1 rounded-full bg-muted text-muted-foreground border border-border text-xs font-semibold">2. External Evidence (below)</span>
                 </div>
               </SettingsCard>
@@ -485,7 +485,7 @@ function SettingsPageInner() {
                 the model, with one-click redaction. Detection runs locally on this
                 deployment — no query text is sent to a third party to perform the scan.
               </p>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <StatusItem label="PHI guard" value={privacy?.phi_guard ?? "rule-based"} />
                 <StatusItem label="Status" value={privacy?.active === false ? "Inactive" : "Active"} />
               </div>
@@ -530,7 +530,7 @@ function SettingsPageInner() {
                     value={confidenceThreshold}
                     disabled={settingsLoading}
                     onChange={(e) => setConfidenceThreshold(parseFloat(e.target.value))}
-                    className="flex-1 accent-[#0B6BCB] dark:accent-[#00E5FF]"
+                    className="flex-1 accent-primary"
                   />
                   <span className="text-sm font-mono font-semibold text-foreground w-12 text-right">{confidenceThreshold.toFixed(2)}</span>
                 </div>
@@ -551,7 +551,7 @@ function SettingsPageInner() {
               <button
                 onClick={savePipelineSettings}
                 disabled={settingsLoading}
-                className="press w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl bg-[#0B6BCB] dark:bg-[#00E5FF] hover:bg-[#0959AC] dark:hover:bg-[#00c4d9] disabled:opacity-60 text-white dark:text-[#0A0C10] font-medium transition-colors"
+                className="press w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl bg-primary hover:bg-primary-hover disabled:opacity-60 text-primary-foreground font-medium transition-colors"
               >
                 <Save className="w-4 h-4" />
                 {settingsSaved ? "Saved!" : "Save AI Controls"}
@@ -595,7 +595,7 @@ function SettingsPageInner() {
               <button
                 onClick={savePipelineSettings}
                 disabled={settingsLoading}
-                className="press w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl bg-[#0B6BCB] dark:bg-[#00E5FF] hover:bg-[#0959AC] dark:hover:bg-[#00c4d9] disabled:opacity-60 text-white dark:text-[#0A0C10] font-medium transition-colors"
+                className="press w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl bg-primary hover:bg-primary-hover disabled:opacity-60 text-primary-foreground font-medium transition-colors"
               >
                 <Save className="w-4 h-4" />
                 {settingsSaved ? "Saved!" : "Save Evidence Sources"}

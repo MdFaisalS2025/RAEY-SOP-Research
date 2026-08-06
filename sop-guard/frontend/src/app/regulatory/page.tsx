@@ -13,6 +13,7 @@ import { SafetyNote } from "@/components/ui/safety-note"
 import { IllustrativeNote } from "@/components/ui/illustrative-note"
 import { ErrorState } from "@/components/ui/error-state"
 import { cn } from "@/lib/utils"
+import { toneChip } from "@/components/ui/tone"
 import { downloadCSV } from "@/lib/csv-export"
 import { Card } from "@/components/ui/card"
 
@@ -110,14 +111,14 @@ type Framework = "All" | "TJC" | "CMS" | "OSHA"
 const FRAMEWORK_TABS: Framework[] = ["All", "TJC", "CMS", "OSHA"]
 
 const FRAMEWORK_COLORS: Record<string, string> = {
-  TJC: "bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30",
+  TJC: "bg-primary/10 text-primary border border-primary/30",
   CMS: "bg-[#0D9488]/10 text-[#0D9488] border border-[#0D9488]/30",
-  OSHA: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30",
+  OSHA: toneChip.warning,
 }
 
 const STATUS_META: Record<string, { label: string; cls: string; icon: typeof CheckCircle }> = {
-  compliant: { label: "Compliant", cls: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30", icon: CheckCircle },
-  needs_review: { label: "Needs Review", cls: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30", icon: Clock },
+  compliant: { label: "Compliant", cls: toneChip.success, icon: CheckCircle },
+  needs_review: { label: "Needs Review", cls: toneChip.warning, icon: Clock },
   not_assessed: { label: "Not Assessed", cls: "bg-card text-muted-foreground border border-input", icon: Clock },
 }
 
@@ -136,9 +137,9 @@ function progressBarColor(pct: number) {
 }
 
 const READY_STATUS_META: Record<string, { label: string; className: string }> = {
-  ready: { label: "Ready", className: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30" },
-  needs_attention: { label: "Needs Attention", className: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30" },
-  at_risk: { label: "At Risk", className: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30" },
+  ready: { label: "Ready", className: toneChip.success },
+  needs_attention: { label: "Needs Attention", className: toneChip.warning },
+  at_risk: { label: "At Risk", className: toneChip.danger },
 }
 
 // ─── Standards Mapping tab ────────────────────────────────────────────────────
@@ -198,8 +199,8 @@ function StandardsMappingTab({ sops, loading, loadError, onRetry }: { sops: Real
           className={cn(
             "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all shrink-0",
             exportState === "success"
-              ? "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30"
-              : "bg-[#0B6BCB] hover:bg-[#0959AC] text-white"
+              ? toneChip.success
+              : "bg-primary hover:bg-primary-hover text-primary-foreground"
           )}
         >
           {exportState === "loading" && <Loader2 className="w-4 h-4 animate-spin" />}
@@ -245,7 +246,7 @@ function StandardsMappingTab({ sops, loading, loadError, onRetry }: { sops: Real
       </div>
 
       {needsReview.length > 0 && (
-        <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 text-sm">
+        <div className={cn(toneChip.warning, "flex items-start gap-2 px-4 py-3 rounded-xl text-sm")}>
           <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
           <span>
             <strong>{needsReview.length} standard{needsReview.length > 1 ? "s" : ""} require review:</strong>{" "}
@@ -262,7 +263,7 @@ function StandardsMappingTab({ sops, loading, loadError, onRetry }: { sops: Real
             className={cn(
               "px-4 py-1.5 rounded-xl text-sm font-medium transition-colors",
               activeTab === tab
-                ? "bg-[#0B6BCB] text-white"
+                ? "bg-primary text-primary-foreground"
                 : "bg-muted text-muted-foreground hover:bg-muted hover:text-foreground"
             )}
           >
@@ -307,7 +308,7 @@ function StandardsMappingTab({ sops, loading, loadError, onRetry }: { sops: Real
                     <code className="text-xs font-mono text-foreground bg-muted px-2 py-0.5 rounded">
                       {std.standard_code}
                     </code>
-                    <span className={cn("flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full font-semibold", stMeta.cls)}>
+                    <span className={cn("flex items-center gap-1 text-11 px-2 py-0.5 rounded-full font-semibold", stMeta.cls)}>
                       <StatusIcon className="w-3 h-3" />
                       {stMeta.label}
                     </span>
@@ -330,7 +331,7 @@ function StandardsMappingTab({ sops, loading, loadError, onRetry }: { sops: Real
                             className={cn(
                               "text-xs px-2.5 py-1 rounded-lg border transition-colors cursor-default",
                               std.overdue.some((o) => o.sop_id === sop.sop_id)
-                                ? "bg-[#FEE2E2] dark:bg-red-500/10 border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400"
+                                ? toneChip.danger
                                 : "bg-muted border-border text-foreground/80"
                             )}
                           >
@@ -366,7 +367,7 @@ function StandardsMappingTab({ sops, loading, loadError, onRetry }: { sops: Real
             { fw: "OSHA", name: "Occupational Safety and Health", desc: "Worker safety standards" },
           ].map(({ fw, name, desc }) => (
             <div key={fw} className="space-y-1">
-              <span className={cn("inline-block text-[11px] px-2 py-0.5 rounded-full font-semibold", FRAMEWORK_COLORS[fw])}>
+              <span className={cn("inline-block text-11 px-2 py-0.5 rounded-full font-semibold", FRAMEWORK_COLORS[fw])}>
                 {fw}
               </span>
               <p className="font-medium text-foreground/80">{name}</p>
@@ -429,7 +430,7 @@ function SurveyReadinessTab({ sops, loading, loadError, onRetry }: { sops: RealS
 
   const stats = [
     { label: "Overall Readiness", value: `${overallReadiness}%`, color: "text-[#15803D] dark:text-green-400", bg: "bg-[#DCFCE7] dark:bg-green-500/10" },
-    { label: "Chapters Ready", value: `${chaptersReady}/${enrichedChapters.length}`, color: "text-[#0B6BCB]", bg: "bg-[#0B6BCB]/10" },
+    { label: "Chapters Ready", value: `${chaptersReady}/${enrichedChapters.length}`, color: "text-primary", bg: "bg-primary/10" },
     { label: "Open Gaps", value: String(openGaps), color: "text-[#B45309] dark:text-amber-400", bg: "bg-[#FEF3C7] dark:bg-amber-500/10" },
   ]
 
@@ -446,13 +447,13 @@ function SurveyReadinessTab({ sops, loading, loadError, onRetry }: { sops: RealS
         <motion.div
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="fixed top-4 right-4 z-50 bg-[#0B6BCB] text-white text-sm px-4 py-2.5 rounded-xl shadow-lg"
+          className="fixed top-4 right-4 z-50 bg-primary text-primary-foreground text-sm px-4 py-2.5 rounded-xl shadow-lg"
         >
           Tracer simulation coming in v2
         </motion.div>
       )}
 
-      <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 text-sm">
+      <div className={cn(toneChip.warning, "flex items-start gap-2 px-4 py-3 rounded-xl text-sm")}>
         <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
         <span>
           Mock survey tool for internal preparation only. Not affiliated with or endorsed by The Joint Commission.
@@ -490,7 +491,7 @@ function SurveyReadinessTab({ sops, loading, loadError, onRetry }: { sops: RealS
             className={cn(
               "px-4 py-1.5 rounded-lg text-sm font-medium transition-colors",
               activeTab === t.key
-                ? "bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30"
+                ? "bg-primary/10 text-primary border border-primary/30"
                 : "bg-card text-muted-foreground border border-border hover:bg-muted"
             )}
           >
@@ -547,7 +548,7 @@ function SurveyReadinessTab({ sops, loading, loadError, onRetry }: { sops: RealS
                     <span
                       key={sop.sop_id}
                       title={sop.title}
-                      className="text-xs text-[#0B6BCB] border border-[#0B6BCB]/30 bg-[#0B6BCB]/10 rounded px-2 py-0.5 cursor-default"
+                      className="text-xs text-primary border border-primary/30 bg-primary/10 rounded px-2 py-0.5 cursor-default"
                     >
                       {sop.sop_id}
                     </span>
@@ -577,7 +578,7 @@ function SurveyReadinessTab({ sops, loading, loadError, onRetry }: { sops: RealS
               </div>
               <Link
                 href="/library"
-                className="text-xs text-[#0B6BCB] hover:text-[#0959AC] flex items-center gap-1 transition-colors"
+                className="text-xs text-primary hover:text-primary-hover flex items-center gap-1 transition-colors"
               >
                 <ExternalLink className="w-3 h-3" /> View in Library
               </Link>
@@ -607,12 +608,12 @@ function SurveyReadinessTab({ sops, loading, loadError, onRetry }: { sops: RealS
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed">{tracer.description}</p>
                 <div className="flex items-center justify-between pt-1">
-                  <span className="text-xs text-[#0B6BCB] border border-[#0B6BCB]/30 bg-[#0B6BCB]/10 rounded px-2 py-0.5">
+                  <span className="text-xs text-primary border border-primary/30 bg-primary/10 rounded px-2 py-0.5">
                     {relevantSop ? relevantSop.sop_id : "No SOP mapped"}
                   </span>
                   <button
                     onClick={() => handleSimulate(tracer.type)}
-                    className="text-xs px-3 py-1.5 rounded-lg bg-[#0B6BCB]/10 text-[#0B6BCB] hover:bg-[#0B6BCB]/20 border border-[#0B6BCB]/30 transition-colors font-medium"
+                    className="text-xs px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 border border-primary/30 transition-colors font-medium"
                   >
                     Simulate
                   </button>
@@ -631,8 +632,8 @@ function SurveyReadinessTab({ sops, loading, loadError, onRetry }: { sops: RealS
         className={cn(
           "w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all",
           exportState === "success"
-            ? "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30"
-            : "bg-[#0B6BCB] hover:bg-[#0959AC] text-white"
+            ? toneChip.success
+            : "bg-primary hover:bg-primary-hover text-primary-foreground"
         )}
       >
         {exportState === "loading" && <Loader2 className="w-4 h-4 animate-spin" />}
@@ -683,8 +684,8 @@ export default function RegulatoryPage() {
 
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-[#0B6BCB]/10 flex items-center justify-center shrink-0">
-              <Shield className="w-6 h-6 text-[#0B6BCB]" />
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+              <Shield className="w-6 h-6 text-primary" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-foreground">Regulatory &amp; Accreditation</h1>
@@ -705,7 +706,7 @@ export default function RegulatoryPage() {
               onClick={() => setTab(t.key)}
               className={cn(
                 "flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors",
-                tab === t.key ? "bg-card text-[#0B6BCB] shadow-sm" : "text-muted-foreground hover:text-foreground"
+                tab === t.key ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
               )}
             >
               <t.icon className="w-4 h-4" />

@@ -58,8 +58,8 @@ export function ProfileMenu() {
     }
   }, [profileOpen])
 
-  const handleSignOut = () => {
-    auth.logout()
+  const handleSignOut = async () => {
+    await auth.logout()
     setProfileOpen(false)
     router.push("/login?signedOut=1")
   }
@@ -75,18 +75,18 @@ export function ProfileMenu() {
         onClick={() => setProfileOpen((v) => !v)}
         aria-label="Open profile menu"
         aria-expanded={profileOpen}
-        className="flex items-center gap-1.5 p-1 rounded-lg hover:bg-muted dark:hover:bg-white/[0.05] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0B6BCB]/50"
+        className="flex items-center gap-1.5 p-1 rounded-lg hover:bg-muted dark:hover:bg-white/[0.05] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
       >
         <div
           className={cn(
-            "flex items-center justify-center w-8 h-8 rounded-lg text-[11px] font-bold shrink-0 select-none",
+            "flex items-center justify-center w-8 h-8 rounded-lg text-11 font-bold shrink-0 select-none",
             colors.bg,
             colors.text
           )}
         >
           {auth.user.initials}
         </div>
-        <span className="hidden xl:block text-[12px] text-[#64748B] dark:text-slate-400 font-medium max-w-[80px] truncate">
+        <span className="hidden xl:block text-12 text-[#64748B] dark:text-slate-400 font-medium max-w-[80px] truncate">
           {auth.user.name.split(" ").slice(-1)[0]}
         </span>
         <ChevronDown
@@ -105,7 +105,7 @@ export function ProfileMenu() {
             <div className="flex items-center gap-2.5 mb-1.5">
               <div
                 className={cn(
-                  "flex items-center justify-center w-9 h-9 rounded-lg text-[12px] font-bold shrink-0",
+                  "flex items-center justify-center w-9 h-9 rounded-lg text-12 font-bold shrink-0",
                   colors.bg,
                   colors.text
                 )}
@@ -113,10 +113,10 @@ export function ProfileMenu() {
                 {auth.user.initials}
               </div>
               <div className="min-w-0">
-                <p className="text-[12px] font-semibold text-[#1A2332] dark:text-white truncate">{auth.user.name}</p>
+                <p className="text-12 font-semibold text-[#1A2332] dark:text-white truncate">{auth.user.name}</p>
                 <span
                   className={cn(
-                    "inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded-md mt-0.5",
+                    "inline-block text-10 font-semibold px-1.5 py-0.5 rounded-md mt-0.5",
                     colors.bg,
                     colors.text
                   )}
@@ -125,7 +125,7 @@ export function ProfileMenu() {
                 </span>
               </div>
             </div>
-            <p className="text-[10px] text-[#64748B] dark:text-slate-500">
+            <p className="text-10 text-[#64748B] dark:text-slate-500">
               Access Level {level} of 4
               {level === 4 ? " - Full platform control" : level === 1 ? " - Basic access" : ""}
             </p>
@@ -134,7 +134,7 @@ export function ProfileMenu() {
           <div className="py-1">
             <button
               onClick={handleSignOut}
-              className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-[12px] text-[#B91C1C] dark:text-red-400 dark:text-red-400 hover:bg-[#FEE2E2] dark:bg-red-500/10 dark:hover:bg-red-500/10 hover:text-[#991B1B] dark:hover:text-red-300 transition-colors"
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-12 text-danger-soft-fg hover:bg-danger-soft transition-colors"
             >
               <LogOut className="w-3.5 h-3.5" />
               Sign Out

@@ -21,7 +21,7 @@ export function FocusBar({ actions }: { actions?: React.ReactNode }) {
     <header className="sticky top-0 z-[55] bg-background isolate">
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-[#0B6BCB] focus:text-white focus:text-sm focus:font-medium"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-primary focus:text-primary-foreground focus:text-sm focus:font-medium"
       >
         Skip to main content
       </a>
@@ -30,8 +30,8 @@ export function FocusBar({ actions }: { actions?: React.ReactNode }) {
         <div className="flex items-center gap-2 px-4 lg:px-6 h-[52px]">
           {/* Brand mark - the escape hatch back to the full app. */}
           <Link href="/dashboard" className="flex items-center gap-2.5 shrink-0 group">
-            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#0B6BCB]/10 dark:bg-[#00E5FF]/15 dark:glow-cyan transition-all duration-200 group-hover:scale-105">
-              <Shield className="w-[18px] h-[18px] text-[#0B6BCB] dark:text-[#00E5FF]" />
+            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 dark:glow-accent transition-all duration-200 group-hover:scale-105">
+              <Shield className="w-[18px] h-[18px] text-primary" />
             </div>
             <span className="hidden sm:inline text-[15px] font-bold text-[#1A2332] dark:text-white tracking-tight">Meridian</span>
           </Link>

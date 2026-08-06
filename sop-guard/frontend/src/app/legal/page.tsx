@@ -87,14 +87,14 @@ export default function LegalPage() {
         <SafetyNote />
 
         {/* Important disclaimer */}
-        <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400 text-sm">
+        <div className={cn(toneChip.danger, "flex items-start gap-3 px-4 py-3 rounded-xl text-sm")}>
           <ShieldAlert className="w-5 h-5 shrink-0 mt-0.5" />
           <span>
             <strong>Important:</strong> This module is for internal governance tracking only. All legal determinations require review by qualified legal counsel.
           </span>
         </div>
 
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 text-sm">
+        <div className={cn(toneChip.warning, "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm")}>
           <AlertTriangle className="w-4 h-4 shrink-0" />
           <span>Showing illustrative legal-review data; not wired to a live case-tracking system.</span>
         </div>
@@ -122,7 +122,7 @@ export default function LegalPage() {
 
         {/* Permission check banner */}
         {!canEdit && (
-          <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 text-sm">
+          <div className={cn(toneChip.warning, "flex items-center gap-2 px-4 py-3 rounded-xl text-sm")}>
             <Eye className="w-4 h-4 shrink-0" />
             <span><strong>Limited Access:</strong> You are viewing in read-only mode. Legal risk management requires Legal/Risk or Compliance Officer role.</span>
           </div>
@@ -161,7 +161,7 @@ export default function LegalPage() {
 
                 {/* SOP title + department */}
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 text-[#0B6BCB] text-xs">
+                  <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/10 border border-primary/30 text-primary text-xs">
                     <FileText className="w-3 h-3" /> {item.sop_title}
                   </span>
                   <span className="px-2.5 py-1 rounded-lg bg-muted border border-border text-muted-foreground text-xs">
@@ -195,7 +195,7 @@ export default function LegalPage() {
                   {hasMore && (
                     <button
                       onClick={() => setExpandedNotes((prev) => ({ ...prev, [item.id]: !prev[item.id] }))}
-                      className="text-xs text-[#0B6BCB] hover:text-[#0B6BCB] transition-colors mt-1 flex items-center gap-1"
+                      className="text-xs text-primary hover:text-primary transition-colors mt-1 flex items-center gap-1"
                     >
                       {notesExpanded ? <><ChevronUp className="w-3 h-3" /> Show less</> : <><ChevronDown className="w-3 h-3" /> Show more</>}
                     </button>
@@ -213,10 +213,10 @@ export default function LegalPage() {
                 {/* Action buttons for legal_risk role */}
                 {canEdit && (
                   <div className="flex items-center gap-2 pt-1">
-                    <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 hover:bg-[#BBF7D0] border border-[#BBF7D0] dark:border-green-500/30 transition-colors font-medium">
+                    <button className={cn(toneChip.success, "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs hover:bg-[#BBF7D0] transition-colors font-medium")}>
                       <CheckCircle className="w-3.5 h-3.5" /> Mark Resolved
                     </button>
-                    <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 hover:bg-[#FECACA] border border-[#FECACA] dark:border-red-500/30 transition-colors font-medium">
+                    <button className={cn(toneChip.danger, "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs hover:bg-[#FECACA] transition-colors font-medium")}>
                       <ShieldAlert className="w-3.5 h-3.5" /> Escalate
                     </button>
                     <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-muted text-muted-foreground hover:bg-[#E2E8F0] border border-border transition-colors font-medium">
@@ -243,14 +243,14 @@ export default function LegalPage() {
               >
                 <p className="text-sm font-semibold text-foreground">{proposal.title}</p>
                 <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded-full text-xs bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30 capitalize">
+                  <span className={cn(toneChip.warning, "px-2 py-0.5 rounded-full text-xs capitalize")}>
                     {proposal.status.replace(/_/g, " ")}
                   </span>
                   <span className="text-xs text-muted-foreground">{proposal.department}</span>
                 </div>
                 <p className="text-xs text-muted-foreground line-clamp-2">{proposal.reason}</p>
                 {canEdit && (
-                  <button className="text-xs px-3 py-1.5 rounded-lg bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 hover:bg-[#FECACA] border border-[#FECACA] dark:border-red-500/30 transition-colors font-medium">
+                  <button className={cn(toneChip.danger, "text-xs px-3 py-1.5 rounded-lg hover:bg-[#FECACA] transition-colors font-medium")}>
                     Begin Review
                   </button>
                 )}

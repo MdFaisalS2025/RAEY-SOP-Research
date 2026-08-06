@@ -11,6 +11,8 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 import app.models.models  # noqa: F401 - register models on Base
 from app.main import app as fastapi_app
 from app.database.db import Base, get_db
+from app.models.models import StaffUser
+from app.services.auth import get_current_user
 
 
 @pytest.fixture
@@ -30,11 +32,27 @@ async def client(tmp_path):
                 await session.rollback()
                 raise
 
+    # This suite predates Phase S (real auth) and exercises governance/SOP
+    # endpoints that now require a verified session. Override the identity
+    # dependency directly (same pattern as _override_get_db above) with a
+    # fixed system_admin - the highest-permission role - rather than seed a
+    # real StaffUser + drive a login request per test, since these tests
+    # are about governance/proposal logic, not auth itself (see
+    # test_auth.py for that).
+    async def _override_current_user() -> StaffUser:
+        return StaffUser(
+            id=1, staff_id="test-admin", name="Test Admin", role="system_admin",
+            department="Test", title="Test",
+            password_hash="",
+        )
+
     fastapi_app.dependency_overrides[get_db] = _override_get_db
+    fastapi_app.dependency_overrides[get_current_user] = _override_current_user
     transport = ASGITransport(app=fastapi_app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
     fastapi_app.dependency_overrides.pop(get_db, None)
+    fastapi_app.dependency_overrides.pop(get_current_user, None)
     await engine.dispose()
 
 
@@ -122,7 +140,6 @@ async def test_proposal_diff_falls_back_to_current_sop_text(client):
     created = await client.post(
         "/api/sops",
         json={"sop_id": "SOP-TEST-001", "title": "Test Protocol", "raw_text": "Original SOP text here."},
-        headers={"X-User-Role": "admin"},
     )
     assert created.status_code == 200, created.text
 

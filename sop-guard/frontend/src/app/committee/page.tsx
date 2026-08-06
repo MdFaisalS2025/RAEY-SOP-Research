@@ -11,6 +11,7 @@ import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { SafetyNote } from "@/components/ui/safety-note"
 import { cn } from "@/lib/utils"
+import { toneChip } from "@/components/ui/tone"
 import { useRole } from "@/lib/role-context"
 import { COMMITTEE_ROSTER } from "@/lib/mock-data"
 import { AccessRestricted } from "@/components/ui/access-restricted"
@@ -34,8 +35,8 @@ interface GapCluster {
 }
 
 const RISK_STYLE: Record<string, string> = {
-  high: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30",
-  moderate: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30",
+  high: toneChip.danger,
+  moderate: toneChip.warning,
   low: "bg-muted text-muted-foreground border-border",
 }
 
@@ -87,7 +88,7 @@ function RecurringGapsWidget() {
           <div className="flex items-start justify-between gap-3">
             <p className="text-sm font-medium text-foreground leading-snug">{c.representative_question}</p>
             {c.count > 1 && (
-              <span className="shrink-0 px-2 py-0.5 rounded-full bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30 text-[11px] font-semibold whitespace-nowrap">
+              <span className="shrink-0 px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/30 text-11 font-semibold whitespace-nowrap">
                 Asked {c.count}x
               </span>
             )}
@@ -104,7 +105,7 @@ function RecurringGapsWidget() {
             <span className="text-muted-foreground">Last asked {new Date(c.last_asked).toLocaleDateString()}</span>
           </div>
           <Link href={`/proposals?new=1&query=${encodeURIComponent(c.representative_question)}`}
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-[#0B6BCB] hover:underline pt-1">
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline pt-1">
             <PlusCircle className="w-3.5 h-3.5" /> Draft a new SOP for this
           </Link>
         </Card>
@@ -187,7 +188,7 @@ function AutoDetectedGapsWidget() {
             <div className="flex items-start justify-between gap-3">
               <p className="text-sm font-medium text-foreground leading-snug">{c.representative_question}</p>
               {c.count > 1 && (
-                <span className="shrink-0 px-2 py-0.5 rounded-full bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30 text-[11px] font-semibold whitespace-nowrap">
+                <span className="shrink-0 px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/30 text-11 font-semibold whitespace-nowrap">
                   Asked {c.count}x
                 </span>
               )}
@@ -199,7 +200,7 @@ function AutoDetectedGapsWidget() {
               <span className="text-muted-foreground">Last asked {new Date(c.last_asked).toLocaleDateString()}</span>
             </div>
             <Link href={`/proposals?new=1&query=${encodeURIComponent(c.representative_question)}`}
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-[#0B6BCB] hover:underline pt-1">
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline pt-1">
               <PlusCircle className="w-3.5 h-3.5" /> Draft a new SOP for this
             </Link>
           </Card>
@@ -252,24 +253,24 @@ function QuorumIndicator({ proposal }: { proposal: Proposal }) {
           <span>{committee_size}-member committee</span>
         </div>
         <div className="w-full h-2 rounded-full bg-[#E2E8F0] overflow-hidden">
-          <div className="h-full rounded-full bg-[#0B6BCB] transition-all" style={{ width: `${Math.min(pct, 100)}%` }} />
+          <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${Math.min(pct, 100)}%` }} />
         </div>
       </div>
 
       {decision === "approved" && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#DCFCE7] dark:bg-green-500/10 border border-[#BBF7D0] dark:border-green-500/30">
+        <div className={cn(toneChip.success, "flex items-center gap-2 px-3 py-2 rounded-lg")}>
           <CheckCircle2 className="w-4 h-4 text-[#15803D] dark:text-green-400 shrink-0" />
           <span className="text-xs font-bold text-[#15803D] dark:text-green-400 uppercase tracking-wide">Quorum reached: Approved</span>
         </div>
       )}
       {decision === "rejected" && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30">
+        <div className={cn(toneChip.danger, "flex items-center gap-2 px-3 py-2 rounded-lg")}>
           <X className="w-4 h-4 text-[#B91C1C] dark:text-red-400 shrink-0" />
           <span className="text-xs font-bold text-[#B91C1C] dark:text-red-400 uppercase tracking-wide">Quorum reached: Rejected</span>
         </div>
       )}
       {decision === "pending" && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30">
+        <div className={cn(toneChip.warning, "flex items-center gap-2 px-3 py-2 rounded-lg")}>
           <AlertTriangle className="w-3.5 h-3.5 text-[#B45309] dark:text-amber-400 shrink-0" />
           <span className="text-xs text-[#B45309] dark:text-amber-400">Quorum not yet met ({threshold} votes required)</span>
         </div>
@@ -331,8 +332,8 @@ function CommitteeProposalCard({ proposal, index, onVoteCast }: {
 
         {proposal.affected_sop_id && (
           <div className="flex items-start gap-2">
-            <FileText className="w-3.5 h-3.5 text-[#0B6BCB] shrink-0 mt-0.5" />
-            <span className="text-xs text-[#0B6BCB]">{proposal.affected_sop_id}</span>
+            <FileText className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
+            <span className="text-xs text-primary">{proposal.affected_sop_id}</span>
           </div>
         )}
 
@@ -359,18 +360,18 @@ function CommitteeProposalCard({ proposal, index, onVoteCast }: {
         {canVote && (
           <div className="flex flex-wrap gap-2 pt-2 border-t border-border">
             <button disabled={submitting} onClick={() => castVote("approve")}
-              className={cn("inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[11px] transition-colors disabled:opacity-50",
-                myVote === "approve" ? "bg-[#16A34A] border-[#16A34A] text-white font-bold" : "bg-[#DCFCE7] dark:bg-green-500/10 border-[#BBF7D0] dark:border-green-500/30 text-[#15803D] dark:text-green-400 hover:bg-[#16A34A]/25")}>
+              className={cn("inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-11 transition-colors disabled:opacity-50",
+                myVote === "approve" ? "bg-[#16A34A] border-[#16A34A] text-white font-bold" : cn(toneChip.success, "hover:bg-[#16A34A]/25"))}>
               <Check className="w-3 h-3" /> Approve{myVote === "approve" ? " ✓" : ""}
             </button>
             <button disabled={submitting} onClick={() => castVote("reject")}
-              className={cn("inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[11px] transition-colors disabled:opacity-50",
-                myVote === "reject" ? "bg-[#B91C1C] border-[#B91C1C] text-white font-bold" : "bg-[#FEE2E2] dark:bg-red-500/10 border-[#FECACA] dark:border-red-500/30 text-[#B91C1C] dark:text-red-400 hover:bg-[#FECACA]")}>
+              className={cn("inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-11 transition-colors disabled:opacity-50",
+                myVote === "reject" ? "bg-[#B91C1C] border-[#B91C1C] text-white font-bold" : cn(toneChip.danger, "hover:bg-[#FECACA]"))}>
               <X className="w-3 h-3" /> Reject{myVote === "reject" ? " ✓" : ""}
             </button>
             <button disabled={submitting} onClick={() => castVote("abstain")}
-              className={cn("inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[11px] transition-colors disabled:opacity-50",
-                myVote === "abstain" ? "bg-[#F59E0B] border-[#F59E0B] text-white font-bold" : "bg-[#FEF3C7] dark:bg-amber-500/10 border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 hover:bg-[#F59E0B]/25")}>
+              className={cn("inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-11 transition-colors disabled:opacity-50",
+                myVote === "abstain" ? "bg-[#F59E0B] border-[#F59E0B] text-white font-bold" : cn(toneChip.warning, "hover:bg-[#F59E0B]/25"))}>
               <MinusCircle className="w-3 h-3" /> Abstain{myVote === "abstain" ? " ✓" : ""}
             </button>
             {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground self-center" />}
@@ -414,7 +415,7 @@ export default function CommitteePage() {
   const stats = [
     { label: "Awaiting Vote", value: activeProposals.length, color: "text-muted-foreground", icon: Vote },
     { label: "Distinct Voters Active", value: votedThisSession, color: "text-[#15803D] dark:text-green-400", icon: CheckCircle2 },
-    { label: "Decided Proposals", value: decidedProposals.length, color: "text-[#0B6BCB]", icon: Calendar },
+    { label: "Decided Proposals", value: decidedProposals.length, color: "text-primary", icon: Calendar },
     { label: "Quorum Threshold", value: `${quorumThreshold}/${committeeSize}`, color: "text-[#B45309] dark:text-amber-400", isText: true, icon: Users },
   ]
 
@@ -429,7 +430,7 @@ export default function CommitteePage() {
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-1">
           <div className="flex items-center gap-3">
-            <Gavel className="w-7 h-7 text-[#0B6BCB]" />
+            <Gavel className="w-7 h-7 text-primary" />
             <h1 className="text-2xl font-bold text-foreground">Committee Workspace</h1>
           </div>
           <p className="text-muted-foreground text-sm pl-10">Live proposals and quorum status from the governance API.</p>
@@ -467,7 +468,7 @@ export default function CommitteePage() {
               <section className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-                    <Vote className="w-5 h-5 text-[#0B6BCB]" /> Proposals Awaiting Review
+                    <Vote className="w-5 h-5 text-primary" /> Proposals Awaiting Review
                   </h2>
                   <span className="px-2.5 py-1 rounded-full bg-muted border border-input text-xs text-foreground font-semibold">
                     {activeProposals.length} active
@@ -485,7 +486,7 @@ export default function CommitteePage() {
 
               <section className="space-y-4">
                 <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-                  <HelpCircle className="w-5 h-5 text-[#0B6BCB]" /> Recurring Unanswered Questions
+                  <HelpCircle className="w-5 h-5 text-primary" /> Recurring Unanswered Questions
                 </h2>
                 <p className="text-xs text-muted-foreground -mt-2">
                   Sourced from SOP Gap Reports (created when Ask Meridian finds no matching internal SOP) - clustered by question similarity.
@@ -495,7 +496,7 @@ export default function CommitteePage() {
 
               <section className="space-y-4">
                 <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-                  <AlertTriangle className="w-5 h-5 text-[#0B6BCB]" /> Auto-Detected Coverage Gaps
+                  <AlertTriangle className="w-5 h-5 text-primary" /> Auto-Detected Coverage Gaps
                 </h2>
                 <p className="text-xs text-muted-foreground -mt-2">
                   Sourced automatically from every logged question the pipeline routed away from the SOP
@@ -524,7 +525,7 @@ export default function CommitteePage() {
                             {p.status === "approved" ? <CheckCircle2 className="w-4 h-4 text-[#15803D] dark:text-green-400" /> : <X className="w-4 h-4 text-[#B91C1C] dark:text-red-400" />}
                           </div>
                           <div className="flex-1 min-w-0 space-y-1">
-                            <Link href={`/proposals/${p.id}`} className="text-sm font-medium text-foreground hover:text-[#0B6BCB] transition-colors line-clamp-1">
+                            <Link href={`/proposals/${p.id}`} className="text-sm font-medium text-foreground hover:text-primary transition-colors line-clamp-1">
                               {p.title}
                             </Link>
                             <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
@@ -543,7 +544,7 @@ export default function CommitteePage() {
 
               <section className="space-y-4">
                 <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-                  <Users className="w-5 h-5 text-[#0B6BCB]" /> Committee Members
+                  <Users className="w-5 h-5 text-primary" /> Committee Members
                 </h2>
                 <p className="text-xs text-muted-foreground -mt-2">
                   Illustrative roster - Meridian has no committee-membership model yet. Each member&apos;s vote status
@@ -557,14 +558,14 @@ export default function CommitteePage() {
                         key={user.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
                         className="rounded-xl bg-card border border-border p-4 flex items-start gap-3"
                       >
-                        <div className="w-10 h-10 rounded-full bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 flex items-center justify-center text-[#0B6BCB] text-sm font-bold shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center text-primary text-sm font-bold shrink-0">
                           {user.initials}
                         </div>
                         <div className="flex-1 min-w-0 space-y-1">
                           <p className="text-sm font-semibold text-foreground truncate">{user.name}</p>
                           <p className="text-xs text-muted-foreground truncate">{user.title}</p>
                           <p className="text-xs text-muted-foreground">{user.department}</p>
-                          <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold mt-1",
+                          <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded text-10 font-semibold mt-1",
                             hasVoted ? "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400" : "bg-muted text-muted-foreground")}>
                             {hasVoted ? <CheckCircle2 className="w-2.5 h-2.5" /> : <Vote className="w-2.5 h-2.5" />}
                             {hasVoted ? "Has voted" : "No votes yet"}

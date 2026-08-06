@@ -91,9 +91,9 @@ export function ProductShowcase({ embedded = false }: { embedded?: boolean }) {
               <div className="space-y-5">
                 {/* user question bubble */}
                 <div className="flex justify-end">
-                  <div className="max-w-[85%] px-4 py-2.5 rounded-2xl rounded-br-md bg-[#0B6BCB]/[0.08] dark:bg-[#00E5FF]/[0.09] border border-[#0B6BCB]/15 dark:border-[#00E5FF]/15 text-[14px] text-foreground">
+                  <div className="max-w-[85%] px-4 py-2.5 rounded-2xl rounded-br-md bg-primary/[0.08] border border-primary/15 text-[14px] text-foreground">
                     {QUESTION.slice(0, questionChars)}
-                    {phase === "typing-question" && <span className="inline-block w-0.5 h-3.5 ml-0.5 bg-[#0B6BCB] dark:bg-[#00E5FF] animate-pulse align-middle" />}
+                    {phase === "typing-question" && <span className="inline-block w-0.5 h-3.5 ml-0.5 bg-primary animate-pulse align-middle" />}
                   </div>
                 </div>
 
@@ -101,7 +101,7 @@ export function ProductShowcase({ embedded = false }: { embedded?: boolean }) {
                 <AnimatePresence>
                   {phase === "thinking" && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2 text-muted-foreground text-xs">
-                      <Sparkles className="w-3.5 h-3.5 text-[#0B6BCB] dark:text-[#00E5FF] animate-pulse" />
+                      <Sparkles className="w-3.5 h-3.5 text-primary animate-pulse" />
                       Searching indexed SOPs...
                     </motion.div>
                   )}
@@ -126,13 +126,13 @@ export function ProductShowcase({ embedded = false }: { embedded?: boolean }) {
                     transition={{ duration: 0.5, ease: EASE_EXPO_OUT }}
                     className="flex flex-wrap items-center gap-2 mt-6 pt-5 border-t border-border"
                   >
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#00C853]/10 text-[#00C853] border border-[#00C853]/25">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-11 font-semibold bg-[#00C853]/10 text-[#00C853] border border-[#00C853]/25">
                       <ShieldCheck className="w-3 h-3" /> 94% confidence · Verified
                     </span>
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] text-muted-foreground border border-border">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-11 text-muted-foreground border border-border">
                       <FileText className="w-3 h-3" /> {SOURCE.title} — {SOURCE.section}
                     </span>
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] text-subtle border border-border ml-auto">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-11 text-subtle border border-border ml-auto">
                       <Mic className="w-3 h-3" /> Voice input available
                     </span>
                   </motion.div>

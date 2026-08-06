@@ -3,12 +3,15 @@ confirmation, captured signature meaning, and the tamper-evident hash
 chain (app/services/signature_chain.py)."""
 
 import pytest
+from fastapi import Request
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 import app.models.models  # noqa: F401 - register models on Base
 from app.main import app as fastapi_app
 from app.database.db import Base, get_db
+from app.models.models import StaffUser
+from app.services.auth import get_current_user
 from app.services.signature_chain import GENESIS_HASH, compute_content_hash, verify_chain
 
 
@@ -29,11 +32,32 @@ async def client(tmp_path):
                 await session.rollback()
                 raise
 
+    # This suite predates Phase S and deliberately signs as several
+    # DIFFERENT identities per test (to exercise the hash-chain across
+    # distinct signers and the second-factor match against varying
+    # names) - a single fixed override (as test_governance_api.py uses)
+    # would collapse every call to one identity and break that. Instead,
+    # trust the identity fields the test itself put in the request body -
+    # a test-only stand-in for "already logged in as this user", since
+    # this suite is about the attestation/hash-chain logic, not login.
+    async def _override_current_user(request: Request) -> StaffUser:
+        body = await request.json()
+        return StaffUser(
+            id=1,
+            staff_id=body.get("user_id") or "test-user",
+            name=body.get("user_name") or "Test User",
+            role=body.get("user_role") or "clinical_staff",
+            department=body.get("department") or "",
+            password_hash="",
+        )
+
     fastapi_app.dependency_overrides[get_db] = _override_get_db
+    fastapi_app.dependency_overrides[get_current_user] = _override_current_user
     transport = ASGITransport(app=fastapi_app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
     fastapi_app.dependency_overrides.pop(get_db, None)
+    fastapi_app.dependency_overrides.pop(get_current_user, None)
     await engine.dispose()
 
 

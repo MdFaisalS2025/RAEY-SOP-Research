@@ -12,8 +12,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 
 from app.database.db import get_db
-from app.models.models import OverrideRecord
+from app.models.models import OverrideRecord, StaffUser
 from app.schemas.schemas import OverrideCreate, OverrideResponse
+from app.services.auth import get_current_user
 
 router = APIRouter(tags=["Overrides"])
 
@@ -22,15 +23,21 @@ _VALID_REASONS = {"will_monitor", "not_applicable", "disagree_with_sop", "other"
 
 
 @router.post("/api/overrides", response_model=OverrideResponse)
-async def create_override(req: OverrideCreate, db: AsyncSession = Depends(get_db)):
+async def create_override(
+    req: OverrideCreate,
+    db: AsyncSession = Depends(get_db),
+    user: StaffUser = Depends(get_current_user),
+):
     context_type = req.context_type if req.context_type in _VALID_CONTEXT_TYPES else "other"
     reason = req.reason if req.reason in _VALID_REASONS else "other"
     rec = OverrideRecord(
         context_type=context_type,
         context_id=req.context_id,
         context_label=req.context_label,
-        user_id=req.user_id,
-        user_name=req.user_name,
+        # Always the session's real identity, never client-supplied - this
+        # record exists specifically to document who made the override.
+        user_id=user.staff_id,
+        user_name=user.name,
         reason=reason,
         note=req.note,
     )

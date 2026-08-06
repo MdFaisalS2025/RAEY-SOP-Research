@@ -18,6 +18,7 @@ import { useRole } from "@/lib/role-context"
 import AppShell from "@/components/layout/app-shell"
 import { SafetyNote } from "@/components/ui/safety-note"
 import { cn } from "@/lib/utils"
+import { toneChip } from "@/components/ui/tone"
 
 const LEADERSHIP_ROLES = [
   "system_admin",
@@ -27,8 +28,8 @@ const LEADERSHIP_ROLES = [
 function SectionHeading({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <div>
-      <h2 className="text-[13px] font-semibold text-foreground uppercase tracking-widest">{title}</h2>
-      {subtitle && <p className="text-[11px] text-subtle mt-0.5">{subtitle}</p>}
+      <h2 className="text-13 font-semibold text-foreground uppercase tracking-widest">{title}</h2>
+      {subtitle && <p className="text-11 text-subtle mt-0.5">{subtitle}</p>}
     </div>
   )
 }
@@ -90,16 +91,16 @@ export default function LeadershipPage() {
       <div className="px-4 md:px-6 lg:px-8 py-6">
         <div className="max-w-2xl mx-auto mt-16">
           <div className="bg-card border border-border rounded-2xl p-8 text-center space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-[#0B6BCB]/10 flex items-center justify-center mx-auto">
-              <ShieldCheck className="w-6 h-6 text-[#0B6BCB]" />
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
+              <ShieldCheck className="w-6 h-6 text-primary" />
             </div>
             <h1 className="text-xl font-semibold text-foreground">Leadership Overview</h1>
-            <p className="text-[13px] text-muted-foreground leading-relaxed">
+            <p className="text-13 text-muted-foreground leading-relaxed">
               This view is designed for hospital leadership. Switch to a leadership role to preview it.
             </p>
-            <p className="text-[11px] text-subtle">
+            <p className="text-11 text-subtle">
               Available to System Admin and Governance & Compliance roles.
-              You are currently viewing as {roleConfig.label}. Use the role switcher in the top bar.
+              You are currently viewing as {roleConfig.label}.
             </p>
           </div>
         </div>
@@ -150,7 +151,7 @@ export default function LeadershipPage() {
     red: "text-[#B91C1C] dark:text-red-400",
     amber: "text-[#B45309] dark:text-amber-400",
     green: "text-[#15803D] dark:text-green-400",
-    neutral: "text-[#0B6BCB]",
+    neutral: "text-primary",
   }
 
   const handleExport = () => {
@@ -182,19 +183,19 @@ export default function LeadershipPage() {
         {/* Header */}
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="flex items-start gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-[#0B6BCB]/10 flex items-center justify-center shrink-0">
-              <ShieldCheck className="w-6 h-6 text-[#0B6BCB]" />
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+              <ShieldCheck className="w-6 h-6 text-primary" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-foreground mb-1">Leadership Overview</h1>
-              <p className="text-[13px] text-subtle">Governance and safety posture for executive review</p>
+              <p className="text-13 text-subtle">Governance and safety posture for executive review</p>
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[11px] text-subtle">{today}</span>
+            <span className="text-11 text-subtle">{today}</span>
             {!loading && !error && (
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-full border bg-[#0B6BCB]/10 text-[#0B6BCB] border-[#0B6BCB]/30">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#0B6BCB]" />
+              <span className="inline-flex items-center gap-1.5 text-11 font-medium px-2.5 py-1 rounded-full border bg-primary/10 text-primary border-primary/30">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary" />
                 Live data
               </span>
             )}
@@ -213,7 +214,7 @@ export default function LeadershipPage() {
             <AlertTriangle className="w-8 h-8 text-[#B91C1C] dark:text-red-400 mx-auto" />
             <p className="text-sm font-medium text-foreground">Couldn't load leadership data</p>
             <p className="text-xs text-muted-foreground">One or more backend services didn't respond. This is a connection failure, not an empty report.</p>
-            <button onClick={load} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-[#0B6BCB]/10 text-[#0B6BCB] hover:bg-[#0B6BCB]/20 transition-colors mx-auto">
+            <button onClick={load} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors mx-auto">
               <RotateCcw className="w-3.5 h-3.5" /> Retry
             </button>
           </div>
@@ -229,18 +230,18 @@ export default function LeadershipPage() {
                   <Link key={t.label} href={t.href} className="block bg-card border border-border rounded-2xl p-4 hover:bg-[#F8FAFC] transition-colors group">
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <p className="text-[11px] text-subtle uppercase tracking-widest font-semibold mb-1">{t.label}</p>
+                        <p className="text-11 text-subtle uppercase tracking-widest font-semibold mb-1">{t.label}</p>
                         <p className={cn("text-2xl font-bold font-display", toneText[t.tone])}>{t.value}</p>
                       </div>
                       <t.icon className={cn("w-5 h-5 shrink-0 opacity-50", toneText[t.tone])} />
                     </div>
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#0B6BCB] opacity-0 group-hover:opacity-100 transition-opacity mt-2">
+                    <span className="inline-flex items-center gap-1 text-11 font-semibold text-primary opacity-0 group-hover:opacity-100 transition-opacity mt-2">
                       View <ChevronRight className="w-3 h-3" />
                     </span>
                   </Link>
                 ))}
               </div>
-              <p className="text-[11px] text-subtle">
+              <p className="text-11 text-subtle">
                 No target/trend columns are shown here - Meridian doesn't track historical snapshots or department-set
                 targets, so a trend arrow would itself be fabricated. Clinical outcome measures (infection rates,
                 bundle adherence) aren't tracked by this system at all and are intentionally absent rather than guessed.
@@ -256,30 +257,30 @@ export default function LeadershipPage() {
                     <Link href="/library" className="block bg-card border border-border rounded-2xl p-4 border-l-4 border-l-[#B91C1C] hover:bg-[#F8FAFC] transition-colors group">
                       <div className="flex items-start gap-2 mb-2">
                         <AlertTriangle className="w-4 h-4 text-[#B91C1C] dark:text-red-400 shrink-0 mt-0.5" />
-                        <p className="text-[13px] font-semibold text-foreground leading-snug">{overdueSops.length} SOP{overdueSops.length !== 1 ? "s" : ""} past review date</p>
+                        <p className="text-13 font-semibold text-foreground leading-snug">{overdueSops.length} SOP{overdueSops.length !== 1 ? "s" : ""} past review date</p>
                       </div>
-                      <p className="text-[11px] text-muted-foreground mb-3 leading-relaxed">{overdueSops.slice(0, 3).map((s) => s.title).join(", ")}{overdueSops.length > 3 ? "…" : ""}</p>
-                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#0B6BCB] group-hover:text-[#0959AC] transition-colors">View SOP Library <ChevronRight className="w-3.5 h-3.5" /></span>
+                      <p className="text-11 text-muted-foreground mb-3 leading-relaxed">{overdueSops.slice(0, 3).map((s) => s.title).join(", ")}{overdueSops.length > 3 ? "…" : ""}</p>
+                      <span className="inline-flex items-center gap-1 text-11 font-semibold text-primary group-hover:text-primary-hover transition-colors">View SOP Library <ChevronRight className="w-3.5 h-3.5" /></span>
                     </Link>
                   )}
                   {conflicts.length > 0 && (
                     <Link href="/conflict-resolution" className="block bg-card border border-border rounded-2xl p-4 border-l-4 border-l-[#B45309] hover:bg-[#F8FAFC] transition-colors group">
                       <div className="flex items-start gap-2 mb-2">
                         <AlertTriangle className="w-4 h-4 text-[#B45309] dark:text-amber-400 shrink-0 mt-0.5" />
-                        <p className="text-[13px] font-semibold text-foreground leading-snug">{conflicts.length} unresolved evidence conflict{conflicts.length !== 1 ? "s" : ""}</p>
+                        <p className="text-13 font-semibold text-foreground leading-snug">{conflicts.length} unresolved evidence conflict{conflicts.length !== 1 ? "s" : ""}</p>
                       </div>
-                      <p className="text-[11px] text-muted-foreground mb-3 leading-relaxed">Cross-SOP conflicts flagged by the entity graph.</p>
-                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#0B6BCB] group-hover:text-[#0959AC] transition-colors">Open conflict resolution <ChevronRight className="w-3.5 h-3.5" /></span>
+                      <p className="text-11 text-muted-foreground mb-3 leading-relaxed">Cross-SOP conflicts flagged by the entity graph.</p>
+                      <span className="inline-flex items-center gap-1 text-11 font-semibold text-primary group-hover:text-primary-hover transition-colors">Open conflict resolution <ChevronRight className="w-3.5 h-3.5" /></span>
                     </Link>
                   )}
                   {openExceptions.length > 0 && (
                     <Link href="/incidents" className="block bg-card border border-border rounded-2xl p-4 border-l-4 border-l-[#B45309] hover:bg-[#F8FAFC] transition-colors group">
                       <div className="flex items-start gap-2 mb-2">
                         <AlertTriangle className="w-4 h-4 text-[#B45309] dark:text-amber-400 shrink-0 mt-0.5" />
-                        <p className="text-[13px] font-semibold text-foreground leading-snug">{openExceptions.length} open exception report{openExceptions.length !== 1 ? "s" : ""}</p>
+                        <p className="text-13 font-semibold text-foreground leading-snug">{openExceptions.length} open exception report{openExceptions.length !== 1 ? "s" : ""}</p>
                       </div>
-                      <p className="text-[11px] text-muted-foreground mb-3 leading-relaxed">{deptRows.slice(0, 3).map((d) => d.department).join(", ")}</p>
-                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#0B6BCB] group-hover:text-[#0959AC] transition-colors">View incidents & exceptions <ChevronRight className="w-3.5 h-3.5" /></span>
+                      <p className="text-11 text-muted-foreground mb-3 leading-relaxed">{deptRows.slice(0, 3).map((d) => d.department).join(", ")}</p>
+                      <span className="inline-flex items-center gap-1 text-11 font-semibold text-primary group-hover:text-primary-hover transition-colors">View incidents & exceptions <ChevronRight className="w-3.5 h-3.5" /></span>
                     </Link>
                   )}
                 </div>
@@ -291,12 +292,12 @@ export default function LeadershipPage() {
               <SectionHeading title="Evidence Freshness" subtitle="How current is the guidance underpinning active SOPs" />
               <div className="bg-card border border-border rounded-2xl p-5 space-y-4 max-w-2xl">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 flex items-center justify-center shrink-0">
-                    <FlaskConical className="w-5 h-5 text-[#0B6BCB]" />
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/30 flex items-center justify-center shrink-0">
+                    <FlaskConical className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold font-display text-[#0B6BCB]">{sops.length ? `${freshPct}%` : "—"}</p>
-                    <p className="text-[11px] text-muted-foreground">of {sops.length} SOPs effective in {thisYear - 1} or newer</p>
+                    <p className="text-2xl font-bold font-display text-primary">{sops.length ? `${freshPct}%` : "—"}</p>
+                    <p className="text-11 text-muted-foreground">of {sops.length} SOPs effective in {thisYear - 1} or newer</p>
                   </div>
                 </div>
                 <div className="space-y-2.5">
@@ -304,7 +305,7 @@ export default function LeadershipPage() {
                     const pct = Math.round((bar.count / freshTotal) * 100)
                     return (
                       <div key={bar.label} className="space-y-1">
-                        <div className="flex justify-between text-[11px]">
+                        <div className="flex justify-between text-11">
                           <span className="text-muted-foreground">{bar.label}</span>
                           <span className={cn("font-semibold", bar.text)}>{bar.count} SOP{bar.count !== 1 ? "s" : ""}</span>
                         </div>
@@ -328,7 +329,7 @@ export default function LeadershipPage() {
               ) : (
                 <div className="bg-card border border-border rounded-2xl overflow-hidden">
                   <div className="overflow-x-auto">
-                    <table className="w-full text-[12px]">
+                    <table className="w-full text-12">
                     <thead>
                       <tr className="bg-muted border-b border-border">
                         <th className="text-left px-4 py-2.5 text-muted-foreground font-semibold">Department</th>
@@ -356,7 +357,7 @@ export default function LeadershipPage() {
                 </div>
               )}
               <div className="flex items-center gap-4">
-                <Link href="/incidents" className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#0B6BCB] hover:text-[#0959AC] transition-colors">
+                <Link href="/incidents" className="inline-flex items-center gap-1 text-11 font-semibold text-primary hover:text-primary-hover transition-colors">
                   View all exception reports <ChevronRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
@@ -367,10 +368,10 @@ export default function LeadershipPage() {
               <button
                 onClick={handleExport}
                 className={cn(
-                  "flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-semibold border transition-colors",
+                  "flex items-center gap-2 px-4 py-2 rounded-lg text-13 font-semibold border transition-colors",
                   exportState === "done"
-                    ? "bg-[#DCFCE7] dark:bg-green-500/10 border-[#BBF7D0] dark:border-green-500/30 text-[#15803D] dark:text-green-400"
-                    : "bg-[#0B6BCB] border-[#0B6BCB] text-white hover:bg-[#0959AC]"
+                    ? toneChip.success
+                    : "bg-primary border-primary text-primary-foreground hover:bg-primary-hover"
                 )}
               >
                 {exportState === "done" ? (
@@ -379,7 +380,7 @@ export default function LeadershipPage() {
                   <><Download className="w-4 h-4" /> Export Snapshot (CSV)</>
                 )}
               </button>
-              <SafetyNote className="text-[11px]" />
+              <SafetyNote className="text-11" />
             </div>
           </>
         )}

@@ -14,7 +14,7 @@ export default function NotFound() {
         className="text-center max-w-md"
       >
         <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-teal-500/10 flex items-center justify-center">
-          <ShieldAlert className="w-10 h-10 text-teal-600 dark:text-[#00E5FF]" />
+          <ShieldAlert className="w-10 h-10 text-teal-600 dark:text-primary" />
         </div>
         <p className="font-display text-7xl font-bold text-foreground mb-2 tracking-tight">404</p>
         <h1 className="text-xl font-semibold text-foreground mb-2">Page not found</h1>

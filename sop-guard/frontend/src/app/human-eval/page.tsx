@@ -7,6 +7,7 @@ import {
 import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { cn } from "@/lib/utils"
+import { toneChip } from "@/components/ui/tone"
 import { useRole } from "@/lib/role-context"
 import { Card } from "@/components/ui/card"
 
@@ -210,8 +211,8 @@ export default function HumanEvalPage() {
 
         {/* Header */}
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-[#0B6BCB]/10 flex items-center justify-center">
-            <ClipboardCheck className="w-6 h-6 text-[#0B6BCB]" />
+          <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+            <ClipboardCheck className="w-6 h-6 text-primary" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-foreground">Clinician Evaluation</h1>
@@ -225,7 +226,7 @@ export default function HumanEvalPage() {
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-muted-foreground">Item {idx + 1} of {EVAL_ITEMS.length}</p>
               <div className="h-1.5 rounded-full bg-[#E2E8F0] w-40 overflow-hidden">
-                <div className="h-full rounded-full bg-[#0B6BCB]" style={{ width: `${(idx / EVAL_ITEMS.length) * 100}%` }} />
+                <div className="h-full rounded-full bg-primary" style={{ width: `${(idx / EVAL_ITEMS.length) * 100}%` }} />
               </div>
             </div>
 
@@ -254,8 +255,8 @@ export default function HumanEvalPage() {
                         className={cn(
                           "py-2 rounded-lg border text-sm font-semibold transition-colors",
                           current[scale] === v
-                            ? "bg-[#0B6BCB] border-[#0B6BCB] text-white"
-                            : "bg-card border-border text-muted-foreground hover:border-[#0B6BCB]"
+                            ? "bg-primary border-primary text-primary-foreground"
+                            : "bg-card border-border text-muted-foreground hover:border-primary"
                         )}
                       >
                         {v}
@@ -272,7 +273,7 @@ export default function HumanEvalPage() {
                   value={comment}
                   onChange={e => setComment(e.target.value)}
                   rows={2}
-                  className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-subtle focus:outline-none focus:border-[#0B6BCB]"
+                  className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-subtle focus:outline-none focus:border-primary"
                   placeholder="Anything you noticed"
                 />
               </div>
@@ -280,7 +281,7 @@ export default function HumanEvalPage() {
               <button
                 onClick={next}
                 disabled={!canAdvance}
-                className="w-full px-4 py-2.5 rounded-lg text-sm font-semibold bg-[#0B6BCB] text-white hover:bg-[#0959AC] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+                className="w-full px-4 py-2.5 rounded-lg text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
               >
                 {idx + 1 >= EVAL_ITEMS.length ? "Finish" : "Next"} <ArrowRight className="w-4 h-4" />
               </button>
@@ -324,7 +325,7 @@ export default function HumanEvalPage() {
             </Card>
 
             {/* Reveal */}
-            <div className="rounded-2xl bg-[#DCFCE7] dark:bg-green-500/10 border border-[#BBF7D0] dark:border-green-500/30 p-5 space-y-1">
+            <div className={cn(toneChip.success, "rounded-2xl p-5 space-y-1")}>
               <h3 className="text-sm font-bold text-[#15803D] dark:text-green-400">Sensitivity result</h3>
               <p className="text-sm text-foreground">
                 Items with known planted errors: {flaggedCount} of {flawedTotal} flagged low by you.
@@ -337,7 +338,7 @@ export default function HumanEvalPage() {
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={exportJSON}
-                className="px-4 py-2 rounded-lg text-sm font-medium bg-[#0B6BCB] text-white hover:bg-[#0959AC] transition-colors flex items-center gap-1.5"
+                className="px-4 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary-hover transition-colors flex items-center gap-1.5"
               >
                 <Download className="w-4 h-4" /> Export ratings (JSON)
               </button>

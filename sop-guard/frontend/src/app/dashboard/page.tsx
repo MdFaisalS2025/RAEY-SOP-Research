@@ -41,6 +41,7 @@ import {
   DEMO_USERS,
 } from "@/lib/mock-data"
 import { cn } from "@/lib/utils"
+import { toneChip } from "@/components/ui/tone"
 import { downloadCSV } from "@/lib/csv-export"
 import type { RiskLevel, SOPStatus, ProposalStatus } from "@/lib/governance-types"
 import Link from "next/link"
@@ -68,12 +69,12 @@ const TILE_BORDER: Record<string, string> = {
 }
 
 const TILE_VALUE: Record<string, string> = {
-  teal: "text-[#0B6BCB]",
+  teal: "text-primary",
   amber: "text-[#B45309] dark:text-amber-400",
   red: "text-[#B91C1C] dark:text-red-400",
   violet: "text-muted-foreground",
   emerald: "text-[#15803D] dark:text-green-400",
-  blue: "text-[#0B6BCB]",
+  blue: "text-primary",
   pink: "text-muted-foreground",
   gray: "text-muted-foreground",
   green: "text-[#15803D] dark:text-green-400",
@@ -88,13 +89,13 @@ const HEALTH_DOT_COLOR: Record<"green" | "amber" | "red" | "teal", string> = {
   green: "bg-[#15803D] dark:bg-green-400",
   amber: "bg-[#B45309] dark:bg-amber-400",
   red: "bg-[#B91C1C] dark:bg-red-400",
-  teal: "bg-[#0B6BCB]",
+  teal: "bg-primary",
 }
 const HEALTH_TEXT_COLOR: Record<"green" | "amber" | "red" | "teal", string> = {
   green: "text-[#15803D] dark:text-green-400",
   amber: "text-[#B45309] dark:text-amber-400",
   red: "text-[#B91C1C] dark:text-red-400",
-  teal: "text-[#0B6BCB]",
+  teal: "text-primary",
 }
 
 function StatTile({ label, value, trend, color = "teal", icon: Icon }: StatTileProps) {
@@ -107,12 +108,12 @@ function StatTile({ label, value, trend, color = "teal", icon: Icon }: StatTileP
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-[11px] text-muted-foreground uppercase tracking-widest font-semibold mb-1">{label}</p>
+          <p className="text-11 text-muted-foreground uppercase tracking-widest font-semibold mb-1">{label}</p>
           <p className={cn("text-2xl font-bold font-display", TILE_VALUE[color])}>{value}</p>
         </div>
         <div className="flex flex-col items-end gap-1 shrink-0">
           {Icon && <Icon className={cn("w-5 h-5 opacity-50", TILE_VALUE[color])} />}
-          {trend === "up" && <TrendingUp className="w-4 h-4 text-[#0B6BCB]" />}
+          {trend === "up" && <TrendingUp className="w-4 h-4 text-primary" />}
           {trend === "down" && <TrendingDown className="w-4 h-4 text-[#B91C1C] dark:text-red-400" />}
         </div>
       </div>
@@ -121,12 +122,12 @@ function StatTile({ label, value, trend, color = "teal", icon: Icon }: StatTileP
 }
 
 const STATUS_BADGE: Record<SOPStatus, string> = {
-  approved: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30",
-  needs_update: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30",
+  approved: toneChip.success,
+  needs_update: toneChip.warning,
   draft: "bg-card text-muted-foreground border-input",
   under_review: "bg-card text-muted-foreground border-input",
   archived: "bg-card text-muted-foreground border-input",
-  on_hold: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30",
+  on_hold: toneChip.warning,
 }
 
 const PROPOSAL_STATUS_BADGE: Record<ProposalStatus, string> = {
@@ -134,19 +135,19 @@ const PROPOSAL_STATUS_BADGE: Record<ProposalStatus, string> = {
   submitted: "bg-card text-muted-foreground border-input",
   evidence_review: "bg-card text-muted-foreground border-input",
   department_review: "bg-card text-muted-foreground border-input",
-  committee_review: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30",
-  legal_review: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30",
+  committee_review: toneChip.warning,
+  legal_review: toneChip.warning,
   training_review: "bg-card text-muted-foreground border-input",
-  approved: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30",
-  rejected: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30",
-  published: "bg-[#0B6BCB]/10 text-[#0B6BCB] border-[#0B6BCB]/30",
+  approved: toneChip.success,
+  rejected: toneChip.danger,
+  published: "bg-primary/10 text-primary border-primary/30",
   archived: "bg-card text-muted-foreground border-input",
 }
 
 const RISK_BADGE: Record<RiskLevel, string> = {
-  critical: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30",
-  high: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30",
-  medium: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30",
+  critical: toneChip.danger,
+  high: toneChip.warning,
+  medium: toneChip.warning,
   low: "bg-card text-muted-foreground border-input",
 }
 
@@ -181,28 +182,28 @@ function SopCard({ sop }: { sop: typeof MOCK_SOPS[0] }) {
       // above, which already gets this right). Every card built from this
       // component used to 404 into not-found.tsx.
       href={`/library?sopId=${encodeURIComponent(sop.sop_id)}`}
-      className="block bg-muted border border-border rounded-lg p-4 hover:border-[#0B6BCB]/30 transition-colors group"
+      className="block bg-muted border border-border rounded-lg p-4 hover:border-primary/30 transition-colors group"
     >
       <div className="flex items-start justify-between gap-2 mb-2">
         <div className="min-w-0">
-          <p className="text-[11px] text-muted-foreground font-mono mb-1">{sop.sop_id}</p>
-          <p className="text-[13px] font-semibold text-foreground group-hover:text-[#0B6BCB] transition-colors line-clamp-2">
+          <p className="text-11 text-muted-foreground font-mono mb-1">{sop.sop_id}</p>
+          <p className="text-13 font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2">
             {sop.title}
           </p>
         </div>
-        <ChevronRight className="w-4 h-4 text-subtle group-hover:text-[#0B6BCB] shrink-0 mt-1 transition-colors" />
+        <ChevronRight className="w-4 h-4 text-subtle group-hover:text-primary shrink-0 mt-1 transition-colors" />
       </div>
       <div className="flex items-center gap-2 flex-wrap">
         <span
           className={cn(
-"text-[10px] font-semibold px-2 py-0.5 rounded-full border capitalize",
+"text-10 font-semibold px-2 py-0.5 rounded-full border capitalize",
             STATUS_BADGE[sop.status]
           )}
         >
           {sop.status.replace("_", " ")}
         </span>
-        <span className="text-[10px] text-muted-foreground">{sop.department}</span>
-        <span className="text-[10px] text-subtle">v{sop.version}</span>
+        <span className="text-10 text-muted-foreground">{sop.department}</span>
+        <span className="text-10 text-subtle">v{sop.version}</span>
       </div>
     </Link>
   )
@@ -218,8 +219,8 @@ function QuickLookup() {
   return (
     <div className="bg-card border border-border shadow-sm rounded-xl p-4">
       <div className="flex items-center gap-2 mb-3">
-        <Search className="w-4 h-4 text-[#0B6BCB]" />
-        <h3 className="text-[13px] font-semibold text-foreground">Quick Lookup</h3>
+        <Search className="w-4 h-4 text-primary" />
+        <h3 className="text-13 font-semibold text-foreground">Quick Lookup</h3>
       </div>
       <form onSubmit={handleSearch} className="flex gap-2">
         <input
@@ -228,11 +229,11 @@ function QuickLookup() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Ask about a protocol or procedure..."
-          className="flex-1 bg-muted border border-border rounded-lg px-3 py-2 text-[13px] text-foreground placeholder:text-subtle focus:outline-none focus:border-[#0B6BCB]/50 focus:ring-1 focus:ring-[#0B6BCB]/20"
+          className="flex-1 bg-muted border border-border rounded-lg px-3 py-2 text-13 text-foreground placeholder:text-subtle focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20"
         />
         <button
           type="submit"
-          className="px-3 py-2 bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 text-[#0B6BCB] rounded-lg text-[13px] font-semibold hover:bg-[#0B6BCB]/25 transition-colors"
+          className="px-3 py-2 bg-primary/10 border border-primary/30 text-primary rounded-lg text-13 font-semibold hover:bg-primary/25 transition-colors"
         >
           Ask
         </button>
@@ -287,18 +288,18 @@ function WinsStat() {
   const hours = Math.round((stats.estimated_minutes_saved / 60) * 10) / 10
 
   return (
-    <div className="bg-card border border-[#0B6BCB]/20 shadow-sm rounded-xl p-4 flex items-start gap-3">
-      <div className="w-9 h-9 rounded-lg bg-[#0B6BCB]/10 flex items-center justify-center shrink-0">
-        <TrendingUp className="w-4 h-4 text-[#0B6BCB]" />
+    <div className="bg-card border border-primary/20 shadow-sm rounded-xl p-4 flex items-start gap-3">
+      <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+        <TrendingUp className="w-4 h-4 text-primary" />
       </div>
       <div className="min-w-0">
-        <p className="text-[13px] text-foreground">
+        <p className="text-13 text-foreground">
           <span className="font-semibold">This week: </span>
-          Meridian answered <span className="font-semibold text-[#0B6BCB]">{stats.queries_this_week}</span> questions,
-          saving an estimated <span className="font-semibold text-[#0B6BCB]">{hours}</span> hours
+          Meridian answered <span className="font-semibold text-primary">{stats.queries_this_week}</span> questions,
+          saving an estimated <span className="font-semibold text-primary">{hours}</span> hours
         </p>
         {stats.illustrative && (
-          <p className="text-[11px] text-subtle mt-0.5">Estimated - usage data unavailable</p>
+          <p className="text-11 text-subtle mt-0.5">Estimated - usage data unavailable</p>
         )}
       </div>
     </div>
@@ -345,8 +346,8 @@ function MostSearchedSops() {
     <div className="bg-card border border-border shadow-sm rounded-xl p-4">
       <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
         <div className="flex items-center gap-2">
-          <BarChart3 className="w-4 h-4 text-[#0B6BCB]" />
-          <h3 className="text-[13px] font-semibold text-foreground">Most-Searched SOPs</h3>
+          <BarChart3 className="w-4 h-4 text-primary" />
+          <h3 className="text-13 font-semibold text-foreground">Most-Searched SOPs</h3>
         </div>
         <div className="flex gap-1 p-0.5 rounded-lg bg-muted border border-border">
           {SEARCH_WINDOWS.map((w) => (
@@ -354,8 +355,8 @@ function MostSearchedSops() {
               key={w.key}
               onClick={() => setWin(w.key)}
               className={cn(
-                "px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors",
-                win === w.key ? "bg-card text-[#0B6BCB] shadow-sm" : "text-muted-foreground hover:text-foreground"
+                "px-2.5 py-1 rounded-md text-11 font-medium transition-colors",
+                win === w.key ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
               )}
             >
               {w.label}
@@ -364,13 +365,13 @@ function MostSearchedSops() {
         </div>
       </div>
       {loading ? (
-        <div className="flex items-center gap-2 text-[12px] text-muted-foreground py-2">
+        <div className="flex items-center gap-2 text-12 text-muted-foreground py-2">
           <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading...
         </div>
       ) : loadError ? (
-        <p className="text-[12px] text-[#B91C1C] dark:text-red-400 py-2">Couldn&apos;t load - backend didn&apos;t respond.</p>
+        <p className="text-12 text-[#B91C1C] dark:text-red-400 py-2">Couldn&apos;t load - backend didn&apos;t respond.</p>
       ) : sops.length === 0 ? (
-        <p className="text-[12px] text-muted-foreground py-2">No queries logged in this window yet.</p>
+        <p className="text-12 text-muted-foreground py-2">No queries logged in this window yet.</p>
       ) : (
         <ol className="space-y-1.5">
           {sops.map((s, i) => (
@@ -379,11 +380,11 @@ function MostSearchedSops() {
                 href={`/library?sopId=${encodeURIComponent(s.sop_id)}`}
                 className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-muted transition-colors group"
               >
-                <span className="text-[11px] font-semibold text-subtle w-4 shrink-0">{i + 1}</span>
-                <span className="flex-1 min-w-0 text-[12px] font-medium text-foreground group-hover:text-[#0B6BCB] transition-colors truncate">
+                <span className="text-11 font-semibold text-subtle w-4 shrink-0">{i + 1}</span>
+                <span className="flex-1 min-w-0 text-12 font-medium text-foreground group-hover:text-primary transition-colors truncate">
                   {s.sop_title}
                 </span>
-                <span className="text-[11px] font-mono text-muted-foreground shrink-0">{s.count}×</span>
+                <span className="text-11 font-mono text-muted-foreground shrink-0">{s.count}×</span>
               </Link>
             </li>
           ))}
@@ -442,7 +443,7 @@ function PhysicianDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Recently Updated SOPs */}
         <div className="space-y-3">
-          <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
+          <h3 className="text-13 font-semibold text-muted-foreground uppercase tracking-widest">
             Recently Updated SOPs {specialtySops.length > 0 ? `in ${currentUser.department}` : ""}
           </h3>
           {recentSops.map((sop) => (
@@ -453,7 +454,7 @@ function PhysicianDashboard() {
         <div className="space-y-4">
           {/* Evidence Watch Alert */}
           <div className="space-y-3">
-            <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
+            <h3 className="text-13 font-semibold text-muted-foreground uppercase tracking-widest">
               Evidence Watch
             </h3>
             {evidenceAlert && (
@@ -467,13 +468,13 @@ function PhysicianDashboard() {
                 <div className="flex items-start gap-2">
                   <AlertTriangle className="w-4 h-4 text-[#B45309] dark:text-amber-400 shrink-0 mt-0.5" />
                   <div className="min-w-0">
-                    <p className="text-[12px] font-semibold text-foreground mb-1">{evidenceAlert.title}</p>
-                    <p className="text-[11px] text-muted-foreground line-clamp-2">{evidenceAlert.summary}</p>
+                    <p className="text-12 font-semibold text-foreground mb-1">{evidenceAlert.title}</p>
+                    <p className="text-11 text-muted-foreground line-clamp-2">{evidenceAlert.summary}</p>
                     <div className="flex items-center gap-2 mt-2">
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30 uppercase">
+                      <span className={cn(toneChip.warning, "text-10 font-semibold px-2 py-0.5 rounded-full uppercase")}>
                         {evidenceAlert.impact_level}
                       </span>
-                      <span className="text-[10px] text-muted-foreground">{evidenceAlert.source_name}</span>
+                      <span className="text-10 text-muted-foreground">{evidenceAlert.source_name}</span>
                     </div>
                   </div>
                 </div>
@@ -489,34 +490,34 @@ function PhysicianDashboard() {
       {/* My Open Proposals */}
       {proposal && (
         <div className="space-y-3">
-          <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
+          <h3 className="text-13 font-semibold text-muted-foreground uppercase tracking-widest">
             My Open Proposals
           </h3>
           <Link
             href={`/proposals/${proposal.id}`}
-            className="block bg-card border border-border rounded-xl p-4 hover:border-[#0B6BCB]/30 transition-colors group"
+            className="block bg-card border border-border rounded-xl p-4 hover:border-primary/30 transition-colors group"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-[13px] font-semibold text-foreground group-hover:text-[#0B6BCB] transition-colors mb-1">
+                <p className="text-13 font-semibold text-foreground group-hover:text-primary transition-colors mb-1">
                   {proposal.title}
                 </p>
-                <p className="text-[11px] text-muted-foreground line-clamp-2 mb-2">{proposal.ai_summary}</p>
+                <p className="text-11 text-muted-foreground line-clamp-2 mb-2">{proposal.ai_summary}</p>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span
                     className={cn(
-"text-[10px] font-semibold px-2 py-0.5 rounded-full border capitalize",
+"text-10 font-semibold px-2 py-0.5 rounded-full border capitalize",
                       PROPOSAL_STATUS_BADGE[proposal.status]
                     )}
                   >
                     {proposal.status.replace("_", " ")}
                   </span>
-                  <span className={cn("text-[10px] font-semibold px-2 py-0.5 rounded-full border capitalize", RISK_BADGE[proposal.priority])}>
+                  <span className={cn("text-10 font-semibold px-2 py-0.5 rounded-full border capitalize", RISK_BADGE[proposal.priority])}>
                     {proposal.priority}
                   </span>
                 </div>
               </div>
-              <ChevronRight className="w-4 h-4 text-subtle group-hover:text-[#0B6BCB] shrink-0 mt-1 transition-colors" />
+              <ChevronRight className="w-4 h-4 text-subtle group-hover:text-primary shrink-0 mt-1 transition-colors" />
             </div>
           </Link>
         </div>
@@ -574,7 +575,7 @@ function NurseDashboard() {
     <div className="space-y-6 relative">
       {/* Toast notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-xl bg-[#DCFCE7] dark:bg-green-500/10 border border-[#BBF7D0] dark:border-green-500/30 text-[#15803D] dark:text-green-400 text-sm font-semibold shadow-lg">
+        <div className={cn(toneChip.success, "fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold shadow-lg")}>
           <CheckCircle2 className="w-4 h-4 shrink-0" />
           {toastMessage}
         </div>
@@ -582,10 +583,10 @@ function NurseDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="space-y-3">
-          <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
+          <h3 className="text-13 font-semibold text-muted-foreground uppercase tracking-widest">
             Protocols Requiring Acknowledgment
             {pendingCount > 0 && (
-              <span className="ml-2 px-1.5 py-0.5 rounded-full bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 text-[10px] font-bold">
+              <span className="ml-2 px-1.5 py-0.5 rounded-full bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 text-10 font-bold">
                 {pendingCount} pending
               </span>
             )}
@@ -599,33 +600,33 @@ function NurseDashboard() {
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="text-[11px] text-muted-foreground font-mono mb-1">{sop.sop_id}</p>
-                    <p className="text-[13px] font-semibold text-foreground line-clamp-2">{sop.title}</p>
+                    <p className="text-11 text-muted-foreground font-mono mb-1">{sop.sop_id}</p>
+                    <p className="text-13 font-semibold text-foreground line-clamp-2">{sop.title}</p>
                   </div>
                   <ChevronRight className="w-4 h-4 text-subtle shrink-0 mt-1" />
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span
                     className={cn(
-"text-[10px] font-semibold px-2 py-0.5 rounded-full border capitalize",
+"text-10 font-semibold px-2 py-0.5 rounded-full border capitalize",
                       STATUS_BADGE[sop.status]
                     )}
                   >
                     {sop.status.replace("_", " ")}
                   </span>
-                  <span className="text-[10px] text-muted-foreground">{sop.department}</span>
-                  <span className="text-[10px] text-subtle">v{sop.version}</span>
+                  <span className="text-10 text-muted-foreground">{sop.department}</span>
+                  <span className="text-10 text-subtle">v{sop.version}</span>
                 </div>
 
                 {/* Acknowledgment button / badge */}
                 {isAcknowledged ? (
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#DCFCE7] dark:bg-green-500/10 border border-[#BBF7D0] dark:border-green-500/30 text-xs text-[#15803D] dark:text-green-400 font-semibold">
+                  <div className={cn(toneChip.success, "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold")}>
                     <CheckCircle2 className="w-3.5 h-3.5" /> Acknowledged
                   </div>
                 ) : (
                   <button
                     onClick={() => acknowledgeFromDashboard(sop.sop_id, sop.title)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#0B6BCB]/40 text-xs text-[#0B6BCB] hover:bg-[#0B6BCB]/10 transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-primary/40 text-xs text-primary hover:bg-primary/10 transition-colors"
                   >
                     <FileCheck className="w-3.5 h-3.5" /> Acknowledge
                   </button>
@@ -636,7 +637,7 @@ function NurseDashboard() {
           {requiresAckSOPs.length > 3 && (
             <button
               onClick={() => setShowAllAcks((v) => !v)}
-              className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-[12px] font-medium text-[#0B6BCB] hover:bg-[#0B6BCB]/5 transition-colors"
+              className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-12 font-medium text-primary hover:bg-primary/5 transition-colors"
             >
               {showAllAcks ? "Show fewer" : `Show all ${requiresAckSOPs.length}`}
             </button>
@@ -644,7 +645,7 @@ function NurseDashboard() {
         </div>
 
         <div className="space-y-3">
-          <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
+          <h3 className="text-13 font-semibold text-muted-foreground uppercase tracking-widest">
             My Training
           </h3>
           {/* Was MOCK_TRAINING.slice(0, 2) - array position, not this
@@ -661,24 +662,24 @@ function NurseDashboard() {
             >
               <div className="flex items-start justify-between gap-2 mb-2">
                 <div className="min-w-0">
-                  <p className="text-[12px] font-semibold text-foreground line-clamp-2">{tm.title}</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">{tm.department} · {tm.estimated_duration_minutes} min</p>
+                  <p className="text-12 font-semibold text-foreground line-clamp-2">{tm.title}</p>
+                  <p className="text-10 text-muted-foreground mt-0.5">{tm.department} · {tm.estimated_duration_minutes} min</p>
                 </div>
                 <span
                   className={cn(
-"text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0 capitalize",
+"text-10 font-semibold px-2 py-0.5 rounded-full border shrink-0 capitalize",
                     tm.status === "completed"
-                      ? "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30"
+                      ? toneChip.success
                       : tm.status === "overdue"
-                      ? "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30"
-                      : "bg-[#0B6BCB]/10 text-[#0B6BCB] border-[#0B6BCB]/30"
+                      ? toneChip.danger
+                      : "bg-primary/10 text-primary border-primary/30"
                   )}
                 >
                   {tm.status}
                 </span>
               </div>
               <div className="space-y-1">
-                <div className="flex justify-between text-[10px] text-muted-foreground">
+                <div className="flex justify-between text-10 text-muted-foreground">
                   <span>Completion</span>
                   <span>{tm.completion_rate}%</span>
                 </div>
@@ -686,7 +687,7 @@ function NurseDashboard() {
                   <div
                     className={cn(
 "h-full rounded-full",
-                      tm.completion_rate >= 90 ? "bg-[#15803D]" : tm.completion_rate >= 60 ? "bg-[#0B6BCB]" : "bg-[#B45309]"
+                      tm.completion_rate >= 90 ? "bg-[#15803D]" : tm.completion_rate >= 60 ? "bg-primary" : "bg-[#B45309]"
                     )}
                     style={{ width: `${tm.completion_rate}%` }}
                   />
@@ -724,7 +725,7 @@ function GovernanceAttentionSummary() {
 
   return (
     <div className="space-y-3">
-      <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
+      <h3 className="text-13 font-semibold text-muted-foreground uppercase tracking-widest">
         Needs Your Attention
       </h3>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -732,10 +733,10 @@ function GovernanceAttentionSummary() {
           <a
             key={item.label}
             href={item.href}
-            className="bg-card border border-border shadow-sm rounded-xl p-4 hover:border-[#0B6BCB]/30 transition-colors block"
+            className="bg-card border border-border shadow-sm rounded-xl p-4 hover:border-primary/30 transition-colors block"
           >
             <p className={cn("text-2xl font-bold font-display", HEALTH_TEXT_COLOR[item.color])}>{item.value}</p>
-            <p className="text-[11px] text-muted-foreground mt-1">{item.label}</p>
+            <p className="text-11 text-muted-foreground mt-1">{item.label}</p>
           </a>
         ))}
       </div>
@@ -770,12 +771,12 @@ function DeptAdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Department Compliance */}
         <div className="space-y-3">
-          <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
+          <h3 className="text-13 font-semibold text-muted-foreground uppercase tracking-widest">
             Department Compliance
           </h3>
           <div className="bg-card border border-border shadow-sm rounded-xl overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-[12px]">
+              <table className="w-full text-12">
               <thead>
                 <tr className="border-b border-border">
                   <th className="text-left px-3 py-2 text-muted-foreground font-semibold">Department</th>
@@ -812,7 +813,7 @@ function DeptAdminDashboard() {
             {MOCK_COMPLIANCE.length > 5 && (
               <button
                 onClick={() => setShowAllDepts((v) => !v)}
-                className="w-full px-3 py-2 text-[11px] font-semibold text-[#0B6BCB] hover:bg-muted transition-colors border-t border-border"
+                className="w-full px-3 py-2 text-11 font-semibold text-primary hover:bg-muted transition-colors border-t border-border"
               >
                 {showAllDepts ? "Show fewer" : `Show all ${MOCK_COMPLIANCE.length} departments`}
               </button>
@@ -822,7 +823,7 @@ function DeptAdminDashboard() {
 
         {/* Overdue Reviews */}
         <div className="space-y-3">
-          <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
+          <h3 className="text-13 font-semibold text-muted-foreground uppercase tracking-widest">
             Overdue Reviews
           </h3>
           {overdueSops.map((sop) => (
@@ -851,7 +852,7 @@ function ComplianceOfficerDashboard() {
       {/* Compliance Heatmap */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
+          <h3 className="text-13 font-semibold text-muted-foreground uppercase tracking-widest">
             Compliance Heatmap
           </h3>
           <button
@@ -865,7 +866,7 @@ function ComplianceOfficerDashboard() {
               compliance_score: c.compliance_score,
               risk_flags: c.risk_flags,
             })))}
-            className="flex items-center gap-2 px-3 py-1.5 bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 text-[#0B6BCB] rounded-lg text-[12px] font-semibold hover:bg-[#0B6BCB]/25 transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 border border-primary/30 text-primary rounded-lg text-12 font-semibold hover:bg-primary/25 transition-colors"
           >
             <Download className="w-3.5 h-3.5" />
             Export Report
@@ -884,7 +885,7 @@ function ComplianceOfficerDashboard() {
                   : "border-[#FECACA] dark:border-red-500/30"
               )}
             >
-              <p className="text-[11px] text-muted-foreground font-semibold mb-1">{c.department}</p>
+              <p className="text-11 text-muted-foreground font-semibold mb-1">{c.department}</p>
               <p
                 className={cn(
 "text-xl font-bold font-display",
@@ -897,7 +898,7 @@ function ComplianceOfficerDashboard() {
               >
                 {c.compliance_score}%
               </p>
-              <div className="mt-2 space-y-0.5 text-[10px] text-muted-foreground">
+              <div className="mt-2 space-y-0.5 text-10 text-muted-foreground">
                 <p>{c.overdue_acknowledgments} overdue acks</p>
                 <p>{c.risk_flags} risk flag{c.risk_flags !== 1 ? "s" : ""}</p>
               </div>
@@ -930,7 +931,7 @@ function CommitteeDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="space-y-3">
-          <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
+          <h3 className="text-13 font-semibold text-muted-foreground uppercase tracking-widest">
             Awaiting Your Review
           </h3>
           {/* Static preview, not a Link and no action buttons - these are
@@ -945,7 +946,7 @@ function CommitteeDashboard() {
               filtered to the same awaitingVote set the stat tile above
               counts, so the heading and the list agree. */}
           {awaitingVote.length === 0 && (
-            <p className="text-[12px] text-muted-foreground px-1">Nothing awaiting your review right now.</p>
+            <p className="text-12 text-muted-foreground px-1">Nothing awaiting your review right now.</p>
           )}
           {awaitingVote.map((proposal) => (
             <div
@@ -954,19 +955,19 @@ function CommitteeDashboard() {
             >
               <div className="flex items-start gap-2 mb-2">
                 <div className="min-w-0 flex-1">
-                  <p className="text-[12px] font-semibold text-foreground line-clamp-2 mb-1">
+                  <p className="text-12 font-semibold text-foreground line-clamp-2 mb-1">
                     {proposal.title}
                   </p>
                   <div className="flex items-center gap-2 flex-wrap">
                     <span
                       className={cn(
-"text-[10px] font-semibold px-2 py-0.5 rounded-full border capitalize",
+"text-10 font-semibold px-2 py-0.5 rounded-full border capitalize",
                         PROPOSAL_STATUS_BADGE[proposal.status]
                       )}
                     >
                       {proposal.status.replace("_", " ")}
                     </span>
-                    <span className={cn("text-[10px] font-semibold px-2 py-0.5 rounded-full border capitalize", RISK_BADGE[proposal.priority])}>
+                    <span className={cn("text-10 font-semibold px-2 py-0.5 rounded-full border capitalize", RISK_BADGE[proposal.priority])}>
                       {proposal.priority}
                     </span>
                   </div>
@@ -974,13 +975,13 @@ function CommitteeDashboard() {
               </div>
             </div>
           ))}
-          <Link href="/proposals" className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#0B6BCB] hover:text-[#0959AC] transition-colors">
+          <Link href="/proposals" className="inline-flex items-center gap-1 text-11 font-semibold text-primary hover:text-primary-hover transition-colors">
             Review real proposals <ChevronRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 
         <div className="space-y-3">
-          <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
+          <h3 className="text-13 font-semibold text-muted-foreground uppercase tracking-widest">
             Evidence Packets
           </h3>
           {MOCK_EVIDENCE_WATCH.slice(0, 3).map((ew) => (
@@ -988,17 +989,17 @@ function CommitteeDashboard() {
               key={ew.id}
               className="bg-muted border border-border rounded-lg p-4"
             >
-              <p className="text-[12px] font-semibold text-foreground mb-1 line-clamp-2">{ew.title}</p>
+              <p className="text-12 font-semibold text-foreground mb-1 line-clamp-2">{ew.title}</p>
               <div className="flex items-center gap-2 flex-wrap">
                 <span
                   className={cn(
-"text-[10px] font-semibold px-2 py-0.5 rounded-full border uppercase",
+"text-10 font-semibold px-2 py-0.5 rounded-full border uppercase",
                     RISK_BADGE[ew.impact_level]
                   )}
                 >
                   {ew.impact_level}
                 </span>
-                <span className="text-[10px] text-muted-foreground">{ew.source_name}</span>
+                <span className="text-10 text-muted-foreground">{ew.source_name}</span>
               </div>
             </div>
           ))}
@@ -1022,7 +1023,7 @@ function LegalRiskDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="space-y-3">
-          <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
+          <h3 className="text-13 font-semibold text-muted-foreground uppercase tracking-widest">
             Legal Issues Requiring Action
           </h3>
           {MOCK_LEGAL.map((item) => (
@@ -1038,18 +1039,18 @@ function LegalRiskDashboard() {
               )}
             >
               <div className="flex items-start justify-between gap-2 mb-2">
-                <p className="text-[12px] font-semibold text-foreground line-clamp-2">{item.sop_title}</p>
-                <span className={cn("text-[10px] font-semibold px-2 py-0.5 rounded-full border capitalize shrink-0", RISK_BADGE[item.risk_classification])}>
+                <p className="text-12 font-semibold text-foreground line-clamp-2">{item.sop_title}</p>
+                <span className={cn("text-10 font-semibold px-2 py-0.5 rounded-full border capitalize shrink-0", RISK_BADGE[item.risk_classification])}>
                   {item.risk_classification}
                 </span>
               </div>
-              <p className="text-[11px] text-muted-foreground line-clamp-2 mb-2">{item.description}</p>
+              <p className="text-11 text-muted-foreground line-clamp-2 mb-2">{item.description}</p>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] text-subtle capitalize">{item.issue_type.replace("_", " ")}</span>
-                <span className="text-[10px] text-subtle">·</span>
+                <span className="text-10 text-subtle capitalize">{item.issue_type.replace("_", " ")}</span>
+                <span className="text-10 text-subtle">·</span>
                 <span
                   className={cn(
-"text-[10px] font-semibold capitalize",
+"text-10 font-semibold capitalize",
                     item.status === "open" ? "text-[#B91C1C] dark:text-red-400" : item.status === "under_review" ? "text-[#B45309] dark:text-amber-400" : "text-[#15803D] dark:text-green-400"
                   )}
                 >
@@ -1061,22 +1062,22 @@ function LegalRiskDashboard() {
         </div>
 
         <div className="space-y-3">
-          <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
+          <h3 className="text-13 font-semibold text-muted-foreground uppercase tracking-widest">
             Proposals for Legal Review
           </h3>
           {MOCK_PROPOSALS.filter((p) => p.legal_review_required).map((proposal) => (
             <Link
               key={proposal.id}
               href={`/proposals/${proposal.id}`}
-              className="block bg-muted border border-border rounded-lg p-4 hover:border-[#0B6BCB]/30 transition-colors group"
+              className="block bg-muted border border-border rounded-lg p-4 hover:border-primary/30 transition-colors group"
             >
-              <p className="text-[12px] font-semibold text-foreground group-hover:text-[#0B6BCB] transition-colors line-clamp-2 mb-2">
+              <p className="text-12 font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2 mb-2">
                 {proposal.title}
               </p>
-              <p className="text-[11px] text-muted-foreground line-clamp-2 mb-2">{proposal.legal_impact}</p>
+              <p className="text-11 text-muted-foreground line-clamp-2 mb-2">{proposal.legal_impact}</p>
               <span
                 className={cn(
-"text-[10px] font-semibold px-2 py-0.5 rounded-full border capitalize",
+"text-10 font-semibold px-2 py-0.5 rounded-full border capitalize",
                   PROPOSAL_STATUS_BADGE[proposal.status]
                 )}
               >
@@ -1131,27 +1132,27 @@ function LearningActivityFeed() {
   return (
     <div className="bg-card border border-border shadow-sm rounded-xl p-4">
       <div className="flex items-center gap-2 mb-3">
-        <CheckCheck className="w-4 h-4 text-[#0B6BCB]" />
-        <h3 className="text-[13px] font-semibold text-foreground">Recent Learning Activity</h3>
+        <CheckCheck className="w-4 h-4 text-primary" />
+        <h3 className="text-13 font-semibold text-foreground">Recent Learning Activity</h3>
       </div>
       {loading ? (
-        <div className="flex items-center gap-2 text-[12px] text-muted-foreground py-2">
+        <div className="flex items-center gap-2 text-12 text-muted-foreground py-2">
           <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading...
         </div>
       ) : loadError ? (
-        <p className="text-[12px] text-[#B91C1C] dark:text-red-400 py-2">Couldn&apos;t load - backend didn&apos;t respond.</p>
+        <p className="text-12 text-[#B91C1C] dark:text-red-400 py-2">Couldn&apos;t load - backend didn&apos;t respond.</p>
       ) : entries.length === 0 ? (
-        <p className="text-[12px] text-muted-foreground py-2">No logged activity yet - scenario completions and SOP reviews will appear here.</p>
+        <p className="text-12 text-muted-foreground py-2">No logged activity yet.</p>
       ) : (
         <ul className="space-y-1.5">
           {entries.map((e) => (
             <li key={e.id} className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg hover:bg-muted transition-colors">
               <div className="min-w-0">
-                <span className="text-[12px] font-medium text-foreground">{e.user_name || "Unknown user"}</span>
-                <span className="text-[12px] text-muted-foreground"> · {ACTIVITY_TYPE_LABEL[e.activity_type] || e.activity_type}</span>
-                {e.activity_title && <span className="block text-[11px] text-subtle truncate">{e.activity_title}</span>}
+                <span className="text-12 font-medium text-foreground">{e.user_name || "Unknown user"}</span>
+                <span className="text-12 text-muted-foreground"> · {ACTIVITY_TYPE_LABEL[e.activity_type] || e.activity_type}</span>
+                {e.activity_title && <span className="block text-11 text-subtle truncate">{e.activity_title}</span>}
               </div>
-              <span className="text-[11px] font-mono text-muted-foreground shrink-0">+{e.credits}</span>
+              <span className="text-11 font-mono text-muted-foreground shrink-0">+{e.credits}</span>
             </li>
           ))}
         </ul>
@@ -1187,30 +1188,30 @@ function TrainingNeedSignals() {
     <div className="bg-card border border-border shadow-sm rounded-xl p-4">
       <div className="flex items-center gap-2 mb-1">
         <AlertTriangle className="w-4 h-4 text-[#B45309] dark:text-amber-400" />
-        <h3 className="text-[13px] font-semibold text-foreground">Training-Need Signals</h3>
+        <h3 className="text-13 font-semibold text-foreground">Training-Need Signals</h3>
       </div>
-      <p className="text-[11px] text-muted-foreground mb-3">
+      <p className="text-11 text-muted-foreground mb-3">
         Questions staff asked with no approved SOP to answer them - said more than once is a prioritization signal.
       </p>
       {loading ? (
-        <div className="flex items-center gap-2 text-[12px] text-muted-foreground py-2">
+        <div className="flex items-center gap-2 text-12 text-muted-foreground py-2">
           <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading...
         </div>
       ) : loadError ? (
-        <p className="text-[12px] text-[#B91C1C] dark:text-red-400 py-2">Couldn&apos;t load - backend didn&apos;t respond.</p>
+        <p className="text-12 text-[#B91C1C] dark:text-red-400 py-2">Couldn&apos;t load - backend didn&apos;t respond.</p>
       ) : clusters.length === 0 ? (
-        <p className="text-[12px] text-muted-foreground py-2">No coverage gaps flagged yet.</p>
+        <p className="text-12 text-muted-foreground py-2">No coverage gaps flagged yet.</p>
       ) : (
         <ul className="space-y-2">
           {clusters.map((c, i) => (
             <li key={i} className="px-2 py-1.5 rounded-lg bg-muted">
-              <p className="text-[12px] font-medium text-foreground line-clamp-2">{c.representative_question}</p>
+              <p className="text-12 font-medium text-foreground line-clamp-2">{c.representative_question}</p>
               <div className="flex items-center gap-2 mt-1 flex-wrap">
-                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30">
+                <span className={cn(toneChip.warning, "text-10 font-semibold px-1.5 py-0.5 rounded-full")}>
                   Asked {c.count}×
                 </span>
                 {c.most_common_department && (
-                  <span className="text-[10px] text-muted-foreground">{c.most_common_department}</span>
+                  <span className="text-10 text-muted-foreground">{c.most_common_department}</span>
                 )}
               </div>
             </li>
@@ -1248,13 +1249,13 @@ function CreditsLeaderboard() {
   return (
     <div className="bg-card border border-border shadow-sm rounded-xl p-4">
       <div className="flex items-center gap-2 mb-3">
-        <TrendingUp className="w-4 h-4 text-[#0B6BCB]" />
-        <h3 className="text-[13px] font-semibold text-foreground">Top Contributors</h3>
+        <TrendingUp className="w-4 h-4 text-primary" />
+        <h3 className="text-13 font-semibold text-foreground">Top Contributors</h3>
       </div>
       <ol className="flex flex-wrap gap-2">
         {entries.map((e, i) => (
-          <li key={e.user_id || i} className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted text-[12px]">
-            <span className="text-[10px] font-semibold text-subtle">{i + 1}</span>
+          <li key={e.user_id || i} className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted text-12">
+            <span className="text-10 font-semibold text-subtle">{i + 1}</span>
             <span className="font-medium text-foreground">{e.user_name || "Unknown"}</span>
             <span className="text-muted-foreground font-mono">{e.total_credits}</span>
           </li>
@@ -1279,15 +1280,15 @@ function NurseEducatorDashboard() {
           /api/analytics/top-sops) but were never surfaced to this role -
           previously this dashboard made zero fetches. */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
+        <h3 className="text-13 font-semibold text-muted-foreground uppercase tracking-widest">
           What's Actually Happening
         </h3>
         <div className="flex items-center gap-2">
-          <Link href="/training" className="text-[12px] font-medium text-[#0B6BCB] hover:underline">
+          <Link href="/training" className="text-12 font-medium text-primary hover:underline">
             Go to Training
           </Link>
           <span className="text-subtle">·</span>
-          <Link href="/library" className="text-[12px] font-medium text-[#0B6BCB] hover:underline">
+          <Link href="/library" className="text-12 font-medium text-primary hover:underline">
             Go to Library
           </Link>
         </div>
@@ -1310,7 +1311,7 @@ function NurseEducatorDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 space-y-3">
-          <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
+          <h3 className="text-13 font-semibold text-muted-foreground uppercase tracking-widest">
             Training Modules
           </h3>
           {MOCK_TRAINING.map((tm) => (
@@ -1320,24 +1321,24 @@ function NurseEducatorDashboard() {
             >
               <div className="flex items-start justify-between gap-2 mb-3">
                 <div className="min-w-0">
-                  <p className="text-[13px] font-semibold text-foreground line-clamp-1 mb-1">{tm.title}</p>
-                  <p className="text-[11px] text-muted-foreground">{tm.department} · {tm.format} · {tm.estimated_duration_minutes} min</p>
+                  <p className="text-13 font-semibold text-foreground line-clamp-1 mb-1">{tm.title}</p>
+                  <p className="text-11 text-muted-foreground">{tm.department} · {tm.format} · {tm.estimated_duration_minutes} min</p>
                 </div>
                 <span
                   className={cn(
-"text-[10px] font-semibold px-2 py-0.5 rounded-full border capitalize shrink-0",
+"text-10 font-semibold px-2 py-0.5 rounded-full border capitalize shrink-0",
                     tm.status === "completed"
-                      ? "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30"
+                      ? toneChip.success
                       : tm.status === "overdue"
-                      ? "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30"
-                      : "bg-[#0B6BCB]/10 text-[#0B6BCB] border-[#0B6BCB]/30"
+                      ? toneChip.danger
+                      : "bg-primary/10 text-primary border-primary/30"
                   )}
                 >
                   {tm.status}
                 </span>
               </div>
               <div className="space-y-1.5 mb-3">
-                <div className="flex justify-between text-[11px]">
+                <div className="flex justify-between text-11">
                   <span className="text-muted-foreground">Completion</span>
                   <span
                     className={cn(
@@ -1345,7 +1346,7 @@ function NurseEducatorDashboard() {
                       tm.completion_rate >= 90
                         ? "text-[#15803D] dark:text-green-400"
                         : tm.completion_rate >= 70
-                        ? "text-[#0B6BCB]"
+                        ? "text-primary"
                         : "text-[#B45309] dark:text-amber-400"
                     )}
                   >
@@ -1359,7 +1360,7 @@ function NurseEducatorDashboard() {
                       tm.completion_rate >= 90
                         ? "bg-[#15803D]"
                         : tm.completion_rate >= 70
-                        ? "bg-[#0B6BCB]"
+                        ? "bg-primary"
                         : "bg-[#B45309]"
                     )}
                     style={{ width: `${tm.completion_rate}%` }}
@@ -1370,12 +1371,12 @@ function NurseEducatorDashboard() {
                 {[
                   { label: "Total", value: tm.total_assigned, color: "text-subtle" },
                   { label: "Done", value: tm.completed, color: "text-[#15803D] dark:text-green-400" },
-                  { label: "Active", value: tm.in_progress, color: "text-[#0B6BCB]" },
+                  { label: "Active", value: tm.in_progress, color: "text-primary" },
                   { label: "Overdue", value: tm.overdue, color: "text-[#B91C1C] dark:text-red-400" },
                 ].map(({ label, value, color }) => (
                   <div key={label} className="bg-muted rounded-lg py-1.5">
                     <p className={cn("text-[14px] font-bold font-display", color)}>{value}</p>
-                    <p className="text-[9px] text-subtle uppercase tracking-wide">{label}</p>
+                    <p className="text-9 text-subtle uppercase tracking-wide">{label}</p>
                   </div>
                 ))}
               </div>
@@ -1384,12 +1385,12 @@ function NurseEducatorDashboard() {
         </div>
 
         <div className="space-y-3">
-          <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
+          <h3 className="text-13 font-semibold text-muted-foreground uppercase tracking-widest">
             Department Summary
           </h3>
           <div className="bg-card border border-border shadow-sm rounded-xl overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-[12px]">
+              <table className="w-full text-12">
               <thead>
                 <tr className="border-b border-border">
                   <th className="text-left px-3 py-2 text-muted-foreground font-semibold">Dept</th>
@@ -1605,24 +1606,24 @@ function SystemAdminDashboard() {
           governance, or evidence signal below without this; every number
           here comes from a real endpoint, not a fixture. */}
       <div className="space-y-3">
-        <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
+        <h3 className="text-13 font-semibold text-muted-foreground uppercase tracking-widest">
           Governance Pulse
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Link href="/proposals" className="bg-card border border-border shadow-sm rounded-xl p-4 hover:border-[#0B6BCB]/30 transition-colors">
-            <p className="text-[11px] text-muted-foreground uppercase tracking-widest font-semibold mb-1">Open Proposals</p>
-            <p className="text-2xl font-bold font-display text-[#0B6BCB]">{pulse.openProposals ?? "-"}</p>
+          <Link href="/proposals" className="bg-card border border-border shadow-sm rounded-xl p-4 hover:border-primary/30 transition-colors">
+            <p className="text-11 text-muted-foreground uppercase tracking-widest font-semibold mb-1">Open Proposals</p>
+            <p className="text-2xl font-bold font-display text-primary">{pulse.openProposals ?? "-"}</p>
           </Link>
-          <Link href="/library" className="bg-card border border-border shadow-sm rounded-xl p-4 hover:border-[#0B6BCB]/30 transition-colors">
-            <p className="text-[11px] text-muted-foreground uppercase tracking-widest font-semibold mb-1">SOP Gap Clusters</p>
+          <Link href="/library" className="bg-card border border-border shadow-sm rounded-xl p-4 hover:border-primary/30 transition-colors">
+            <p className="text-11 text-muted-foreground uppercase tracking-widest font-semibold mb-1">SOP Gap Clusters</p>
             <p className="text-2xl font-bold font-display text-[#B45309] dark:text-amber-400">{pulse.gapReportClusters ?? "-"}</p>
           </Link>
-          <Link href="/incidents" className="bg-card border border-border shadow-sm rounded-xl p-4 hover:border-[#0B6BCB]/30 transition-colors">
-            <p className="text-[11px] text-muted-foreground uppercase tracking-widest font-semibold mb-1">Open Exceptions</p>
+          <Link href="/incidents" className="bg-card border border-border shadow-sm rounded-xl p-4 hover:border-primary/30 transition-colors">
+            <p className="text-11 text-muted-foreground uppercase tracking-widest font-semibold mb-1">Open Exceptions</p>
             <p className="text-2xl font-bold font-display text-[#B91C1C] dark:text-red-400">{pulse.openExceptions ?? "-"}</p>
           </Link>
           <div className="bg-card border border-border shadow-sm rounded-xl p-4">
-            <p className="text-[11px] text-muted-foreground uppercase tracking-widest font-semibold mb-1">Evidence Providers</p>
+            <p className="text-11 text-muted-foreground uppercase tracking-widest font-semibold mb-1">Evidence Providers</p>
             <p className="text-2xl font-bold font-display text-[#15803D] dark:text-green-400">
               {pulse.activeProviders ?? "-"}<span className="text-muted-foreground text-base">/{pulse.totalProviders ?? "-"}</span>
             </p>
@@ -1633,7 +1634,7 @@ function SystemAdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* System Health */}
         <div className="space-y-3">
-          <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
+          <h3 className="text-13 font-semibold text-muted-foreground uppercase tracking-widest">
             System Health
           </h3>
           <div className="space-y-2">
@@ -1647,17 +1648,17 @@ function SystemAdminDashboard() {
                 key={label}
                 className="flex items-center justify-between bg-card border border-border rounded-lg px-3 py-2.5"
               >
-                <span className="text-[12px] text-muted-foreground">{label}</span>
+                <span className="text-12 text-muted-foreground">{label}</span>
                 <div className="flex items-center gap-1.5">
                   <div className={cn("w-1.5 h-1.5 rounded-full", HEALTH_DOT_COLOR[color])} />
-                  <span className={cn("text-[11px] font-semibold", HEALTH_TEXT_COLOR[color])}>{status}</span>
+                  <span className={cn("text-11 font-semibold", HEALTH_TEXT_COLOR[color])}>{status}</span>
                 </div>
               </div>
             ))}
           </div>
 
           {/* Quick Actions */}
-          <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest mt-4">
+          <h3 className="text-13 font-semibold text-muted-foreground uppercase tracking-widest mt-4">
             Quick Actions
           </h3>
           <div className="space-y-2">
@@ -1669,11 +1670,11 @@ function SystemAdminDashboard() {
               <Link
                 key={href}
                 href={href}
-                className="flex items-center gap-2 px-3 py-2.5 bg-card border border-border rounded-lg hover:border-[#0B6BCB]/30 transition-colors group"
+                className="flex items-center gap-2 px-3 py-2.5 bg-card border border-border rounded-lg hover:border-primary/30 transition-colors group"
               >
-                <Icon className="w-4 h-4 text-[#0B6BCB]" />
-                <span className="text-[12px] text-foreground group-hover:text-foreground transition-colors">{label}</span>
-                <ChevronRight className="w-3.5 h-3.5 text-subtle group-hover:text-[#0B6BCB] ml-auto transition-colors" />
+                <Icon className="w-4 h-4 text-primary" />
+                <span className="text-12 text-foreground group-hover:text-foreground transition-colors">{label}</span>
+                <ChevronRight className="w-3.5 h-3.5 text-subtle group-hover:text-primary ml-auto transition-colors" />
               </Link>
             ))}
           </div>
@@ -1681,15 +1682,15 @@ function SystemAdminDashboard() {
 
         {/* Recent Activity */}
         <div className="lg:col-span-2 space-y-3">
-          <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-widest">
+          <h3 className="text-13 font-semibold text-muted-foreground uppercase tracking-widest">
             Recent Activity
           </h3>
           <div className="space-y-2">
             {activityError && (
-              <p className="text-[12px] text-[#B91C1C] dark:text-red-400 px-1">Couldn&apos;t load activity - backend didn&apos;t respond.</p>
+              <p className="text-12 text-[#B91C1C] dark:text-red-400 px-1">Couldn&apos;t load activity - backend didn&apos;t respond.</p>
             )}
             {!activityError && recentActivity.length === 0 && (
-              <p className="text-[12px] text-subtle px-1">No activity logged yet this session.</p>
+              <p className="text-12 text-subtle px-1">No activity logged yet this session.</p>
             )}
             {recentActivity.map((entry) => {
               const Icon = ACTIVITY_ICON[entry.action] ?? Activity
@@ -1698,15 +1699,15 @@ function SystemAdminDashboard() {
                   key={entry.id}
                   className="flex items-start gap-3 bg-card border border-border rounded-lg px-3 py-3"
                 >
-                  <div className="w-7 h-7 rounded-lg bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 flex items-center justify-center shrink-0">
-                    <Icon className="w-3.5 h-3.5 text-[#0B6BCB]" />
+                  <div className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/30 flex items-center justify-center shrink-0">
+                    <Icon className="w-3.5 h-3.5 text-primary" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[12px] text-foreground line-clamp-2">{summarizeActivity(entry)}</p>
+                    <p className="text-12 text-foreground line-clamp-2">{summarizeActivity(entry)}</p>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-[10px] text-subtle">{entry.user_name}</span>
-                      <span className="text-[10px] text-subtle">·</span>
-                      <span className="text-[10px] text-subtle">
+                      <span className="text-10 text-subtle">{entry.user_name}</span>
+                      <span className="text-10 text-subtle">·</span>
+                      <span className="text-10 text-subtle">
                         {new Date(entry.timestamp).toLocaleDateString("en-US")}
                       </span>
                     </div>
@@ -1734,8 +1735,8 @@ export default function DashboardPage() {
   })()
 
   const ROLE_BADGE_COLORS: Record<typeof role, string> = {
-    clinical_staff: "bg-[#0B6BCB]/10 text-[#0B6BCB] border-[#0B6BCB]/30",
-    governance_compliance: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30",
+    clinical_staff: "bg-primary/10 text-primary border-primary/30",
+    governance_compliance: toneChip.success,
     educator: "bg-card text-muted-foreground border-input",
     system_admin: "bg-card text-muted-foreground border-input",
   }
@@ -1751,16 +1752,16 @@ export default function DashboardPage() {
               <h1 className="text-2xl font-bold text-foreground mb-1">
                 {greeting}, {currentUser.name.split(" ")[0]}
               </h1>
-              <p className="text-[13px] text-muted-foreground">{currentUser.title}</p>
+              <p className="text-13 text-muted-foreground">{currentUser.title}</p>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className={cn("text-[11px] font-semibold px-2.5 py-1 rounded-full border", ROLE_BADGE_COLORS[role])}>
+              <span className={cn("text-11 font-semibold px-2.5 py-1 rounded-full border", ROLE_BADGE_COLORS[role])}>
                 {roleConfig.label}
               </span>
-              <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full border bg-muted text-muted-foreground border-border">
+              <span className="text-11 font-semibold px-2.5 py-1 rounded-full border bg-muted text-muted-foreground border-border">
                 {currentUser.department}
               </span>
-              <span className="text-[11px] text-subtle">
+              <span className="text-11 text-subtle">
                 {new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
               </span>
             </div>
@@ -1773,20 +1774,20 @@ export default function DashboardPage() {
         {["system_admin", "governance_compliance"].includes(role) && (
           <Link
             href="/leadership"
-            className="flex items-center gap-3 bg-card border border-[#0B6BCB]/30 rounded-xl px-4 py-3 hover:border-[#0B6BCB]/40 transition-colors group"
+            className="flex items-center gap-3 bg-card border border-primary/30 rounded-xl px-4 py-3 hover:border-primary/40 transition-colors group"
           >
-            <div className="w-9 h-9 rounded-lg bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 flex items-center justify-center shrink-0">
-              <BarChart3 className="w-4 h-4 text-[#0B6BCB]" />
+            <div className="w-9 h-9 rounded-lg bg-primary/10 border border-primary/30 flex items-center justify-center shrink-0">
+              <BarChart3 className="w-4 h-4 text-primary" />
             </div>
             <div className="min-w-0">
-              <p className="text-[13px] font-semibold text-foreground group-hover:text-[#0B6BCB] transition-colors">
+              <p className="text-13 font-semibold text-foreground group-hover:text-primary transition-colors">
                 Leadership Overview
               </p>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-11 text-muted-foreground">
                 Board scorecard, evidence freshness, quarterly activity
               </p>
             </div>
-            <ChevronRight className="w-4 h-4 text-subtle group-hover:text-[#0B6BCB] ml-auto shrink-0 transition-colors" />
+            <ChevronRight className="w-4 h-4 text-subtle group-hover:text-primary ml-auto shrink-0 transition-colors" />
           </Link>
         )}
 

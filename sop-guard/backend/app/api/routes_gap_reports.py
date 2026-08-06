@@ -19,8 +19,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.database.db import get_db
-from app.models.models import SOPGapReportRecord, QueryLogRecord
+from app.models.models import SOPGapReportRecord, QueryLogRecord, StaffUser
 from app.services.activity import log_activity
+from app.services.auth import get_current_user, require_permission
 
 try:
     from app.api.routes_governance import _emit_notification
@@ -61,7 +62,11 @@ def _serialize(r: SOPGapReportRecord) -> dict:
 
 
 @router.post("/api/sop-gap-reports")
-async def create_gap_report(payload: GapReportCreate, db: AsyncSession = Depends(get_db)):
+async def create_gap_report(
+    payload: GapReportCreate,
+    db: AsyncSession = Depends(get_db),
+    user: StaffUser = Depends(get_current_user),
+):
     record = SOPGapReportRecord(
         question=payload.question,
         asked_at=datetime.now(timezone.utc),
@@ -250,7 +255,11 @@ async def auto_detected_gaps(db: AsyncSession = Depends(get_db), days: int = 30,
 
 
 @router.post("/api/sop-gap-reports/{report_id}/send-to-committee")
-async def send_gap_report_to_committee(report_id: int, db: AsyncSession = Depends(get_db)):
+async def send_gap_report_to_committee(
+    report_id: int,
+    db: AsyncSession = Depends(get_db),
+    user: StaffUser = Depends(require_permission("manage_quality")),
+):
     record = (await db.execute(
         select(SOPGapReportRecord).where(SOPGapReportRecord.id == report_id)
     )).scalar_one_or_none()

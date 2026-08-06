@@ -7,6 +7,8 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 import app.models.models  # noqa: F401 - register models on Base
 from app.main import app as fastapi_app
 from app.database.db import Base, get_db
+from app.models.models import StaffUser
+from app.services.auth import get_current_user
 
 
 @pytest.fixture
@@ -26,11 +28,24 @@ async def client(tmp_path):
                 await session.rollback()
                 raise
 
+    # This suite predates Phase S and only touches /api/governance/proposals
+    # incidentally (test_capa_links_to_proposal) - same fixed-identity
+    # pattern as test_governance_api.py, since this suite is about CAPA
+    # lifecycle, not auth.
+    async def _override_current_user() -> StaffUser:
+        return StaffUser(
+            id=1, staff_id="test-admin", name="Test Admin", role="system_admin",
+            department="Test", title="Test",
+            password_hash="",
+        )
+
     fastapi_app.dependency_overrides[get_db] = _override_get_db
+    fastapi_app.dependency_overrides[get_current_user] = _override_current_user
     transport = ASGITransport(app=fastapi_app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
     fastapi_app.dependency_overrides.pop(get_db, None)
+    fastapi_app.dependency_overrides.pop(get_current_user, None)
     await engine.dispose()
 
 

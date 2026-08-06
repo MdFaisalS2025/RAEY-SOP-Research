@@ -106,8 +106,8 @@ export function CommandPalette() {
         name: "Sign out",
         keywords: "logout exit leave",
         group: "Actions",
-        run: () => {
-          auth.logout()
+        run: async () => {
+          await auth.logout()
           router.push("/login")
         },
       },
@@ -237,7 +237,7 @@ export function CommandPalette() {
             spellCheck={false}
             className="flex-1 bg-transparent outline-none text-sm text-[#1A2332] dark:text-subtle placeholder:text-subtle"
           />
-          <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded border border-[#E2E8F0] dark:border-white/10 text-[10px] font-medium text-subtle">
+          <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded border border-[#E2E8F0] dark:border-white/10 text-10 font-medium text-subtle">
             Esc
           </kbd>
         </div>
@@ -251,7 +251,7 @@ export function CommandPalette() {
             const Icon = GROUP_ICON[group.label]
             return (
               <div key={group.label}>
-                <p className="px-4 pt-2.5 pb-1 text-[10px] font-semibold uppercase tracking-widest text-subtle">
+                <p className="px-4 pt-2.5 pb-1 text-10 font-semibold uppercase tracking-widest text-subtle">
                   {group.label}
                 </p>
                 {group.items.map((cmd) => {
@@ -266,16 +266,16 @@ export function CommandPalette() {
                       onClick={() => runCommand(cmd)}
                       onMouseMove={() => setSelected(i)}
                       className={cn(
-                        "w-full flex items-center gap-2.5 px-4 py-2 text-left text-[13px] font-medium transition-colors",
+                        "w-full flex items-center gap-2.5 px-4 py-2 text-left text-13 font-medium transition-colors",
                         isSelected
-                          ? "bg-[#0B6BCB]/[0.08] text-[#0B6BCB]"
+                          ? "bg-primary/[0.08] text-primary"
                           : "text-[#334155] dark:text-slate-300"
                       )}
                     >
                       <Icon
                         className={cn(
                           "w-3.5 h-3.5 shrink-0",
-                          isSelected ? "text-[#0B6BCB]" : "text-subtle"
+                          isSelected ? "text-primary" : "text-subtle"
                         )}
                       />
                       <span className="truncate">{cmd.name}</span>
@@ -288,7 +288,7 @@ export function CommandPalette() {
         </div>
 
         {/* Footer hint */}
-        <div className="px-4 py-2 border-t border-[#EDF1F5] dark:border-white/[0.06] text-[11px] text-subtle">
+        <div className="px-4 py-2 border-t border-[#EDF1F5] dark:border-white/[0.06] text-11 text-subtle">
           Enter to open - Esc to close
         </div>
       </div>

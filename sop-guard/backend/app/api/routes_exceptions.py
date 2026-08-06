@@ -14,8 +14,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.database.db import get_db
-from app.models.models import ExceptionRecord
+from app.models.models import ExceptionRecord, StaffUser
 from app.schemas.schemas import ExceptionCreate, ExceptionUpdate, ExceptionResponse
+from app.services.auth import get_current_user, require_permission
 
 router = APIRouter(tags=["Exceptions"])
 
@@ -38,12 +39,18 @@ async def list_exceptions(
 
 
 @router.post("/api/exceptions", response_model=ExceptionResponse)
-async def create_exception(req: ExceptionCreate, db: AsyncSession = Depends(get_db)):
+async def create_exception(
+    req: ExceptionCreate,
+    db: AsyncSession = Depends(get_db),
+    user: StaffUser = Depends(get_current_user),
+):
     record = ExceptionRecord(
         sop_id=req.sop_id,
         sop_title=req.sop_title or req.sop_id,
-        reported_by=req.reported_by,
-        reporter_role=req.reporter_role,
+        # Always the session's real identity, never req.reported_by/
+        # reporter_role - same spoofing gap the S6 vote/incident fixes closed.
+        reported_by=user.name,
+        reporter_role=user.role,
         department=req.department,
         date_of_deviation=req.date_of_deviation,
         deviation_type=req.deviation_type,
@@ -60,7 +67,12 @@ async def create_exception(req: ExceptionCreate, db: AsyncSession = Depends(get_
 
 
 @router.put("/api/exceptions/{exception_id}", response_model=ExceptionResponse)
-async def update_exception(exception_id: int, req: ExceptionUpdate, db: AsyncSession = Depends(get_db)):
+async def update_exception(
+    exception_id: int,
+    req: ExceptionUpdate,
+    db: AsyncSession = Depends(get_db),
+    user: StaffUser = Depends(require_permission("manage_quality")),
+):
     record = (await db.execute(
         select(ExceptionRecord).where(ExceptionRecord.id == exception_id)
     )).scalar_one_or_none()
@@ -72,10 +84,12 @@ async def update_exception(exception_id: int, req: ExceptionUpdate, db: AsyncSes
             raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of {sorted(_VALID_STATUSES)}.")
         record.status = req.status
 
-    for field in ("reviewed_by", "resolution", "sop_update_required", "follow_up_required"):
+    for field in ("resolution", "sop_update_required", "follow_up_required"):
         value = getattr(req, field)
         if value is not None:
             setattr(record, field, value)
+    # reviewed_by is always the session's real reviewer, never client-supplied.
+    record.reviewed_by = user.name
 
     await db.flush()
     await db.refresh(record)

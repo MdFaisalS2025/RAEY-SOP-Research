@@ -8,7 +8,6 @@ import { FocusBar } from "./focus-bar"
 import { CommandPalette } from "./command-palette"
 import { Toaster } from "@/components/ui/toaster"
 import { useAuth } from "@/lib/auth-context"
-import { useRole } from "@/lib/role-context"
 
 // Human-readable title per top-level route, shown as "<Title> | Meridian" in
 // the browser tab - distinct tab titles are what let a user with several
@@ -77,7 +76,6 @@ export default function AppShell({
   chromeActions?: React.ReactNode
 }) {
   const auth = useAuth()
-  const { setRole } = useRole()
   const router = useRouter()
   const pathname = usePathname()
   usePageTitle(pathname)
@@ -93,13 +91,6 @@ export default function AppShell({
     }
   }, [auth.loading, auth.isAuthenticated, pathname, router])
 
-  // Sync logged-in user's role to RoleProvider
-  useEffect(() => {
-    if (auth.user) {
-      setRole(auth.user.role)
-    }
-  }, [auth.user, setRole])
-
   // Apply saved density preference app-wide
   useEffect(() => {
     try {
@@ -114,7 +105,7 @@ export default function AppShell({
   if (auth.loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-2 border-[#0B6BCB]/20 border-t-[#0B6BCB] animate-spin" />
+        <div className="w-8 h-8 rounded-full border-2 border-primary/20 border-t-primary animate-spin" />
       </div>
     )
   }
@@ -123,7 +114,7 @@ export default function AppShell({
   if (!auth.isAuthenticated && pathname !== "/login") {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-2 border-[#0B6BCB]/20 border-t-[#0B6BCB] animate-spin" />
+        <div className="w-8 h-8 rounded-full border-2 border-primary/20 border-t-primary animate-spin" />
       </div>
     )
   }

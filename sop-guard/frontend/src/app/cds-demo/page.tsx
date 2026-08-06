@@ -9,6 +9,7 @@ import {
 import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { cn } from "@/lib/utils"
+import { toneChip } from "@/components/ui/tone"
 import { Card } from "@/components/ui/card"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -53,9 +54,9 @@ function mockCards(medication: string, dose: string): CDSCard[] {
 }
 
 const indicatorConfig: Record<Indicator, { strip: string; chip: string; icon: typeof Info; label: string }> = {
-  info: { strip: "bg-[#0B6BCB]", chip: "bg-[#0B6BCB]/10 text-[#0B6BCB] border-[#0B6BCB]/30", icon: Info, label: "Info" },
-  warning: { strip: "bg-[#F59E0B]", chip: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30", icon: AlertTriangle, label: "Warning" },
-  critical: { strip: "bg-[#DC2626]", chip: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30", icon: ShieldAlert, label: "Critical" },
+  info: { strip: "bg-primary", chip: "bg-primary/10 text-primary border-primary/30", icon: Info, label: "Info" },
+  warning: { strip: "bg-[#F59E0B]", chip: toneChip.warning, icon: AlertTriangle, label: "Warning" },
+  critical: { strip: "bg-[#DC2626]", chip: toneChip.danger, icon: ShieldAlert, label: "Critical" },
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -112,8 +113,8 @@ export default function CDSDemoPage() {
 
         {/* Header */}
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-[#0B6BCB]/10 flex items-center justify-center">
-            <Plug className="w-6 h-6 text-[#0B6BCB]" />
+          <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+            <Plug className="w-6 h-6 text-primary" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-foreground">EMR Integration (CDS Hooks)</h1>
@@ -124,7 +125,7 @@ export default function CDSDemoPage() {
         </div>
 
         {/* Disclaimer */}
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 text-sm">
+        <div className={cn(toneChip.warning, "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm")}>
           <AlertTriangle className="w-4 h-4 shrink-0" />
           <span>Demonstration against a simulated EMR. Production use requires hospital EHR integration.</span>
         </div>
@@ -145,7 +146,7 @@ export default function CDSDemoPage() {
                   id="cds-med"
                   value={medication}
                   onChange={e => setMedication(e.target.value)}
-                  className="w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:border-[#0B6BCB]"
+                  className="w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary"
                 >
                   {MEDICATIONS.map(m => (
                     <option key={m} value={m}>{m}</option>
@@ -160,13 +161,13 @@ export default function CDSDemoPage() {
                   value={dose}
                   onChange={e => setDose(e.target.value)}
                   placeholder="e.g. 0.1 mcg/kg/min"
-                  className="w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground placeholder:text-subtle focus:outline-none focus:border-[#0B6BCB]"
+                  className="w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground placeholder:text-subtle focus:outline-none focus:border-primary"
                 />
               </div>
               <button
                 onClick={signOrder}
                 disabled={loading}
-                className="w-full px-4 py-2.5 rounded-lg text-sm font-semibold bg-[#0B6BCB] text-white hover:bg-[#0959AC] transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+                className="w-full px-4 py-2.5 rounded-lg text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary-hover transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
               >
                 {loading && <Loader2 className="w-4 h-4 animate-spin" />}
                 Sign Order
@@ -202,7 +203,7 @@ export default function CDSDemoPage() {
                     </div>
                     <p className="text-sm font-bold text-foreground">{card.summary}</p>
                     <p className="text-sm text-muted-foreground">{card.detail}</p>
-                    <Link href="/library" className="text-xs text-[#0B6BCB] hover:text-[#0959AC] font-medium inline-flex items-center gap-1">
+                    <Link href="/library" className="text-xs text-primary hover:text-primary-hover font-medium inline-flex items-center gap-1">
                       View full SOP <ExternalLink className="w-3 h-3" />
                     </Link>
                   </div>
@@ -230,15 +231,15 @@ export default function CDSDemoPage() {
             <div className="px-5 pb-5 space-y-4">
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#0B6BCB] mt-1.5 shrink-0" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
                   The EMR discovers Meridian services at the CDS Hooks discovery endpoint.
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#0B6BCB] mt-1.5 shrink-0" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
                   The order-select hook fires when a clinician selects an order.
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#0B6BCB] mt-1.5 shrink-0" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
                   Guidance cards are returned in under 500 ms.
                 </li>
               </ul>

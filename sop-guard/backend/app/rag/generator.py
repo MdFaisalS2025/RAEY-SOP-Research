@@ -8,7 +8,10 @@ Research prototype  - NOT for clinical use.
 import re
 from typing import Any
 
-from app.rag.citation_tracker import build_numbered_context, extract_citations, _chunk_id
+from app.rag.citation_tracker import (
+    build_numbered_context, build_numbered_texts, build_numbered_spans,
+    extract_citations, narrow_citation_spans, _chunk_id,
+)
 
 # Minimum relevance score to consider a chunk useful. This only catches
 # queries with essentially no lexical overlap with the corpus at all - it
@@ -128,6 +131,19 @@ class MockGenerator:
         # actually used - same post-processing the LLM path does, so both
         # generation modes produce consistent inline_citations shapes.
         answer, citation_records = extract_citations(answer, citation_records)
+
+        # Narrow each citation's highlight to the specific sentence the
+        # answer actually used (Q2.6) - mock mode is the default install
+        # (no LLM configured), so this is the majority code path, not a
+        # secondary one. Never fatal to the answer itself; falls back to
+        # leaving passage_* fields empty on any failure.
+        try:
+            from app.rag.faithfulness_semantic import get_similarity_fn
+            numbered_texts = build_numbered_texts(good_chunks)
+            numbered_spans = build_numbered_spans(good_chunks)
+            narrow_citation_spans(answer, citation_records, numbered_texts, numbered_spans, get_similarity_fn())
+        except Exception:
+            pass
 
         # Confidence based on top chunk relevance
         top_score = good_chunks[0].get("relevance_score", 0)

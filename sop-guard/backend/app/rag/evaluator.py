@@ -101,6 +101,16 @@ def evaluate_retrieval(
         # Check refusal
         if should_refuse:
             refusal_total += 1
+            # This 0.01 floor predates the corpus growing to 22 SOPs and no
+            # longer discriminates: measured 2026-08-05, the single
+            # should_refuse case ("cooking") now retrieves plausible-looking
+            # chunks scoring ~0.35, so refusal_accuracy reads 0% here even
+            # though the pipeline's real abstention logic (a separately
+            # calibrated gate - see evidence_sufficiency.py) is unaffected.
+            # Disclosed in README.md's Key Results rather than silently
+            # left to imply a false 100% - not fixed here since this
+            # evaluator's refusal check is a much cruder proxy than the
+            # real gate and recalibrating it is out of scope for this pass.
             if not retrieved or (retrieved and retrieved[0].get("relevance_score", 0) < 0.01):
                 refusal_correct += 1
 

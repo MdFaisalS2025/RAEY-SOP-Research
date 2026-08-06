@@ -7,7 +7,7 @@ sentence-transformers is installed.
 
 import re
 
-from app.rag.faithfulness_nli import check_faithfulness_semantic
+from app.rag.faithfulness_semantic import check_faithfulness_semantic
 
 
 def _token_overlap_sim(a: str, b: str) -> float:

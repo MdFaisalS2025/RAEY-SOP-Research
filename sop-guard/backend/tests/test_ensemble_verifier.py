@@ -1,9 +1,14 @@
 """
 Tests for EnsembleVerifier: unit-level behavior of the WARNING-rescue
 strategy, plus a benchmark-level regression test confirming the combined
-verifier actually beats both individual verifiers on the full 120-case
-perturbation benchmark (the empirical justification for choosing this
-strategy over a naive union/veto - see ensemble_verifier.py's docstring).
+verifier actually beats both individual verifiers on the full perturbation
+benchmark (hand-written cases + the programmatically-generated set, which
+scales with corpus size - see generate_perturbed_benchmark; the exact case
+count therefore isn't asserted here, only the relative sensitivity/
+specificity balance, which is the actual claim being tested). This is the
+empirical justification for choosing the WARNING-rescue strategy over a
+naive union/veto - see ensemble_verifier.py's docstring for the current
+numbers.
 """
 
 from app.verifier.ensemble_verifier import EnsembleVerifier

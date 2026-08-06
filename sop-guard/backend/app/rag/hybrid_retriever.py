@@ -88,16 +88,37 @@ class HybridRetriever:
                 # the always-available scorer rather than fail retrieval.
                 self._sparse_backend = "tfidf"
 
-        # Defaults to no-op: the ablation endpoint (GET /api/evaluation/ablation)
-        # measured HeuristicReranker actively making retrieval worse - average
-        # top-1 relevance 0.305 with it enabled vs 0.334 disabled, reordering
-        # the top-3 in 70% of the eval queries. It double-counts signals the
-        # base TF-IDF + chunk-type-boost score already accounts for (raw,
+        # Defaults to no-op. HeuristicReranker double-counts signals the base
+        # TF-IDF + chunk-type-boost score already accounts for (raw,
         # non-IDF-weighted term overlap and numeric-match bonuses), so a
-        # chunk that repeats common query words can outrank one the base
-        # score correctly preferred. Pass reranker=HeuristicReranker()
-        # explicitly to re-enable it once that scoring is fixed and
-        # re-validated against the ablation.
+        # chunk that repeats common query words can plausibly outrank one the
+        # base score correctly preferred - a real, structural risk, not
+        # measured away.
+        #
+        # An earlier version of this comment cited a "measured" 0.305 (on) vs
+        # 0.334 (off) top-1-relevance result from GET /api/evaluation/ablation
+        # as evidence the reranker hurts retrieval. That comparison is
+        # invalid and has been retracted: run_ablation() (ragas_lite.py)
+        # scores each arm's top-1 chunk using `relevance_score`, the PRE-
+        # rerank base score - so the no-op arm's "top-1 relevance" is, by
+        # construction, the maximum base score over all candidates (no-op
+        # preserves base-score order), while the reranked arm's top-1 chunk
+        # is whichever chunk `rerank_score` promoted, which can only match or
+        # undercut that maximum. "Reranker off wins" was therefore a
+        # mathematical identity of the metric, not an empirical finding about
+        # retrieval quality - the ablation never had access to any ground
+        # truth independent of the score it was comparing.
+        #
+        # NoOpReranker remains the default because the double-counting risk
+        # above is real and unresolved, not because of the retracted number.
+        # Whether reranking actually helps or hurts on this corpus is
+        # currently unknown; answering that needs a relevance judgment that
+        # doesn't come from either arm's own scoring (e.g. expected-SOP
+        # ground truth per query, as app/rag/evaluator.py uses for a much
+        # smaller case set) - see the Phase U research plan for the
+        # broader effort to build one. Pass reranker=HeuristicReranker() or
+        # CrossEncoderReranker() explicitly to enable a reranker; nothing in
+        # this codebase currently measures whether that's a good idea.
         self._reranker = reranker or NoOpReranker()
 
     def _tokenize(self, text: str) -> list[str]:

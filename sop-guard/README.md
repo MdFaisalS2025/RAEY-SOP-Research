@@ -24,14 +24,16 @@ The core research contribution is the **Procedural Faithfulness Verifier**: an a
 
 ## Key Results
 
-| Metric | Value |
-|--------|-------|
-| Adversarial violation detection | **100%** (17/17) |
-| Retrieval precision | **87.5%** |
-| Keyword coverage | **88%** |
-| Refusal accuracy (unsupported queries) | **100%** |
-| Demo SOPs indexed | 10 |
-| Query types supported | 6 (procedure, threshold, contraindication, monitoring, medication, general) |
+Measured 2026-08-05 against the current 22-SOP synthetic corpus, mock/extractive generation mode (no LLM configured in this run - retrieval and verification are unaffected by generation mode, but faithfulness-style metrics are not; see the live evaluation page). These are small, fixed test sets (8-17 cases) that drift as the corpus grows, so treat them as a snapshot, not a permanent claim - the live `/evaluation` page in the running app always reflects the current numbers, computed on demand, and is the authoritative source.
+
+| Metric | Value | Basis |
+|--------|-------|-------|
+| Adversarial violation detection (sensitivity) | **100%** (17/17) | 17 hand-written adversarial cases (`adversarial_tests.py`) |
+| Retrieval precision | **100%** (8/8) | 8 fixed test queries against expected SOP (`rag/evaluator.py`) |
+| Keyword coverage | **80%** | Same 8-case set, fraction of expected keywords retrieved |
+| Refusal accuracy (unsupported queries) | **0%** (0/1) | Single out-of-scope test query; the naive `relevance_score < 0.01` threshold this specific evaluator uses predates the corpus growing to 22 SOPs and no longer discriminates - this is a known, disclosed regression in a small legacy check, not a claim about the pipeline's real abstention logic, which uses a separately calibrated gate (see `evidence_sufficiency.py`) and is exercised by the adversarial/perturbation benchmarks above instead. |
+| Demo SOPs indexed | **22** | `demo_data/demo_sops.py`, all synthetic |
+| Query types supported | 6 (procedure, threshold, contraindication, monitoring, medication, general) | Fixed taxonomy, not a measured metric |
 
 ## Features
 
@@ -236,7 +238,7 @@ sop-guard/
         embeddings.py      # sentence-transformers with TF-IDF fallback
       verifier/        # Procedural Faithfulness Verifier
       services/        # Document parsing, permissions, activity logging
-      demo_data/       # 10 synthetic SOPs, queries, adversarial tests
+      demo_data/       # 22 synthetic SOPs, queries, adversarial tests
       evaluation/      # RAG evaluation framework
   frontend/
     src/

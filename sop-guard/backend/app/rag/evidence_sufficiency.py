@@ -35,7 +35,24 @@ _STOPWORDS = {
 def confidence_tier(score: float) -> str:
     """Labels the checker's 0-1 `score` (fraction of sufficiency checks
     passed) into a physician-readable band for explainability - shown in
-    Trust Details / the pipeline trace rather than a bare number."""
+    Trust Details / the pipeline trace rather than a bare number.
+
+    Not calibrated the way min_semantic_relevance/semantic_dominance_*
+    below are (measured score distributions from real matched-vs-mismatched
+    queries) - `score` here is a discrete pass-count fraction (5, 6, or 7
+    checks depending on which conditional checks fired for a given query -
+    see `check()`), not a continuous similarity score, so there's no
+    distribution to separate. These boundaries are a display/explainability
+    policy choice, not a measured discriminator: roughly "5 or 6 of 6-7
+    checks" reads as High, "about 2 in 3" as Moderate, "about 2 in 5" as
+    Weak. A consequence worth knowing: because `total` varies per query, the
+    same literal number of failed checks can land in a different tier
+    depending on how many checks ran - e.g. 1 failure out of 6 (0.833)
+    reads as Moderate, but 1 failure out of 7 (0.857) reads as High. This
+    doesn't affect the real sufficiency gate (`sufficient` in check() below,
+    which is score plus hard gates, not this label), only the tier text
+    shown to the reader.
+    """
     if score >= 0.85:
         return "High Confidence"
     if score >= 0.65:

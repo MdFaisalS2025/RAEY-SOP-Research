@@ -80,6 +80,47 @@ def _build_demo_pipeline() -> MeridianPipeline:
     return MeridianPipeline(chunks, structured_sops)
 
 
+def _faithfulness_note(dominant_mode: str, n_faith: int, n: int) -> str:
+    """Build the faithfulness_note text from a run's dominant generation
+    mode. Pulled out of run_eval() so get_eval_summary() can recompute it
+    for cached snapshots too - a cached last_eval.json otherwise carries
+    whatever note string was baked in at generation time forever, even
+    after this function's logic is fixed going forward. "unknown" is the
+    pre-refactor label a cached file may still use for what run_eval() now
+    calls "no_generation" - both bucket the same way here."""
+    if dominant_mode in ("mock", "mock_fallback"):
+        note = (
+            "avg_faithfulness sits near its 1.0 ceiling in mock mode because "
+            "the mock generator is purely extractive (answers are built from "
+            "verbatim chunk phrases), so keyword-grounding checks trivially "
+            "pass. It only becomes a meaningful discriminator for LLM-"
+            "generated answers, which can paraphrase or add unsupported "
+            "content."
+        )
+    elif dominant_mode in ("no_generation", "unknown"):
+        note = (
+            "Most queries in this run never reached the generator at all "
+            "(routed to no-evidence, clarification, or external-evidence "
+            "answers instead), so this run's dominant mode is neither a "
+            "mock-mode ceiling nor a real LLM-generation signal - "
+            "faithfulness here reflects only the minority of queries that "
+            "generated an answer."
+        )
+    else:
+        note = (
+            "LLM-generated answers: faithfulness reflects real "
+            "grounding checks, not an extractive-generation ceiling."
+        )
+    if n_faith < n:
+        note += (
+            f" Faithfulness was scored for {n_faith} of {n} completed queries - "
+            "the rest routed to external evidence (no internal SOP chunks to "
+            "check faithfulness against) and are excluded from the average "
+            "rather than counted as failures."
+        )
+    return note
+
+
 async def run_eval(pipeline: Optional[MeridianPipeline] = None) -> dict:
     """
     Run the RAGAS-lite evaluation suite against the pipeline.
@@ -176,27 +217,7 @@ async def run_eval(pipeline: Optional[MeridianPipeline] = None) -> dict:
         "out_of_scope_cases": abstention_total,
         "generation_mode": dominant_mode,
         "generation_mode_breakdown": dict(mode_counts),
-        "faithfulness_note": (
-            (
-                "avg_faithfulness sits near its 1.0 ceiling in mock mode because "
-                "the mock generator is purely extractive (answers are built from "
-                "verbatim chunk phrases), so keyword-grounding checks trivially "
-                "pass. It only becomes a meaningful discriminator for LLM-"
-                "generated answers, which can paraphrase or add unsupported "
-                "content."
-                if dominant_mode in ("mock", "mock_fallback")
-                else "LLM-generated answers: faithfulness reflects real "
-                     "grounding checks, not an extractive-generation ceiling."
-            )
-            + (
-                f" Faithfulness was scored for {n_faith} of {n} completed queries - "
-                "the rest routed to external evidence (no internal SOP chunks to "
-                "check faithfulness against) and are excluded from the average "
-                "rather than counted as failures."
-                if n_faith < n
-                else ""
-            )
-        ),
+        "faithfulness_note": _faithfulness_note(dominant_mode, n_faith, n),
     }
 
     return {
@@ -237,6 +258,17 @@ async def get_eval_summary(
         cached = _load_cache()
         if cached is not None:
             cached["_cached"] = True
+            # Recompute the note (not just trust the stored string) so a
+            # note-logic fix applies retroactively to old cached snapshots,
+            # which otherwise carry whatever text was baked in when they
+            # were generated - see _faithfulness_note's docstring.
+            agg = cached.get("aggregate")
+            if isinstance(agg, dict) and "generation_mode_breakdown" in agg:
+                breakdown = agg["generation_mode_breakdown"]
+                dominant = max(breakdown, key=breakdown.get) if breakdown else agg.get("generation_mode", "unknown")
+                n = agg.get("completed", 0)
+                n_faith = agg.get("faithfulness_scored_count", 0)
+                agg["faithfulness_note"] = _faithfulness_note(dominant, n_faith, n)
             return cached
     try:
         result = await run_eval(pipeline)
@@ -321,4 +353,21 @@ async def run_ablation(pipeline: Optional[MeridianPipeline] = None) -> dict:
         "top3_order_changed": order_changed,
         "queries_compared": compared,
         "order_change_rate": round(order_changed / compared, 3) if compared else 0.0,
+        # avg_top1_relevance is not a valid quality comparison between the
+        # two arms: both are scored with `relevance_score`, the PRE-rerank
+        # base score, so the off arm's top-1 is by construction the maximum
+        # base score available (off preserves base-score order) and the on
+        # arm's top-1 can only match or undercut that maximum, regardless of
+        # whether reranking actually helped. Only order_change_rate (whether
+        # reranking changes anything at all) is a meaningful reading here;
+        # avg_top1_relevance would need a relevance judgment independent of
+        # either arm's own scoring to mean anything (see hybrid_retriever.py
+        # HybridRetriever.__init__'s reranker-default comment for detail).
+        "metric_caveat": (
+            "avg_top1_relevance compares each arm's own pre-rerank score, so "
+            "the reranker-off arm wins by construction and this number "
+            "cannot show whether reranking helps or hurts. Use "
+            "order_change_rate instead, or treat this ablation as "
+            "structural-risk documentation, not a benchmark result."
+        ),
     }

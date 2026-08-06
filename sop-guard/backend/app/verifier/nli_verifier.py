@@ -15,7 +15,9 @@ entailed / contradicted / neutral against its best-matching premise sentence.
 
 This is a heuristic entailment proxy, NOT a neural NLI model - no
 transformers/torch dependency is available in this environment (see
-faithfulness_nli.py's docstring for the same constraint). The entailment
+faithfulness_semantic.py's docstring for the same constraint - that module
+measures topical similarity, not entailment, and was renamed for exactly
+this reason). The entailment
 signals used are: numeric equality, negation/polarity agreement, and step-
 order agreement - the same three violation classes verifier.py targets, but
 detected generically rather than per-type.

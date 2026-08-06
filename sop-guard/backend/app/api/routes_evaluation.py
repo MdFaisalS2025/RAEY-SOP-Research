@@ -13,14 +13,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 
 from app.database.db import get_db
-from app.models.models import SOP, SOPChunk, EvalSnapshotRecord
+from app.models.models import SOP, SOPChunk, EvalSnapshotRecord, StaffUser
 from app.schemas.schemas import EvaluationResult
 from app.agents.pipeline import MeridianPipeline
 from app.evaluation.evaluator import Evaluator
 from app.rag.hybrid_retriever import HybridRetriever
 from app.rag.evaluator import evaluate_retrieval
+from app.services.auth import require_permission
 
 router = APIRouter(tags=["Evaluation"])
+
+# Every route below except GET /api/project/summary is nav-gated to
+# system_admin only (see topnav.tsx's /evaluation entry) - these either run
+# expensive evaluation harnesses or expose internal pipeline/verifier
+# internals, neither of which the UI ever showed to other roles.
+_REQUIRE_EVAL_ACCESS = require_permission("configure_system")
 
 # Cache latest evaluation results in-memory
 _latest_result: EvaluationResult | None = None
@@ -28,7 +35,10 @@ _latest_rag_result: dict | None = None
 
 
 @router.post("/api/evaluate", response_model=EvaluationResult)
-async def run_evaluation(db: AsyncSession = Depends(get_db)):
+async def run_evaluation(
+    db: AsyncSession = Depends(get_db),
+    user: StaffUser = Depends(_REQUIRE_EVAL_ACCESS),
+):
     """Run the evaluation suite against the current pipeline and SOP data."""
     global _latest_result
 
@@ -59,7 +69,7 @@ async def run_evaluation(db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/api/evaluation/results", response_model=EvaluationResult)
-async def get_evaluation_results():
+async def get_evaluation_results(user: StaffUser = Depends(_REQUIRE_EVAL_ACCESS)):
     """Get the latest evaluation results."""
     if _latest_result is None:
         return EvaluationResult(total_cases=0, details=[])
@@ -67,7 +77,10 @@ async def get_evaluation_results():
 
 
 @router.post("/api/evaluate/rag")
-async def run_rag_evaluation(db: AsyncSession = Depends(get_db)):
+async def run_rag_evaluation(
+    db: AsyncSession = Depends(get_db),
+    user: StaffUser = Depends(_REQUIRE_EVAL_ACCESS),
+):
     """Run RAG-specific evaluation (retrieval quality, keyword coverage, refusal accuracy)."""
     global _latest_rag_result
 
@@ -98,7 +111,7 @@ async def run_rag_evaluation(db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/api/evaluate/rag/results")
-async def get_rag_evaluation_results():
+async def get_rag_evaluation_results(user: StaffUser = Depends(_REQUIRE_EVAL_ACCESS)):
     """Get the latest RAG evaluation results."""
     if _latest_rag_result is None:
         return {"total_cases": 0, "details": []}
@@ -106,7 +119,10 @@ async def get_rag_evaluation_results():
 
 
 @router.get("/api/evaluation/ragas-lite")
-async def run_ragas_lite_evaluation(db: AsyncSession = Depends(get_db)):
+async def run_ragas_lite_evaluation(
+    db: AsyncSession = Depends(get_db),
+    user: StaffUser = Depends(_REQUIRE_EVAL_ACCESS),
+):
     """Run the RAGAS-lite reference-free evaluation suite and return JSON."""
     from app.evaluation.ragas_lite import run_eval
 
@@ -160,7 +176,11 @@ def _pipeline_from_rows(rows) -> MeridianPipeline | None:
 
 
 @router.get("/api/evaluation/summary")
-async def evaluation_summary_eval(force: bool = False, db: AsyncSession = Depends(get_db)):
+async def evaluation_summary_eval(
+    force: bool = False,
+    db: AsyncSession = Depends(get_db),
+    user: StaffUser = Depends(_REQUIRE_EVAL_ACCESS),
+):
     """
     Return the LAST cached RAGAS-lite eval run, or run + cache a fresh one.
     Never 500s: returns structured results whatever mode ran.
@@ -176,7 +196,11 @@ async def evaluation_summary_eval(force: bool = False, db: AsyncSession = Depend
 
 
 @router.get("/api/evaluation/ragas")
-async def run_ragas_evaluation(force: bool = False, db: AsyncSession = Depends(get_db)):
+async def run_ragas_evaluation(
+    force: bool = False,
+    db: AsyncSession = Depends(get_db),
+    user: StaffUser = Depends(_REQUIRE_EVAL_ACCESS),
+):
     """
     Real RAGAS library metrics (faithfulness, response relevancy, context
     precision), judged by our self-hosted Ollama model - not a third-party
@@ -196,7 +220,10 @@ async def run_ragas_evaluation(force: bool = False, db: AsyncSession = Depends(g
 
 
 @router.get("/api/evaluation/chunk-distribution")
-async def chunk_type_distribution(db: AsyncSession = Depends(get_db)):
+async def chunk_type_distribution(
+    db: AsyncSession = Depends(get_db),
+    user: StaffUser = Depends(_REQUIRE_EVAL_ACCESS),
+):
     """Real chunk_type counts across the current live corpus (not a fixed test set)."""
     rows = (await db.execute(select(SOPChunk.chunk_type))).all()
     total = len(rows)
@@ -212,7 +239,10 @@ async def chunk_type_distribution(db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/api/evaluation/ablation")
-async def evaluation_ablation(db: AsyncSession = Depends(get_db)):
+async def evaluation_ablation(
+    db: AsyncSession = Depends(get_db),
+    user: StaffUser = Depends(_REQUIRE_EVAL_ACCESS),
+):
     """Reranker on-vs-off ablation over the eval set (retrieval-only, never 500s)."""
     from app.evaluation.ragas_lite import run_ablation
 
@@ -260,7 +290,10 @@ def _run_verifier_over_cases(verifier, test_cases: list[dict], structured_lookup
 
 @router.post("/api/evaluate/adversarial")
 async def run_adversarial_evaluation(
-    include_generated: bool = False, compare_nli: bool = False, db: AsyncSession = Depends(get_db)
+    include_generated: bool = False,
+    compare_nli: bool = False,
+    db: AsyncSession = Depends(get_db),
+    user: StaffUser = Depends(_REQUIRE_EVAL_ACCESS),
 ):
     """
     Run the verifier against adversarial test cases.
@@ -274,15 +307,17 @@ async def run_adversarial_evaluation(
     compare_nli=true additionally runs the same test cases through
     NLIVerifier (app/verifier/nli_verifier.py) and EnsembleVerifier
     (app/verifier/ensemble_verifier.py), reporting all three alongside the
-    primary rule-based verifier for comparison. On the full 120-case
-    perturbation benchmark the two base verifiers disagree in an
-    informative way: the rule-based verifier has much higher sensitivity
-    but lower specificity (it over-flags correct answers), while the
-    NLI-lite verifier is the opposite (conservative: it misses more
-    violations but rarely false-alarms). The ensemble combines them with a
-    measured, better sensitivity/specificity balance than either alone -
-    see ensemble_verifier.py's docstring for why naive union/veto
-    strategies were tried first and didn't work.
+    primary rule-based verifier for comparison. On the full perturbation
+    benchmark the two base verifiers disagree in an informative way: the
+    rule-based verifier has much higher sensitivity but lower specificity
+    (it over-flags correct answers), while the NLI-lite verifier is the
+    opposite (conservative: it misses more violations but rarely
+    false-alarms). The ensemble combines them with a measured, better
+    sensitivity/specificity balance than either alone - see
+    ensemble_verifier.py's docstring for the exact numbers, why naive
+    union/veto strategies were tried first and didn't work, and the two
+    honesty caveats on those numbers (they drift with corpus size, and the
+    rescue threshold was tuned in-sample, not on a held-out split).
     """
     from app.demo_data.adversarial_tests import ADVERSARIAL_TESTS
     from app.verifier.verifier import ProceduralFaithfulnessVerifier
@@ -431,11 +466,14 @@ async def run_adversarial_evaluation(
                 "ensemble (EnsembleVerifier) trusts rule_based as primary but "
                 "upgrades its WARNING verdicts to PASSED when nli_lite confidently "
                 "disagrees - rule_based's specificity problem turned out to live "
-                "almost entirely in its WARNING bucket (51/120 correct answers) "
-                "rather than FAILED (14/120), so this is where nli_lite actually "
-                "helps. Naive union/veto combinations were tried first and didn't "
-                "improve the sensitivity/specificity balance - see "
-                "ensemble_verifier.py's docstring for the comparison."
+                "almost entirely in its WARNING bucket rather than FAILED, so "
+                "this is where nli_lite actually helps. Naive union/veto "
+                "combinations were tried first and didn't improve the "
+                "sensitivity/specificity balance. These per-case counts and the "
+                "rescue threshold itself are measured/tuned on this same benchmark "
+                "(in-sample, not a held-out split) and will shift as the corpus "
+                "changes - see ensemble_verifier.py's docstring for the current "
+                "numbers and both caveats."
             ),
         }
 
@@ -513,7 +551,11 @@ def _serialize_snapshot(r: EvalSnapshotRecord) -> dict:
 
 
 @router.post("/api/evaluation/snapshot")
-async def record_eval_snapshot(label: str = "", db: AsyncSession = Depends(get_db)):
+async def record_eval_snapshot(
+    label: str = "",
+    db: AsyncSession = Depends(get_db),
+    user: StaffUser = Depends(_REQUIRE_EVAL_ACCESS),
+):
     """
     Run the full evaluation suite once against the current corpus and
     persist the result as a snapshot, so metrics can be tracked release
@@ -608,7 +650,11 @@ async def record_eval_snapshot(label: str = "", db: AsyncSession = Depends(get_d
 
 
 @router.get("/api/evaluation/snapshots")
-async def list_eval_snapshots(limit: int = 30, db: AsyncSession = Depends(get_db)):
+async def list_eval_snapshots(
+    limit: int = 30,
+    db: AsyncSession = Depends(get_db),
+    user: StaffUser = Depends(_REQUIRE_EVAL_ACCESS),
+):
     """History of recorded eval snapshots, newest first, for the trend view
     on the frontend Evaluation page. Empty until at least one snapshot has
     been recorded via POST /api/evaluation/snapshot."""

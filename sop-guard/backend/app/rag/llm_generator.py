@@ -20,9 +20,12 @@ import httpx
 from app.config import settings
 from app.rag.generator import MockGenerator
 from app.rag.hallucination_checker import check_faithfulness
-from app.rag.faithfulness_nli import check_faithfulness_semantic, get_similarity_fn
+from app.rag.faithfulness_semantic import check_faithfulness_semantic, get_similarity_fn
 from app.rag.conflict_detector import detect_sop_conflicts
-from app.rag.citation_tracker import build_numbered_context, build_numbered_texts, extract_citations, auto_insert_citations
+from app.rag.citation_tracker import (
+    build_numbered_context, build_numbered_texts, build_numbered_spans,
+    extract_citations, auto_insert_citations, narrow_citation_spans,
+)
 from app.rag.entity_graph import conflicts_for_sops
 
 
@@ -304,6 +307,8 @@ Answer:"""
         # validated and counted as cited_in_answer exactly like ones the
         # model wrote itself. Never fatal - a matching failure just means
         # citations stay however the model left them.
+        numbered_texts = {}
+        sim_fn = None
         try:
             numbered_texts = build_numbered_texts(retrieved_chunks)
             sim_fn = get_similarity_fn()
@@ -313,6 +318,18 @@ Answer:"""
 
         answer_text, citation_records = extract_citations(answer_text, citation_records)
         abstained = "not covered in the available sops" in answer_text.lower()
+
+        # Narrow each citation's highlight from the whole chunk span down to
+        # the specific sentence the answer actually used (Q2.6) - never a
+        # guess: falls back to leaving passage_* fields empty (the existing
+        # whole-chunk char_start/char_end stays the honest highlight) when
+        # there's no similarity function, no chunk offsets, or nothing
+        # clears the similarity bar. Never fatal to the answer itself.
+        try:
+            numbered_spans = build_numbered_spans(retrieved_chunks)
+            narrow_citation_spans(answer_text, citation_records, numbered_texts, numbered_spans, sim_fn)
+        except Exception as e:
+            logger.warning(f"narrow_citation_spans failed, continuing without it: {e}")
 
         sop_titles = []
         seen = set()

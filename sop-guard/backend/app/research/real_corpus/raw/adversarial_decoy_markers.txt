@@ -1,0 +1,38 @@
+SOURCE: Synthetic adversarial fixture, constructed for this corpus (NOT organically scraped)
+PUBLISHER: Constructed by this project, modeling a real, commonly-observed document convention
+LICENSE: Original construction, no external copyright content reproduced
+CONSTRUCTED: 2026-08-06
+PURPOSE: Every method in this pilot locates a candidate block by searching raw_text for the
+FIRST line matching an item_id's marker pattern (e.g. "^3\.\s+"). Real government guideline
+pages routinely contain numbered reference/citation lists using that exact same line-start
+convention (this project's own CDC/AHRQ raw files carry "References and resources: 1-12"
+style citation ranges and footnote superscripts). This fixture builds the worst case of that
+overlap directly: a numbered References section appears BEFORE a numbered Recommendations
+section, reusing the identical numbers 1-5, so a first-match marker search is forced to choose
+between a decoy (a bibliographic citation, not real guidance content) and the real item. The
+content of both sections is original writing for this fixture, not copied from any real
+document - only the STRUCTURAL PATTERN (numbered references before numbered recommendations)
+is modeled on what real corpus documents already exhibit.
+NUMBERING SCHEME: two independent numbered lists (1-5 each), References then Recommendations.
+GROUND TRUTH NOTE: corpus.py's parser for this document (_parse_adversarial_decoy_markers)
+only extracts items from the Recommendations section - the References section is deliberately
+excluded from ground truth so it functions purely as a decoy in raw_text, the way an
+uninstrumented real document's citation list would be.
+
+---
+
+References
+
+1. Author AB, Author CD. A Study of Infection Prevention Adherence. J Infect Control. 2018;46(2):112-119.
+2. Author EF, Author GH. Hand Hygiene Compliance in Acute Care. Am J Epidemiol. 2019;54(3):201-209.
+3. Author IJ. Device-Associated Infection Surveillance Methods. Infect Control Hosp Epidemiol. 2020;41(7):788-795.
+4. Author KL, Author MN, Author OP. Environmental Cleaning Practices in Hospitals. Clin Infect Dis. 2017;65(11):1901-1908.
+5. Author QR. Antimicrobial Stewardship Program Outcomes. JAMA Intern Med. 2021;181(4):512-520.
+
+Recommendations
+
+1. Perform hand hygiene immediately before and after every direct patient contact, using an alcohol-based hand rub unless hands are visibly soiled, in which case soap and water should be used instead.
+2. Wear a clean pair of gloves before contact with a patient's mucous membranes, non-intact skin, or any body fluid, and remove those gloves immediately after the task is finished and before touching any other surface.
+3. Label every intravenous line, tubing, and solution with the date it was started so staff can identify lines that are due for routine replacement or that have exceeded the facility's maximum dwell time.
+4. Store sterile supplies in a designated clean area away from sinks, trash receptacles, and any other source of splash or airborne contamination that could compromise the packaging.
+5. Document the specific reason for continuing any indwelling device at every shift handoff, so that a device without a current justification is flagged for removal rather than left in place by default.

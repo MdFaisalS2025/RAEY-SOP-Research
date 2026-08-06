@@ -1,0 +1,114 @@
+SOURCE: CDC's Core Infection Prevention and Control Practices for Safe Healthcare Delivery in All Settings
+URL: https://www.cdc.gov/infection-control/hcp/core-practices/index.html
+RETRIEVED: 2026-08-05
+PUBLISHER: US Centers for Disease Control and Prevention (CDC), HHS
+LICENSE: Public domain - work of the US federal government, 17 U.S.C. Section 105. No territorial restriction.
+PAGE UPDATED: Apr. 12, 2024 (per page metadata)
+NUMBERING SCHEME: numbered categories (1-8), with subcategory letters where present (5a-5f)
+
+---
+
+1. Leadership Support
+References and resources: 1-12
+- Ensure that the governing body of the healthcare facility or organization is accountable for the success of infection prevention activities.
+- Allocate sufficient human and material resources to infection prevention to ensure consistent and prompt action to remove or mitigate infection risks and stop transmission of infections. Ensure that staffing and resources do not prevent nurses, environmental staff, et. al., from consistently adhering to infection prevention and control practices.
+- Assign one or more qualified individuals with training in infection prevention and control to manage the facility's infection prevention program.
+- Empower and support the authority of those managing the infection prevention program to ensure effectiveness of the program.
+
+2. Education and Training of Healthcare Personnel on Infection Prevention
+References and resources: 1-4, 6-8, 10-13
+- Provide job-specific, infection prevention education and training to all healthcare personnel for all tasks.
+- Require training before individuals are allowed to perform their duties and at least annually as a refresher.
+- Provide additional training in response to recognized lapses in adherence and to address newly recognized infection transmission threats (e.g., introduction of new equipment or procedures).
+- Develop processes to ensure that all healthcare personnel understand and are competent to adhere to infection prevention requirements as they perform their roles and responsibilities.
+- Provide written infection prevention policies and procedures that are available, current, and based on evidence-based guidelines (e.g., CDC/ HICPAC, etc.).
+
+3. Patient, Family and Caregiver Education
+References and resources: 2-5, 7-8, 10-11
+- Provide appropriate infection prevention education to patients, family members, visitors, and others included in the caregiving network.
+
+4. Performance Monitoring and Feedback
+References and resources: 1-14
+- Identify and monitor adherence to infection prevention practices and infection control requirements.
+- Provide prompt, regular feedback on adherence and related outcomes to healthcare personnel and facility leadership.
+- Train performance monitoring personnel and use standardized tools and definitions.
+- Monitor the incidence of infections that may be related to care provided at the facility and act on the data and use information collected through surveillance to detect transmission of infectious agents in the facility.
+
+5. Standard Precautions
+Use Standard Precautions to care for all patients in all settings. Standard Precautions include:
+5a. Hand hygiene
+5b. Environmental cleaning and disinfection
+5c. Injection and medication safety
+5d. Risk assessment with use of appropriate personal protective equipment (e.g., gloves, gowns, face masks) based on activities being performed
+5e. Minimizing Potential Exposures (e.g. respiratory hygiene and cough etiquette)
+5f. Reprocessing of reusable medical equipment between each patient or when soiled
+
+5a. Hand Hygiene
+References and resources: 3, 7, 11
+- Require healthcare personnel to perform hand hygiene in accordance with Centers for Disease Control and Prevention (CDC) recommendations.
+- Use an alcohol-based hand rub or wash with soap and water for the following clinical indications: immediately before touching a patient; before performing an aseptic task (e.g., placing an indwelling device) or handling invasive medical devices; before moving from work on a soiled body site to a clean body site on the same patient; after touching a patient or the patient's immediate environment; after contact with blood, body fluids or contaminated surfaces; immediately after glove removal.
+- Ensure that healthcare personnel perform hand hygiene with soap and water when hands are visibly soiled.
+- Ensure that supplies necessary for adherence to hand hygiene are readily accessible in all areas where patient care is being delivered.
+
+5b. Environmental Cleaning and Disinfection
+References and resources: 4, 7, 10, 11, 13, 21
+- Require routine and targeted cleaning of environmental surfaces as indicated by the level of patient contact and degree of soiling.
+- Clean and disinfect surfaces in close proximity to the patient and frequently touched surfaces in the patient care environment on a more frequent schedule compared to other surfaces.
+- Promptly clean and decontaminate spills of blood or other potentially infectious materials.
+- Select EPA-registered disinfectants that have microbiocidal activity against the pathogens most likely to contaminate the patient-care environment.
+- Follow manufacturers' instructions for proper use of cleaning and disinfecting products (e.g., dilution, contact time, material compatibility, storage, shelf-life, safe use and disposal).
+
+5c. Injection and Medication Safety
+References and resources: 7, 11, 16-20
+- Prepare medications in a designated clean medication preparation area that is separated from potential sources of contamination, including sinks or other water sources.
+- Use aseptic technique when preparing and administering medications
+- Disinfect the access diaphragms of medication vials before inserting a device into the vial
+- Use needles and syringes for one patient only (this includes manufactured prefilled syringes and cartridge devices such as insulin pens).
+- Enter medication containers with a new needle and a new syringe, even when obtaining additional doses for the same patient.
+- Ensure single-dose or single-use vials, ampules, and bags or bottles of parenteral solution are used for one patient only.
+- Use fluid infusion or administration sets (e.g., intravenous tubing) for one patient only
+- Dedicate multidose vials to a single patient whenever possible. If multidose vials are used for more than one patient, restrict the medication vials to a centralized medication area and do not bring them into the immediate patient treatment area (e.g., operating room, patient room/cubicle)
+- Wear a facemask when placing a catheter or injecting material into the epidural or subdural space (e.g., during myelogram, epidural or spinal anesthesia)
+
+5d. Risk Assessment with Appropriate Use of Personal Protective Equipment
+References and resources: 7, 11, 19, 20
+- Ensure proper selection and use of personal protective equipment (PPE) based on the nature of the patient interaction and potential for exposure to blood, body fluids and/or infectious material: wear gloves when it can be reasonably anticipated that contact with blood or other potentially infectious materials, mucous membranes, non-intact skin, potentially contaminated skin or contaminated equipment could occur.
+- Wear a gown that is appropriate to the task to protect skin and prevent soiling of clothing during procedures and activities that could cause contact with blood, body fluids, secretions, or excretions.
+- Use protective eyewear and a mask, or a face shield, to protect the mucous membranes of the eyes, nose and mouth during procedures and activities that could generate splashes or sprays of blood, body fluids, secretions and excretions. Select masks, goggles, face shields, and combinations of each according to the need anticipated by the task performed.
+- Remove and discard PPE, other than respirators, upon completing a task before leaving the patient's room or care area. If a respirator is used, it should be removed and discarded (or reprocessed if reusable) after leaving the patient room or care area and closing the door.
+- Do not use the same gown or pair of gloves for care of more than one patient. Remove and discard disposable gloves upon completion of a task or when soiled during the process of care.
+- Do not wash gloves for the purpose of reuse.
+- Ensure that healthcare personnel have immediate access to and are trained and able to select, put on, remove, and dispose of PPE in a manner that protects themselves, the patient, and others
+
+5e. Minimizing Potential Exposures
+References and resources: 1, 7, 11, 21, 22
+- Develop and implement systems for early detection and management (e.g., use of appropriate infection control measures, including isolation precautions, PPE) of potentially infectious persons at initial points of patient encounter in outpatient settings (e.g., triage areas, emergency departments, outpatient clinics, physician offices) and at the time of admission to hospitals and long-term care facilities (LTCF).
+- Use respiratory hygiene and cough etiquette to reduce the transmission of respiratory infections within the facility.
+- Prompt patients and visitors with symptoms of respiratory infection to contain their respiratory secretions and perform hand hygiene after contact with respiratory secretions by providing tissues, masks, hand hygiene supplies and instructional signage or handouts at points of entry and throughout the facility
+- When space permits, separate patients with respiratory symptoms from others as soon as possible (e.g., during triage or upon entry into the facility).
+
+5f. Reprocessing of Reusable Medical Equipment
+References and resources: 2-4, 7-8, 11-13
+- Clean and reprocess (disinfect or sterilize) reusable medical equipment (e.g., blood glucose meters and other point-of-care devices, blood pressure cuffs, oximeter probes, surgical instruments, endoscopes) prior to use on another patient or when soiled.
+- Consult and adhere to manufacturers' instructions for reprocessing.
+- Maintain separation between clean and soiled equipment to prevent cross contamination.
+
+6. Transmission-Based Precautions
+References and resources: 7, 11
+- Implement additional precautions (i.e., Transmission-Based Precautions) for patients with documented or suspected diagnoses where contact with the patient, their body fluids, or their environment presents a substantial transmission risk despite adherence to Standard Precautions
+- Adapt transmission-based precautions to the specific healthcare setting, the facility design characteristics, and the type of patient interaction.
+- Implement transmission-based precautions based on the patient's clinical presentation and likely infection diagnoses (e.g., syndromes suggestive of transmissible infections such as diarrhea, meningitis, fever and rash, respiratory infection) as soon as possible after the patient enters the healthcare facility (including reception or triage areas in emergency departments, ambulatory clinics or physicians' offices) then adjust or discontinue precautions when more clinical information becomes available (e.g., confirmatory laboratory results).
+- To the extent possible, place patients who may need transmission-based precautions into a single-patient room while awaiting clinical assessment.
+- Notify accepting facilities and the transporting agency about the need for transmission-based precautions based on suspected or confirmed infections or presence of targeted multidrug-resistant pathogens when patients are transferred.
+
+7. Temporary invasive Medical Devices for Clinical Management
+References and resources: 8, 11
+- During each healthcare encounter, assess the medical necessity of any invasive medical device (e.g., vascular catheter, indwelling urinary catheter, feeding tubes, ventilator, surgical drain) in order to identify the earliest opportunity for safe removal.
+- Ensure that healthcare personnel adhere to recommended insertion and maintenance practices
+
+8. Occupational Health
+References and resources: 1, 7, 18, 19
+- Ensure that healthcare personnel either receive immunizations or have documented evidence of immunity against vaccine-preventable diseases as recommended by the CDC, CDC's Advisory Committee on Immunization Practices (ACIP) and required by federal, state or local authorities.
+- Implement processes and sick leave policies to encourage healthcare personnel to stay home when they develop signs or symptoms of acute infectious illness (e.g. fever, cough, diarrhea, vomiting, or draining skin lesions) to prevent spreading their infections to patients and other healthcare personnel.
+- Implement a system for healthcare personnel to report signs, symptoms, and diagnosed illnesses that may represent a risk to their patients and coworkers to their supervisor or healthcare facility staff who are responsible for occupational health
+- Adhere to federal and state standards and directives applicable to protecting healthcare workers against transmission of infectious agents including OSHA's Bloodborne Pathogens Standard, Personal Protective Equipment Standard, Respiratory Protection standard and TB compliance directive.

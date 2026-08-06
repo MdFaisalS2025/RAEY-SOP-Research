@@ -11,8 +11,45 @@ Classification thresholds (cosine):
   partial     0.40 - 0.55
   unsupported < 0.40
 
+Calibration attempt (2026-08-05, bge-small-en-v1.5, the model this backend
+actually uses): 4 (faithful-paraphrase, unrelated-sentence) pairs against
+real demo-corpus chunks (SOP-ICU-001's norepinephrine/blood-culture/
+antibiotics/lactate steps), each paraphrase checked against its own source
+chunk and each unrelated sentence checked against a different chunk's text
+(PPE donning / insulin-hold / code-blue epinephrine / transfusion
+contraindications - all real chunks from other SOPs). Measured: supported
+scores 0.832-0.952, unrelated scores 0.431-0.656.
+
+That is NOT a clean separation - one unrelated pair ("epinephrine dosing in
+code blue" vs. an antibiotics-in-sepsis chunk) scored 0.656, above the
+current 0.55 supported threshold, because both sentences share the same
+"give drug X within/every Y minutes in an emergency" template; general-
+purpose sentence embeddings pick up on that structural similarity as if it
+were topical agreement. On this fixture the current threshold would have
+mislabeled that pair "supported". n=4 is too small to responsibly move the
+threshold on (a different unrelated pair could as easily land at 0.35 as at
+0.656, and raising the floor to e.g. 0.75 to clear this one case is not
+validated against enough genuine paraphrases to know it wouldn't cost real
+recall) - documented here as a known, measured risk rather than silently
+assumed away. A properly-sized labeled fixture (dozens of pairs, held-out
+split) is exactly the kind of measurement the Phase U research plan's real
+corpus would support; until then, treat "supported" as "probably grounded"
+and lean on numeric_verifier.py / the procedural verifiers in app/verifier/
+for the specific-fact checks this method structurally cannot make (see the
+naming note below).
+
 Returns the same shape the frontend expects (overall_faithfulness + sentences)
 plus a `method` field ("semantic" or "keyword_fallback").
+
+Naming note: this module was previously named faithfulness_nli.py, which
+overclaimed - cosine similarity measures topical relatedness, not entailment,
+and cannot itself detect a sentence that contradicts its source on a fact
+(that's what numeric_verifier.py and the rule-based/NLI-lite procedural
+verifiers in app/verifier/ are for; see nli_verifier.py's docstring for a
+verifier that genuinely does model entailment signals - numeric equality,
+negation/polarity agreement, step-order agreement, still without a neural
+NLI model, but closer to the concept). Renamed to describe what the
+similarity-based method actually measures.
 
 Research prototype. Not for clinical use.
 """
@@ -148,6 +185,11 @@ def check_faithfulness_semantic(
     attach_citation_numbers(answer, results)
 
     total = len(results)
+    # Strict: only "supported" (best_sim >= 0.55) counts toward the headline
+    # score. "partial" sentences are real, non-trivial similarity (0.40-0.55)
+    # but not confident enough to count as faithfulness - see
+    # at_least_partial_count below for the looser reading, which is a
+    # separate diagnostic figure, not an alternate definition of this one.
     overall = supported / total if total else 1.0
 
     return {
@@ -157,6 +199,13 @@ def check_faithfulness_semantic(
         "supported_count": supported,
         "partial_count": partial,
         "unsupported_count": unsupported,
-        "grounded_count": supported + partial,
+        # Diagnostic only - NOT used in overall_faithfulness above, which is
+        # strict (supported-only). This counts "supported or partial" for
+        # callers that want to distinguish "confidently wrong/unrelated"
+        # from "somewhat related but not confidently grounded". Previously
+        # named grounded_count, which read as a second definition of
+        # "grounded" competing with overall_faithfulness's stricter one -
+        # renamed to make the looser criterion explicit in the field name.
+        "at_least_partial_count": supported + partial,
         "total_checked": total,
     }

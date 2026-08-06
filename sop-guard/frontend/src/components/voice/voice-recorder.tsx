@@ -274,12 +274,12 @@ export function VoiceRecorder({ onTranscript }: VoiceRecorderProps) {
             {liveText && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                 className="px-3 py-2 rounded-xl bg-card border border-border shadow-lg text-sm max-w-[320px]">
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Live transcript</p>
+                <p className="text-10 text-muted-foreground uppercase tracking-wider mb-1">Live transcript</p>
                 <p className="text-foreground">{liveText}</p>
               </motion.div>
             )}
 
-            <span className="text-[10px] text-amber-500/60">No patient identifiers.</span>
+            <span className="text-10 text-amber-500/60">No patient identifiers.</span>
           </motion.div>
         )}
       </AnimatePresence>

@@ -40,15 +40,15 @@ function SourceRow({
       }}
       className={cn(
         "p-4 rounded-xl border transition-colors duration-200",
-        onSelect && "cursor-pointer hover:border-[#0B6BCB]/40",
+        onSelect && "cursor-pointer hover:border-primary/40",
         highlighted
-          ? "bg-[#0B6BCB]/[0.06] border-[#0B6BCB]/40"
+          ? "bg-primary/[0.06] border-primary/40"
           : "bg-card border-border",
         dimmed && "opacity-70"
       )}
     >
       <div className="flex items-start gap-3">
-        <span className="shrink-0 inline-flex items-center justify-center min-w-[22px] h-[22px] px-1 rounded text-[11px] font-bold text-white bg-[#0B6BCB]">
+        <span className="shrink-0 inline-flex items-center justify-center min-w-[22px] h-[22px] px-1 rounded text-[11px] font-bold text-white bg-primary">
           {citation.number}
         </span>
         <div className="flex-1 min-w-0">
@@ -78,7 +78,7 @@ function SourceRow({
               </span>
             )}
             {citation.status && citation.status !== "active" && (
-              <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30 capitalize">
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-danger-soft text-danger-soft-fg border border-danger-soft-border capitalize">
                 {citation.status}
               </span>
             )}
@@ -92,11 +92,11 @@ function SourceRow({
                 <span className="text-[11px] text-subtle shrink-0">Relevance</span>
                 <div className="flex-1 h-1.5 rounded-full bg-[#EDF1F5] overflow-hidden">
                   <div
-                    className="h-full rounded-full bg-[#0B6BCB] transition-all duration-200"
+                    className="h-full rounded-full bg-primary transition-all duration-200"
                     style={{ width: `${Math.round(citation.relevance_score * 100)}%` }}
                   />
                 </div>
-                <span className="text-[11px] font-mono text-[#0B6BCB] shrink-0">
+                <span className="text-[11px] font-mono text-primary shrink-0">
                   {Math.round(citation.relevance_score * 100)}%
                 </span>
               </div>
@@ -106,7 +106,7 @@ function SourceRow({
               target={citation.is_external ? "_blank" : undefined}
               rel={citation.is_external ? "noopener noreferrer" : undefined}
               onClick={(e) => e.stopPropagation()}
-              className="inline-flex items-center gap-1 text-[11px] text-[#0B6BCB] hover:underline shrink-0"
+              className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline shrink-0"
             >
               {citation.is_external ? "View source" : "View in Library"}
               <ExternalLink className="w-3 h-3" />
@@ -134,7 +134,7 @@ export function SourcePanel({
   return (
     <Card className="shadow-sm">
       <h3 className="text-sm font-semibold mb-4 flex items-center gap-2 text-foreground">
-        <FileText className="w-4 h-4 text-[#0B6BCB]" />
+        <FileText className="w-4 h-4 text-primary" />
         Sources
       </h3>
       <div className="space-y-3">

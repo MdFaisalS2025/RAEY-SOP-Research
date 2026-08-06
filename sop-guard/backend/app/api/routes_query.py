@@ -29,7 +29,7 @@ async def _load_chunks(db: AsyncSession) -> tuple[list[dict], dict[str, dict]]:
     chunk_rows = (await db.execute(
         select(
             SOPChunk, SOP.sop_id.label("sop_sop_id"), SOP.title.label("sop_title"), SOP.structured_json,
-            SOP.version, SOP.effective_date, SOP.review_date, SOP.status,
+            SOP.version, SOP.effective_date, SOP.review_date, SOP.status, SOP.raw_text,
         )
         .join(SOP, SOPChunk.sop_id == SOP.id)
     )).all()
@@ -50,6 +50,15 @@ async def _load_chunks(db: AsyncSession) -> tuple[list[dict], dict[str, dict]]:
             "effective_date": row.effective_date or "",
             "review_date": row.review_date or "",
             "status": row.status or "active",
+            "char_start": chunk.char_start,
+            "char_end": chunk.char_end,
+            "offset_source": chunk.offset_source or "",
+            "offset_anchor": chunk.offset_anchor or "",
+            # SOP's full raw text - needed to map a narrowed citation
+            # sentence back to real document offsets (Q2.6). Not sent to
+            # the frontend (schemas.py's citation passthrough only carries
+            # the fields citation_tracker.py explicitly builds).
+            "sop_raw_text": row.raw_text or "",
         })
         if row.sop_sop_id not in structured_sops and row.structured_json:
             structured_sops[row.sop_sop_id] = row.structured_json
@@ -206,7 +215,7 @@ async def export_query_report(req: QueryRequest, db: AsyncSession = Depends(get_
     chunk_rows = (await db.execute(
         select(
             SOPChunk, SOP.sop_id.label("sop_sop_id"), SOP.title.label("sop_title"), SOP.structured_json,
-            SOP.version, SOP.effective_date, SOP.review_date, SOP.status,
+            SOP.version, SOP.effective_date, SOP.review_date, SOP.status, SOP.raw_text,
         )
         .join(SOP, SOPChunk.sop_id == SOP.id)
     )).all()
@@ -227,6 +236,15 @@ async def export_query_report(req: QueryRequest, db: AsyncSession = Depends(get_
             "effective_date": row.effective_date or "",
             "review_date": row.review_date or "",
             "status": row.status or "active",
+            "char_start": chunk.char_start,
+            "char_end": chunk.char_end,
+            "offset_source": chunk.offset_source or "",
+            "offset_anchor": chunk.offset_anchor or "",
+            # SOP's full raw text - needed to map a narrowed citation
+            # sentence back to real document offsets (Q2.6). Not sent to
+            # the frontend (schemas.py's citation passthrough only carries
+            # the fields citation_tracker.py explicitly builds).
+            "sop_raw_text": row.raw_text or "",
         })
         if row.sop_sop_id not in structured_sops and row.structured_json:
             structured_sops[row.sop_sop_id] = row.structured_json
@@ -283,7 +301,7 @@ async def generate_report(req: QueryRequest, db: AsyncSession = Depends(get_db))
     chunk_rows = (await db.execute(
         select(
             SOPChunk, SOP.sop_id.label("sop_sop_id"), SOP.title.label("sop_title"), SOP.structured_json,
-            SOP.version, SOP.effective_date, SOP.review_date, SOP.status,
+            SOP.version, SOP.effective_date, SOP.review_date, SOP.status, SOP.raw_text,
         )
         .join(SOP, SOPChunk.sop_id == SOP.id)
     )).all()
@@ -304,6 +322,15 @@ async def generate_report(req: QueryRequest, db: AsyncSession = Depends(get_db))
             "effective_date": row.effective_date or "",
             "review_date": row.review_date or "",
             "status": row.status or "active",
+            "char_start": chunk.char_start,
+            "char_end": chunk.char_end,
+            "offset_source": chunk.offset_source or "",
+            "offset_anchor": chunk.offset_anchor or "",
+            # SOP's full raw text - needed to map a narrowed citation
+            # sentence back to real document offsets (Q2.6). Not sent to
+            # the frontend (schemas.py's citation passthrough only carries
+            # the fields citation_tracker.py explicitly builds).
+            "sop_raw_text": row.raw_text or "",
         })
         if row.sop_sop_id not in structured_sops and row.structured_json:
             structured_sops[row.sop_sop_id] = row.structured_json

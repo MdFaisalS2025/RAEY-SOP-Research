@@ -6,10 +6,12 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Search, BookOpen, Clock, Hash, FileText, AlertTriangle, Loader2, X, ExternalLink, ListOrdered, ShieldAlert, Gauge, LayoutGrid, List, FileCheck, CheckCircle2, Printer, Filter, CheckCircle, History } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import { VersionTimeline } from "@/components/query/version-history-panel"
+import { SopFullText, resolveHighlight } from "@/components/sop/sop-full-text"
 import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { getSOPs } from "@/lib/api"
 import { cn } from "@/lib/utils"
+import { toneChip } from "@/components/ui/tone"
 import type { SOP } from "@/lib/types"
 import { MOCK_SOPS } from "@/lib/mock-data"
 import type { EnhancedSOP } from "@/lib/governance-types"
@@ -140,14 +142,14 @@ const fallbackSOPs: SOP[] = [
 ]
 
 const deptColors: Record<string, string> = {
-  ICU: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30",
-"Infection Control": "bg-muted text-muted-foreground border-input",
-  Endocrine: "bg-muted text-muted-foreground border-input",
-  Emergency: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30",
-  Pharmacy: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30",
-  Radiology: "bg-muted text-muted-foreground border-input",
-  Nursing: "bg-[#0B6BCB]/10 text-[#0B6BCB] border-[#0B6BCB]/30",
-  General: "bg-muted text-muted-foreground border-input",
+  ICU: toneChip.danger,
+"Infection Control": toneChip.neutral,
+  Endocrine: toneChip.neutral,
+  Emergency: toneChip.warning,
+  Pharmacy: toneChip.success,
+  Radiology: toneChip.neutral,
+  Nursing: "bg-primary/10 text-primary border-primary/30",
+  General: toneChip.neutral,
 }
 
 const statusColors: Record<string, string> = {
@@ -158,7 +160,7 @@ const statusColors: Record<string, string> = {
 
 export default function LibraryPage() {
   return (
-    <Suspense fallback={<AppShell><div className="flex items-center justify-center py-24"><Loader2 className="w-8 h-8 text-[#0B6BCB] animate-spin" /></div></AppShell>}>
+    <Suspense fallback={<AppShell><div className="flex items-center justify-center py-24"><Loader2 className="w-8 h-8 text-primary animate-spin" /></div></AppShell>}>
       <LibraryPageInner />
     </Suspense>
   )
@@ -277,47 +279,34 @@ function LibraryPageInner() {
     }
   }, [activeTab, selectedSOP, fullText])
 
-  // ── "Cite to exact line": locate the citation's snippet inside the
-  // rendered full text at view-time (no stored offsets - see
-  // citation_tracker.py) and scroll + highlight the matching paragraph.
+  // ── "Cite to exact line": locate the citation's passage inside the raw
+  // full text via the shared offset->snippet->section honesty ladder (see
+  // components/sop/sop-full-text.tsx) - one renderer, shared with the
+  // in-place SOP source panel (P3.8), instead of a paragraph-level
+  // view-time match that highlighted an entire PROCEDURE section at once.
   const highlightSnippet = searchParams.get("highlight") || ""
   const highlightSectionTitle = searchParams.get("sectionTitle") || ""
+  const highlightCharStartParam = searchParams.get("charStart")
+  const highlightCharEndParam = searchParams.get("charEnd")
+  const highlightCharStart = highlightCharStartParam !== null ? Number(highlightCharStartParam) : null
+  const highlightCharEnd = highlightCharEndParam !== null ? Number(highlightCharEndParam) : null
+  const highlightOffsetSource = searchParams.get("offsetSource") || ""
+  const highlightOffsetAnchor = searchParams.get("offsetAnchor") || ""
 
-  const fullTextParagraphs = useMemo(
-    () => (fullText ? fullText.split(/\n\s*\n/).filter((p) => p.trim()) : []),
-    [fullText]
+  const fullTextHighlight = useMemo(
+    () =>
+      fullText
+        ? resolveHighlight(fullText, {
+            snippet: highlightSnippet,
+            sectionTitle: highlightSectionTitle,
+            charStart: Number.isFinite(highlightCharStart) ? highlightCharStart : null,
+            charEnd: Number.isFinite(highlightCharEnd) ? highlightCharEnd : null,
+            offsetSource: highlightOffsetSource,
+            offsetAnchor: highlightOffsetAnchor,
+          })
+        : null,
+    [fullText, highlightSnippet, highlightSectionTitle, highlightCharStart, highlightCharEnd, highlightOffsetSource, highlightOffsetAnchor]
   )
-
-  const highlightedParaIndex = useMemo(() => {
-    if (fullTextParagraphs.length === 0) return null
-    const normalize = (s: string) => s.replace(/\s+/g, " ").trim().toLowerCase()
-    if (highlightSnippet) {
-      // The stored citation snippet is truncated to ~200 chars and can cut
-      // off mid-word - match on a shorter prefix so a trailing partial word
-      // doesn't prevent an otherwise-good match.
-      const needle = normalize(highlightSnippet).slice(0, 80)
-      if (needle.length >= 15) {
-        const idx = fullTextParagraphs.findIndex((p) => normalize(p).includes(needle))
-        if (idx !== -1) return idx
-      }
-    }
-    // Fall back to the section heading if the snippet itself wasn't found
-    // (e.g. the SOP was re-edited since the answer was generated).
-    if (highlightSectionTitle) {
-      const needle = normalize(highlightSectionTitle)
-      const idx = fullTextParagraphs.findIndex((p) => normalize(p).includes(needle))
-      if (idx !== -1) return idx
-    }
-    return null
-  }, [fullTextParagraphs, highlightSnippet, highlightSectionTitle])
-
-  const highlightedParaRef = useRef<HTMLParagraphElement | null>(null)
-
-  useEffect(() => {
-    if (highlightedParaIndex !== null) {
-      highlightedParaRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })
-    }
-  }, [highlightedParaIndex])
 
   const filtered = sops.filter((s) => {
     const matchSearch = s.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -382,7 +371,7 @@ function LibraryPageInner() {
 
         {/* Demo banner */}
         {isDemo && (
-          <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 text-[#B45309] dark:text-amber-400 text-sm mb-4">
+          <div className={cn(toneChip.warning, "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm mb-4")}>
             <AlertTriangle className="w-4 h-4 shrink-0" />
             <span>Showing demo data. Start the backend for real SOPs.</span>
           </div>
@@ -397,7 +386,7 @@ function LibraryPageInner() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search SOPs by title or department..."
-              className="bg-transparent outline-none w-full text-sm text-foreground placeholder:text-subtle caret-[#0B6BCB]"
+              className="bg-transparent outline-none w-full text-sm text-foreground placeholder:text-subtle caret-primary"
             />
           </div>
           <div className="flex gap-2 overflow-x-auto">
@@ -408,7 +397,7 @@ function LibraryPageInner() {
                 className={cn(
 "px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap border transition-colors",
                   deptFilter === d
-                    ? "bg-[#0B6BCB]/10 text-[#0B6BCB] border-[#0B6BCB]/30"
+                    ? "bg-primary/10 text-primary border-primary/30"
                     : "border-border text-muted-foreground hover:text-foreground"
                 )}
               >
@@ -418,13 +407,13 @@ function LibraryPageInner() {
             <div className="flex items-center gap-1 ml-auto">
               <button onClick={() => setViewMode("cards")} className={cn(
 "p-2 rounded-lg transition-colors",
-                viewMode === "cards" ? "bg-[#0B6BCB]/10 text-[#0B6BCB]" : "text-muted-foreground hover:text-foreground"
+                viewMode === "cards" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"
               )}>
                 <LayoutGrid className="w-4 h-4" />
               </button>
               <button onClick={() => setViewMode("table")} className={cn(
 "p-2 rounded-lg transition-colors",
-                viewMode === "table" ? "bg-[#0B6BCB]/10 text-[#0B6BCB]" : "text-muted-foreground hover:text-foreground"
+                viewMode === "table" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"
               )}>
                 <List className="w-4 h-4" />
               </button>
@@ -439,7 +428,7 @@ function LibraryPageInner() {
             className={cn(
 "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
               myDeptOnly
-                ? "bg-[#0B6BCB]/10 text-[#0B6BCB] border-[#0B6BCB]/30"
+                ? "bg-primary/10 text-primary border-primary/30"
                 : "border-border text-muted-foreground hover:text-foreground"
             )}
           >
@@ -447,7 +436,7 @@ function LibraryPageInner() {
             My Department Only
           </button>
           {myDeptOnly && (
-            <span className="text-xs text-[#0B6BCB] bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 px-2.5 py-1 rounded-lg">
+            <span className="text-xs text-primary bg-primary/10 border border-primary/30 px-2.5 py-1 rounded-lg">
               Showing {filtered.length} SOP{filtered.length !== 1 ? "s" : ""} for {currentUser.department}
             </span>
           )}
@@ -456,7 +445,7 @@ function LibraryPageInner() {
         {/* Loading */}
         {loading && (
           <div className="flex items-center justify-center py-24">
-            <Loader2 className="w-8 h-8 text-[#0B6BCB] animate-spin" />
+            <Loader2 className="w-8 h-8 text-primary animate-spin" />
           </div>
         )}
 
@@ -483,7 +472,7 @@ function LibraryPageInner() {
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openSOP(sop) }
                     }}
-                    className="border-b border-border hover:bg-muted cursor-pointer transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#0B6BCB] dark:focus-visible:outline-[#00E5FF]">
+                    className="border-b border-border hover:bg-muted cursor-pointer transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#0B6BCB]">
                     <td className="p-3 font-medium">{sop.title}</td>
                     <td className="p-3">
                       <span className={cn("px-2 py-0.5 rounded text-xs font-medium border", deptColors[sop.department] || "bg-muted")}>
@@ -518,10 +507,10 @@ function LibraryPageInner() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
-                  className="p-5 rounded-2xl bg-card border border-border hover:border-[#0B6BCB]/30 hover:shadow-md transition-all duration-300 group"
+                  className="p-5 rounded-2xl bg-card border border-border hover:border-primary/30 hover:shadow-md transition-all duration-300 group"
                 >
                   <div
-                    className="cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#0B6BCB] dark:focus-visible:outline-[#00E5FF] rounded-lg"
+                    className="cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#0B6BCB] rounded-lg"
                     role="button"
                     tabIndex={0}
                     onClick={() => openSOP(sop)}
@@ -538,7 +527,7 @@ function LibraryPageInner() {
                       </span>
                     </div>
 
-                    <h3 className="text-sm font-semibold mb-3 group-hover:text-[#0B6BCB] transition-colors">
+                    <h3 className="text-sm font-semibold mb-3 group-hover:text-primary transition-colors">
                       {sop.title}
                     </h3>
 
@@ -553,7 +542,7 @@ function LibraryPageInner() {
                     {/* Acknowledgment completion rate */}
                     {completionRate !== undefined && (
                       <div className="mb-3 space-y-1">
-                        <div className="flex justify-between text-[10px] text-muted-foreground">
+                        <div className="flex justify-between text-10 text-muted-foreground">
                           <span>Staff acknowledgment</span>
                           <span className="font-semibold">{completionRate}%</span>
                         </div>
@@ -561,7 +550,7 @@ function LibraryPageInner() {
                           <div
                             className={cn(
 "h-full rounded-full",
-                              completionRate >= 90 ? "bg-[#15803D]" : completionRate >= 70 ? "bg-[#0B6BCB]" : "bg-[#B45309]"
+                              completionRate >= 90 ? "bg-[#15803D]" : completionRate >= 70 ? "bg-primary" : "bg-[#B45309]"
                             )}
                             style={{ width: `${completionRate}%` }}
                           />
@@ -574,7 +563,7 @@ function LibraryPageInner() {
                   {needsAck && (
                     <div className="mt-2">
                       {isAcknowledged ? (
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#DCFCE7] dark:bg-green-500/10 border border-[#BBF7D0] dark:border-green-500/30 text-xs text-[#15803D] dark:text-green-400 font-semibold">
+                        <div className={cn(toneChip.success, "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold")}>
                           <CheckCircle2 className="w-3.5 h-3.5" /> Acknowledged
                         </div>
                       ) : (
@@ -583,7 +572,7 @@ function LibraryPageInner() {
                             e.stopPropagation()
                             acknowledge(sop.sop_id)
                           }}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#0B6BCB]/40 text-xs text-[#0B6BCB] hover:bg-[#0B6BCB]/10 transition-colors"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-primary/40 text-xs text-primary hover:bg-primary/10 transition-colors"
                         >
                           <FileCheck className="w-3.5 h-3.5" /> Acknowledge
                         </button>
@@ -666,17 +655,17 @@ function LibraryPageInner() {
 
               {/* AI Summary Section */}
               {SOP_AI_SUMMARIES[selectedSOP.sop_id] && (
-                <div className="mx-6 mt-4 p-4 rounded-xl bg-[#0B6BCB]/[0.04] border border-[#0B6BCB]/30">
+                <div className="mx-6 mt-4 p-4 rounded-xl bg-primary/[0.04] border border-primary/30">
                   <div className="flex items-center gap-2 mb-2">
-                    <p className="text-xs font-semibold text-[#0B6BCB] uppercase tracking-wide">AI-Generated Summary</p>
+                    <p className="text-xs font-semibold text-primary uppercase tracking-wide">AI-Generated Summary</p>
                   </div>
-                  <p className="text-[11px] text-muted-foreground italic mb-3">
+                  <p className="text-11 text-muted-foreground italic mb-3">
                     Read the full SOP before clinical application.
                   </p>
                   <ul className="space-y-1.5">
                     {SOP_AI_SUMMARIES[selectedSOP.sop_id].map((point, idx) => (
                       <li key={idx} className="flex items-start gap-2">
-                        <CheckCircle className="w-3.5 h-3.5 text-[#0B6BCB] shrink-0 mt-0.5" />
+                        <CheckCircle className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
                         <span className="text-xs text-muted-foreground leading-snug">{point}</span>
                       </li>
                     ))}
@@ -695,7 +684,7 @@ function LibraryPageInner() {
                       className={cn(
 "flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium whitespace-nowrap transition-colors relative",
                         activeTab === tab.id
-                          ? "text-[#0B6BCB]"
+                          ? "text-primary"
                           : "text-muted-foreground hover:text-foreground"
                       )}
                     >
@@ -704,7 +693,7 @@ function LibraryPageInner() {
                       {activeTab === tab.id && (
                         <motion.div
                           layoutId="tab-underline"
-                          className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#0B6BCB] rounded-full"
+                          className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full"
                         />
                       )}
                     </button>
@@ -754,9 +743,9 @@ function LibraryPageInner() {
                       </p>
                     </div>
                     {selectedSOP.chunk_count > 0 && (
-                      <div className="p-4 rounded-xl bg-[#0B6BCB]/[0.04] border border-[#0B6BCB]/30">
+                      <div className="p-4 rounded-xl bg-primary/[0.04] border border-primary/30">
                         <p className="text-xs text-muted-foreground mb-1">Indexed Content</p>
-                        <p className="text-sm font-semibold text-[#0B6BCB]">{selectedSOP.chunk_count} chunks available for AI queries</p>
+                        <p className="text-sm font-semibold text-primary">{selectedSOP.chunk_count} chunks available for AI queries</p>
                       </div>
                     )}
 
@@ -767,7 +756,7 @@ function LibraryPageInner() {
                         {(() => {
                           const sj = structuredJson || {} as any
                           const stats = [
-                            { label: "Steps", count: (sj.steps || []).length, icon: ListOrdered, color: "text-[#0B6BCB]" },
+                            { label: "Steps", count: (sj.steps || []).length, icon: ListOrdered, color: "text-primary" },
                             { label: "Thresholds", count: (sj.thresholds || []).length, icon: Gauge, color: "text-[#B45309] dark:text-amber-400" },
                             { label: "Warnings", count: (sj.contraindications || []).length, icon: ShieldAlert, color: "text-[#B91C1C] dark:text-red-400" },
                             { label: "Chunks", count: selectedSOP?.chunk_count || 0, icon: FileText, color: "text-[#15803D] dark:text-green-400" },
@@ -792,7 +781,7 @@ function LibraryPageInner() {
                       <ol className="space-y-2">
                         {structuredJson.steps.map((step: any) => (
                           <li key={step.step_number} className="flex gap-3 p-3 rounded-xl bg-muted border border-border">
-                            <span className="flex-shrink-0 w-7 h-7 rounded-full bg-[#0B6BCB]/10 text-[#0B6BCB] text-xs font-bold flex items-center justify-center">
+                            <span className="flex-shrink-0 w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
                               {step.step_number}
                             </span>
                             <span className="text-sm leading-relaxed pt-1">{step.text}</span>
@@ -836,7 +825,7 @@ function LibraryPageInner() {
                     {structuredJson?.contraindications && structuredJson.contraindications.length > 0 ? (
                       <div className="space-y-2">
                         {structuredJson.contraindications.map((c: any, i: number) => (
-                          <div key={i} className="flex gap-3 p-4 rounded-xl bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30">
+                          <div key={i} className={cn(toneChip.danger, "flex gap-3 p-4 rounded-xl")}>
                             <AlertTriangle className="w-4 h-4 text-[#B91C1C] dark:text-red-400 flex-shrink-0 mt-0.5" />
                             <div>
                               <p className="text-sm font-medium">{c.text}</p>
@@ -859,32 +848,19 @@ function LibraryPageInner() {
                   <div>
                     {loadingFullText ? (
                       <div className="flex items-center justify-center py-16">
-                        <Loader2 className="w-6 h-6 text-[#0B6BCB] animate-spin mr-2" />
+                        <Loader2 className="w-6 h-6 text-primary animate-spin mr-2" />
                         <span className="text-sm text-muted-foreground">Loading full text...</span>
                       </div>
                     ) : fullText ? (
                       <div className="p-4 rounded-xl bg-muted border border-border max-h-[55vh] overflow-y-auto">
-                        {highlightSnippet && highlightedParaIndex === null && (
-                          <div className="mb-3 px-3 py-2 rounded-lg bg-card border border-border text-xs text-muted-foreground">
-                            The cited passage may have changed since this answer was generated - showing the full document instead.
-                          </div>
-                        )}
-                        {fullTextParagraphs.map((para, i) => (
-                          <p
-                            key={i}
-                            ref={i === highlightedParaIndex ? highlightedParaRef : undefined}
-                            className={cn(
-                              "text-[15px] leading-[1.7] text-foreground whitespace-pre-wrap mb-3 last:mb-0 rounded-lg transition-colors",
-                              i === highlightedParaIndex && "bg-[#FEF3C7] dark:bg-amber-500/20 -mx-2 px-2 py-1.5 ring-1 ring-[#FDE68A] dark:ring-amber-500/30"
-                            )}
-                          >
-                            {para.trim()}
-                          </p>
-                        ))}
+                        {/* SopFullText renders its own caption for every
+                            rung, including "no match found" - no need for
+                            a second, bespoke notice here. */}
+                        <SopFullText rawText={fullText} highlight={fullTextHighlight} />
                       </div>
                     ) : (
                       <div className="flex items-center justify-center py-16">
-                        <Loader2 className="w-6 h-6 text-[#0B6BCB] animate-spin mr-2" />
+                        <Loader2 className="w-6 h-6 text-primary animate-spin mr-2" />
                         <span className="text-sm text-muted-foreground">Loading...</span>
                       </div>
                     )}
@@ -904,13 +880,13 @@ function LibraryPageInner() {
                 const isAcknowledged = acknowledged.has(selectedSOP.sop_id)
                 if (!needsAck) return null
                 return (
-                  <div className="mx-6 mb-2 p-4 rounded-xl border border-[#0B6BCB]/30 bg-[#0B6BCB]/[0.04] space-y-3 sop-no-print">
+                  <div className="mx-6 mb-2 p-4 rounded-xl border border-primary/30 bg-primary/[0.04] space-y-3 sop-no-print">
                     <div className="flex items-center gap-2">
-                      <FileCheck className="w-4 h-4 text-[#0B6BCB] shrink-0" />
-                      <p className="text-xs font-semibold text-[#0B6BCB] uppercase tracking-wide">Policy Acknowledgment Required</p>
+                      <FileCheck className="w-4 h-4 text-primary shrink-0" />
+                      <p className="text-xs font-semibold text-primary uppercase tracking-wide">Policy Acknowledgment Required</p>
                     </div>
                     {isAcknowledged ? (
-                      <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-[#DCFCE7] dark:bg-green-500/10 border border-[#BBF7D0] dark:border-green-500/30">
+                      <div className={cn(toneChip.success, "flex items-center gap-2 px-4 py-3 rounded-lg")}>
                         <CheckCircle2 className="w-5 h-5 text-[#15803D] dark:text-green-400 shrink-0" />
                         <div>
                           <p className="text-sm font-semibold text-[#15803D] dark:text-green-400">Acknowledged</p>
@@ -924,7 +900,7 @@ function LibraryPageInner() {
                         </p>
                         <button
                           onClick={() => acknowledge(selectedSOP.sop_id)}
-                          className="w-full py-3 rounded-xl bg-[#0B6BCB] hover:bg-[#0959AC] text-white font-semibold transition-colors flex items-center justify-center gap-2 text-sm"
+                          className="w-full py-3 rounded-xl bg-primary hover:bg-primary-hover text-primary-foreground font-semibold transition-colors flex items-center justify-center gap-2 text-sm"
                         >
                           <FileCheck className="w-4 h-4" />
                           I Acknowledge This Policy
@@ -939,7 +915,7 @@ function LibraryPageInner() {
               <div className="flex gap-3 p-6 pt-4 border-t border-border sop-no-print">
                 <button
                   onClick={() => router.push(`/query?q=${encodeURIComponent(`Tell me about ${selectedSOP.title}`)}`)}
-                  className="flex-1 py-3 rounded-xl bg-[#0B6BCB] hover:bg-[#0959AC] text-white font-medium transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 py-3 rounded-xl bg-primary hover:bg-primary-hover text-primary-foreground font-medium transition-colors flex items-center justify-center gap-2"
                 >
                   <ExternalLink className="w-4 h-4" />
                   Ask about this SOP

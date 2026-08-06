@@ -1,12 +1,27 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
-import Link from "next/link"
+// Bedside Lookup - a large-type, voice-first single-question interface for
+// use at the point of care. Runs the exact same MeridianPipeline as Ask
+// Meridian (POST /api/query) - every defect here was client-side: answers
+// were truncated to 4 sentences, a regex fabricated a "confirmed value"
+// chip that was never a real verification, citations were scraped with a
+// brittle "Source:" regex instead of using the real inline_citations the
+// backend already returns, there was no PHI gate, no auth guard, and no
+// way to cancel an in-flight request or the voice it was about to speak.
+
+import { useEffect, useRef, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Mic, MicOff, Volume2, VolumeX, X, AlertTriangle, Loader2 } from "lucide-react"
+import { Volume2, VolumeX, AlertTriangle, Loader2, Square, ShieldAlert } from "lucide-react"
+import AppShell from "@/components/layout/app-shell"
 import { SafetyNote } from "@/components/ui/safety-note"
-import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { ErrorState } from "@/components/ui/error-state"
+import { VoiceRecorder } from "@/components/voice/voice-recorder"
+import { AnswerRenderer } from "@/components/query/answer-renderer"
+import { SopSourcePanel } from "@/components/sop/sop-source-panel"
+import { usePhiGuard, useVoiceEnabled } from "@/lib/use-phi-guard"
+import { mapCitations } from "@/lib/citations"
+import type { InlineCitation } from "@/components/query/citation-chip"
 
 const QUICK_QUERIES = [
   "Sepsis 1 hour bundle",
@@ -16,68 +31,58 @@ const QUICK_QUERIES = [
   "Transfusion reaction steps",
 ]
 
+interface NumericVerification {
+  claims_total: number
+  supported: number
+  unsupported: string[]
+  all_grounded: boolean
+}
+
 interface BedsideAnswer {
-  answerText: string
-  keyValue: string | null
-  sourceSop: string
+  text: string
+  citations: InlineCitation[]
+  numericVerification: NumericVerification | null
   hasConflict: boolean
-}
-
-function extractKeyValue(text: string): string | null {
-  const match = text.match(/\b(maximum|minimum|target|threshold)[^.\n]{0,80}?\d[^.\n]{0,40}/i)
-  return match ? match[0].trim() : null
-}
-
-function firstSentences(text: string, count: number): string {
-  const clean = text.replace(/\*\*/g, "").replace(/^#+\s*/gm, "")
-  const sentences = clean.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 3)
-  return sentences.slice(0, count).join(" ")
 }
 
 export default function BedsidePage() {
   const [transcript, setTranscript] = useState("")
-  const [listening, setListening] = useState(false)
   const [loading, setLoading] = useState(false)
   const [answer, setAnswer] = useState<BedsideAnswer | null>(null)
   // Separate from `answer` on purpose: a fetch failure used to render
-  // through the exact same card as a real cited answer (and could be
-  // read aloud by speech synthesis in the same voice as real guidance) -
-  // indistinguishable from a genuine result at the bedside. Errors now
-  // get their own visually distinct treatment and are never spoken.
+  // through the exact same card as a real cited answer (and could be read
+  // aloud by speech synthesis in the same voice as real guidance) -
+  // indistinguishable from a genuine result at the bedside.
   const [error, setError] = useState<string | null>(null)
   const [audioEnabled, setAudioEnabled] = useState(true)
   const [speaking, setSpeaking] = useState(false)
-  const [voiceSupported, setVoiceSupported] = useState(false)
-  const recognitionRef = useRef<any>(null)
+  const [sourceCitation, setSourceCitation] = useState<InlineCitation | null>(null)
+
+  const abortControllerRef = useRef<AbortController | null>(null)
+  const voiceEnabled = useVoiceEnabled()
+  const { phi, phiAcknowledged, setPhiAcknowledged, scanForPhiBeforeSend } = usePhiGuard(transcript)
 
   useEffect(() => {
     try {
       const saved = localStorage.getItem("meridian-bedside-audio")
       if (saved === "off") setAudioEnabled(false)
     } catch { /* ignore */ }
+  }, [])
 
-    const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition
-    if (SpeechRecognition) {
-      setVoiceSupported(true)
-      const recognition = new SpeechRecognition()
-      recognition.continuous = false
-      recognition.interimResults = true
-      recognition.lang = "en-US"
-      recognition.onresult = (event: any) => {
-        let text = ""
-        for (let i = 0; i < event.results.length; i++) {
-          text += event.results[i][0].transcript
-        }
-        setTranscript(text)
-      }
-      recognition.onend = () => setListening(false)
-      recognition.onerror = () => setListening(false)
-      recognitionRef.current = recognition
+  // Abort any in-flight request and stop the device talking when the page
+  // is left mid-answer - previously neither happened, so exiting mid-query
+  // left a stray request racing to update unmounted state, and exiting
+  // mid-speech left the device narrating the previous answer on whatever
+  // page came next.
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort()
+      window.speechSynthesis?.cancel()
     }
   }, [])
 
   const toggleAudio = () => {
-    setAudioEnabled(prev => {
+    setAudioEnabled((prev) => {
       const next = !prev
       try { localStorage.setItem("meridian-bedside-audio", next ? "on" : "off") } catch { /* ignore */ }
       if (!next) window.speechSynthesis?.cancel()
@@ -85,27 +90,24 @@ export default function BedsidePage() {
     })
   }
 
-  const toggleListening = () => {
-    if (!recognitionRef.current) return
-    if (listening) {
-      recognitionRef.current.stop()
-      setListening(false)
-    } else {
-      setTranscript("")
-      setAnswer(null)
-      recognitionRef.current.start()
-      setListening(true)
-    }
-  }
-
   const stopAudio = () => {
     window.speechSynthesis?.cancel()
     setSpeaking(false)
   }
 
-  const runQuery = async (q: string) => {
+  const runQuery = async (q: string, skipPhiGate = false) => {
     const question = q.trim()
     if (!question || loading) return
+
+    if (!skipPhiGate) {
+      const result = await scanForPhiBeforeSend(question)
+      if (result?.has_phi) return // amber warning + Send-anyway stays visible
+    }
+
+    abortControllerRef.current?.abort()
+    const controller = new AbortController()
+    abortControllerRef.current = controller
+
     setLoading(true)
     setAnswer(null)
     setError(null)
@@ -115,92 +117,105 @@ export default function BedsidePage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query: question }),
+        signal: controller.signal,
       })
       if (!res.ok) throw new Error(`Request failed (${res.status})`)
       const data = await res.json()
       const text: string = data.answer ?? "This information is not covered in the available SOPs."
-      const sourceMatch = text.match(/Source:\s*(.+)$/im)
       const bedsideAnswer: BedsideAnswer = {
-        answerText: firstSentences(text, 4),
-        keyValue: extractKeyValue(text),
-        sourceSop: sourceMatch ? sourceMatch[1].trim() : (data.citations?.[0] ?? ""),
+        text,
+        citations: mapCitations(data.inline_citations),
+        numericVerification: data.numeric_verification ?? null,
         hasConflict: Boolean(data.sop_conflicts?.length),
       }
       setAnswer(bedsideAnswer)
 
       if (audioEnabled && "speechSynthesis" in window) {
-        const utterance = new SpeechSynthesisUtterance(bedsideAnswer.answerText.slice(0, 400))
+        const utterance = new SpeechSynthesisUtterance(text.replace(/\[\d+\]/g, "").slice(0, 600))
         utterance.rate = 0.95
         utterance.onend = () => setSpeaking(false)
         setSpeaking(true)
         window.speechSynthesis.speak(utterance)
       }
-    } catch {
+    } catch (err: any) {
+      if (err?.name === "AbortError") return
       setError("Could not reach the SOP database. Check your connection and try again.")
     } finally {
       setLoading(false)
     }
   }
 
+  const handleCitationClick = (n: number) => {
+    const citation = answer?.citations.find((c) => c.number === n)
+    if (citation?.is_external && citation.url) {
+      window.open(citation.url, "_blank", "noopener,noreferrer")
+      return
+    }
+    if (citation?.sop_id) setSourceCitation(citation)
+  }
+
+  const chromeActions = (
+    <button
+      onClick={toggleAudio}
+      className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors px-2 py-1.5"
+    >
+      {audioEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+      <span className="hidden sm:inline">{audioEnabled ? "Audio on" : "Audio off"}</span>
+    </button>
+  )
+
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <header className="flex items-center justify-between px-6 py-4 bg-card border-b border-border">
-        <h1 className="text-xl font-semibold text-foreground">Bedside Lookup</h1>
-        <div className="flex items-center gap-4">
-          <button
-            onClick={toggleAudio}
-            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-[#0B6BCB] transition-colors"
-          >
-            {audioEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
-            {audioEnabled ? "Audio on" : "Audio off"}
-          </button>
-          <Link href="/query" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-[#0B6BCB] transition-colors">
-            <X className="w-5 h-5" /> Exit
-          </Link>
-        </div>
-      </header>
-
-      <main className="flex-1 flex flex-col items-center px-6 py-10 max-w-2xl mx-auto w-full">
-        {voiceSupported ? (
-          <button
-            onClick={toggleListening}
-            className={cn(
-              "w-28 h-28 rounded-full flex items-center justify-center shadow-md transition-colors mb-6",
-              listening ? "bg-[#B91C1C] animate-pulse" : "bg-[#0B6BCB] hover:bg-[#0959AC]"
-            )}
-            aria-label={listening ? "Stop listening" : "Start listening"}
-          >
-            {listening ? <MicOff className="w-12 h-12 text-white" /> : <Mic className="w-12 h-12 text-white" />}
-          </button>
-        ) : null}
-
-        <p className="text-sm text-muted-foreground mb-4">
-          {voiceSupported ? (listening ? "Listening..." : "Tap to speak, or type below") : "Voice input is not available on this device"}
-        </p>
+    <AppShell chrome="minimal" chromeActions={chromeActions}>
+      <div className="flex flex-col items-center px-6 py-10 max-w-2xl mx-auto w-full">
+        <h1 className="sr-only">Bedside Lookup</h1>
 
         <form
-          onSubmit={e => { e.preventDefault(); runQuery(transcript) }}
-          className="w-full flex gap-2 mb-8"
+          onSubmit={(e) => { e.preventDefault(); runQuery(transcript) }}
+          className="w-full flex items-center gap-2 mb-6"
         >
           <input
             aria-label="Ask a clinical question"
             value={transcript}
-            onChange={e => setTranscript(e.target.value)}
+            onChange={(e) => setTranscript(e.target.value)}
             placeholder="Ask a clinical question"
-            className="flex-1 text-2xl px-4 py-4 rounded-xl border border-input bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-[#0B6BCB]/40 focus:border-[#0B6BCB]"
+            className="flex-1 text-2xl px-4 py-4 rounded-xl border border-input bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
           />
+          {voiceEnabled && (
+            <VoiceRecorder
+              onTranscript={(t) => {
+                setTranscript(t)
+                runQuery(t)
+              }}
+            />
+          )}
           <Button className="px-6 rounded-xl disabled:opacity-50 font-medium transition-colors" type="submit"
             disabled={loading || !transcript.trim()}>
             {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : "Ask"}
           </Button>
         </form>
 
+        {phi?.has_phi && !phiAcknowledged && (
+          <div className="w-full mb-6 px-4 py-3 rounded-xl bg-warn-soft border border-warn-soft-border flex items-start gap-3">
+            <ShieldAlert className="w-5 h-5 text-warn-soft-fg shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-warn-soft-fg">Possible patient identifier detected</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Remove any patient names or identifiers before sending, or send anyway.</p>
+            </div>
+            <button
+              onClick={() => { setPhiAcknowledged(true); runQuery(transcript, true) }}
+              className="shrink-0 text-xs font-medium text-warn-soft-fg hover:underline"
+            >
+              Send anyway
+            </button>
+          </div>
+        )}
+
         <div className="w-full flex flex-wrap gap-2 justify-center mb-8">
-          {QUICK_QUERIES.map(q => (
+          {QUICK_QUERIES.map((q) => (
             <button
               key={q}
               onClick={() => { setTranscript(q); runQuery(q) }}
-              className="text-base px-4 py-3 rounded-xl bg-card border border-border text-foreground hover:border-[#0B6BCB]/40 hover:bg-[#0B6BCB]/5 transition-colors shadow-sm"
+              className="text-base px-4 py-3 rounded-xl bg-card border border-border text-foreground hover:border-primary/40 hover:bg-primary/5 transition-colors shadow-sm"
             >
               {q}
             </button>
@@ -213,19 +228,9 @@ export default function BedsidePage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="w-full bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 rounded-2xl shadow-sm p-6 flex items-start gap-3"
+              className="w-full bg-card border border-danger-soft-border rounded-2xl shadow-sm"
             >
-              <AlertTriangle className="w-6 h-6 text-[#B91C1C] dark:text-red-400 shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <p className="text-lg font-semibold text-[#B91C1C] dark:text-red-400 mb-1">Couldn't get an answer</p>
-                <p className="text-base text-foreground/90">{error}</p>
-                <button
-                  onClick={() => runQuery(transcript)}
-                  className="mt-3 px-4 py-2 rounded-lg bg-[#B91C1C] dark:bg-red-500/20 text-white dark:text-red-300 text-sm font-medium hover:opacity-90 transition-opacity"
-                >
-                  Try again
-                </button>
-              </div>
+              <ErrorState message={error} onRetry={() => runQuery(transcript)} />
             </motion.div>
           )}
           {answer && (
@@ -236,42 +241,51 @@ export default function BedsidePage() {
               className="w-full bg-card border border-border rounded-2xl shadow-sm p-6"
             >
               {answer.hasConflict && (
-                <div className="flex items-center gap-2 mb-4 px-4 py-2.5 bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 rounded-lg text-[#B91C1C] dark:text-red-400 font-medium text-lg">
+                <div className="flex items-center gap-2 mb-4 px-4 py-2.5 bg-danger-soft border border-danger-soft-border rounded-lg text-danger-soft-fg font-medium text-lg">
                   <AlertTriangle className="w-5 h-5 shrink-0" />
                   Conflicting guidance detected. Verify with your charge nurse.
                 </div>
               )}
 
-              {answer.keyValue && (
-                <div className="mb-4 px-4 py-3 bg-[#DCFCE7] dark:bg-green-500/10 border border-[#BBF7D0] dark:border-green-500/30 rounded-lg text-[#15803D] dark:text-green-400 text-xl font-semibold">
-                  {answer.keyValue}
+              {/* Large bedside type via a scoped wrapper (descendant
+                  selectors bump AnswerRenderer's internal text sizes)
+                  rather than truncating the answer to fit a smaller card -
+                  the whole grounded answer is shown, never just the first
+                  few sentences. */}
+              <div className="[&_p]:text-xl [&_li]:text-xl [&_p]:leading-relaxed [&_li]:leading-relaxed">
+                <AnswerRenderer text={answer.text} citations={answer.citations} onCitationClick={handleCitationClick} animate={false} />
+              </div>
+
+              {/* Real numeric verification (verifier/numeric_verifier.py) -
+                  not a regex guessing at "confirmed" values. Quiet when
+                  every numeric claim was grounded; only speaks up when one
+                  wasn't. */}
+              {answer.numericVerification && answer.numericVerification.claims_total > 0 && (
+                <div className={`mt-4 px-4 py-2.5 rounded-lg text-sm font-medium ${answer.numericVerification.all_grounded ? "bg-ok-soft text-ok-soft-fg" : "bg-warn-soft text-warn-soft-fg"}`}>
+                  {answer.numericVerification.all_grounded
+                    ? "All dose/threshold values verified against the SOP."
+                    : "A value in this answer could not be confirmed against the SOP - verify directly."}
                 </div>
-              )}
-
-              <p className="text-xl leading-relaxed text-foreground mb-4">
-                {answer.answerText}
-              </p>
-
-              {answer.sourceSop && (
-                <p className="text-sm text-muted-foreground">Source: {answer.sourceSop}</p>
               )}
 
               {speaking && (
                 <button
                   onClick={stopAudio}
-                  className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-[#B45309] dark:text-amber-400 bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30 rounded-lg px-4 py-2"
+                  className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-warn-soft-fg bg-warn-soft border border-warn-soft-border rounded-lg px-4 py-2"
                 >
-                  <VolumeX className="w-4 h-4" /> Stop audio
+                  <Square className="w-4 h-4 fill-current" /> Stop audio
                 </button>
               )}
             </motion.div>
           )}
         </AnimatePresence>
-      </main>
+      </div>
 
       <footer className="text-center py-4">
         <SafetyNote />
       </footer>
-    </div>
+
+      <SopSourcePanel citation={sourceCitation} onClose={() => setSourceCitation(null)} />
+    </AppShell>
   )
 }

@@ -13,6 +13,44 @@ const config: Config = {
         sans: ["var(--font-inter)", "system-ui", "sans-serif"],
         display: ["var(--font-display)", "var(--font-inter)", "system-ui", "sans-serif"],
       },
+      // Chat-surface type scale (Phase R3). Semantic names, not t-shirt
+      // sizes, so a class says what it's for and can be re-tuned in one
+      // place. Tailwind's numeric defaults (text-xs/sm/base/lg/xl/...) are
+      // deliberately NOT overridden - ~300 arbitrary-px sites elsewhere in
+      // the app still rely on them, and silently retuning text-base would
+      // move every one. 14px deliberately has no semantic name here - if a
+      // future edit reaches for one, that's a signal to reconsider it.
+      fontSize: {
+        answer: ["1rem", { lineHeight: "1.75" }], // 16 / 28 - answer prose, bullets, steps, KV values
+        "answer-h1": ["1.1875rem", { lineHeight: "1.4" }], // 19 / 26.6
+        "answer-h2": ["1.0625rem", { lineHeight: "1.45" }], // 17 / 24.6
+        "answer-h3": ["1rem", { lineHeight: "1.5" }], // 16 / 24
+        chat: ["0.9375rem", { lineHeight: "1.6" }], // 15 / 24 - user bubble, callouts, tables, menu items
+        compose: ["1rem", { lineHeight: "1.5" }], // 16 / 24 - composer textarea only (matches text-base's line-height)
+        label: ["0.8125rem", { lineHeight: "1.45" }], // 13 / 18.9 - toolbar buttons, KV labels, eyebrows
+        meta: ["0.75rem", { lineHeight: "1.5" }], // 12 / 18 - provenance caption, alignment line
+        "meta-xs": ["0.6875rem", { lineHeight: "1.45" }], // 11 / 16 - source-list metadata, footnotes
+        marker: ["0.625rem", { lineHeight: "1" }], // 10 / 10 - citation superscripts, count badges
+        // Bare-string entries below (font-size only, no paired line-height)
+        // for the ~300 arbitrary text-[Npx] sites outside the chat surface.
+        // Bare strings apply ONLY font-size, exactly like the arbitrary
+        // values they replace - unlike Tailwind's numeric scale, they carry
+        // no line-height side effect, so this is a zero-visual-delta rename.
+        9: "0.5625rem",
+        10: "0.625rem",
+        11: "0.6875rem",
+        12: "0.75rem",
+        13: "0.8125rem",
+      },
+      // --radius is 0.5rem, so these are byte-identical to Tailwind's own
+      // defaults (rounded-lg: 0.5rem, rounded-md: 0.375rem) - wiring them
+      // to the token is a zero-visual-delta change. Deliberately no `sm`:
+      // the shadcn convention (0.25rem) differs from Tailwind's default
+      // rounded-sm (0.125rem) and would silently move every such site.
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+      },
       colors: {
         "sop-blue": "#1a365d",
         "sop-teal": "#0d9488",
@@ -66,10 +104,6 @@ const config: Config = {
         danger: { soft: "hsl(var(--danger-soft))", "soft-border": "hsl(var(--danger-soft-border))", "soft-fg": "hsl(var(--danger-soft-fg))" },
         warn: { soft: "hsl(var(--warn-soft))", "soft-border": "hsl(var(--warn-soft-border))", "soft-fg": "hsl(var(--warn-soft-fg))" },
         ok: { soft: "hsl(var(--ok-soft))", "soft-border": "hsl(var(--ok-soft-border))", "soft-fg": "hsl(var(--ok-soft-fg))" },
-        brand: {
-          accent: "hsl(var(--brand-accent))",
-          ink: "hsl(var(--brand-ink))",
-        },
         "sop-clinical-blue": "#0B6BCB",
         "clinical": {
           cyan: "#0B6BCB",

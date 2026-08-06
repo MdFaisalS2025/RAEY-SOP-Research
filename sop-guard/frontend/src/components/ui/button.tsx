@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils"
 // fixes landed earlier in this phase (see globals.css's hex-literal
 // remap block and the --primary-hover token).
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap font-semibold transition-colors press disabled:pointer-events-none disabled:opacity-50 disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0B6BCB]/50 dark:focus-visible:ring-[#00E5FF]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap font-semibold transition-colors press disabled:pointer-events-none disabled:opacity-50 disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
   {
     variants: {
       variant: {

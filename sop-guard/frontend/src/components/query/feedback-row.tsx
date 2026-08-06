@@ -1,9 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { MessageCircleQuestion, ThumbsDown, ThumbsUp } from "lucide-react"
+import { MessageCircleQuestion, ShieldOff, ThumbsDown, ThumbsUp } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { OverrideModal } from "@/components/ui/override-modal"
+import { FeedbackModal, type FeedbackType } from "@/components/ui/feedback-modal"
 import { toast } from "@/components/ui/use-toast"
 import { submitFeedback } from "@/lib/api"
 
@@ -21,6 +22,14 @@ function hashQuery(text: string): string {
 export function FeedbackRow({ queryText, answerId }: { queryText: string; answerId?: string | null }) {
   const [choice, setChoice] = useState<FeedbackChoice | null>(null)
   const [showOverride, setShowOverride] = useState(false)
+  // "Disagree" used to open OverrideModal directly, but that modal's
+  // reasons (will_monitor/not_applicable/disagree_with_sop) are a clinical-
+  // override audit record ("I read this and am departing from it for this
+  // patient"), not an answer-quality report ("Meridian got this wrong") -
+  // which is what a thumbs-down actually means. It now opens FeedbackModal
+  // (Incorrect/Unsafe/Missing Info) instead; the override capture moves to
+  // its own explicit button below so that record-keeping path isn't lost.
+  const [showFeedback, setShowFeedback] = useState(false)
   const storageKey = hashQuery(queryText)
 
   useEffect(() => {
@@ -41,10 +50,8 @@ export function FeedbackRow({ queryText, answerId }: { queryText: string; answer
       /* ignore */
     }
     if (c === "disagree") {
-      setShowOverride(true)
+      setShowFeedback(true)
     } else {
-      // "disagree" already gets a real backend call via OverrideModal
-      // below (POST /api/overrides); helpful/clarification need their own.
       // Backend's feedback_type vocabulary is positive/negative/correction/
       // clarification/incorrect/unsafe/missing - "helpful" maps to
       // "positive"; "clarification" already matches by name.
@@ -54,9 +61,9 @@ export function FeedbackRow({ queryText, answerId }: { queryText: string; answer
   }
 
   const options: { key: FeedbackChoice; label: string; icon: typeof ThumbsUp; active: string }[] = [
-    { key: "helpful", label: "Helpful", icon: ThumbsUp, active: "text-[#15803D] dark:text-green-400 bg-[#DCFCE7] dark:bg-green-500/10" },
-    { key: "clarification", label: "Needs clarification", icon: MessageCircleQuestion, active: "text-[#B45309] dark:text-amber-400 bg-[#FEF3C7] dark:bg-amber-500/10" },
-    { key: "disagree", label: "Disagree", icon: ThumbsDown, active: "text-[#B91C1C] dark:text-red-400 bg-[#FEE2E2] dark:bg-red-500/10" },
+    { key: "helpful", label: "Helpful", icon: ThumbsUp, active: "text-ok-soft-fg bg-ok-soft" },
+    { key: "clarification", label: "Needs clarification", icon: MessageCircleQuestion, active: "text-warn-soft-fg bg-warn-soft" },
+    { key: "disagree", label: "Disagree", icon: ThumbsDown, active: "text-danger-soft-fg bg-danger-soft" },
   ]
 
   return (
@@ -76,6 +83,24 @@ export function FeedbackRow({ queryText, answerId }: { queryText: string; answer
           <o.icon className="w-4 h-4" />
         </button>
       ))}
+      <button
+        onClick={() => setShowOverride(true)}
+        title="Override guidance"
+        aria-label="Override guidance"
+        className="inline-flex items-center justify-center w-8 h-8 rounded-lg transition-colors duration-150 text-muted-foreground hover:text-foreground hover:bg-muted"
+      >
+        <ShieldOff className="w-4 h-4" />
+      </button>
+      <FeedbackModal
+        open={showFeedback}
+        onClose={() => setShowFeedback(false)}
+        questionText={queryText}
+        onSubmit={(type: FeedbackType, note: string) =>
+          submitFeedback({ answerId, feedbackType: type, feedbackText: note }).then(() => {
+            toast({ description: "Feedback recorded", variant: "success" })
+          })
+        }
+      />
       <OverrideModal
         open={showOverride}
         onClose={() => setShowOverride(false)}

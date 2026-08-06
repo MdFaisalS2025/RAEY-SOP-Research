@@ -46,11 +46,11 @@ export function CommitteeCommentCard({ version }: { version: SOPVersion }) {
     <div className="rounded-xl bg-muted border border-border p-4 space-y-2.5">
       <div className="flex flex-wrap items-center gap-2">
         <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground">
-          <Gavel className="w-3.5 h-3.5 text-[#0B6BCB]" /> {version.committee_name || "Committee"}
+          <Gavel className="w-3.5 h-3.5 text-primary" /> {version.committee_name || "Committee"}
         </span>
         <span className="text-xs text-muted-foreground">{version.effective_date}</span>
         {version.change_category && (
-          <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30">
+          <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-primary/10 text-primary border border-primary/30">
             {CHANGE_CATEGORY_LABEL[version.change_category] ?? version.change_category}
           </span>
         )}
@@ -67,7 +67,7 @@ export function CommitteeCommentCard({ version }: { version: SOPVersion }) {
       {(version.training_required || version.acknowledgment_required) && (
         <div className="flex flex-wrap gap-2 pt-1">
           {version.training_required && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-warn-soft text-warn-soft-fg border border-warn-soft-border">
               <GraduationCap className="w-3 h-3" /> Training required
             </span>
           )}
@@ -122,24 +122,21 @@ function VersionComparePicker({ sopId, versions }: { sopId: string; versions: SO
       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Compare versions</p>
       <div className="flex flex-wrap items-center gap-2">
         <select aria-label="Compare from version" value={fromVersion} onChange={(e) => setFromVersion(e.target.value)}
-          className="px-3 py-2 rounded-lg bg-muted border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#0B6BCB]/40">
+          className="px-3 py-2 rounded-lg bg-muted border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40">
           {sorted.map((v) => <option key={v.id} value={v.version_number}>v{v.version_number}</option>)}
         </select>
         <span className="text-xs text-muted-foreground">vs.</span>
         <select aria-label="Compare to version" value={toVersion} onChange={(e) => setToVersion(e.target.value)}
-          className="px-3 py-2 rounded-lg bg-muted border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#0B6BCB]/40">
+          className="px-3 py-2 rounded-lg bg-muted border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40">
           {sorted.map((v) => <option key={v.id} value={v.version_number}>v{v.version_number}</option>)}
         </select>
         <button
           onClick={() => setCompared({ from: fromVersion, to: toVersion })}
           disabled={fromVersion === toVersion}
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium bg-[#0B6BCB] hover:bg-[#0959AC] disabled:opacity-40 disabled:cursor-not-allowed text-white transition-colors">
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium bg-primary hover:bg-primary-hover disabled:opacity-40 disabled:cursor-not-allowed text-white transition-colors">
           Compare
         </button>
       </div>
-      {fromVersion === toVersion && (
-        <p className="text-xs text-muted-foreground">Choose two different versions to compare.</p>
-      )}
       {compared && compared.from !== compared.to && (
         <div className="pt-2 border-t border-border">
           <p className="text-xs text-muted-foreground mb-2">v{compared.from} &rarr; v{compared.to}</p>
@@ -193,7 +190,7 @@ export function VersionTimeline({ sopId }: { sopId: string }) {
             {!isLast && <div className="absolute left-[11px] top-6 bottom-0 w-px bg-border" />}
             <div className={cn(
               "absolute left-0 top-1.5 w-6 h-6 rounded-full border-2 flex items-center justify-center",
-              v.status === "current" ? "bg-[#0B6BCB] border-[#0B6BCB]" : "bg-card border-border"
+              v.status === "current" ? "bg-primary border-primary" : "bg-card border-border"
             )}>
               <FlaskConical className={cn("w-3 h-3", v.status === "current" ? "text-white" : "text-subtle")} />
             </div>
@@ -204,7 +201,7 @@ export function VersionTimeline({ sopId }: { sopId: string }) {
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-sm font-semibold text-foreground">v{v.version_number}</span>
                 {v.status === "current" && (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30 uppercase tracking-wide">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-primary/10 text-primary border border-primary/30 uppercase tracking-wide">
                     Current Approved Version
                   </span>
                 )}
@@ -241,13 +238,13 @@ export function LatestVersionBadge({
   if (!version) return null
   return (
     <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground px-1">
-      <History className="w-3.5 h-3.5 text-[#0B6BCB]" />
+      <History className="w-3.5 h-3.5 text-primary" />
       <span>
         Answer generated from latest approved SOP version:{" "}
         <span className="font-semibold text-foreground">v{version}</span>
         {effectiveDate && <> approved on {effectiveDate}</>}
       </span>
-      <button onClick={onViewHistory} className="text-[#0B6BCB] hover:underline font-medium">
+      <button onClick={onViewHistory} className="text-primary hover:underline font-medium">
         View SOP Version History
       </button>
     </div>
@@ -268,9 +265,9 @@ export function VersionHistoryPanel({ sopId }: { sopId: string }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30">
-        <History className="w-4 h-4 text-[#B45309] dark:text-amber-400 shrink-0 mt-0.5" />
-        <p className="text-xs text-[#B45309] dark:text-amber-400">
+      <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-warn-soft border border-warn-soft-border">
+        <History className="w-4 h-4 text-warn-soft-fg shrink-0 mt-0.5" />
+        <p className="text-xs text-warn-soft-fg">
           This response supports SOP review and clinical workflow. It does not replace approved hospital policy or clinical judgment.
         </p>
       </div>

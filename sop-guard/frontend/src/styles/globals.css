@@ -46,8 +46,6 @@
                                       against --background and failed WCAG AA at any size. This
                                       value measures ~5.5:1. Still a distinct, lighter tier than
                                       --muted-foreground (#64748B, ~4.7:1), just no longer failing. */
-    --brand-accent: 187 100% 42%; /* Meridian cyan, light-mode strength */
-    --brand-ink: 217 33% 15%;     /* Meridian graphite/ink, light-mode */
 
     /* Soft tint triples (surface / border / foreground) for danger, warn,
        ok - collapse the 7-utility pattern
@@ -72,32 +70,35 @@
 
   .dark {
     --background: 220 20% 4%;    /* #0A0C10 */
-    --foreground: 190 12% 90%;   /* #dce4e5 */
-    --card: 180 14% 8%;          /* #0d1516 */
-    --card-foreground: 190 12% 90%;
-    --popover: 180 14% 8%;
-    --popover-foreground: 190 12% 90%;
-    --primary: 187 100% 50%;     /* #00E5FF clinical cyan */
+    --foreground: 210 16% 90%;   /* #dbe1e8 - was 190 12% 90% (teal-tinted); Phase P single-hue palette */
+    --card: 215 16% 9%;          /* #12161c - was 180 14% 8% (#0d1516, teal-tinted) */
+    --card-foreground: 210 16% 90%;
+    --popover: 215 16% 9%;
+    --popover-foreground: 210 16% 90%;
+    /* Phase P: single brand hue across both modes. Was 187 100% 50%
+       (#00E5FF, a different hue family from light mode's 210 blue) -
+       read as sci-fi HUD rather than clinical instrument, and clashed
+       with --brand-accent which also claimed to be "the brand" at a
+       different hue. Now a lightened tint of the SAME 210 hue. */
+    --primary: 210 90% 62%;      /* #479EF5 */
     --primary-foreground: 220 20% 4%;
-    --primary-hover: 185.8 100% 42.5%; /* #00C4D9 - matches the small number of call sites that already got a dark:hover: sibling right */
-    --secondary: 180 10% 13%;    /* #192122 surface container */
-    --secondary-foreground: 190 12% 90%;
-    --muted: 180 10% 13%;
-    --muted-foreground: 190 10% 65%;  /* #bac9cc subdued */
-    --accent: 180 10% 13%;
-    --accent-foreground: 190 12% 90%;
+    --primary-hover: 210 90% 70%;
+    --secondary: 215 14% 14%;    /* was 180 10% 13% (#192122, teal-tinted) */
+    --secondary-foreground: 210 16% 90%;
+    --muted: 215 14% 14%;
+    --muted-foreground: 212 12% 68%;  /* was 190 10% 65% (#bac9cc, teal-tinted) */
+    --accent: 215 14% 14%;
+    --accent-foreground: 210 16% 90%;
     --destructive: 0 100% 66%;   /* #FF5252 critical red */
     --destructive-foreground: 0 0% 100%;
     --border: 0 0% 100% / 0.08;
-    --input: 180 10% 10%;
-    --ring: 187 100% 50%;        /* clinical cyan */
+    --input: 215 14% 11%;        /* was 180 10% 10% (teal-tinted) */
+    --ring: 210 90% 62%;         /* matches --primary */
     --success: 145 100% 39%;     /* #00C853 clinical emerald */
     --success-foreground: 0 0% 100%;
     --warning: 54 100% 50%;      /* #FFD600 alert amber */
     --warning-foreground: 220 20% 4%;
-    --text-subtle: 190 8% 55%;   /* dimmer than muted-foreground, still legible on #0A0C10 */
-    --brand-accent: 187 100% 50%; /* Meridian cyan, dark-mode strength (matches primary) */
-    --brand-ink: 190 12% 90%;    /* Meridian graphite/ink, dark-mode (near-white on dark) */
+    --text-subtle: 212 10% 58%;  /* was 190 8% 55% (teal-tinted) */
 
     /* Same alpha-in-token trick as --border above: reproduce Tailwind's
        red-500/amber-500/green-500 at the /10 (surface) and /30 (border)
@@ -139,8 +140,8 @@
   }
 
   ::selection {
-    background-color: rgba(11, 107, 203, 0.18);
-    color: #1A2332;
+    background-color: hsl(var(--primary) / 0.18);
+    color: hsl(var(--foreground));
   }
 
   h1, h2, h3 {
@@ -157,16 +158,16 @@
   .dark input,
   .dark textarea,
   .dark select {
-    color: #dce4e5;
-    caret-color: #00E5FF;
+    color: hsl(var(--foreground));
+    caret-color: hsl(var(--primary));
   }
   .dark input::placeholder,
   .dark textarea::placeholder {
-    color: #7f8f92;
+    color: hsl(var(--muted-foreground));
   }
   .dark select option {
-    background: #11191b;
-    color: #dce4e5;
+    background: hsl(var(--input));
+    color: hsl(var(--foreground));
   }
 
   /* Custom scrollbar */
@@ -232,12 +233,12 @@
     border: 1px solid rgba(255, 255, 255, 0.08);
   }
 
-  .glow-cyan {
-    box-shadow: 0 0 20px rgba(0, 229, 255, 0.1), 0 0 40px rgba(0, 229, 255, 0.05);
+  .glow-accent {
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.1), 0 0 40px hsl(var(--primary) / 0.05);
   }
 
-  .glow-cyan-strong {
-    box-shadow: 0 0 20px rgba(0, 229, 255, 0.2), 0 0 60px rgba(0, 229, 255, 0.08);
+  .glow-accent-strong {
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.2), 0 0 60px hsl(var(--primary) / 0.08);
   }
 
   .no-scrollbar {
@@ -250,7 +251,7 @@
   }
 
   .clinical-input {
-    @apply bg-white dark:bg-[#11191b] text-foreground dark:text-[#dce4e5] placeholder-muted-foreground dark:placeholder-[#7f8f92] caret-[#0B6BCB] dark:caret-[#00E5FF] border border-[#CBD5E1] dark:border-white/10 rounded-lg focus:border-[#0B6BCB] dark:focus:border-[#00E5FF]/50 focus:ring-1 focus:ring-[#0B6BCB]/30 dark:focus:ring-[#00E5FF]/30 focus:outline-none transition-colors;
+    @apply bg-white dark:bg-input text-foreground placeholder-muted-foreground caret-[#0B6BCB] border border-[#CBD5E1] dark:border-white/10 rounded-lg focus:border-[#0B6BCB] dark:focus:border-primary/50 focus:ring-1 focus:ring-[#0B6BCB]/30 dark:focus:ring-primary/30 focus:outline-none transition-colors;
   }
 
   /* Micro-interactions: consistent tactile feedback across the app */
@@ -259,11 +260,11 @@
   }
 
   .lift {
-    @apply transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/5 dark:hover:shadow-[#00E5FF]/5;
+    @apply transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/5 dark:hover:shadow-primary/5;
   }
 
   .interactive-card {
-    @apply transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:shadow-black/5 dark:hover:shadow-[#00E5FF]/5 hover:border-[#0B6BCB]/30 active:scale-[0.99] active:translate-y-0;
+    @apply transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:shadow-black/5 dark:hover:shadow-primary/5 hover:border-[#0B6BCB]/30 active:scale-[0.99] active:translate-y-0;
   }
 
   /* Copilot-style loading sweep for the Ask Meridian loading indicator: a
@@ -332,8 +333,8 @@
   .dark input:-webkit-autofill:hover,
   .dark input:-webkit-autofill:focus,
   .dark textarea:-webkit-autofill {
-    -webkit-text-fill-color: #dce4e5;
-    -webkit-box-shadow: 0 0 0 1000px #11191b inset;
+    -webkit-text-fill-color: hsl(var(--foreground));
+    -webkit-box-shadow: 0 0 0 1000px hsl(var(--input)) inset;
     transition: background-color 5000s ease-in-out 0s;
   }
 
@@ -420,12 +421,9 @@
   }
 
   :focus-visible {
-    outline: 2px solid #0B6BCB;
+    outline: 2px solid hsl(var(--ring));
     outline-offset: 2px;
     border-radius: 2px;
-  }
-  .dark :focus-visible {
-    outline-color: #00E5FF;
   }
 }
 
@@ -452,6 +450,15 @@ body.compact .gap-4 {
 }
 body.compact .space-y-4 > * + * {
   margin-top: 0.625rem !important;
+}
+/* Phase R3: the chat answer surface moved its block spacing to space-y-5
+   (and turn/message spacing to explicit item margins, not a shared
+   space-y-*) to fix a dead-CSS bug and get more generous default
+   whitespace - this keeps that spacing responsive to compact density.
+   Deliberately no matching font-size override for .text-answer: compact
+   is for fitting more chrome, not for shrinking clinical prose. */
+body.compact .space-y-5 > * + * {
+  margin-top: 0.875rem !important;
 }
 
 /* ── Print ────────────────────────────────────────────────────── */

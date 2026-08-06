@@ -78,10 +78,10 @@ export function FeedbackModal({
         {open && (
           submitted ? (
               <div className="flex flex-col items-center justify-center gap-3 px-6 py-10">
-                <div className="w-12 h-12 rounded-full bg-[#DCFCE7] dark:bg-green-500/10 flex items-center justify-center">
-                  <CheckCircle2 className="w-6 h-6 text-[#15803D] dark:text-green-400" />
+                <div className="w-12 h-12 rounded-full bg-ok-soft flex items-center justify-center">
+                  <CheckCircle2 className="w-6 h-6 text-ok-soft-fg" />
                 </div>
-                <p className="text-sm font-semibold text-[#15803D] dark:text-green-400">Feedback submitted - thank you</p>
+                <p className="text-sm font-semibold text-ok-soft-fg">Feedback submitted - thank you</p>
               </div>
             ) : (
               <>
@@ -99,10 +99,10 @@ export function FeedbackModal({
                   {FEEDBACK_TYPES.map((f) => (
                     <button key={f.key} onClick={() => setType(f.key)}
                       className={cn("w-full flex items-start gap-2.5 px-3 py-2.5 rounded-xl border text-left transition-colors",
-                        type === f.key ? "bg-[#0B6BCB]/10 border-[#0B6BCB]/40" : "border-border hover:bg-muted")}>
-                      <f.icon className={cn("w-4 h-4 shrink-0 mt-0.5", type === f.key ? "text-[#0B6BCB]" : "text-muted-foreground")} />
+                        type === f.key ? "bg-primary/10 border-primary/40" : "border-border hover:bg-muted")}>
+                      <f.icon className={cn("w-4 h-4 shrink-0 mt-0.5", type === f.key ? "text-primary" : "text-muted-foreground")} />
                       <span>
-                        <span className={cn("block text-sm font-medium", type === f.key ? "text-[#0B6BCB]" : "text-foreground")}>{f.label}</span>
+                        <span className={cn("block text-sm font-medium", type === f.key ? "text-primary" : "text-foreground")}>{f.label}</span>
                         <span className="block text-xs text-muted-foreground">{f.description}</span>
                       </span>
                     </button>
@@ -113,7 +113,7 @@ export function FeedbackModal({
                     onChange={(e) => setNote(e.target.value)}
                     placeholder="Optional details - what should be different?"
                     rows={3}
-                    className="w-full px-3 py-2 rounded-xl bg-muted border border-border text-sm text-foreground placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-[#0B6BCB]/30 resize-none"
+                    className="w-full px-3 py-2 rounded-xl bg-muted border border-border text-sm text-foreground placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
                   />
                 </div>
 

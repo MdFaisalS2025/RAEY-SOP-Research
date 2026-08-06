@@ -107,10 +107,10 @@ export function OverrideModal({ open, onClose, contextType, contextId, contextLa
         {open && (
             status !== "idle" ? (
               <div className="flex flex-col items-center justify-center gap-3 px-6 py-10">
-                <div className="w-12 h-12 rounded-full bg-[#DCFCE7] dark:bg-green-500/10 flex items-center justify-center">
-                  <CheckCircle2 className="w-6 h-6 text-[#15803D] dark:text-green-400" />
+                <div className="w-12 h-12 rounded-full bg-ok-soft flex items-center justify-center">
+                  <CheckCircle2 className="w-6 h-6 text-ok-soft-fg" />
                 </div>
-                <p className="text-sm font-semibold text-[#15803D] dark:text-green-400">
+                <p className="text-sm font-semibold text-ok-soft-fg">
                   {status === "success" ? "Override recorded" : "Recorded locally"}
                 </p>
               </div>
@@ -134,17 +134,17 @@ export function OverrideModal({ open, onClose, contextType, contextId, contextLa
                       className={cn(
                         "w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-left text-sm font-medium transition-colors",
                         reason === r.key
-                          ? "bg-[#0B6BCB]/10 border-[#0B6BCB]/40 text-[#0B6BCB]"
+                          ? "bg-primary/10 border-primary/40 text-primary"
                           : "border-border text-foreground hover:bg-muted"
                       )}
                     >
                       <span
                         className={cn(
                           "w-4 h-4 rounded-full border-2 shrink-0 flex items-center justify-center",
-                          reason === r.key ? "border-[#0B6BCB]" : "border-input"
+                          reason === r.key ? "border-primary" : "border-input"
                         )}
                       >
-                        {reason === r.key && <span className="w-2 h-2 rounded-full bg-[#0B6BCB]" />}
+                        {reason === r.key && <span className="w-2 h-2 rounded-full bg-primary" />}
                       </span>
                       <r.icon className="w-4 h-4 shrink-0" />
                       {r.label}
@@ -158,7 +158,7 @@ export function OverrideModal({ open, onClose, contextType, contextId, contextLa
                       onChange={(e) => setNote(e.target.value)}
                       placeholder="Briefly describe your reason..."
                       rows={3}
-                      className="w-full px-3 py-2 rounded-xl bg-muted border border-border text-sm text-foreground placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-[#0B6BCB]/30 resize-none"
+                      className="w-full px-3 py-2 rounded-xl bg-muted border border-border text-sm text-foreground placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
                     />
                   )}
                 </div>

@@ -13,6 +13,7 @@ import AppShell from "@/components/layout/app-shell"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { SafetyNote } from "@/components/ui/safety-note"
 import { cn } from "@/lib/utils"
+import { toneChip } from "@/components/ui/tone"
 import { useRole } from "@/lib/role-context"
 import { DiffView, DiffStatsRow, type DiffSegment, type DiffStats } from "@/components/governance/diff-view"
 import { priorityBadge, statusBadge, voteBadge } from "@/components/proposals/badges"
@@ -81,15 +82,15 @@ function EffectiveDateCard({ proposal, onUpdated }: { proposal: Proposal; onUpda
       isPending ? "bg-[#FEF3C7]/40 dark:bg-amber-500/[0.06] border-[#FDE68A] dark:border-amber-500/30" : "bg-muted border-border"
     )}>
       <div className="flex items-center gap-2">
-        <Calendar className={cn("w-4 h-4", isPending ? "text-[#B45309] dark:text-amber-400" : "text-[#0B6BCB]")} />
+        <Calendar className={cn("w-4 h-4", isPending ? "text-[#B45309] dark:text-amber-400" : "text-primary")} />
         <h3 className="text-sm font-semibold text-foreground">Effective Date</h3>
         {isEffective && (
-          <span className="ml-auto px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border border-[#BBF7D0] dark:border-green-500/30">
+          <span className={cn(toneChip.success, "ml-auto px-2 py-0.5 rounded-full text-10 font-semibold uppercase")}>
             In effect
           </span>
         )}
         {isPending && (
-          <span className="ml-auto px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border border-[#FDE68A] dark:border-amber-500/30">
+          <span className={cn(toneChip.warning, "ml-auto px-2 py-0.5 rounded-full text-10 font-semibold uppercase")}>
             Approved - pending
           </span>
         )}
@@ -108,7 +109,7 @@ function EffectiveDateCard({ proposal, onUpdated }: { proposal: Proposal; onUpda
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
             className="px-3 py-1.5 rounded-lg border border-border bg-background text-sm" />
           <button onClick={() => save(date)} disabled={saving || date === proposal.scheduled_effective_date}
-            className="px-3 py-1.5 rounded-lg bg-[#0B6BCB] hover:bg-[#0959AC] disabled:opacity-40 text-white text-xs font-semibold">
+            className="px-3 py-1.5 rounded-lg bg-primary hover:bg-primary-hover disabled:opacity-40 text-primary-foreground text-xs font-semibold">
             {saving ? "Saving..." : "Schedule"}
           </button>
           {proposal.scheduled_effective_date && (
@@ -137,9 +138,9 @@ interface ImpactReport {
 }
 
 const RISK_STYLE: Record<string, string> = {
-  low: "bg-[#DCFCE7] dark:bg-green-500/10 text-[#15803D] dark:text-green-400 border-[#BBF7D0] dark:border-green-500/30",
-  elevated: "bg-[#FEF3C7] dark:bg-amber-500/10 text-[#B45309] dark:text-amber-400 border-[#FDE68A] dark:border-amber-500/30",
-  critical: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30",
+  low: toneChip.success,
+  elevated: toneChip.warning,
+  critical: toneChip.danger,
 }
 
 function ImpactAssessmentCard({ proposalId }: { proposalId: number }) {
@@ -165,9 +166,9 @@ function ImpactAssessmentCard({ proposalId }: { proposalId: number }) {
   return (
     <Card className="space-y-3">
       <div className="flex items-center gap-2">
-        <AlertTriangle className="w-4 h-4 text-[#0B6BCB]" />
+        <AlertTriangle className="w-4 h-4 text-primary" />
         <h3 className="text-sm font-semibold text-foreground">Change Impact Assessment</h3>
-        <span className={cn("ml-auto px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase border", RISK_STYLE[impact.risk_level ?? "low"])}>
+        <span className={cn("ml-auto px-2 py-0.5 rounded-full text-10 font-semibold uppercase border", RISK_STYLE[impact.risk_level ?? "low"])}>
           {impact.risk_level} risk
         </span>
       </div>
@@ -176,22 +177,22 @@ function ImpactAssessmentCard({ proposalId }: { proposalId: number }) {
       <div className="grid grid-cols-3 gap-3">
         <div className="rounded-xl bg-muted border border-border p-3 text-center">
           <p className="text-xl font-bold text-foreground">{conflicts.length}</p>
-          <p className="text-[11px] text-muted-foreground">New conflicts</p>
+          <p className="text-11 text-muted-foreground">New conflicts</p>
         </div>
         <div className="rounded-xl bg-muted border border-border p-3 text-center">
           <p className="text-xl font-bold text-foreground">{(impact.stale_acknowledgments ?? 0) + (impact.stale_attestations ?? 0)}</p>
-          <p className="text-[11px] text-muted-foreground">Staff to re-acknowledge</p>
+          <p className="text-11 text-muted-foreground">Staff to re-acknowledge</p>
         </div>
         <div className="rounded-xl bg-muted border border-border p-3 text-center">
           <p className="text-xl font-bold text-foreground">{impact.historical_citation_count ?? 0}</p>
-          <p className="text-[11px] text-muted-foreground">Recent query citations</p>
+          <p className="text-11 text-muted-foreground">Recent query citations</p>
         </div>
       </div>
 
       {conflicts.length > 0 && (
         <div className="space-y-2 pt-1">
           {conflicts.map((c, i) => (
-            <div key={i} className="p-3 rounded-lg bg-[#FEE2E2] dark:bg-red-500/10 border border-[#FECACA] dark:border-red-500/30 text-xs">
+            <div key={i} className={cn(toneChip.danger, "p-3 rounded-lg text-xs")}>
               <p className="font-semibold text-[#B91C1C] dark:text-red-400">{c.message}</p>
             </div>
           ))}
@@ -214,7 +215,7 @@ function OverviewTab({ proposal }: { proposal: Proposal }) {
       <div className="grid sm:grid-cols-2 gap-4">
         <div className="rounded-xl bg-muted border border-border p-4 space-y-2">
           <p className="text-xs text-muted-foreground">Affected SOP</p>
-          <p className="text-sm font-medium text-[#0B6BCB]">{proposal.affected_sop_id || "Not specified"}</p>
+          <p className="text-sm font-medium text-primary">{proposal.affected_sop_id || "Not specified"}</p>
         </div>
         <div className="rounded-xl bg-muted border border-border p-4 space-y-2">
           <p className="text-xs text-muted-foreground">Department</p>
@@ -279,7 +280,7 @@ function RedlineTab({ proposalId }: { proposalId: string }) {
       )}
       {diff.stats && <DiffStatsRow stats={diff.stats} />}
       <DiffView segments={diff.segments} />
-      <p className="text-[11px] text-subtle">Word-level diff. Underlined = added, strikethrough = removed.</p>
+      <p className="text-11 text-subtle">Word-level diff. Underlined = added, strikethrough = removed.</p>
     </div>
   )
 }
@@ -324,23 +325,23 @@ function VotesTab({ proposal, onVoteCast }: { proposal: Proposal; onVoteCast: (p
           <div className="h-full rounded-full bg-gradient-to-r from-[#0B6BCB] to-[#16A34A] transition-all" style={{ width: `${Math.min(pct, 100)}%` }} />
         </div>
         <div className="grid grid-cols-4 gap-2 text-center pt-1">
-          <div><p className="text-lg font-bold text-[#15803D] dark:text-green-400">{proposal.tally.approve}</p><p className="text-[10px] text-muted-foreground uppercase">Approve</p></div>
-          <div><p className="text-lg font-bold text-[#B91C1C] dark:text-red-400">{proposal.tally.reject}</p><p className="text-[10px] text-muted-foreground uppercase">Reject</p></div>
-          <div><p className="text-lg font-bold text-muted-foreground">{proposal.tally.abstain}</p><p className="text-[10px] text-muted-foreground uppercase">Abstain</p></div>
-          <div><p className="text-lg font-bold text-[#B45309] dark:text-amber-400">{proposal.tally.request_changes}</p><p className="text-[10px] text-muted-foreground uppercase">Changes</p></div>
+          <div><p className="text-lg font-bold text-[#15803D] dark:text-green-400">{proposal.tally.approve}</p><p className="text-10 text-muted-foreground uppercase">Approve</p></div>
+          <div><p className="text-lg font-bold text-[#B91C1C] dark:text-red-400">{proposal.tally.reject}</p><p className="text-10 text-muted-foreground uppercase">Reject</p></div>
+          <div><p className="text-lg font-bold text-muted-foreground">{proposal.tally.abstain}</p><p className="text-10 text-muted-foreground uppercase">Abstain</p></div>
+          <div><p className="text-lg font-bold text-[#B45309] dark:text-amber-400">{proposal.tally.request_changes}</p><p className="text-10 text-muted-foreground uppercase">Changes</p></div>
         </div>
       </div>
 
       <div className="space-y-3">
         <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-          <Users className="w-4 h-4 text-[#0B6BCB]" /> Votes Cast ({proposal.votes.length})
+          <Users className="w-4 h-4 text-primary" /> Votes Cast ({proposal.votes.length})
         </h3>
         {proposal.votes.length === 0 && <p className="text-sm text-muted-foreground text-center py-6">No votes yet.</p>}
         {proposal.votes.map((v) => {
           const info = voteBadge(v.vote)
           return (
             <div key={v.id} className="flex items-start gap-3 p-3 rounded-xl bg-muted border border-border">
-              <div className="w-9 h-9 rounded-full bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 flex items-center justify-center text-[#0B6BCB] text-xs font-bold shrink-0">
+              <div className="w-9 h-9 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center text-primary text-xs font-bold shrink-0">
                 {v.user_name.slice(0, 2).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0 space-y-1">
@@ -417,7 +418,7 @@ function TimelineTab({ proposal }: { proposal: Proposal }) {
   return (
     <div className="space-y-2">
       <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-4">
-        <History className="w-4 h-4 text-[#0B6BCB]" /> Timeline
+        <History className="w-4 h-4 text-primary" /> Timeline
       </h3>
       <div className="relative space-y-0">
         {events.map((entry, i) => {
@@ -425,7 +426,7 @@ function TimelineTab({ proposal }: { proposal: Proposal }) {
           return (
             <div key={i} className="flex gap-4">
               <div className="flex flex-col items-center">
-                <div className="w-7 h-7 rounded-full border-2 flex items-center justify-center text-white shrink-0 bg-[#0B6BCB] border-[#0B6BCB]">
+                <div className="w-7 h-7 rounded-full border-2 flex items-center justify-center text-primary-foreground shrink-0 bg-primary border-primary">
                   {entry.icon}
                 </div>
                 {!isLast && <div className="w-px flex-1 bg-[#E2E8F0] mt-1" />}
@@ -485,7 +486,7 @@ export default function ProposalDetailPage() {
     return (
       <AppShell>
         <div className="p-6 max-w-5xl mx-auto space-y-4">
-          <Link href="/proposals" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-[#0B6BCB] transition-colors">
+          <Link href="/proposals" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors">
             <ChevronLeft className="w-3.5 h-3.5" /> Back to Proposals
           </Link>
           <Card padding="none" className="p-12 text-center">
@@ -507,7 +508,7 @@ export default function ProposalDetailPage() {
           { label: proposal.title.length > 60 ? proposal.title.slice(0, 60) + "…" : proposal.title },
         ]} />
 
-        <Link href="/proposals" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-[#0B6BCB] transition-colors">
+        <Link href="/proposals" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors">
           <ChevronLeft className="w-3.5 h-3.5" /> Back to Proposals
         </Link>
 
@@ -518,7 +519,7 @@ export default function ProposalDetailPage() {
             </span>
             <span className={cn("px-2.5 py-1 rounded text-xs font-semibold", statusInfo.cls)}>{statusInfo.label}</span>
             {proposal.legal_review_required && (
-              <span className="px-2.5 py-1 rounded text-xs font-semibold bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border border-[#FECACA] dark:border-red-500/30 flex items-center gap-1">
+              <span className={cn(toneChip.danger, "px-2.5 py-1 rounded text-xs font-semibold flex items-center gap-1")}>
                 <Scale className="w-3 h-3" /> Legal Review Required
               </span>
             )}
@@ -550,7 +551,7 @@ export default function ProposalDetailPage() {
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
                   "inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-colors rounded-t-lg border-b-2 -mb-px",
-                  activeTab === tab.id ? "text-[#0B6BCB] border-[#0B6BCB]" : "text-muted-foreground border-transparent hover:text-[#0B6BCB]"
+                  activeTab === tab.id ? "text-primary border-primary" : "text-muted-foreground border-transparent hover:text-primary"
                 )}
               >
                 <Icon className="w-3.5 h-3.5" /> {tab.label}

@@ -48,18 +48,18 @@ function extractEvidenceScore(reasoning: string): number | null {
 
 const ROUTE_CONFIG: Record<string, { label: string; className: string }> = {
   sop_library: { label: "Sourced from: SOP Library", className: "bg-muted text-muted-foreground border-border" },
-  external_evidence: { label: "Sourced from: External Literature", className: "bg-[#0B6BCB]/10 dark:bg-[#00E5FF]/10 text-[#0B6BCB] dark:text-[#00E5FF] border-[#0B6BCB]/30 dark:border-[#00E5FF]/30" },
-  hybrid: { label: "Sourced from: SOP Library + External Literature", className: "bg-[#0B6BCB]/10 dark:bg-[#00E5FF]/10 text-[#0B6BCB] dark:text-[#00E5FF] border-[#0B6BCB]/30 dark:border-[#00E5FF]/30" },
-  no_evidence: { label: "No source available", className: "bg-[#FEE2E2] dark:bg-red-500/10 text-[#B91C1C] dark:text-red-400 border-[#FECACA] dark:border-red-500/30" },
+  external_evidence: { label: "Sourced from: External Literature", className: "bg-primary/10 text-primary border-primary/30" },
+  hybrid: { label: "Sourced from: SOP Library + External Literature", className: "bg-primary/10 text-primary border-primary/30" },
+  no_evidence: { label: "No source available", className: "bg-danger-soft text-danger-soft-fg border-danger-soft-border" },
 }
 
 function InfoCard({ label, value, icon: Icon, tone }: { label: string; value: string; icon: React.ComponentType<{ className?: string }>; tone?: "warning" }) {
   return (
     <div className={cn("flex items-start gap-2.5 p-3 rounded-xl border",
-      tone === "warning" ? "bg-[#FEF3C7] dark:bg-amber-500/10 border-[#FDE68A] dark:border-amber-500/30" : "bg-muted border-border")}>
-      <Icon className={cn("w-4 h-4 shrink-0 mt-0.5", tone === "warning" ? "text-[#B45309] dark:text-amber-400" : "text-muted-foreground")} />
+      tone === "warning" ? "bg-warn-soft border-warn-soft-border" : "bg-muted border-border")}>
+      <Icon className={cn("w-4 h-4 shrink-0 mt-0.5", tone === "warning" ? "text-warn-soft-fg" : "text-muted-foreground")} />
       <div className="min-w-0">
-        <p className={cn("text-[11px] font-medium uppercase tracking-wide", tone === "warning" ? "text-[#B45309] dark:text-amber-400" : "text-muted-foreground")}>{label}</p>
+        <p className={cn("text-[11px] font-medium uppercase tracking-wide", tone === "warning" ? "text-warn-soft-fg" : "text-muted-foreground")}>{label}</p>
         <p className="text-sm text-foreground font-medium break-words">{value}</p>
       </div>
     </div>
@@ -85,15 +85,15 @@ export function TrustAuditPanel({
 
   const status = data.verification.status
   const statusConfig = {
-    passed: { icon: ShieldCheck, label: "Verified", className: "text-[#15803D] dark:text-green-400" },
-    warning: { icon: ShieldAlert, label: "Caution", className: "text-[#B45309] dark:text-amber-400" },
-    failed: { icon: ShieldX, label: "Unverified", className: "text-[#B91C1C] dark:text-red-400" },
+    passed: { icon: ShieldCheck, label: "Verified", className: "text-ok-soft-fg" },
+    warning: { icon: ShieldAlert, label: "Caution", className: "text-warn-soft-fg" },
+    failed: { icon: ShieldX, label: "Unverified", className: "text-danger-soft-fg" },
   }
   const sc = statusConfig[status]
 
   const confidencePct = Math.round(data.verification.confidence * 100)
   const confidenceLevel = data.verification.confidence >= 0.7 ? "high" : data.verification.confidence >= 0.5 ? "medium" : "low"
-  const confidenceColor = confidenceLevel === "high" ? "text-[#15803D] dark:text-green-400" : confidenceLevel === "medium" ? "text-[#B45309] dark:text-amber-400" : "text-[#B91C1C] dark:text-red-400"
+  const confidenceColor = confidenceLevel === "high" ? "text-ok-soft-fg" : confidenceLevel === "medium" ? "text-warn-soft-fg" : "text-danger-soft-fg"
   // Backend-calibrated label (see evidence_sufficiency.py's
   // confidence_tier()) - calibrated against real separation between
   // sufficient/insufficient evidence, not just a bare score cutoff. Shown
@@ -175,9 +175,9 @@ export function TrustAuditPanel({
               <div className="space-y-2">
                 {data.verification.thresholdChecks.map((c, i) => (
                   <div key={i} className="flex items-center gap-2 p-2.5 rounded-lg bg-muted">
-                    {c.status === "pass" ? <CheckCircle2 className="w-4 h-4 text-[#15803D] dark:text-green-400 shrink-0" /> : <XCircle className="w-4 h-4 text-[#B91C1C] dark:text-red-400 shrink-0" />}
-                    <span className="flex-1 text-sm text-foreground">{c.parameter}: <span className="font-mono text-[#0B6BCB]">{c.value}</span></span>
-                    <span className={cn("text-xs font-semibold", c.status === "pass" ? "text-[#15803D] dark:text-green-400" : "text-[#B91C1C] dark:text-red-400")}>{c.status.toUpperCase()}</span>
+                    {c.status === "pass" ? <CheckCircle2 className="w-4 h-4 text-ok-soft-fg shrink-0" /> : <XCircle className="w-4 h-4 text-danger-soft-fg shrink-0" />}
+                    <span className="flex-1 text-sm text-foreground">{c.parameter}: <span className="font-mono text-primary">{c.value}</span></span>
+                    <span className={cn("text-xs font-semibold", c.status === "pass" ? "text-ok-soft-fg" : "text-danger-soft-fg")}>{c.status.toUpperCase()}</span>
                   </div>
                 ))}
               </div>
@@ -189,7 +189,7 @@ export function TrustAuditPanel({
               <div className="space-y-2">
                 {data.verification.sequenceChecks.map((c, i) => (
                   <div key={i} className="flex items-center gap-2 p-2.5 rounded-lg bg-muted">
-                    {c.correct ? <CheckCircle2 className="w-4 h-4 text-[#15803D] dark:text-green-400" /> : <XCircle className="w-4 h-4 text-[#B91C1C] dark:text-red-400" />}
+                    {c.correct ? <CheckCircle2 className="w-4 h-4 text-ok-soft-fg" /> : <XCircle className="w-4 h-4 text-danger-soft-fg" />}
                     <span className="text-sm text-foreground">{c.procedure}</span>
                     <span className="text-muted-foreground text-xs ml-auto">{c.correct ? "Correct order" : "Order issue"}</span>
                   </div>
@@ -203,7 +203,7 @@ export function TrustAuditPanel({
               <div className="space-y-2">
                 {data.verification.contraindicationChecks.map((c, i) => (
                   <div key={i} className="flex items-center gap-2 p-2.5 rounded-lg bg-muted">
-                    {c.safe ? <CheckCircle2 className="w-4 h-4 text-[#15803D] dark:text-green-400" /> : <AlertTriangle className="w-4 h-4 text-[#B45309] dark:text-amber-400" />}
+                    {c.safe ? <CheckCircle2 className="w-4 h-4 text-ok-soft-fg" /> : <AlertTriangle className="w-4 h-4 text-warn-soft-fg" />}
                     <span className="flex-1 text-sm text-foreground">{c.item}</span>
                     <span className="text-xs text-muted-foreground">{c.note}</span>
                   </div>
@@ -227,9 +227,9 @@ export function TrustAuditPanel({
               <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
                 <div className="space-y-2 pt-2">
                   {faithfulness.sentences.map((s: any, i: number) => (
-                    <div key={i} className={cn("p-2.5 rounded-lg text-[13px] leading-relaxed", s.grounded ? "bg-muted" : "bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30")}>
+                    <div key={i} className={cn("p-2.5 rounded-lg text-[13px] leading-relaxed", s.grounded ? "bg-muted" : "bg-warn-soft border border-warn-soft-border")}>
                       <span className="text-foreground">{s.text}</span>
-                      {!s.grounded && <span className="ml-2 text-[#B45309] dark:text-amber-400 text-xs font-semibold">Not found in SOP</span>}
+                      {!s.grounded && <span className="ml-2 text-warn-soft-fg text-xs font-semibold">Not found in SOP</span>}
                     </div>
                   ))}
                 </div>

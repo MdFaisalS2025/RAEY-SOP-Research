@@ -86,7 +86,7 @@ export function SlideOver({
         <div className="sticky top-0 z-10 flex items-start justify-between gap-3 px-5 sm:px-6 py-4 border-b border-border bg-card">
           <div className="min-w-0">
             <h3 className="text-base sm:text-lg font-semibold text-foreground flex items-center gap-2">
-              {Icon && <Icon className="w-5 h-5 text-[#0B6BCB] shrink-0" />}
+              {Icon && <Icon className="w-5 h-5 text-primary shrink-0" />}
               {title}
             </h3>
             {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}

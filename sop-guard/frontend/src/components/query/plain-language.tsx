@@ -78,7 +78,7 @@ export function ReadingLevelToggle({ value, onChange }: { value: ReadingLevel; o
           onClick={() => onChange(o.key)}
           className={cn(
             "px-2.5 py-1 rounded-md text-[12px] font-medium transition-colors",
-            value === o.key ? "bg-card text-[#0B6BCB] shadow-sm border border-border" : "text-muted-foreground hover:text-foreground"
+            value === o.key ? "bg-card text-primary shadow-sm border border-border" : "text-muted-foreground hover:text-foreground"
           )}
         >
           {o.label}

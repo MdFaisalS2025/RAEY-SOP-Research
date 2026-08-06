@@ -7,6 +7,15 @@ test.describe("auth", () => {
     await page.waitForURL("**/login")
   })
 
+  test("unauthenticated user hitting /bedside is redirected to /login", async ({ page }) => {
+    // Bedside Lookup previously had no auth guard at all - it was the one
+    // route in the app a logged-out visitor could fully use. Adopting
+    // AppShell (Phase P4) closed this; this test is the gap nothing else
+    // covered, since the full-route-sweep below only ever runs logged in.
+    await page.goto("/bedside")
+    await page.waitForURL("**/login")
+  })
+
   test("demo login reaches the dashboard with no console errors", async ({ page }) => {
     const errors: string[] = []
     page.on("console", (msg) => { if (msg.type() === "error") errors.push(msg.text()) })
@@ -20,12 +29,12 @@ test.describe("core query flow", () => {
   test("asking a question returns a sourced answer", async ({ page }) => {
     await loginAsDemoUser(page, "Sarah Mitchell")
     await page.goto("/query")
-    // Suggested-query buttons submit immediately on click (see the O-N-B
-    // small-fixes chat work), so there's no separate composer/Enter step
-    // here anymore - this test previously targeted a placeholder string
-    // ("ask a clinical sop question") the composer hasn't used since the
-    // J-A composer rebuild, so it was failing before this fix.
+    // Suggested-query buttons fill the composer rather than sending
+    // immediately (Phase R2) - a user should be able to review/edit an
+    // example before it's submitted, and filling routes the text through
+    // the same PHI-scan path as anything else typed into the composer.
     await page.getByRole("button", { name: "What is the maximum norepinephrine dose?" }).click()
+    await page.getByRole("button", { name: "Send" }).click()
     await expect(page.getByText(/sources/i).first()).toBeVisible({ timeout: 15_000 })
   })
 })

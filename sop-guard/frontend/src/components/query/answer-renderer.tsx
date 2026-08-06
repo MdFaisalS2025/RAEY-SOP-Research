@@ -51,7 +51,7 @@ function StepChecklist({ items, ctx }: { items: { num: string; text: string }[];
     })
   }
   return (
-    <ol className="space-y-2.5">
+    <ol className="space-y-3">
       {items.map((s) => {
         const isDone = done.has(s.num)
         return (
@@ -62,15 +62,15 @@ function StepChecklist({ items, ctx }: { items: { num: string; text: string }[];
               aria-pressed={isDone}
               aria-label={isDone ? `Mark step ${s.num} as not done` : `Mark step ${s.num} as done`}
               className={cn(
-                "shrink-0 mt-0.5 w-7 h-7 rounded-full text-[13px] font-bold flex items-center justify-center border transition-colors",
+                "shrink-0 mt-0.5 w-6 h-6 rounded-full text-meta font-semibold flex items-center justify-center border transition-colors",
                 isDone
-                  ? "bg-[#15803D] dark:bg-green-600 border-[#15803D] dark:border-green-600 text-white"
-                  : "bg-[#0B6BCB]/10 border-transparent text-[#0B6BCB] hover:bg-[#0B6BCB]/20"
+                  ? "bg-success border-success text-success-foreground"
+                  : "bg-muted border-border text-muted-foreground hover:bg-muted hover:text-foreground"
               )}
             >
               {isDone ? <Check className="w-3.5 h-3.5" /> : s.num}
             </button>
-            <span className={cn("text-[16px] leading-[1.6] pt-0.5 transition-colors", isDone ? "text-muted-foreground line-through" : "text-foreground")}>
+            <span className={cn("text-answer pt-0 transition-colors", isDone ? "text-muted-foreground line-through" : "text-foreground")}>
               {renderInline(s.text, ctx)}
             </span>
           </li>
@@ -130,7 +130,7 @@ function renderCitationTokens(text: string, keyPrefix: string, ctx?: CitationCtx
           if (ctx && ctx.byNumber.size > 0) {
             return <CitationChip key={`${keyPrefix}-${i}`} number={num} citation={ctx.byNumber.get(num)} onClick={ctx.onCite} />
           }
-          return <span key={`${keyPrefix}-${i}`} className="text-subtle text-[13px]">{part}</span>
+          return <span key={`${keyPrefix}-${i}`} className="text-subtle text-label">{part}</span>
         }
         return <span key={`${keyPrefix}-${i}`}>{part}</span>
       })}
@@ -275,14 +275,14 @@ export function AnswerRenderer({ text, citations, onCitationClick, animate = fal
     onCite: onCitationClick,
   }
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {blocks.map((block, i) => (
         <BlockWrap key={i} index={i} animate={animate}>
           {renderBlock(block, i, ctx)}
         </BlockWrap>
       ))}
       {streaming && trailing.trim() && (
-        <p className="text-[16px] leading-[1.7] text-foreground max-w-[70ch]">{renderInline(trailing, ctx)}</p>
+        <p className="text-answer text-foreground max-w-[70ch]">{renderInline(trailing, ctx)}</p>
       )}
     </div>
   )
@@ -290,21 +290,29 @@ export function AnswerRenderer({ text, citations, onCitationClick, animate = fal
 
 function renderBlock(block: AnswerBlock, i: number, ctx: CitationCtx): React.ReactNode {
   if (block.type === "heading") {
-    const sizeClass = block.level === 1 ? "text-xl font-bold" : block.level === 2 ? "text-lg font-semibold" : "text-base font-semibold"
-    const marginClass = block.level === 1 ? "" : block.level === 2 ? "pt-2 border-t border-border" : ""
+    // Headings render in text-foreground, not accent - a large heading
+    // with generous space-y above it already reads as a section break
+    // (Phase R3's colour-restraint pass), and the old h2 top-border rule
+    // is dropped for the same reason: it drew a line every couple of
+    // paragraphs, which is exactly the extra chrome that pass removes.
+    // font-sans overrides globals.css's global `h1,h2,h3 { @apply
+    // font-display }` so answer-body headings use the same typeface as
+    // the surrounding prose without touching that sitewide rule (which
+    // real page headings still want).
+    const sizeClass = block.level === 1 ? "text-answer-h1 font-semibold" : block.level === 2 ? "text-answer-h2 font-semibold" : "text-answer-h3 font-semibold"
     return (
-      <div key={i} className={cn("first:mt-0", i > 0 && marginClass)}>
-        {block.level === 1 && <h1 className={cn("text-[#0B6BCB]", sizeClass)}>{block.text}</h1>}
-        {block.level === 2 && <h2 className={cn("text-[#0B6BCB]", sizeClass)}>{block.text}</h2>}
-        {block.level === 3 && <h3 className={cn("text-foreground", sizeClass)}>{block.text}</h3>}
+      <div key={i} className={cn("first:mt-0", i > 0 && "mt-1")}>
+        {block.level === 1 && <h1 className={cn("font-sans text-foreground", sizeClass)}>{block.text}</h1>}
+        {block.level === 2 && <h2 className={cn("font-sans text-foreground", sizeClass)}>{block.text}</h2>}
+        {block.level === 3 && <h3 className={cn("font-sans text-foreground", sizeClass)}>{block.text}</h3>}
       </div>
     )
   }
   if (block.type === "callout") {
     return (
-      <div key={i} className="flex items-start gap-3 p-4 rounded-xl bg-[#FEF3C7] dark:bg-amber-500/10 border border-[#FDE68A] dark:border-amber-500/30">
-        <AlertTriangle className="w-4 h-4 text-[#B45309] dark:text-amber-400 shrink-0 mt-0.5" />
-        <p className="text-[15px] leading-relaxed text-foreground max-w-[70ch]">{renderInline(block.text, ctx)}</p>
+      <div key={i} className="flex items-start gap-3 p-4 rounded-xl bg-warn-soft border border-warn-soft-border">
+        <AlertTriangle className="w-4 h-4 text-warn-soft-fg shrink-0 mt-0.5" />
+        <p className="text-chat text-foreground max-w-[70ch]">{renderInline(block.text, ctx)}</p>
       </div>
     )
   }
@@ -315,7 +323,7 @@ function renderBlock(block: AnswerBlock, i: number, ctx: CitationCtx): React.Rea
     // they benefit from the room and don't suffer the same way long
     // unbroken lines of text do.
     return (
-      <p key={i} className="text-[16px] leading-[1.7] text-foreground max-w-[70ch]">
+      <p key={i} className="text-answer text-foreground max-w-[70ch]">
         {renderInline(block.text, ctx)}
       </p>
     )
@@ -327,8 +335,8 @@ function renderBlock(block: AnswerBlock, i: number, ctx: CitationCtx): React.Rea
           const danger = isDangerRow(p.label, p.value)
           return (
             <div key={j} className="flex flex-col sm:flex-row sm:items-baseline gap-0.5 sm:gap-4 px-4 py-3 odd:bg-muted even:bg-transparent">
-              <dt className="text-[13px] font-semibold uppercase tracking-wide text-muted-foreground sm:w-36 shrink-0">{p.label}</dt>
-              <dd className={cn("text-[16px] leading-snug font-medium", danger ? "text-[#B91C1C] dark:text-red-400" : "text-foreground")}>
+              <dt className="text-meta font-semibold uppercase tracking-wide text-muted-foreground sm:w-36 shrink-0">{p.label}</dt>
+              <dd className={cn("text-answer leading-snug font-medium", danger ? "text-danger-soft-fg" : "text-foreground")}>
                 {renderInline(p.value, ctx)}
               </dd>
             </div>
@@ -343,16 +351,16 @@ function renderBlock(block: AnswerBlock, i: number, ctx: CitationCtx): React.Rea
   if (block.type === "bullets") {
     if (isContraindicationList(block.items)) {
       return (
-        <div key={i} className="rounded-xl border border-[#FECACA] dark:border-red-500/30 bg-[#FEE2E2] dark:bg-red-500/10 p-4">
+        <div key={i} className="rounded-xl border border-danger-soft-border bg-danger-soft p-4">
           <div className="flex items-center gap-2 mb-2.5">
-            <XCircle className="w-4 h-4 text-[#B91C1C] dark:text-red-400" />
-            <span className="text-[13px] font-bold uppercase tracking-wide text-[#B91C1C] dark:text-red-400">Contraindications</span>
+            <XCircle className="w-4 h-4 text-danger-soft-fg" />
+            <span className="text-label font-bold uppercase tracking-wide text-danger-soft-fg">Contraindications</span>
           </div>
           <ul className="space-y-2">
             {block.items.map((b, j) => (
               <li key={j} className="flex gap-2.5 items-start">
-                <XCircle className="shrink-0 mt-0.5 w-4 h-4 text-[#B91C1C] dark:text-red-400" />
-                <span className="text-[16px] leading-[1.6] font-medium text-[#B91C1C] dark:text-red-400">{renderInline(b, ctx)}</span>
+                <XCircle className="shrink-0 mt-0.5 w-4 h-4 text-danger-soft-fg" />
+                <span className="text-answer font-medium text-danger-soft-fg">{renderInline(b, ctx)}</span>
               </li>
             ))}
           </ul>
@@ -364,7 +372,7 @@ function renderBlock(block: AnswerBlock, i: number, ctx: CitationCtx): React.Rea
       return (
         <div key={i} className="space-y-2">
           <div className="overflow-x-auto rounded-xl border border-border">
-            <table className="w-full min-w-[360px] text-[15px] border-collapse">
+            <table className="w-full min-w-[360px] text-chat border-collapse">
               <tbody>
                 {thresholdTable.rows.map((row, j) => {
                   const danger = isDangerRow(row.label, row.value)
@@ -373,7 +381,7 @@ function renderBlock(block: AnswerBlock, i: number, ctx: CitationCtx): React.Rea
                       <td className="py-2 px-3 font-semibold text-foreground w-2/5 align-top">
                         {row.label}
                       </td>
-                      <td className={cn("py-2 px-3 align-top", danger ? "text-[#B91C1C] dark:text-red-400 font-semibold" : "text-foreground")}>
+                      <td className={cn("py-2 px-3 align-top", danger ? "text-danger-soft-fg font-semibold" : "text-foreground")}>
                         {renderInline(row.value, ctx)}
                       </td>
                     </tr>
@@ -386,8 +394,8 @@ function renderBlock(block: AnswerBlock, i: number, ctx: CitationCtx): React.Rea
             <ul className="space-y-2">
               {thresholdTable.leftover.map((b, j) => (
                 <li key={j} className="flex gap-2.5 items-start">
-                  <span className="shrink-0 mt-2.5 w-1.5 h-1.5 rounded-full bg-[#0B6BCB]" />
-                  <span className="text-[16px] leading-[1.6] text-foreground">{renderInline(b, ctx)}</span>
+                  <span className="shrink-0 mt-[0.6rem] w-1.5 h-1.5 rounded-full bg-muted-foreground/60" />
+                  <span className="text-answer text-foreground">{renderInline(b, ctx)}</span>
                 </li>
               ))}
             </ul>
@@ -399,8 +407,8 @@ function renderBlock(block: AnswerBlock, i: number, ctx: CitationCtx): React.Rea
       <ul key={i} className="space-y-2">
         {block.items.map((b, j) => (
           <li key={j} className="flex gap-2.5 items-start">
-            <span className="shrink-0 mt-2.5 w-1.5 h-1.5 rounded-full bg-[#0B6BCB]" />
-            <span className="text-[16px] leading-[1.6] text-foreground">{renderInline(b, ctx)}</span>
+            <span className="shrink-0 mt-[0.6rem] w-1.5 h-1.5 rounded-full bg-muted-foreground/60" />
+            <span className="text-answer text-foreground">{renderInline(b, ctx)}</span>
           </li>
         ))}
       </ul>
@@ -410,7 +418,7 @@ function renderBlock(block: AnswerBlock, i: number, ctx: CitationCtx): React.Rea
   // backend generator still appends a trailing "Source: ..." line (and
   // occasionally a "research prototype" aside) to raw answer text - real
   // backend behavior we're not changing - but the caller (ChatAnswerMessage)
-  // already renders every cited source once via SourceStrip, and a
+  // already renders every cited source once via SourceList, and a
   // research-prototype note has no place in a clinical answer body. Parsing
   // still recognizes these blocks (parseAnswer) so they're cleanly excluded
   // rather than falling through to a generic paragraph.

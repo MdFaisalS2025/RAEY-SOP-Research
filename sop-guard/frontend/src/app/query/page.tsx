@@ -20,6 +20,8 @@ import { READING_LEVEL_KEY, type ReadingLevel } from "@/components/query/plain-l
 import AppShell from "@/components/layout/app-shell"
 import { SafetyNote } from "@/components/ui/safety-note"
 import { VoiceRecorder } from "@/components/voice/voice-recorder"
+import { usePhiGuard, useVoiceEnabled } from "@/lib/use-phi-guard"
+import { mapCitations } from "@/lib/citations"
 import { cn } from "@/lib/utils"
 
 const suggestedQueries = [
@@ -139,29 +141,6 @@ type ChatMessage =
 
 function emptyVerification(): VerificationData {
   return { status: "warning", confidence: 0.5, thresholdChecks: [], sequenceChecks: [], contraindicationChecks: [] }
-}
-
-function mapCitations(raw: unknown): InlineCitation[] {
-  if (!Array.isArray(raw)) return []
-  return raw
-    .filter((c: any) => c && typeof c.number === "number")
-    .map((c: any) => ({
-      number: c.number,
-      sop_id: c.sop_id ?? "",
-      sop_title: c.sop_title ?? "Unknown SOP",
-      section_title: c.section_title ?? "",
-      chunk_type: c.chunk_type ?? "",
-      snippet: c.snippet ?? "",
-      relevance_score: typeof c.relevance_score === "number" ? c.relevance_score : 0,
-      cited_in_answer: c.cited_in_answer ?? false,
-      version: c.version ?? "",
-      effective_date: c.effective_date ?? "",
-      review_date: c.review_date ?? "",
-      status: c.status ?? "active",
-      url: c.url ?? "",
-      is_external: c.is_external ?? false,
-      pub_date: c.pub_date ?? "",
-    }))
 }
 
 /**
@@ -301,7 +280,7 @@ function AnswerLoadingIndicator() {
           answer body) so the phrase and the first token share a left edge -
           nothing shifts horizontally when this is replaced. */}
       <div className="flex items-center gap-2 px-1 py-1" aria-hidden="true">
-        <span className="loading-dot w-1.5 h-1.5 rounded-full bg-[#0B6BCB] shrink-0" />
+        <span className="loading-dot w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
         <span className="text-shimmer text-sm leading-5">{LOADING_PHRASES[phraseIndex]}</span>
       </div>
     </>
@@ -331,7 +310,7 @@ function UserMessageBubble({ content, onEdit }: { content: string; onEdit: (newT
             if (e.key === "Enter" && !e.shiftKey && draft.trim()) { e.preventDefault(); setEditing(false); onEdit(draft.trim()) }
           }}
           rows={Math.min(8, draft.split("\n").length + 1)}
-          className="w-full px-4 py-2.5 rounded-2xl border border-[#0B6BCB]/40 bg-card text-[15px] leading-relaxed text-foreground resize-none focus:outline-none"
+          className="w-full px-4 py-2.5 rounded-2xl border border-primary/40 bg-card text-[15px] leading-relaxed text-foreground resize-none focus:outline-none"
         />
         <div className="flex justify-end gap-2 mt-1.5">
           <button onClick={() => { setEditing(false); setDraft(content) }}
@@ -339,7 +318,7 @@ function UserMessageBubble({ content, onEdit }: { content: string; onEdit: (newT
             Cancel
           </button>
           <button onClick={() => { setEditing(false); onEdit(draft.trim()) }} disabled={!draft.trim()}
-            className="text-xs font-medium px-3 py-1.5 rounded-lg bg-[#0B6BCB] hover:bg-[#0959AC] text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+            className="text-xs font-medium px-3 py-1.5 rounded-lg bg-primary hover:bg-primary-hover text-primary-foreground disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
             Save &amp; Submit
           </button>
         </div>
@@ -353,7 +332,7 @@ function UserMessageBubble({ content, onEdit }: { content: string; onEdit: (newT
         className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted shrink-0">
         <Pencil className="w-3.5 h-3.5" />
       </button>
-      <div className="max-w-[85%] sm:max-w-[65%] px-4 py-2.5 rounded-2xl rounded-br-md bg-[#0B6BCB]/[0.08] border border-[#0B6BCB]/15 text-[15px] leading-relaxed text-foreground whitespace-pre-wrap">
+      <div className="max-w-[85%] sm:max-w-[65%] px-4 py-2.5 rounded-2xl rounded-br-md bg-muted border border-border text-chat text-foreground whitespace-pre-wrap">
         {content}
       </div>
     </div>
@@ -400,31 +379,10 @@ export default function QueryPage() {
   const [showConversations, setShowConversations] = useState(false)
   const [conversations, setConversations] = useState<Array<{ id: number; title: string; created_at: string; message_count: number }> | null>(null)
   const conversationsRef = useRef<HTMLDivElement>(null)
-  // Respects the Voice Input toggle on Settings ("meridian-settings" in
-  // localStorage) - that toggle previously had no consumer anywhere, so
-  // turning it off did nothing. Defaults to on (matches the toggle's
-  // own default) if unset or unreadable.
-  const [voiceInputEnabled, setVoiceInputEnabled] = useState(true)
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem("meridian-settings")
-      if (stored) {
-        const s = JSON.parse(stored)
-        if (typeof s.voiceEnabled === "boolean") setVoiceInputEnabled(s.voiceEnabled)
-      }
-    } catch { /* ignore */ }
-  }, [])
+  const voiceInputEnabled = useVoiceEnabled()
   const [serverHistory, setServerHistory] = useState<Array<{ id: number; query: string; confidence: number; query_type: string; timestamp: string }>>([])
   const [readingLevel, setReadingLevel] = useState<ReadingLevel>("clinical")
-  // PHI guard: result of scanning the current composer text (see
-  // /api/privacy/scan). Soft-blocks sending until the user redacts or
-  // explicitly confirms "Send anyway".
-  const [phi, setPhi] = useState<{ has_phi: boolean; types: string[]; redacted_text: string } | null>(null)
-  const [phiAcknowledged, setPhiAcknowledged] = useState(false)
-  // Tracks which composer text `phi` was computed for, so a submit that
-  // races ahead of the debounced scan can trigger a fresh synchronous check
-  // instead of gating on a stale (or absent) result.
-  const phiScannedTextRef = useRef<string>("")
+  const { phi, phiAcknowledged, setPhiAcknowledged, scanForPhiBeforeSend } = usePhiGuard(query)
 
   // Lets Stop actually cancel an in-flight generation - see handleStop.
   const abortControllerRef = useRef<AbortController | null>(null)
@@ -517,53 +475,6 @@ export default function QueryPage() {
   }
 
   const submitted = messages.length > 0
-
-  // Debounced PHI scan of the composer text. Skips very short input (no point
-  // scanning "sepsis?") and clears the indicator when the box is emptied.
-  useEffect(() => {
-    // A new keystroke invalidates any prior acknowledgment - re-typing after
-    // "Send anyway" re-gates on the new text.
-    setPhiAcknowledged(false)
-    const text = query.trim()
-    if (text.length < 8) { setPhi(null); phiScannedTextRef.current = query; return }
-    const t = setTimeout(() => {
-      fetch("/api/privacy/scan", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: query }),
-      })
-        .then((r) => r.json())
-        .then((d) => {
-          setPhi({ has_phi: !!d.has_phi, types: d.types ?? [], redacted_text: d.redacted_text ?? query })
-          phiScannedTextRef.current = query
-        })
-        .catch(() => setPhi(null))
-    }, 400)
-    return () => clearTimeout(t)
-  }, [query])
-
-  /** Ensures `phi` reflects the exact text about to be sent, running a
-   * synchronous scan if the debounced background scan hasn't caught up yet
-   * (e.g. a fast type-then-Enter). Returns the up-to-date PHI result. */
-  async function scanForPhiBeforeSend(text: string) {
-    if (phiScannedTextRef.current === text && phi) return phi
-    try {
-      const r = await fetch("/api/privacy/scan", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
-      })
-      const d = await r.json()
-      const result = { has_phi: !!d.has_phi, types: d.types ?? [], redacted_text: d.redacted_text ?? text }
-      setPhi(result)
-      phiScannedTextRef.current = text
-      return result
-    } catch {
-      // Scan failed - don't block sending on a network hiccup (advisory
-      // guard, fail-open), but don't claim a clean result either.
-      return null
-    }
-  }
 
   useEffect(() => {
     fetch("/api/query/history?limit=10")
@@ -1053,7 +964,7 @@ export default function QueryPage() {
   const canSend = !!query.trim() && !loading && !(phi?.has_phi && !phiAcknowledged)
 
   const composer = (
-    <div className="rounded-2xl border border-border bg-muted focus-within:ring-2 focus-within:ring-[#0B6BCB]/40 transition-shadow">
+    <div className="rounded-2xl border border-border bg-muted focus-within:ring-2 focus-within:ring-primary/40 transition-shadow">
       <textarea
         ref={textareaRef}
         aria-label={submitted ? "Ask a follow-up question" : "Ask about a protocol or procedure"}
@@ -1062,7 +973,7 @@ export default function QueryPage() {
         onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); handleSubmit() } }}
         placeholder={submitted ? "Ask a follow-up…" : "Ask about a protocol or procedure…"}
         rows={1}
-        className="w-full bg-transparent border-0 px-4 pt-3.5 pb-1 resize-none focus:outline-none focus:ring-0 text-foreground placeholder:text-subtle caret-[#0B6BCB] text-base max-h-[200px] overflow-y-auto"
+        className="w-full bg-transparent border-0 px-4 pt-3.5 pb-1 resize-none focus:outline-none focus:ring-0 text-foreground placeholder:text-subtle caret-primary text-compose max-h-[200px] overflow-y-auto"
       />
       <div className="flex items-center justify-end gap-1.5 px-2.5 pb-2.5">
         {voiceInputEnabled && (
@@ -1078,7 +989,7 @@ export default function QueryPage() {
           disabled={loading ? false : !canSend}
           title={loading ? "Stop generating" : phi?.has_phi && !phiAcknowledged ? "Possible patient identifier detected - redact or confirm before sending" : "Send"}
           aria-label={loading ? "Stop generating" : "Send"}
-          className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-[#0B6BCB] hover:bg-[#0959AC] disabled:opacity-40 disabled:cursor-not-allowed text-white transition-colors shrink-0">
+          className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-primary hover:bg-primary-hover disabled:opacity-40 disabled:cursor-not-allowed text-primary-foreground transition-colors shrink-0">
           {loading ? <Square className="w-3.5 h-3.5 fill-current" /> : <Send className="w-4 h-4" />}
         </button>
       </div>
@@ -1093,7 +1004,7 @@ export default function QueryPage() {
           </span>
           <button
             onClick={() => setQuery(phi.redacted_text)}
-            className="underline underline-offset-2 text-[#0B6BCB] dark:text-[#00E5FF] hover:opacity-80"
+            className="underline underline-offset-2 text-primary hover:opacity-80"
           >
             Redact before sending
           </button>
@@ -1119,16 +1030,15 @@ export default function QueryPage() {
   const chromeActions = (
     <div className="flex items-center gap-1">
       <button onClick={resetConversation}
-        className="inline-flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-        title="Start a new conversation">
+        className="inline-flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
         <RotateCcw className="w-4 h-4" />
         <span className="hidden sm:inline">New chat</span>
       </button>
       <div className="relative" ref={conversationsRef}>
         <button onClick={() => setShowConversations(!showConversations)}
           className={cn("inline-flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-sm font-medium transition-colors",
-            showConversations ? "bg-[#0B6BCB]/10 text-[#0B6BCB]" : "text-muted-foreground hover:text-foreground hover:bg-muted")}
-          title="Past conversations" aria-expanded={showConversations} aria-haspopup="menu">
+            showConversations ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted")}
+          aria-expanded={showConversations} aria-haspopup="menu">
           <MessageSquare className="w-4 h-4" />
           <span className="hidden sm:inline">Conversations</span>
         </button>
@@ -1136,13 +1046,13 @@ export default function QueryPage() {
           <motion.div initial={{ opacity: 0, y: -6, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }}
             className="absolute right-0 top-full mt-1.5 z-30 w-80 max-w-[calc(100vw-2rem)] p-4 rounded-2xl bg-card border border-border shadow-lg">
             <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-              <MessageSquare className="w-4 h-4 text-[#0B6BCB]" />
+              <MessageSquare className="w-4 h-4 text-primary" />
               Conversations
             </h3>
             {conversations === null ? (
               <p className="text-sm text-muted-foreground py-4 text-center">Loading…</p>
             ) : conversations.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">No saved conversations yet - ask a question to start one.</p>
+              <p className="text-sm text-muted-foreground py-4 text-center">No saved conversations yet.</p>
             ) : (
               <div className="space-y-1 max-h-80 overflow-y-auto">
                 {conversations.map((c) => (
@@ -1151,7 +1061,7 @@ export default function QueryPage() {
                     role="button" tabIndex={0}
                     onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleOpenConversation(c.id) } }}
                     className={cn("w-full text-left p-2.5 rounded-xl hover:bg-muted border border-transparent hover:border-border transition-all cursor-pointer flex items-center gap-2 group",
-                      sessionId === String(c.id) && "bg-[#0B6BCB]/[0.06] border-[#0B6BCB]/20")}>
+                      sessionId === String(c.id) && "bg-primary/[0.06] border-primary/20")}>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm truncate">{c.title || "New conversation"}</p>
                       <p className="text-xs text-muted-foreground">{Math.ceil(c.message_count / 2)} {c.message_count === 2 ? "turn" : "turns"}</p>
@@ -1172,8 +1082,8 @@ export default function QueryPage() {
       <div className="relative" ref={historyRef}>
         <button onClick={() => setShowHistory(!showHistory)}
           className={cn("inline-flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-sm font-medium transition-colors",
-            showHistory ? "bg-[#0B6BCB]/10 text-[#0B6BCB]" : "text-muted-foreground hover:text-foreground hover:bg-muted")}
-          title="Query history" aria-expanded={showHistory} aria-haspopup="menu">
+            showHistory ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted")}
+          aria-expanded={showHistory} aria-haspopup="menu">
           <History className="w-4 h-4" />
           <span className="hidden sm:inline">History</span>
         </button>
@@ -1181,7 +1091,7 @@ export default function QueryPage() {
           <motion.div initial={{ opacity: 0, y: -6, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }}
             className="absolute right-0 top-full mt-1.5 z-30 w-80 max-w-[calc(100vw-2rem)] p-4 rounded-2xl bg-card border border-border shadow-lg">
             <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-              <History className="w-4 h-4 text-[#0B6BCB]" />
+              <History className="w-4 h-4 text-primary" />
               Recent Queries
             </h3>
             <div className="space-y-2 max-h-80 overflow-y-auto">
@@ -1205,7 +1115,7 @@ export default function QueryPage() {
 
   return (
     <AppShell chrome="minimal" chromeActions={chromeActions}>
-      <div className="p-4 sm:p-6 max-w-4xl mx-auto w-full">
+      <div className="p-4 sm:p-6 max-w-3xl mx-auto w-full">
         {/* Empty state - greeting, composer, and suggested prompts as one
             vertically-centered block (Claude-style), instead of the
             composer pinned at the very top with a lone title stranded in
@@ -1222,14 +1132,27 @@ export default function QueryPage() {
                   gone - promoted from h2 rather than adding a second,
                   duplicate heading. */}
               <h1 className="text-3xl font-semibold text-foreground">Ask Meridian</h1>
-              <p className="text-sm text-muted-foreground mt-1.5">Search approved SOPs and clinical evidence.</p>
             </div>
             <div className="w-full">
               {composer}
               <SafetyNote className="mt-2" />
               <div className="mt-4 flex gap-2 overflow-x-auto pb-2 scrollbar-thin sm:flex-wrap sm:justify-center">
                 {suggestedQueries.map((q) => (
-                  <button key={q} onClick={() => handleSubmit(q)}
+                  <button
+                    key={q}
+                    onClick={() => {
+                      // Fill and focus rather than send immediately - these
+                      // are examples meant to be edited or reviewed before
+                      // sending, unlike a follow-up chip (which IS the next
+                      // question). Matches the fill-only pattern already
+                      // used by the recent-history dropdown.
+                      setQuery(q)
+                      requestAnimationFrame(() => {
+                        const el = textareaRef.current
+                        el?.focus()
+                        el?.setSelectionRange(q.length, q.length)
+                      })
+                    }}
                     className="px-3 py-1.5 rounded-lg bg-muted text-sm text-muted-foreground hover:text-foreground border border-border transition-colors whitespace-nowrap shrink-0 sm:whitespace-normal sm:shrink">
                     {q}
                   </button>
@@ -1243,12 +1166,23 @@ export default function QueryPage() {
             the document outline valid without a second visible heading. */}
         {submitted && <h1 className="sr-only">Ask Meridian</h1>}
 
-        {/* Conversation Thread */}
-        <div className="space-y-5">
-          {messages.map((m) => {
+        {/* Conversation Thread - Phase R3: this used to be a `space-y-3`
+            container with each user message adding its own `mt-5` on top,
+            on the theory that mt-3 + mt-5 produced the wider turn-to-turn
+            gap. That never actually rendered: Tailwind's space-y selector
+            (`.space-y-3 > :not([hidden]) ~ :not([hidden])`) has higher
+            specificity (0,3,0) than a plain `.mt-5` (0,1,0), so the parent
+            always won and every gap in the thread was a flat 12px. Fixed
+            by dropping the shared space-y entirely and putting real
+            margins on each item, which also escapes body.compact's
+            `.space-y-4` override (this was never even using that class,
+            but the fix keeps the same “explicit margin” shape density
+            styling already expects elsewhere). */}
+        <div className="flex flex-col">
+          {messages.map((m, idx) => {
             if (m.role === "user") {
               return (
-                <div key={m.id} id={`msg-${m.id}`} className="scroll-mt-20">
+                <div key={m.id} id={`msg-${m.id}`} className={cn("scroll-mt-20", idx > 0 && "mt-10")}>
                   <UserMessageBubble content={m.content} onEdit={(newText) => handleEditResend(m.id, newText)} />
                 </div>
               )
@@ -1258,8 +1192,11 @@ export default function QueryPage() {
               // The ref only matters for the latest message (see the
               // spacer effect's settle branch, which measures it the
               // instant `loading` flips false) - harmless no-op for
-              // every earlier message.
-              <div key={m.id} ref={isLatest ? lastMessageRef : undefined}>
+              // every earlier message. mt-4 gives the question->answer gap
+              // its own margin - excluded from this element's offsetHeight,
+              // so it can only ever make the scroll spacer over-reserve by
+              // a frame, never under-reserve (see the spacerPx effect).
+              <div key={m.id} ref={isLatest ? lastMessageRef : undefined} className="mt-4">
                 <ChatAnswerMessage
                   data={m.data}
                   onFollowup={(q) => handleSubmit(q)}
@@ -1298,13 +1235,14 @@ export default function QueryPage() {
           {loading && (
             <motion.div
               ref={growingContentRef}
+              className="mt-4"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
             >
               {revealedText ? (
                 <div className="px-1">
                   <AnswerRenderer text={revealedText} citations={[]} streaming />
-                  <span className="inline-block w-1.5 h-4 ml-0.5 bg-[#0B6BCB] animate-pulse align-text-bottom" />
+                  <span className="inline-block w-1.5 h-4 ml-0.5 bg-primary animate-pulse align-text-bottom" />
                 </div>
               ) : (
                 <AnswerLoadingIndicator />

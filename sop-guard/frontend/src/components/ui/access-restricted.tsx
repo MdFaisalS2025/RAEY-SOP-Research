@@ -23,8 +23,8 @@ export function AccessRestricted({
       <div className="p-6 max-w-2xl mx-auto">
         <Breadcrumb items={[{ label }]} />
         <Card padding="none" className="mt-16 flex flex-col items-center justify-center text-center space-y-4 p-12">
-          <div className="w-16 h-16 rounded-2xl bg-[#FEE2E2] dark:bg-red-500/10 flex items-center justify-center">
-            <Lock className="w-8 h-8 text-[#B91C1C] dark:text-red-400" />
+          <div className="w-16 h-16 rounded-2xl bg-danger-soft flex items-center justify-center">
+            <Lock className="w-8 h-8 text-danger-soft-fg" />
           </div>
           <h2 className="text-xl font-bold">Access Restricted</h2>
           <p className="text-muted-foreground">{requirement}</p>

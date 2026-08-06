@@ -85,10 +85,10 @@ function ProposalCard({ proposal, index }: { proposal: Proposal; index: number }
 
         {proposal.affected_sop_id && (
           <div className="flex items-start gap-2">
-            <FileText className="w-3.5 h-3.5 text-[#0B6BCB] shrink-0 mt-0.5" />
+            <FileText className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
             <span className="text-xs">
               <span className="text-muted-foreground">Affected SOP: </span>
-              <span className="text-[#0B6BCB] font-medium">{proposal.affected_sop_id}</span>
+              <span className="text-primary font-medium">{proposal.affected_sop_id}</span>
             </span>
           </div>
         )}
@@ -135,7 +135,7 @@ function ProposalCard({ proposal, index }: { proposal: Proposal; index: number }
         <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-border">
           <Link
             href={`/proposals/${proposal.id}`}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0B6BCB]/10 border border-[#0B6BCB]/30 text-xs text-[#0B6BCB] hover:bg-[#0B6BCB]/20 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/30 text-xs text-primary hover:bg-primary/20 transition-colors"
           >
             View <ChevronRight className="w-3 h-3" />
           </Link>
@@ -217,25 +217,25 @@ function NewProposalModal({ onClose, onCreated, initial }: { onClose: () => void
         </div>
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label className="text-xs font-medium text-muted-foreground">Title *</label>
-            <input value={title} onChange={(e) => setTitle(e.target.value)} required
+            <label htmlFor="proposal-title" className="text-xs font-medium text-muted-foreground">Title *</label>
+            <input id="proposal-title" value={title} onChange={(e) => setTitle(e.target.value)} required
               className="w-full mt-1 px-3 py-2 rounded-lg border border-border bg-background text-sm" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-medium text-muted-foreground">Department</label>
-              <input value={department} onChange={(e) => setDepartment(e.target.value)}
+              <label htmlFor="proposal-department" className="text-xs font-medium text-muted-foreground">Department</label>
+              <input id="proposal-department" value={department} onChange={(e) => setDepartment(e.target.value)}
                 className="w-full mt-1 px-3 py-2 rounded-lg border border-border bg-background text-sm" />
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground">Affected SOP ID</label>
-              <input value={affectedSopId} onChange={(e) => setAffectedSopId(e.target.value)} placeholder="e.g. SOP-ICU-001"
+              <label htmlFor="proposal-affected-sop" className="text-xs font-medium text-muted-foreground">Affected SOP ID</label>
+              <input id="proposal-affected-sop" value={affectedSopId} onChange={(e) => setAffectedSopId(e.target.value)} placeholder="e.g. SOP-ICU-001"
                 className="w-full mt-1 px-3 py-2 rounded-lg border border-border bg-background text-sm" />
             </div>
           </div>
           <div>
-            <label className="text-xs font-medium text-muted-foreground">Priority</label>
-            <select value={priority} onChange={(e) => setPriority(e.target.value)}
+            <label htmlFor="proposal-priority" className="text-xs font-medium text-muted-foreground">Priority</label>
+            <select id="proposal-priority" value={priority} onChange={(e) => setPriority(e.target.value)}
               className="w-full mt-1 px-3 py-2 rounded-lg border border-border bg-background text-sm">
               <option value="low">Low</option>
               <option value="normal">Normal</option>
@@ -244,8 +244,8 @@ function NewProposalModal({ onClose, onCreated, initial }: { onClose: () => void
             </select>
           </div>
           <div>
-            <label className="text-xs font-medium text-muted-foreground">Summary / Rationale</label>
-            <textarea value={aiSummary} onChange={(e) => setAiSummary(e.target.value)} rows={3}
+            <label htmlFor="proposal-summary" className="text-xs font-medium text-muted-foreground">Summary / Rationale</label>
+            <textarea id="proposal-summary" value={aiSummary} onChange={(e) => setAiSummary(e.target.value)} rows={3}
               className="w-full mt-1 px-3 py-2 rounded-lg border border-border bg-background text-sm" />
           </div>
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -254,19 +254,19 @@ function NewProposalModal({ onClose, onCreated, initial }: { onClose: () => void
           </label>
           <div className="pt-1 border-t border-border">
             <button type="button" onClick={() => setShowTextChange((v) => !v)}
-              className="text-xs font-medium text-[#0B6BCB] hover:underline">
+              className="text-xs font-medium text-primary hover:underline">
               {showTextChange ? "Hide" : "+ Add"} specific text change (for redline review)
             </button>
             {showTextChange && (
               <div className="mt-2 space-y-2">
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground">Current text (optional - defaults to the affected SOP&apos;s current text)</label>
-                  <textarea value={oldText} onChange={(e) => setOldText(e.target.value)} rows={3}
+                  <label htmlFor="proposal-old-text" className="text-xs font-medium text-muted-foreground">Current text (optional - defaults to the affected SOP&apos;s current text)</label>
+                  <textarea id="proposal-old-text" value={oldText} onChange={(e) => setOldText(e.target.value)} rows={3}
                     className="w-full mt-1 px-3 py-2 rounded-lg border border-border bg-background text-sm font-mono" />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground">Proposed new text</label>
-                  <textarea value={newText} onChange={(e) => setNewText(e.target.value)} rows={3}
+                  <label htmlFor="proposal-new-text" className="text-xs font-medium text-muted-foreground">Proposed new text</label>
+                  <textarea id="proposal-new-text" value={newText} onChange={(e) => setNewText(e.target.value)} rows={3}
                     className="w-full mt-1 px-3 py-2 rounded-lg border border-border bg-background text-sm font-mono" />
                 </div>
               </div>
@@ -284,7 +284,7 @@ function NewProposalModal({ onClose, onCreated, initial }: { onClose: () => void
 }
 
 export default function ProposalsPage() {
-  const { role, hasPermission } = useRole()
+  const { hasPermission } = useRole()
   const [activeFilter, setActiveFilter] = useState<ProposalFilter>("all")
   const [proposals, setProposals] = useState<Proposal[]>([])
   const [loading, setLoading] = useState(true)
@@ -329,14 +329,14 @@ export default function ProposalsPage() {
   const filtered = proposals.filter((p) => activeFilter === "all" || p.status === activeFilter)
 
   const stats = [
-    { label: "Total", value: proposals.length, color: "text-[#0B6BCB]" },
+    { label: "Total", value: proposals.length, color: "text-primary" },
     { label: "Open", value: proposals.filter((p) => p.status === "open").length, color: "text-[#B45309] dark:text-amber-400" },
     { label: "Approved", value: proposals.filter((p) => p.status === "approved").length, color: "text-[#15803D] dark:text-green-400" },
     { label: "Rejected", value: proposals.filter((p) => p.status === "rejected").length, color: "text-[#B91C1C] dark:text-red-400" },
   ]
 
-  if (role !== "governance_compliance" && role !== "system_admin") {
-    return <AccessRestricted label="Proposals" requirement="This area requires Governance & Compliance access." />
+  if (!hasPermission("create_proposal")) {
+    return <AccessRestricted label="Proposals" requirement="This area requires permission to raise SOP update proposals." />
   }
 
   return (
@@ -347,7 +347,7 @@ export default function ProposalsPage() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex items-start justify-between gap-4 flex-wrap">
           <div className="space-y-1">
             <div className="flex items-center gap-3">
-              <ClipboardList className="w-7 h-7 text-[#0B6BCB]" />
+              <ClipboardList className="w-7 h-7 text-primary" />
               <h1 className="text-2xl font-bold text-foreground">Update Proposals</h1>
             </div>
             <p className="text-muted-foreground text-sm pl-10">Live proposals and committee votes from the governance API.</p>
@@ -356,7 +356,7 @@ export default function ProposalsPage() {
           {hasPermission("create_proposal") && (
             <button
               onClick={() => { setNewModalInitial(undefined); setShowNewModal(true) }}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0B6BCB] hover:bg-[#0959AC] text-white text-sm font-semibold transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-primary-foreground text-sm font-semibold transition-colors"
             >
               <Plus className="w-4 h-4" /> New Proposal
             </button>
@@ -389,7 +389,7 @@ export default function ProposalsPage() {
               onClick={() => setActiveFilter(tab.value)}
               className={cn(
                 "px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors",
-                activeFilter === tab.value ? "bg-[#0B6BCB]/10 text-[#0B6BCB] border border-[#0B6BCB]/30" : "text-muted-foreground hover:bg-muted"
+                activeFilter === tab.value ? "bg-primary/10 text-primary border border-primary/30" : "text-muted-foreground hover:bg-muted"
               )}
             >
               {tab.label}

@@ -91,7 +91,7 @@ export function MagneticButton({
   }
 
   const base =
-    "group relative inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full text-[15px] font-semibold transition-colors duration-300 overflow-hidden"
+    "group relative inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full text-sm font-semibold transition-colors duration-300 overflow-hidden"
   const styles =
     variant === "primary"
       ? "bg-primary text-primary-foreground hover:bg-primary-hover"

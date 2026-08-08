@@ -62,7 +62,7 @@ function renderAnswerText(text: string) {
       )
     }
     return (
-      <p key={i} className="text-[15px] leading-relaxed text-foreground mb-2">
+      <p key={i} className="text-sm leading-relaxed text-foreground mb-2">
         {line.replace(/\*\*(.+?)\*\*/g, "$1")}
       </p>
     )

@@ -16,7 +16,7 @@ const ROLE_TEXT_COLORS: Record<UserRole, string> = {
 }
 
 const ROLE_DOT_COLORS: Record<UserRole, string> = {
-  clinical_staff: "#0B6BCB",
+  clinical_staff: "hsl(var(--primary))",
   governance_compliance: "#15803D",
   educator: "#64748B",
   system_admin: "#64748B",

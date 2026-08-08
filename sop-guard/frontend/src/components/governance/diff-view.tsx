@@ -35,7 +35,7 @@ export function DiffStatsRow({ stats }: { stats: DiffStats }) {
 export function DiffView({ segments }: { segments: DiffSegment[] }) {
   return (
     <div className="rounded-2xl bg-muted border border-border p-5">
-      <p className="text-[14px] leading-relaxed whitespace-pre-wrap font-mono">
+      <p className="text-sm leading-relaxed whitespace-pre-wrap font-mono">
         {segments.map((seg, i) => {
           if (seg.type === "equal") return <span key={i} className="text-foreground">{seg.text}</span>
           if (seg.type === "insert") return (

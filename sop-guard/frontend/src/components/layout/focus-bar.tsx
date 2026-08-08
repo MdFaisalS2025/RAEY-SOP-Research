@@ -33,7 +33,7 @@ export function FocusBar({ actions }: { actions?: React.ReactNode }) {
             <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 dark:glow-accent transition-all duration-200 group-hover:scale-105">
               <Shield className="w-[18px] h-[18px] text-primary" />
             </div>
-            <span className="hidden sm:inline text-[15px] font-bold text-[#1A2332] dark:text-white tracking-tight">Meridian</span>
+            <span className="hidden sm:inline text-sm font-bold text-[#1A2332] dark:text-white tracking-tight">Meridian</span>
           </Link>
 
           <div className="flex items-center gap-1 ml-auto">

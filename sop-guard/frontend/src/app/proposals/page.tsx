@@ -120,7 +120,7 @@ function ProposalCard({ proposal, index }: { proposal: Proposal; index: number }
         <div className="space-y-1.5">
           <div className="w-full h-1.5 rounded-full bg-[#E2E8F0] overflow-hidden">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-[#0B6BCB] to-[#16A34A] transition-all"
+              className="h-full rounded-full bg-gradient-to-r from-primary to-[#16A34A] transition-all"
               style={{ width: `${Math.min(approvalPct, 100)}%` }}
             />
           </div>

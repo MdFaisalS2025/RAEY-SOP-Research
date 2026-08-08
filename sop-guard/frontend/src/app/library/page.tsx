@@ -472,7 +472,7 @@ function LibraryPageInner() {
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openSOP(sop) }
                     }}
-                    className="border-b border-border hover:bg-muted cursor-pointer transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#0B6BCB]">
+                    className="border-b border-border hover:bg-muted cursor-pointer transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
                     <td className="p-3 font-medium">{sop.title}</td>
                     <td className="p-3">
                       <span className={cn("px-2 py-0.5 rounded text-xs font-medium border", deptColors[sop.department] || "bg-muted")}>
@@ -510,7 +510,7 @@ function LibraryPageInner() {
                   className="p-5 rounded-2xl bg-card border border-border hover:border-primary/30 hover:shadow-md transition-all duration-300 group"
                 >
                   <div
-                    className="cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#0B6BCB] rounded-lg"
+                    className="cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary rounded-lg"
                     role="button"
                     tabIndex={0}
                     onClick={() => openSOP(sop)}

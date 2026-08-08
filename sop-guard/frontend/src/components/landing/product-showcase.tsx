@@ -91,7 +91,7 @@ export function ProductShowcase({ embedded = false }: { embedded?: boolean }) {
               <div className="space-y-5">
                 {/* user question bubble */}
                 <div className="flex justify-end">
-                  <div className="max-w-[85%] px-4 py-2.5 rounded-2xl rounded-br-md bg-primary/[0.08] border border-primary/15 text-[14px] text-foreground">
+                  <div className="max-w-[85%] px-4 py-2.5 rounded-2xl rounded-br-md bg-primary/[0.08] border border-primary/15 text-sm text-foreground">
                     {QUESTION.slice(0, questionChars)}
                     {phase === "typing-question" && <span className="inline-block w-0.5 h-3.5 ml-0.5 bg-primary animate-pulse align-middle" />}
                   </div>
@@ -109,7 +109,7 @@ export function ProductShowcase({ embedded = false }: { embedded?: boolean }) {
 
                 {/* answer */}
                 {showAnswer && (
-                  <div className="p-4 rounded-2xl bg-muted border border-border text-[14px] leading-relaxed text-foreground">
+                  <div className="p-4 rounded-2xl bg-muted border border-border text-sm leading-relaxed text-foreground">
                     {ANSWER.slice(0, answerChars)}
                     {phase === "streaming-answer" && <span className="inline-block w-0.5 h-3.5 ml-0.5 bg-foreground/60 animate-pulse align-middle" />}
                   </div>

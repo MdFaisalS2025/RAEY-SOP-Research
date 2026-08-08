@@ -322,7 +322,7 @@ function VotesTab({ proposal, onVoteCast }: { proposal: Proposal; onVoteCast: (p
           <span className="font-bold text-foreground">{proposal.quorum.votes_cast} / {proposal.quorum.threshold} votes to reach quorum</span>
         </div>
         <div className="w-full h-3 rounded-full bg-[#E2E8F0] overflow-hidden">
-          <div className="h-full rounded-full bg-gradient-to-r from-[#0B6BCB] to-[#16A34A] transition-all" style={{ width: `${Math.min(pct, 100)}%` }} />
+          <div className="h-full rounded-full bg-gradient-to-r from-primary to-[#16A34A] transition-all" style={{ width: `${Math.min(pct, 100)}%` }} />
         </div>
         <div className="grid grid-cols-4 gap-2 text-center pt-1">
           <div><p className="text-lg font-bold text-[#15803D] dark:text-green-400">{proposal.tally.approve}</p><p className="text-10 text-muted-foreground uppercase">Approve</p></div>

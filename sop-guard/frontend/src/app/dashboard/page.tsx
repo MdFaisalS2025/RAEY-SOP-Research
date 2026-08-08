@@ -57,12 +57,12 @@ interface StatTileProps {
 }
 
 const TILE_BORDER: Record<string, string> = {
-  teal: "border-l-[#0B6BCB]",
+  teal: "border-l-primary",
   amber: "border-l-[#B45309]",
   red: "border-l-[#B91C1C]",
   violet: "border-l-[#94A3B8]",
   emerald: "border-l-[#15803D]",
-  blue: "border-l-[#0B6BCB]",
+  blue: "border-l-primary",
   pink: "border-l-[#94A3B8]",
   gray: "border-l-[#94A3B8]",
   green: "border-l-[#15803D]",
@@ -1375,7 +1375,7 @@ function NurseEducatorDashboard() {
                   { label: "Overdue", value: tm.overdue, color: "text-[#B91C1C] dark:text-red-400" },
                 ].map(({ label, value, color }) => (
                   <div key={label} className="bg-muted rounded-lg py-1.5">
-                    <p className={cn("text-[14px] font-bold font-display", color)}>{value}</p>
+                    <p className={cn("text-sm font-bold font-display", color)}>{value}</p>
                     <p className="text-9 text-subtle uppercase tracking-wide">{label}</p>
                   </div>
                 ))}

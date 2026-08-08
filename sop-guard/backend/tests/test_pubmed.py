@@ -100,6 +100,50 @@ def test_parse_esummary_unit():
     assert [r["pmid"] for r in records] == ["111", "222"]
 
 
+ELINK_WITH_PMC_JSON = {
+    "linksets": [{
+        "dbfrom": "pubmed",
+        "ids": ["34599691"],
+        "linksetdbs": [
+            {"dbto": "pmc", "linkname": "pubmed_pmc_refs", "links": ["999999"]},
+            {"dbto": "pmc", "linkname": "pubmed_pmc", "links": ["8486643"]},
+        ],
+    }]
+}
+ELINK_NO_PMC_JSON = {"linksets": [{"dbfrom": "pubmed", "ids": ["12345"]}]}
+
+
+class _ElinkFakeClient(_FakeClient):
+    def __init__(self, payload):
+        self._payload = payload
+
+    def __call__(self, *args, **kwargs):
+        return self
+
+    async def get(self, url, params=None):
+        return _FakeResponse(self._payload)
+
+
+class TestGetPmcFullTextLink:
+    async def test_uses_pubmed_pmc_not_refs(self, monkeypatch):
+        monkeypatch.setattr(pubmed.httpx, "AsyncClient", _ElinkFakeClient(ELINK_WITH_PMC_JSON))
+        url, style = await pubmed.get_pmc_full_text_link("34599691")
+        assert style == "pmc_xml"
+        assert "id=8486643" in url
+        assert "999999" not in url
+
+    async def test_no_pmc_link_returns_empty(self, monkeypatch):
+        monkeypatch.setattr(pubmed.httpx, "AsyncClient", _ElinkFakeClient(ELINK_NO_PMC_JSON))
+        assert await pubmed.get_pmc_full_text_link("12345") == ("", "")
+
+    async def test_empty_pmid_returns_empty(self):
+        assert await pubmed.get_pmc_full_text_link("") == ("", "")
+
+    async def test_network_failure_returns_empty(self, monkeypatch):
+        monkeypatch.setattr(pubmed.httpx, "AsyncClient", _FailingClient)
+        assert await pubmed.get_pmc_full_text_link("34599691") == ("", "")
+
+
 class TestStudyTypeClassification:
     def test_meta_analysis_ranked_above_journal_article(self):
         result = pubmed._classify_study_type(["Journal Article", "Meta-Analysis"])

@@ -306,6 +306,49 @@ def _parse_efetch_abstracts(text: str, id_list: list[str]) -> dict[str, str]:
     return result
 
 
+async def get_pmc_full_text_link(pmid: str) -> tuple[str, str]:
+    """Real, freely-fetchable full-text link for `pmid` via its PMC mirror,
+    if one exists - ("", "") otherwise. Every article in PMC is free full
+    text by definition (that is what PMC is), so unlike Europe PMC there is
+    no availability code to check - only whether a PMC copy exists at all.
+
+    Verified live against the real elink response shape before writing this:
+    dbfrom=pubmed&db=pmc returns TWO separate linksetdbs for an article with
+    citations - "pubmed_pmc" (the article's own PMC copy) and
+    "pubmed_pmc_refs" (PMC copies of articles it CITES). Only "pubmed_pmc"
+    is the right document; using the first linksetdb blindly would have
+    resolved to an unrelated cited paper. Not cached (called at most once
+    per get_guideline_text call, for the single already-selected candidate -
+    not per search result, to avoid multiplying elink calls by result count).
+    """
+    pmid = (pmid or "").strip()
+    if not pmid:
+        return "", ""
+    try:
+        async with httpx.AsyncClient(timeout=_TIMEOUT, headers=DEFAULT_HEADERS) as client:
+            resp = await client.get(
+                f"{_EUTILS_BASE}/elink.fcgi",
+                params={"dbfrom": "pubmed", "db": "pmc", "id": pmid, "retmode": "json"},
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            linksets = data.get("linksets") or []
+            for linkset in linksets:
+                for linksetdb in linkset.get("linksetdbs") or []:
+                    if linksetdb.get("linkname") != "pubmed_pmc":
+                        continue
+                    links = linksetdb.get("links") or []
+                    if links:
+                        pmcid = links[0]
+                        return (
+                            f"{_EUTILS_BASE}/efetch.fcgi?db=pmc&id={pmcid}&rettype=full&retmode=xml",
+                            "pmc_xml",
+                        )
+    except Exception as e:  # noqa: BLE001 - deliberately swallow all failures
+        logger.warning(f"PMC link lookup failed for PMID {pmid}: {e}")
+    return "", ""
+
+
 class PubMedSource(EvidenceSource):
     """EvidenceSource adapter over the module-level search_pubmed() above,
     kept as a plain function for backward compatibility with existing

@@ -91,6 +91,31 @@ async def test_fetch_full_text_returns_none_over_size_cap(monkeypatch):
     assert await fulltext_fetch.fetch_full_text("https://example.org/x", "html") is None
 
 
+# ---- fetch_full_text: pmc_xml path -----------------------------------------
+
+
+async def test_fetch_full_text_pmc_xml_extracts_body_only(monkeypatch):
+    xml = (
+        "<pmc-articleset><article>"
+        "<front><journal-meta><journal-title>Fake Journal</journal-title></journal-meta></front>"
+        "<body><p>" + ("Give antibiotics within one hour of recognition. " * 10) + "</p></body>"
+        "<back><ref-list><ref>Some Citation 2021</ref></ref-list></back>"
+        "</article></pmc-articleset>"
+    )
+    monkeypatch.setattr(fulltext_fetch.httpx, "AsyncClient", _fake_client(_FakeResponse(content=xml.encode(), text=xml)))
+    text = await fulltext_fetch.fetch_full_text("https://eutils.ncbi.nlm.nih.gov/x", "pmc_xml")
+    assert text is not None
+    assert "Give antibiotics within one hour" in text
+    assert "Fake Journal" not in text
+    assert "Some Citation" not in text
+
+
+async def test_fetch_full_text_pmc_xml_returns_none_without_body_tag(monkeypatch):
+    xml = "<pmc-articleset><article><front><journal-meta>no body here</journal-meta></front></article></pmc-articleset>"
+    monkeypatch.setattr(fulltext_fetch.httpx, "AsyncClient", _fake_client(_FakeResponse(content=xml.encode(), text=xml)))
+    assert await fulltext_fetch.fetch_full_text("https://eutils.ncbi.nlm.nih.gov/x", "pmc_xml") is None
+
+
 # ---- europepmc._free_full_text_link: real-shape parsing -------------------
 
 
@@ -180,6 +205,72 @@ async def test_get_guideline_text_falls_back_when_no_full_text_link():
     basis, text = await guideline_finder.get_guideline_text(guideline)
     assert basis == "abstract"
     assert text == "Only an abstract here."
+
+
+async def test_get_guideline_text_tries_pmc_mirror_for_pubmed_candidate(monkeypatch):
+    from app.services import guideline_finder
+    from app.integrations import pubmed as pubmed_module
+
+    async def _fake_pmc_link(pmid):
+        return "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=999&rettype=full&retmode=xml", "pmc_xml"
+
+    async def _fake_fetch(url, style):
+        assert style == "pmc_xml"
+        return "Real PMC full text via elink. " * 20
+
+    monkeypatch.setattr(pubmed_module, "get_pmc_full_text_link", _fake_pmc_link)
+    monkeypatch.setattr("app.services.fulltext_fetch.fetch_full_text", _fake_fetch)
+    guideline = {"abstract": "abstract only", "source_type": "pubmed", "pmid": "34599691"}
+    basis, text = await guideline_finder.get_guideline_text(guideline)
+    assert basis == "full_text"
+    assert "Real PMC full text" in text
+
+
+async def test_get_guideline_text_falls_back_when_pmc_lookup_finds_nothing(monkeypatch):
+    from app.services import guideline_finder
+    from app.integrations import pubmed as pubmed_module
+
+    async def _fake_pmc_link(pmid):
+        return "", ""
+
+    monkeypatch.setattr(pubmed_module, "get_pmc_full_text_link", _fake_pmc_link)
+    guideline = {"abstract": "abstract only", "source_type": "pubmed", "pmid": "12345"}
+    basis, text = await guideline_finder.get_guideline_text(guideline)
+    assert basis == "abstract"
+    assert text == "abstract only"
+
+
+async def test_get_guideline_text_tries_iris_pdf_for_who_candidate(monkeypatch):
+    from app.services import guideline_finder
+    from app.integrations import who as who_module
+
+    async def _fake_iris_link(item_uuid):
+        return "https://iris.who.int/server/api/core/bitstreams/x/content"
+
+    async def _fake_fetch(url, style):
+        assert style == "pdf"
+        return "Real WHO IRIS PDF full text. " * 20
+
+    monkeypatch.setattr(who_module, "get_iris_full_text_link", _fake_iris_link)
+    monkeypatch.setattr("app.services.fulltext_fetch.fetch_full_text", _fake_fetch)
+    guideline = {"abstract": "abstract only", "source_type": "who", "item_uuid": "some-uuid"}
+    basis, text = await guideline_finder.get_guideline_text(guideline)
+    assert basis == "full_text"
+    assert "Real WHO IRIS PDF" in text
+
+
+async def test_get_guideline_text_falls_back_when_no_iris_link(monkeypatch):
+    from app.services import guideline_finder
+    from app.integrations import who as who_module
+
+    async def _fake_iris_link(item_uuid):
+        return ""
+
+    monkeypatch.setattr(who_module, "get_iris_full_text_link", _fake_iris_link)
+    guideline = {"abstract": "abstract only", "source_type": "who", "item_uuid": "some-uuid"}
+    basis, text = await guideline_finder.get_guideline_text(guideline)
+    assert basis == "abstract"
+    assert text == "abstract only"
 
 
 # ---- extract_recommendations locus_label ------------------------------------

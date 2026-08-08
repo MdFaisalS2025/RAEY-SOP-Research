@@ -22,6 +22,7 @@ from app.integrations.evidence_source import DEFAULT_HEADERS, EvidenceSource, TT
 logger = logging.getLogger(__name__)
 
 _BASE = "https://iris.who.int/server/api/discover/search/objects"
+_CORE_BASE = "https://iris.who.int/server/api/core"
 _TIMEOUT = 6.0
 _cache = TTLCache(ttl_seconds=3600)
 
@@ -65,6 +66,11 @@ def _parse_object(obj: dict[str, Any]) -> dict[str, Any]:
         "source_type": "who",
         "pub_types": [dc_type] if dc_type else [],
         "study_type": _study_type_for(dc_type),
+        # DSpace item UUID (distinct from `handle` above) - needed to walk
+        # the bundles/bitstreams chain in get_iris_full_text_link. Only the
+        # UUID form works against /server/api/core/items/{id}; the handle is
+        # a separate, human-facing identifier DSpace does not accept there.
+        "item_uuid": indexable.get("uuid") or indexable.get("id") or "",
     }
 
 
@@ -103,6 +109,46 @@ async def search_who(term: str, max_results: int = 5) -> list[dict[str, Any]]:
     except Exception as e:  # noqa: BLE001 - deliberately swallow all failures
         logger.warning(f"WHO lookup failed for term '{term}': {e}")
         return []
+
+
+async def get_iris_full_text_link(item_uuid: str) -> str:
+    """Real, freely-downloadable PDF URL for a WHO IRIS item, if one exists -
+    "" otherwise. IRIS is DSpace, which never exposes a document's file URL
+    directly in a search result - reaching it takes two more real API calls,
+    verified live against the actual response shape before writing this:
+    item -> its bundles (ORIGINAL/LICENSE/TEXT/THUMBNAIL, unpredictable
+    order) -> the "ORIGINAL" bundle's own bitstreams -> the first bitstream
+    whose name ends .pdf, whose own `_links.content.href` is the real
+    downloadable file. Every WHO IRIS publication observed during
+    verification carries a public-domain-adjacent CC BY-NC-SA IGO licence on
+    the item page, consistent with fetching for research/comparison use
+    here (not redistribution) - same posture as every other full-text
+    fetch in this codebase."""
+    item_uuid = (item_uuid or "").strip()
+    if not item_uuid:
+        return ""
+    try:
+        async with httpx.AsyncClient(timeout=_TIMEOUT, headers=DEFAULT_HEADERS) as client:
+            bundles_resp = await client.get(f"{_CORE_BASE}/items/{item_uuid}/bundles")
+            bundles_resp.raise_for_status()
+            bundles = ((bundles_resp.json().get("_embedded") or {}).get("bundles")) or []
+            original = next((b for b in bundles if b.get("name") == "ORIGINAL"), None)
+            if not original:
+                return ""
+            bitstreams_href = (((original.get("_links") or {}).get("bitstreams") or {}).get("href") or "")
+            if not bitstreams_href:
+                return ""
+
+            bs_resp = await client.get(bitstreams_href)
+            bs_resp.raise_for_status()
+            bitstreams = ((bs_resp.json().get("_embedded") or {}).get("bitstreams")) or []
+            for bitstream in bitstreams:
+                name = (bitstream.get("name") or "").strip().lower()
+                if name.endswith(".pdf"):
+                    return (((bitstream.get("_links") or {}).get("content") or {}).get("href") or "")
+    except Exception as e:  # noqa: BLE001 - deliberately swallow all failures
+        logger.warning(f"WHO IRIS bitstream lookup failed for item {item_uuid}: {e}")
+    return ""
 
 
 class WHOSource(EvidenceSource):

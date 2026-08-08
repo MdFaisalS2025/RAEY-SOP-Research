@@ -83,6 +83,7 @@ async def test_find_guideline_returns_none_when_no_candidates(monkeypatch):
         return []
     monkeypatch.setattr(guideline_finder, "search_pubmed", _empty)
     monkeypatch.setattr(guideline_finder, "search_europepmc", _empty)
+    monkeypatch.setattr(guideline_finder, "search_who", _empty)
     assert await guideline_finder.find_guideline("sepsis management") is None
 
 
@@ -102,8 +103,12 @@ async def test_find_guideline_prefers_guideline_typed_candidate(monkeypatch):
     async def _epmc(*args, **kwargs):
         return [real_guideline]
 
+    async def _empty(*args, **kwargs):
+        return []
+
     monkeypatch.setattr(guideline_finder, "search_pubmed", _pubmed)
     monkeypatch.setattr(guideline_finder, "search_europepmc", _epmc)
+    monkeypatch.setattr(guideline_finder, "search_who", _empty)
 
     result = await guideline_finder.find_guideline("sepsis management")
     assert result is not None
@@ -122,6 +127,7 @@ async def test_find_guideline_caches_result(monkeypatch):
 
     monkeypatch.setattr(guideline_finder, "search_pubmed", _pubmed)
     monkeypatch.setattr(guideline_finder, "search_europepmc", _empty)
+    monkeypatch.setattr(guideline_finder, "search_who", _empty)
 
     first = await guideline_finder.find_guideline("heat stroke")
     second = await guideline_finder.find_guideline("heat stroke")
@@ -138,8 +144,62 @@ async def test_find_guideline_degrades_gracefully_on_provider_exception(monkeypa
 
     monkeypatch.setattr(guideline_finder, "search_pubmed", _raises)
     monkeypatch.setattr(guideline_finder, "search_europepmc", _empty)
+    monkeypatch.setattr(guideline_finder, "search_who", _empty)
 
     # Must not raise - a provider outage degrades to "no guideline found",
     # not a 500.
     result = await guideline_finder.find_guideline("sepsis management")
     assert result is None
+
+
+async def test_find_guideline_includes_who_candidates(monkeypatch):
+    who_guideline = {
+        "title": "WHO Guidelines for the Management of Sepsis", "study_type": "Guideline",
+        "pub_types": ["Guideline"], "pub_date_parsed": "2022-01-01", "abstract": "...",
+        "source_type": "who", "item_uuid": "some-uuid",
+    }
+
+    async def _empty(*args, **kwargs):
+        return []
+
+    async def _who(*args, **kwargs):
+        return [who_guideline]
+
+    monkeypatch.setattr(guideline_finder, "search_pubmed", _empty)
+    monkeypatch.setattr(guideline_finder, "search_europepmc", _empty)
+    monkeypatch.setattr(guideline_finder, "search_who", _who)
+
+    result = await guideline_finder.find_guideline("sepsis management")
+    assert result is not None
+    assert result["source_type"] == "who"
+
+
+async def test_find_guideline_drops_who_candidates_older_than_min_year(monkeypatch):
+    old_who = {
+        "title": "Old WHO Report", "study_type": "Guideline", "pub_types": ["Guideline"],
+        "pub_date_parsed": "2005-01-01", "abstract": "...", "source_type": "who", "item_uuid": "old-uuid",
+    }
+
+    async def _empty(*args, **kwargs):
+        return []
+
+    async def _who(*args, **kwargs):
+        return [old_who]
+
+    monkeypatch.setattr(guideline_finder, "search_pubmed", _empty)
+    monkeypatch.setattr(guideline_finder, "search_europepmc", _empty)
+    monkeypatch.setattr(guideline_finder, "search_who", _who)
+
+    result = await guideline_finder.find_guideline("sepsis management", min_year=2015)
+    assert result is None
+
+
+class TestMeetsMinYear:
+    def test_recent_year_passes(self):
+        assert guideline_finder._meets_min_year({"pub_date_parsed": "2022-01-01"}, 2015) is True
+
+    def test_old_year_fails(self):
+        assert guideline_finder._meets_min_year({"pub_date_parsed": "2005-01-01"}, 2015) is False
+
+    def test_missing_date_kept_not_dropped(self):
+        assert guideline_finder._meets_min_year({}, 2015) is True

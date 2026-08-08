@@ -15,13 +15,17 @@ One thing this deliberately does NOT do:
   clean_search_term's or search_pubmed/search_europepmc's default behavior
   for any other caller.
 
-Full-text parsing (get_guideline_text below) was added as a narrow first
-slice, not full coverage: only Europe PMC exposes a real, verified-free
-full-text link in this codebase today (see europepmc.py's
-_free_full_text_link and app/services/fulltext_fetch.py), so PubMed
-candidates - and Europe PMC candidates without a free link - still fall
-back to abstract-only exactly as before this was added. See
-get_guideline_text's docstring for the honest per-candidate breakdown.
+Full-text coverage, stated plainly: Europe PMC (a real, verified-free link
+in fullTextUrlList - europepmc.py's _free_full_text_link), PubMed (via its
+PMC mirror - pubmed.py's get_pmc_full_text_link), and WHO (via IRIS's
+bitstream chain - who.py's get_iris_full_text_link, and WHO is only
+searched as a guideline candidate at all as of this addition - see
+find_guideline below). CDC and ClinicalTrials.gov remain abstract-only/
+not-applicable: CDC's Content Syndication API returned zero results for
+real clinical terms in live testing (see fulltext_fetch.py's module
+docstring), and ClinicalTrials.gov trial records are structured data with
+no separate "full text" document to fetch. See get_guideline_text's
+docstring for the honest per-candidate breakdown.
 
 Research prototype. Not for clinical use.
 """
@@ -35,6 +39,7 @@ from typing import Any, Optional
 from app.integrations.evidence_source import clean_search_term, evidence_grade_rank, grade_evidence
 from app.integrations.pubmed import search_pubmed
 from app.integrations.europepmc import search_europepmc
+from app.integrations.who import search_who
 from app.rag.citation_tracker import _split_sentences_for_citation
 
 #: PubMed publication-type field tags and Europe PMC PUB_TYPE values that
@@ -90,12 +95,31 @@ def _selection_key(record: dict[str, Any]) -> tuple:
     )
 
 
+def _meets_min_year(record: dict[str, Any], min_year: int) -> bool:
+    """WHO IRIS has no server-side date filter (see search_who), so unlike
+    PubMed/Europe PMC this is applied client-side after the search. A record
+    with no parseable date is kept rather than dropped - an unparseable
+    date is missing information, not evidence the document is old."""
+    parsed = record.get("pub_date_parsed") or ""
+    year = parsed[:4]
+    return not year.isdigit() or int(year) >= min_year
+
+
 async def find_guideline(topic: str, min_year: int = _MIN_GUIDELINE_YEAR) -> Optional[dict[str, Any]]:
-    """Search PubMed + Europe PMC for a real guideline document on `topic`,
-    return the single best candidate (or None if nothing qualifies). Never
-    raises - provider failures degrade to "no guideline found", the same
-    outcome as a genuine empty result (routes_comparison.py distinguishes
-    these at the reason_code level, not here)."""
+    """Search PubMed + Europe PMC + WHO IRIS for a real guideline document on
+    `topic`, return the single best candidate (or None if nothing
+    qualifies). Never raises - provider failures degrade to "no guideline
+    found", the same outcome as a genuine empty result
+    (routes_comparison.py distinguishes these at the reason_code level, not
+    here).
+
+    WHO IRIS has no publication-type/date field filter the way PubMed/
+    Europe PMC do (search_who takes no such parameters - see who.py), so its
+    candidates rely entirely on the post-hoc _is_guideline_type/
+    grade_evidence scoring below to keep non-guideline IRIS content
+    (technical reports, regional bulletins - the bulk of the repository,
+    per who.py's own docstring) from ever winning selection over a real
+    guideline-typed candidate from another source."""
     topic = (topic or "").strip()
     if not topic:
         return None
@@ -128,6 +152,11 @@ async def find_guideline(topic: str, min_year: int = _MIN_GUIDELINE_YEAR) -> Opt
         candidates.extend(europepmc_records)
     except Exception:
         pass
+    try:
+        who_records = await search_who(api_term, max_results=10)
+        candidates.extend(r for r in who_records if _meets_min_year(r, min_year))
+    except Exception:
+        pass
 
     if not candidates:
         _cache_set(cache_key, None)
@@ -146,14 +175,25 @@ async def get_guideline_text(guideline: dict[str, Any]) -> tuple[str, str]:
     label for where it came from: ("full_text", text) when a real, freely-
     available full document was fetched, ("abstract", text) when that
     wasn't possible and the pre-existing abstract-only behavior is used
-    instead - never a silent guess at which happened. Only Europe PMC
-    candidates carry full_text_url/full_text_style today (see this
-    module's docstring); a PubMed-only candidate, or a Europe PMC one
-    without a verified-free link, always returns ("abstract", ...).
+    instead - never a silent guess at which happened.
+
+    Three independent full-text paths are tried, in order, stopping at the
+    first that actually yields usable text - each is a real, verified-live
+    discovery mechanism (see this module's docstring), never a guess:
+    1. Europe PMC candidates already carry full_text_url/full_text_style
+       from the search response itself (no extra call).
+    2. PubMed candidates (source_type == "pubmed", carrying a pmid) are
+       checked against their PMC mirror, one extra elink call.
+    3. WHO candidates (source_type == "who", carrying item_uuid) are
+       checked against IRIS's bitstream chain, two extra calls.
+    A candidate only ever matches one of these three shapes, so trying all
+    three in sequence is not redundant work - it is a plain if/elif/elif
+    dispatch on which provider produced this particular guideline dict.
     fetch_full_text already never raises and returns None on any failure
     (network, oversized, too little extracted text), so this function
-    can't raise either - a failed fetch just falls through to the
-    abstract, the same outcome as never having attempted one."""
+    can't raise either - a failed fetch just falls through to the next
+    path, and a failure on every path falls through to the abstract, the
+    same outcome as never having attempted one."""
     from app.services.fulltext_fetch import fetch_full_text
 
     full_text_url = guideline.get("full_text_url") or ""
@@ -162,6 +202,25 @@ async def get_guideline_text(guideline: dict[str, Any]) -> tuple[str, str]:
         text = await fetch_full_text(full_text_url, full_text_style)
         if text:
             return "full_text", text
+
+    if guideline.get("source_type") == "pubmed" and guideline.get("pmid"):
+        from app.integrations.pubmed import get_pmc_full_text_link
+
+        pmc_url, pmc_style = await get_pmc_full_text_link(guideline["pmid"])
+        if pmc_url:
+            text = await fetch_full_text(pmc_url, pmc_style)
+            if text:
+                return "full_text", text
+
+    if guideline.get("source_type") == "who" and guideline.get("item_uuid"):
+        from app.integrations.who import get_iris_full_text_link
+
+        pdf_url = await get_iris_full_text_link(guideline["item_uuid"])
+        if pdf_url:
+            text = await fetch_full_text(pdf_url, "pdf")
+            if text:
+                return "full_text", text
+
     return "abstract", guideline.get("abstract", "")
 
 

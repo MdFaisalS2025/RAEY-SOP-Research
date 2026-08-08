@@ -67,7 +67,7 @@ export default function AlertStewardshipPage() {
           </p>
         </motion.div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <label htmlFor="min-overrides" className="text-xs text-muted-foreground">
             Minimum override count
           </label>
@@ -83,7 +83,7 @@ export default function AlertStewardshipPage() {
             ))}
           </select>
           {data && (
-            <span className="text-xs text-muted-foreground ml-auto">
+            <span className="text-xs text-muted-foreground sm:ml-auto">
               {data.total_distinct_contexts} distinct alert{data.total_distinct_contexts === 1 ? "" : "s"} overridden at least once
             </span>
           )}

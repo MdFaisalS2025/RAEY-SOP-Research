@@ -145,6 +145,53 @@ async def test_role_gated_sop_creation_blocked_for_clinical_staff(client):
     assert resp.status_code == 403
 
 
+async def test_login_lockout_after_repeated_failures(client):
+    """Real gap this closes: /api/auth/login had zero brute-force protection
+    - unlimited password guesses against any staff_id. A unique staff_id
+    (not "u1"/"u4", which other tests in this file use) since the rate
+    limiter's state is process-wide, not per-test."""
+    from app.services.rate_limit import reset as reset_rate_limit
+    key = "rate-limit-test-only"
+    reset_rate_limit(key)
+    try:
+        for _ in range(5):
+            resp = await client.post(
+                "/api/auth/login", json={"staff_id": key, "password": "wrong"}
+            )
+            assert resp.status_code == 401
+
+        # The 6th attempt is locked out even with the CORRECT password -
+        # the account doesn't exist in this test DB at all, so this also
+        # proves the lockout fires before any credential check runs.
+        locked = await client.post(
+            "/api/auth/login", json={"staff_id": key, "password": "anything"}
+        )
+        assert locked.status_code == 429
+    finally:
+        reset_rate_limit(key)
+
+
+async def test_login_lockout_is_per_staff_id(client):
+    """A lockout on one account must not block a different, unrelated one."""
+    from app.services.rate_limit import reset as reset_rate_limit
+    locked_key, other_key = "rate-limit-locked", "rate-limit-other"
+    reset_rate_limit(locked_key)
+    reset_rate_limit(other_key)
+    try:
+        for _ in range(5):
+            await client.post("/api/auth/login", json={"staff_id": locked_key, "password": "wrong"})
+        assert (await client.post(
+            "/api/auth/login", json={"staff_id": locked_key, "password": "anything"}
+        )).status_code == 429
+
+        # u1 with the real (correct) password still works.
+        resp = await client.post("/api/auth/login", json={"staff_id": "u1", "password": "demo1234"})
+        assert resp.status_code == 200, resp.text
+    finally:
+        reset_rate_limit(locked_key)
+        reset_rate_limit(other_key)
+
+
 async def test_role_gated_sop_creation_allowed_for_system_admin(client, tmp_path):
     async with async_sessionmaker(
         create_async_engine(f"sqlite+aiosqlite:///{tmp_path / 'test_auth.db'}", connect_args={"check_same_thread": False}),

@@ -379,8 +379,11 @@ def build_guideline_reference_items(guideline: dict[str, Any], recommendations: 
     from a paper title (build_dynamic_reference_items) or a hand-typed
     bundle (REFERENCE_PROTOCOLS). Every item carries the guideline's own
     grade and, via `fidelity`/`source_locus` (passed through from
-    extract_recommendations), an honest note that it's abstract-derived -
-    not the full guideline text."""
+    extract_recommendations), an honest note of exactly which text it came
+    from - "Full text" when a real, freely-available document was fetched
+    (see guideline_finder.get_guideline_text), "Abstract" when that wasn't
+    available and only the abstract was used, same as before full-text
+    fetching existed."""
     source_name = guideline.get("title") or "(untitled guideline)"
     source_type = guideline.get("study_type") or guideline.get("source_type", "")
     pub_date = guideline.get("pub_date") or (guideline.get("pub_date_parsed") or "")[:4]
@@ -403,12 +406,14 @@ async def compare_sop_to_guideline(sop_id: str, sop_title: str, internal_steps: 
     Returns None (not an exception) whenever no guideline is found or its
     abstract yields no extractable recommendations, so callers can fall
     back to compare_sop_to_dynamic_evidence without special-casing."""
-    from app.services.guideline_finder import find_guideline, extract_recommendations
+    from app.services.guideline_finder import find_guideline, get_guideline_text, extract_recommendations
 
     guideline = await find_guideline(sop_title)
     if guideline is None:
         return None
-    recommendations = extract_recommendations(guideline.get("abstract", ""))
+    basis, text = await get_guideline_text(guideline)
+    locus_label = "Full text" if basis == "full_text" else "Abstract"
+    recommendations = extract_recommendations(text, locus_label=locus_label)
     if not recommendations:
         return None
 

@@ -2,21 +2,26 @@
 Meridian Guideline Finder (Phase Q3.1/Q3.2)
 --------------------------------------------
 Retrieves a real, published guideline document for an SOP's topic and
-extracts real recommendation sentences from its abstract - the online
-alternative to sop_comparison.py's hand-transcribed REFERENCE_PROTOCOLS,
-built on the existing EvidenceSource registry (no new providers).
+extracts real recommendation sentences from it (full text when available,
+abstract otherwise - see get_guideline_text) - the online alternative to
+sop_comparison.py's hand-transcribed REFERENCE_PROTOCOLS, built on the
+existing EvidenceSource registry (no new providers).
 
-Two things this deliberately does NOT do:
-- Parse full guideline text (PDF/HTML). Only the abstract is available from
-  any of these APIs' summary endpoints - see extract_recommendations'
-  docstring for how that's disclosed rather than presented as complete
-  coverage.
+One thing this deliberately does NOT do:
 - Replace the general evidence search used elsewhere (Evidence Watch, the
   answer pipeline's external-evidence route). This module always opts into
   guideline-specific behavior (preserve_domain_terms, publication-type
   filters, a longer cache TTL) via explicit parameters - it never changes
   clean_search_term's or search_pubmed/search_europepmc's default behavior
   for any other caller.
+
+Full-text parsing (get_guideline_text below) was added as a narrow first
+slice, not full coverage: only Europe PMC exposes a real, verified-free
+full-text link in this codebase today (see europepmc.py's
+_free_full_text_link and app/services/fulltext_fetch.py), so PubMed
+candidates - and Europe PMC candidates without a free link - still fall
+back to abstract-only exactly as before this was added. See
+get_guideline_text's docstring for the honest per-candidate breakdown.
 
 Research prototype. Not for clinical use.
 """
@@ -136,6 +141,30 @@ async def find_guideline(topic: str, min_year: int = _MIN_GUIDELINE_YEAR) -> Opt
     return best
 
 
+async def get_guideline_text(guideline: dict[str, Any]) -> tuple[str, str]:
+    """The text to run extract_recommendations against, plus an honest
+    label for where it came from: ("full_text", text) when a real, freely-
+    available full document was fetched, ("abstract", text) when that
+    wasn't possible and the pre-existing abstract-only behavior is used
+    instead - never a silent guess at which happened. Only Europe PMC
+    candidates carry full_text_url/full_text_style today (see this
+    module's docstring); a PubMed-only candidate, or a Europe PMC one
+    without a verified-free link, always returns ("abstract", ...).
+    fetch_full_text already never raises and returns None on any failure
+    (network, oversized, too little extracted text), so this function
+    can't raise either - a failed fetch just falls through to the
+    abstract, the same outcome as never having attempted one."""
+    from app.services.fulltext_fetch import fetch_full_text
+
+    full_text_url = guideline.get("full_text_url") or ""
+    full_text_style = guideline.get("full_text_style") or ""
+    if full_text_url and full_text_style:
+        text = await fetch_full_text(full_text_url, full_text_style)
+        if text:
+            return "full_text", text
+    return "abstract", guideline.get("abstract", "")
+
+
 #: A recommendation sentence either states a directive (what to do) or
 #: carries a concrete clinical quantity (a dose, threshold, or timeframe) -
 #: the two shapes of sentence worth extracting from an abstract as a
@@ -160,26 +189,25 @@ _BOILERPLATE_PREFIXES = (
 _MAX_RECOMMENDATIONS = 12
 
 
-def extract_recommendations(abstract_text: str) -> list[dict[str, Any]]:
-    """Extract candidate recommendation sentences from a guideline's
-    abstract - the substance of "real sentences from the right guideline"
-    rather than comparing against a bare title.
+def extract_recommendations(text: str, locus_label: str = "Abstract") -> list[dict[str, Any]]:
+    """Extract candidate recommendation sentences from guideline text - the
+    substance of "real sentences from the right guideline" rather than
+    comparing against a bare title.
 
-    Deliberate scope limit, disclosed via `fidelity`/`source_locus` on
-    every returned item: this reads the ABSTRACT only. No provider used
-    here (PubMed, Europe PMC) exposes full guideline text through its
-    summary API - getting the complete document would mean parsing a PDF
-    or HTML page per source, which is real integration work each guideline
-    publisher would need its own scraper for for (the same reason
-    sop_comparison.py's REFERENCE_PROTOCOLS module docstring gives for not
-    building one). An abstract-derived recommendation is real, verbatim
-    text from the actual retrieved guideline - just not the whole of it,
-    and every item says so."""
-    abstract_text = (abstract_text or "").strip()
-    if not abstract_text:
+    `text` is whatever get_guideline_text resolved (full document or
+    abstract-only) - this function itself doesn't care which, it just
+    extracts sentences. `locus_label` is what actually discloses the
+    provenance honestly on every returned item's `source_locus`
+    ("Full text, sentence N" vs "Abstract, sentence N"), so a caller who
+    got real full text can't be silently mistaken for one that only ever
+    saw an abstract, and vice versa. Defaults to "Abstract" so any
+    pre-existing caller that only ever passed an abstract keeps identical
+    output without changes."""
+    text = (text or "").strip()
+    if not text:
         return []
 
-    sentences = _split_sentences_for_citation(abstract_text)
+    sentences = _split_sentences_for_citation(text)
     seen: set[str] = set()
     out: list[dict[str, Any]] = []
     for i, sent in enumerate(sentences):
@@ -196,7 +224,7 @@ def extract_recommendations(abstract_text: str) -> list[dict[str, Any]]:
         out.append({
             "text": normalized,
             "fidelity": "verbatim",
-            "source_locus": f"Abstract, sentence {i + 1}",
+            "source_locus": f"{locus_label}, sentence {i + 1}",
         })
         if len(out) >= _MAX_RECOMMENDATIONS:
             break

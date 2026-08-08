@@ -60,6 +60,24 @@ def _study_type_from_pub_types(pub_types: list[str], is_preprint: bool) -> str:
     return ""
 
 
+def _free_full_text_link(doc: dict[str, Any]) -> tuple[str, str]:
+    """Real, freely-fetchable full-text link if one exists in the record's
+    own fullTextUrlList - ("", "") otherwise. Only availabilityCode "F"
+    (Europe PMC's own "genuinely free, no login" flag - verified against a
+    live API response before writing this, not assumed) and documentStyle
+    "pdf"/"html" qualify; "doi" entries are redirect links, not directly
+    fetchable content, and everything else (subscription-required, etc.)
+    is exactly the case the abstract-only fallback exists for."""
+    url_list = (doc.get("fullTextUrlList") or {}).get("fullTextUrl") or []
+    for entry in url_list:
+        if entry.get("availabilityCode") != "F":
+            continue
+        style = (entry.get("documentStyle") or "").strip().lower()
+        if style in ("pdf", "html") and entry.get("url"):
+            return entry["url"], style
+    return "", ""
+
+
 def _parse_result(doc: dict[str, Any]) -> dict[str, Any]:
     pub_date = (doc.get("firstPublicationDate") or doc.get("pubYear") or "").strip()
     pmid = doc.get("pmid") or doc.get("id") or ""
@@ -68,6 +86,7 @@ def _parse_result(doc: dict[str, Any]) -> dict[str, Any]:
     pub_types = [doc.get("pubTypeList", {}).get("pubType", [])] if isinstance(doc.get("pubTypeList"), dict) else []
     pub_types_flat = pub_types[0] if pub_types else []
     is_preprint = doc.get("pubType") == "preprint"
+    full_text_url, full_text_style = _free_full_text_link(doc)
     return {
         "title": (doc.get("title") or "").strip(),
         "authors": (doc.get("authorString") or "").strip(),
@@ -84,6 +103,10 @@ def _parse_result(doc: dict[str, Any]) -> dict[str, Any]:
         # the one source where this comes back in the same request, no
         # second call needed (contrast pubmed.py's separate efetch).
         "abstract": _clean_abstract(doc.get("abstractText") or ""),
+        # "" when no free full-text link exists - see guideline_finder.py's
+        # get_guideline_text, the only current consumer of these two fields.
+        "full_text_url": full_text_url,
+        "full_text_style": full_text_style,
     }
 
 

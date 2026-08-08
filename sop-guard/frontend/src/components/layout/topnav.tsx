@@ -20,7 +20,6 @@ import {
   FlaskConical,
   Users,
   BookMarked,
-  Scale,
   ClipboardList,
   GraduationCap,
   Activity,
@@ -29,16 +28,11 @@ import {
   Check,
   Landmark,
   AlertOctagon,
-  Gauge,
   Wrench,
   Info,
-  ShieldOff,
   UploadCloud,
-  Inbox,
   Stethoscope,
   PlayCircle,
-  Radio,
-  ClipboardCheck,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { RoleSwitcher } from "@/components/layout/role-switcher"
@@ -82,6 +76,25 @@ const DIRECT_LINKS: NavItem[] = [
 // reachable only via Ctrl+K, are promoted into Protocols since they're
 // real clinical/educator workflows, not demos - a first-time user
 // shouldn't need to know the command palette exists to find them.
+// Nav/IA reduction pass: 6 items demoted out of the persistent dropdowns
+// down to command-palette-only (Ctrl+K already lists every route in this
+// app regardless of nav placement - see command-palette.tsx's PAGES array -
+// so nothing here becomes unreachable, only less persistently visible).
+// This is the same treatment Bedside Lookup and Scenario Training had
+// *before* being promoted into Protocols (see that comment above) - low
+// risk and reversible, unlike restructuring the pages themselves. Criteria
+// used: infrequent oversight/analytics tools (checked occasionally, not
+// used daily), explicitly-labeled demo pages, and pages already carrying a
+// known-partial-fabrication disclosure (H6) that don't need equal top-level
+// billing with fully-real pages until that's resolved. Demoted:
+// EMR Integration Demo (literally a demo, the clearest case - the same
+// "real workflow, not a demo" bar that got Bedside/Scenarios promoted cuts
+// the other way here), AI Evaluation, Clinician Evaluation, Usage &
+// Feedback (all system_admin/governance oversight tools, not daily-use),
+// Legal & Risk (H6-flagged partial mock content), Alert Stewardship (a
+// narrow, low-frequency governance_compliance tool). Regulatory &
+// Effectiveness were considered and kept - both are genuine recurring
+// compliance/monitoring workflows, not oversight-occasionally tools.
 const NAV_GROUPS: NavGroup[] = [
   {
     label: "Protocols",
@@ -104,24 +117,18 @@ const NAV_GROUPS: NavGroup[] = [
       { href: "/conflict-resolution", label: "Conflicts & Impact", icon: AlertTriangle, roles: ["governance_compliance", "system_admin"] },
       { href: "/compliance", label: "Compliance", icon: ShieldCheck, roles: ["educator", "governance_compliance", "system_admin"] },
       { href: "/audit", label: "Audit", icon: ClipboardList, roles: ["governance_compliance", "system_admin"] },
-      { href: "/legal", label: "Legal & Risk", icon: Scale, roles: ["governance_compliance", "system_admin"] },
       { href: "/regulatory", label: "Regulatory & Accreditation", icon: Landmark, roles: ["governance_compliance", "system_admin"] },
       // Leadership is reachable via the "Leadership Overview" shortcut on the
       // Dashboard for governance/admin roles rather than a separate nav item
       // - it duplicated the Dashboard's own metrics.
       { href: "/effectiveness", label: "Effectiveness", icon: Activity, roles: ["clinical_staff", "governance_compliance", "system_admin"] },
       { href: "/incidents", label: "Deviations & Incidents", icon: AlertOctagon, roles: ["clinical_staff", "governance_compliance", "system_admin"] },
-      { href: "/alert-stewardship", label: "Alert Stewardship", icon: ShieldOff, roles: ["governance_compliance", "system_admin"] },
     ],
   },
   {
     label: "Admin",
     items: [
-      { href: "/evaluation", label: "AI Evaluation", icon: Gauge, roles: ["system_admin"] },
-      { href: "/human-eval", label: "Clinician Evaluation", icon: ClipboardCheck, roles: ["system_admin", "governance_compliance"] },
-      { href: "/feedback", label: "Usage & Feedback", icon: Inbox, roles: ["governance_compliance", "system_admin"] },
       { href: "/upload", label: "Upload SOP", icon: UploadCloud, roles: ["system_admin"] },
-      { href: "/cds-demo", label: "EMR Integration Demo", icon: Radio, roles: ["system_admin"] },
       { href: "/settings", label: "Settings", icon: Settings },
       { href: "/admin", label: "Admin", icon: Wrench, roles: ["system_admin"] },
     ],

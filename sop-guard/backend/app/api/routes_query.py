@@ -161,28 +161,6 @@ async def submit_query_stream(req: QueryRequest, db: AsyncSession = Depends(get_
     )
 
 
-@router.get("/api/answers/{answer_id}")
-async def get_answer_permalink(answer_id: int, db: AsyncSession = Depends(get_db)):
-    """Permalink to a previously answered query (from the audit log)."""
-    from app.models.models import QueryLogRecord
-    rec = (await db.execute(
-        select(QueryLogRecord).where(QueryLogRecord.id == answer_id)
-    )).scalar_one_or_none()
-    if not rec:
-        raise HTTPException(status_code=404, detail=f"Answer {answer_id} not found.")
-    return {
-        "id": rec.id,
-        "query": rec.query_text,
-        "answer": rec.answer_text,
-        "query_type": rec.query_type,
-        "citations": rec.citations_json or [],
-        "confidence": rec.confidence,
-        "faithfulness": rec.faithfulness_score,
-        "abstained": str(rec.abstained).lower() == "true",
-        "created_at": rec.created_at.isoformat() if rec.created_at else "",
-    }
-
-
 @router.get("/api/query/history")
 async def get_query_history(
     limit: int = 20,
@@ -206,93 +184,6 @@ async def get_query_history(
             for q in rows
         ]
     }
-
-
-@router.post("/api/query/export")
-async def export_query_report(req: QueryRequest, db: AsyncSession = Depends(get_db)):
-    """Run a query and return a downloadable JSON report."""
-    # Load all chunks from DB
-    chunk_rows = (await db.execute(
-        select(
-            SOPChunk, SOP.sop_id.label("sop_sop_id"), SOP.title.label("sop_title"), SOP.structured_json,
-            SOP.version, SOP.effective_date, SOP.review_date, SOP.status, SOP.raw_text,
-        )
-        .join(SOP, SOPChunk.sop_id == SOP.id)
-    )).all()
-
-    chunks = []
-    structured_sops: dict[str, dict] = {}
-    for row in chunk_rows:
-        chunk = row[0]
-        chunks.append({
-            "chunk_text": chunk.chunk_text,
-            "text": chunk.chunk_text,
-            "section_title": chunk.section_title,
-            "sop_title": row.sop_title,
-            "sop_id": row.sop_sop_id,
-            "chunk_type": getattr(chunk, "chunk_type", "section") or "section",
-            "chunk_index": chunk.chunk_index,
-            "version": row.version or "",
-            "effective_date": row.effective_date or "",
-            "review_date": row.review_date or "",
-            "status": row.status or "active",
-            "char_start": chunk.char_start,
-            "char_end": chunk.char_end,
-            "offset_source": chunk.offset_source or "",
-            "offset_anchor": chunk.offset_anchor or "",
-            # SOP's full raw text - needed to map a narrowed citation
-            # sentence back to real document offsets (Q2.6). Not sent to
-            # the frontend (schemas.py's citation passthrough only carries
-            # the fields citation_tracker.py explicitly builds).
-            "sop_raw_text": row.raw_text or "",
-        })
-        if row.sop_sop_id not in structured_sops and row.structured_json:
-            structured_sops[row.sop_sop_id] = row.structured_json
-
-    if not chunks:
-        raise HTTPException(status_code=404, detail="No SOPs loaded.")
-
-    pipeline = MeridianPipeline(chunks, structured_sops)
-    result = await pipeline.run(
-        query=req.query,
-        user_role=req.user_role or "",
-        department=req.department or "",
-    )
-
-    report = {
-        "report_type": "Meridian Query Report",
-        "disclaimer": "Research prototype. Not for clinical use.",
-        "generated_at": datetime.utcnow().isoformat(),
-        "query": req.query,
-        "query_type": result.query_type,
-        "answer": result.answer,
-        "confidence": result.confidence,
-        "verification": {
-            "status": result.verification_result.status.value if result.verification_result else "unknown",
-            "score": result.verification_result.overall_score if result.verification_result else 0,
-            "explanation": result.verification_result.explanation if result.verification_result else "",
-        },
-        "sources": [
-            {
-                "sop_title": c.sop_title,
-                "section": c.section_title,
-                "relevance": c.relevance_score,
-                "text_preview": c.chunk_text[:200],
-            }
-            for c in result.retrieved_chunks[:5]
-        ],
-        "reasoning_trace": result.reasoning_trace,
-    }
-
-    return JSONResponse(
-        content=report,
-        headers={
-            "Content-Disposition": (
-                f'attachment; filename="meridian-report-'
-                f'{datetime.utcnow().strftime("%Y%m%d-%H%M%S")}.json"'
-            )
-        },
-    )
 
 
 @router.post("/api/query/report")

@@ -533,7 +533,6 @@ async def project_summary():
         "instructions": {
             "run_rag_eval": "POST /api/evaluate/rag",
             "run_adversarial_eval": "POST /api/evaluate/adversarial",
-            "export_query_report": "POST /api/query/export",
             "check_llm_status": "GET /api/llm/status",
         },
     }

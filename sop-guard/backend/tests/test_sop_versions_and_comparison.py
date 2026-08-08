@@ -48,6 +48,28 @@ def test_full_bundle_coverage_is_aligned():
     assert result["summary"]["overall_alignment"] == "Aligned"
 
 
+@pytest.mark.parametrize("sop_id", ["SOP-ICU-003", "SOP-NEURO-011"])
+def test_expanded_curated_fallback_entries_are_well_formed(sop_id):
+    reference = REFERENCE_PROTOCOLS[sop_id]
+    assert reference["steps"], f"{sop_id} must carry at least one reference step"
+    for step in reference["steps"]:
+        # Neither new entry's primary source could be fetched directly
+        # during verification (see reference_protocols.py's module
+        # docstring) - every step must therefore be honestly marked as a
+        # paraphrase of a secondary source, never claimed verbatim.
+        assert step["fidelity"] == "paraphrase"
+        assert step["grade"] in {"Strong", "Moderate", "Limited", "Research Only", "Unknown", "Outdated"}
+        assert step["source_locus"]
+
+
+def test_expanded_curated_fallback_full_coverage_is_aligned():
+    for sop_id in ("SOP-ICU-003", "SOP-NEURO-011"):
+        steps = REFERENCE_PROTOCOLS[sop_id]["steps"]
+        result = compare_sop_to_reference(sop_id, [s["text"] for s in steps])
+        assert result["summary"]["match_count"] == len(steps)
+        assert result["summary"]["overall_alignment"] == "Aligned"
+
+
 # ─── Weighted overall_alignment (Q3.5) ──────────────────────────────────────
 # Replaces the old boolean cascade (any missing -> Needs Review, any partial
 # -> Partially Aligned, else Aligned), which made 8/9 match + 1 missing

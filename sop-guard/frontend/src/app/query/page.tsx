@@ -14,6 +14,10 @@ import {
   MessageSquare,
   Trash2,
   Download,
+  Paperclip,
+  X,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react"
 import { type InlineCitation } from "@/components/query/citation-chip"
 import { AnswerRenderer } from "@/components/query/answer-renderer"
@@ -25,6 +29,7 @@ import { VoiceRecorder } from "@/components/voice/voice-recorder"
 import { usePhiGuard, useVoiceEnabled } from "@/lib/use-phi-guard"
 import { mapCitations } from "@/lib/citations"
 import { cn, formatMessageTime } from "@/lib/utils"
+import { toast } from "@/components/ui/use-toast"
 
 const suggestedQueries = [
 "What are the steps for sepsis management?",
@@ -77,6 +82,10 @@ const REVEAL_MAX_MS = 2200
 
 const CHAT_SESSION_KEY = "meridian-chat-session"
 const DRAFT_QUERY_KEY = "meridian-draft-query"
+//: How many of the most recent messages stay permanently mounted - see
+//: the render loop's comment for the full rationale (this is a capped
+//: reveal, not real virtualization).
+const RENDER_TAIL_COUNT = 40
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -130,6 +139,17 @@ export type AssistantData = {
    * answered without the conversation history the session path would
    * have sent, so a follow-up referencing earlier turns may not land. */
   contextDegraded?: boolean
+  /** The one version this turn displaced, if it was edited - a single
+   * step of undo/redo, not a full branch tree (see handleSwapVersion's
+   * comment for why this scope was chosen over real branching). Absent
+   * on a turn that's never been edited. Nested to depth 1 only: a
+   * previousVersion's own answer never carries a previousVersion of its
+   * own, so swapping back and forth never grows unbounded. */
+  previousVersion?: { question: string; answer: AssistantData }
+  /** True on a version currently being viewed after a swap-back - lets
+   * the toggle control label itself correctly without needing a separate
+   * "which one is newer" lookup. */
+  isPreviousVersion?: boolean
 }
 
 /** Pulls "Evidence: sufficient (score: 0.83)" out of the joined reasoning trace. */
@@ -139,7 +159,7 @@ function extractEvidenceScore(reasoning: string): number | null {
 }
 
 type ChatMessage =
-  | { id: string; role: "user"; content: string; createdAt: number }
+  | { id: string; role: "user"; content: string; createdAt: number; attachmentName?: string }
   | { id: string; role: "assistant"; data: AssistantData }
 
 /** Shared by both message variants - assistant messages already carry a
@@ -316,7 +336,7 @@ function AnswerLoadingIndicator() {
 // pattern) - editing and saving discards this message and everything
 // after it, then resubmits the edited text as a new turn, exactly like
 // asking again with a corrected question.
-function UserMessageBubble({ content, timestamp, failed, onEdit, onRetry }: { content: string; timestamp: number; failed: boolean; onEdit: (newText: string) => void; onRetry: () => void }) {
+function UserMessageBubble({ content, timestamp, failed, attachmentName, onEdit, onRetry }: { content: string; timestamp: number; failed: boolean; attachmentName?: string; onEdit: (newText: string) => void; onRetry: () => void }) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(content)
   const taRef = useRef<HTMLTextAreaElement | null>(null)
@@ -353,17 +373,28 @@ function UserMessageBubble({ content, timestamp, failed, onEdit, onRetry }: { co
 
   return (
     <div className="group flex flex-col items-end">
-      <div className="flex items-center gap-1">
-        <button onClick={() => setEditing(true)} title="Edit and resend" aria-label="Edit and resend"
-          className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted shrink-0">
-          <Pencil className="w-3.5 h-3.5" />
-        </button>
-        <div className={cn(
-          "max-w-[85%] sm:max-w-[65%] px-4 py-2.5 rounded-2xl rounded-br-md text-chat text-foreground whitespace-pre-wrap",
-          failed ? "bg-danger-soft border border-danger-soft-border" : "bg-muted border border-border",
-        )}>
-          {content}
+      <div className="flex flex-col items-end gap-1 max-w-[85%] sm:max-w-[65%]">
+        <div className="flex items-center gap-1">
+          <button onClick={() => setEditing(true)} title="Edit and resend" aria-label="Edit and resend"
+            className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted shrink-0">
+            <Pencil className="w-3.5 h-3.5" />
+          </button>
+          <div className={cn(
+            "px-4 py-2.5 rounded-2xl rounded-br-md text-chat text-foreground whitespace-pre-wrap",
+            failed ? "bg-danger-soft border border-danger-soft-border" : "bg-muted border border-border",
+          )}>
+            {content}
+          </div>
         </div>
+        {/* The pipeline actually reads the attached file's text (see
+            handleSubmit's sendText) - this chip is what discloses that to
+            the reader, since the bubble above only shows the question. */}
+        {attachmentName && (
+          <span className="flex items-center gap-1 text-meta-xs text-muted-foreground mr-1">
+            <Paperclip className="w-3 h-3" />
+            {attachmentName}
+          </span>
+        )}
       </div>
       {/* Failed sends get a permanent, not hover-only, marker - the whole
           point is to be visible without the reader having to guess to
@@ -396,6 +427,10 @@ function nextId() {
 export default function QueryPage() {
   const [query, setQuery] = useState("")
   const [messages, setMessages] = useState<ChatMessage[]>([])
+  // Manual reveal for very long threads - see the render loop's comment
+  // for why this is a one-directional "load more" rather than true
+  // windowed virtualization.
+  const [revealAllMessages, setRevealAllMessages] = useState(false)
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   // Screen-reader-only completion announcement: fires once per answer when
@@ -446,6 +481,31 @@ export default function QueryPage() {
       window.removeEventListener("offline", goOffline)
     }
   }, [])
+
+  // Text-file attachment. Deliberately text-only, not images/PDFs/etc -
+  // the pipeline (both the extractive default and the Ollama-backed mode)
+  // has no vision model wired anywhere, so an image "attachment" the model
+  // genuinely could not see would be exactly the kind of control-that-
+  // doesn't-work this project has repeatedly gone back and removed
+  // elsewhere. A text file's content, by contrast, becomes real context
+  // the pipeline actually reads - see handleSubmit's use of it below.
+  const [attachedFile, setAttachedFile] = useState<{ name: string; content: string } | null>(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const ATTACHMENT_MAX_CHARS = 20_000
+
+  const handleFileSelected = async (file: File | undefined) => {
+    if (!file) return
+    if (!/\.(txt|md|csv|json|log)$/i.test(file.name)) {
+      toast({ description: "Only text files (.txt, .md, .csv, .json, .log) can be attached - Meridian has no way to read images or PDFs.", variant: "error" })
+      return
+    }
+    const text = await file.text()
+    if (text.length > ATTACHMENT_MAX_CHARS) {
+      toast({ description: `That file is too long to attach (${text.length.toLocaleString()} characters, limit ${ATTACHMENT_MAX_CHARS.toLocaleString()}) - trim it and try again.`, variant: "error" })
+      return
+    }
+    setAttachedFile({ name: file.name, content: text })
+  }
 
   // Lets Stop actually cancel an in-flight generation - see handleStop.
   const abortControllerRef = useRef<AbortController | null>(null)
@@ -912,21 +972,58 @@ export default function QueryPage() {
 
   // Edit-and-resend: drops the edited message and everything after it
   // (its old answer, and any later turns that were built on top of it),
-  // then resubmits the edited text as a fresh question.
+  // then resubmits the edited text as a fresh question. The immediate
+  // Q+A pair being replaced is kept as `previousVersion` on the new
+  // answer (see handleSwapVersion) rather than silently discarded -
+  // anything beyond that pair (later turns built on top of it) is still
+  // dropped, matching the behavior before this existed. A full branch
+  // tree that preserved every later turn too would need messages to be
+  // a tree rather than a flat array - a real architecture change, not a
+  // one-field addition, so this stays a single step of undo/redo.
   const handleEditResend = (messageId: string, newText: string) => {
     if (!newText || loading) return
+    const idx = messages.findIndex(m => m.id === messageId)
+    if (idx === -1) return
+    const edited = messages[idx]
+    const nextMsg = messages[idx + 1]
+    const retiredVersion = (edited.role === "user" && nextMsg?.role === "assistant")
+      ? { question: edited.content, answer: { ...nextMsg.data, previousVersion: undefined, isPreviousVersion: undefined } }
+      : undefined
+    setMessages(prev => prev.slice(0, idx))
+    handleSubmit(newText, true, false, retiredVersion)
+  }
+
+  // Swaps the currently-displayed version of a turn with the one version
+  // it displaced (see previousVersion's type comment - capped at depth 1,
+  // not a full history). Symmetric: calling it again swaps back.
+  const handleSwapVersion = (userMessageId: string, assistantMessageId: string) => {
     setMessages(prev => {
-      const idx = prev.findIndex(m => m.id === messageId)
-      return idx === -1 ? prev : prev.slice(0, idx)
+      const uIdx = prev.findIndex(m => m.id === userMessageId)
+      const aIdx = prev.findIndex(m => m.id === assistantMessageId)
+      if (uIdx === -1 || aIdx === -1 || prev[aIdx].role !== "assistant") return prev
+      const aMsg = prev[aIdx] as Extract<ChatMessage, { role: "assistant" }>
+      const uMsg = prev[uIdx] as Extract<ChatMessage, { role: "user" }>
+      const displaced = aMsg.data.previousVersion
+      if (!displaced) return prev
+      const next = [...prev]
+      next[uIdx] = { ...uMsg, content: displaced.question }
+      next[aIdx] = {
+        ...aMsg,
+        data: {
+          ...displaced.answer,
+          isPreviousVersion: !aMsg.data.isPreviousVersion,
+          previousVersion: { question: uMsg.content, answer: { ...aMsg.data, previousVersion: undefined, isPreviousVersion: undefined } },
+        },
+      }
+      return next
     })
-    handleSubmit(newText, true)
   }
 
   // `skipUserMessage` is Regenerate's escape hatch: it needs everything
   // else handleSubmit does (PHI gate bypassed, generate, finalize) but
   // must NOT append a new user bubble - the question was already asked,
   // regenerate is only replacing the answer to it.
-  const handleSubmit = async (overrideQuery?: string, skipPhiGate = false, skipUserMessage = false) => {
+  const handleSubmit = async (overrideQuery?: string, skipPhiGate = false, skipUserMessage = false, retiredVersion?: { question: string; answer: AssistantData }) => {
     const q = (overrideQuery ?? query).trim()
     if (!q || loading) return
 
@@ -941,9 +1038,24 @@ export default function QueryPage() {
       if (result?.has_phi) return // amber warning + Send-anyway stays visible
     }
 
+    // Only a genuine composer submission consumes the pending attachment -
+    // a follow-up chip or Regenerate/Edit (all of which pass an explicit
+    // overrideQuery) must not silently scoop up a file the reader attached
+    // for an unrelated, not-yet-sent question.
+    const useAttachment = overrideQuery === undefined ? attachedFile : null
+    // What the pipeline actually reads is the question plus the file's
+    // real text, clearly delimited - not a bare filename with no content
+    // behind it. What's SHOWN in the bubble stays just the typed question
+    // (see attachmentName below for the visible disclosure that a file
+    // was included).
+    const sendText = useAttachment
+      ? `${q}\n\n--- Attached file: ${useAttachment.name} ---\n${useAttachment.content}\n--- End of attached file ---`
+      : q
+
     setQuery("")
     try { localStorage.removeItem(DRAFT_QUERY_KEY) } catch { /* ignore */ }
-    if (!skipUserMessage) setMessages(prev => [...prev, { id: nextId(), role: "user", content: q, createdAt: Date.now() }])
+    if (useAttachment) setAttachedFile(null)
+    if (!skipUserMessage) setMessages(prev => [...prev, { id: nextId(), role: "user", content: q, createdAt: Date.now(), attachmentName: useAttachment?.name }])
     setLoading(true)
     setStreamingText("")
     setRevealedText("")
@@ -982,7 +1094,7 @@ export default function QueryPage() {
         }
         response = await streamSSE(
           `/api/chat/sessions/${sid}/messages/stream`,
-          { content: q },
+          { content: sendText },
           onToken,
           controller.signal,
         )
@@ -999,7 +1111,7 @@ export default function QueryPage() {
         usedFallback = true
         setStreamingText("")
         setRevealedText("")
-        response = await streamSSE("/api/query/stream", { query: q }, onToken, controller.signal)
+        response = await streamSSE("/api/query/stream", { query: sendText }, onToken, controller.signal)
         if (!response) throw new Error("fallback stream failed")
       }
 
@@ -1072,6 +1184,7 @@ export default function QueryPage() {
     if (data) {
       setStreamingText(data.answer)
       await waitForRevealCatchUp(data.answer)
+      if (retiredVersion) data.previousVersion = retiredVersion
     }
     setLoading(false)
     setStreamingText("")
@@ -1081,6 +1194,8 @@ export default function QueryPage() {
   }
 
   const lastAssistantId = [...messages].reverse().find(m => m.role === "assistant")?.id ?? null
+  const hiddenMessageCount = !revealAllMessages && messages.length > RENDER_TAIL_COUNT ? messages.length - RENDER_TAIL_COUNT : 0
+  const visibleMessages = hiddenMessageCount > 0 ? messages.slice(hiddenMessageCount) : messages
 
   // Auto-grow the composer textarea (1 row up to ~8 rows) instead of a fixed
   // rows={3} box - this also removes the need to reserve space for the
@@ -1127,6 +1242,25 @@ export default function QueryPage() {
         </div>
       )}
     <div className="rounded-2xl border border-border bg-muted focus-within:ring-2 focus-within:ring-primary/40 transition-shadow">
+      {attachedFile && (
+        <div className="flex items-center gap-1.5 mx-2.5 mt-2.5 px-2.5 py-1.5 rounded-lg bg-card border border-border text-meta-xs text-muted-foreground w-fit">
+          <Paperclip className="w-3 h-3 shrink-0" />
+          <span className="truncate max-w-[220px]">{attachedFile.name}</span>
+          <span className="text-subtle">&middot;</span>
+          <span className="shrink-0">{attachedFile.content.length.toLocaleString()} chars</span>
+          <button onClick={() => setAttachedFile(null)} title="Remove attachment" aria-label="Remove attachment"
+            className="shrink-0 p-0.5 rounded hover:bg-muted hover:text-foreground transition-colors">
+            <X className="w-3 h-3" />
+          </button>
+        </div>
+      )}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".txt,.md,.csv,.json,.log"
+        className="hidden"
+        onChange={(e) => { handleFileSelected(e.target.files?.[0]); e.target.value = "" }}
+      />
       <textarea
         ref={textareaRef}
         aria-label={submitted ? "Ask a follow-up question" : "Ask about a protocol or procedure"}
@@ -1155,6 +1289,14 @@ export default function QueryPage() {
           </span>
         ) : <span />}
         <div className="flex items-center gap-1.5 shrink-0">
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={!!attachedFile}
+          title={attachedFile ? "One attachment at a time" : "Attach a text file"}
+          aria-label="Attach a text file"
+          className="inline-flex items-center justify-center w-9 h-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-card disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0">
+          <Paperclip className="w-4 h-4" />
+        </button>
         {voiceInputEnabled && (
           <VoiceRecorder onTranscript={(t) => {
             // Append to, rather than replace, anything already typed -
@@ -1372,7 +1514,38 @@ export default function QueryPage() {
             but the fix keeps the same “explicit margin” shape density
             styling already expects elsewhere). */}
         <div className="flex flex-col">
-          {messages.map((m, idx) => {
+          {/* Caps how many messages mount as full React trees at once - a
+              very long thread otherwise means hundreds of live citation
+              popovers, source lists and toolbars sitting in the DOM
+              simultaneously. Deliberately NOT a true windowed/virtualized
+              list: the scroll-preservation effects above (spacerPx, the
+              near-bottom follow-scroll, the new-question scrollIntoView)
+              all key off refs and DOM ids that only ever point at the
+              LATEST message - as long as the tail stays fully, permanently
+              rendered, none of that delicate logic needs to change. Real
+              bidirectional virtualization would need to estimate the
+              height of off-screen messages to keep scroll position stable
+              while scrolling *up*, which their wildly variable heights
+              (a one-line question vs. a table-and-citations answer) makes
+              hard to do accurately - and there's no reported performance
+              problem today to justify that risk. This is a manual,
+              one-directional reveal instead: older messages collapse
+              behind a button, like Gmail/Slack's "load more", not an
+              automatic background operation - so a scroll jump on click
+              is expected pagination behavior, not the surprising-during-
+              normal-reading jump the earlier scroll-bug phases were about. */}
+          {hiddenMessageCount > 0 && (
+            <div className="flex justify-center mb-4">
+              <button
+                onClick={() => setRevealAllMessages(true)}
+                className="text-meta-xs font-medium text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-full bg-muted hover:bg-card border border-border transition-colors"
+              >
+                Show {hiddenMessageCount} earlier {hiddenMessageCount === 1 ? "message" : "messages"}
+              </button>
+            </div>
+          )}
+          {visibleMessages.map((m, localIdx) => {
+            const idx = localIdx + hiddenMessageCount
             // A day divider only when the calendar day actually changed
             // since the previous message - most conversations happen in
             // one sitting and never trigger this.
@@ -1400,7 +1573,7 @@ export default function QueryPage() {
                 <div key={m.id}>
                   {divider}
                   <div id={`msg-${m.id}`} className={cn("scroll-mt-20", idx > 0 && !showDivider && "mt-10")}>
-                    <UserMessageBubble content={m.content} timestamp={m.createdAt} failed={failed}
+                    <UserMessageBubble content={m.content} timestamp={m.createdAt} failed={failed} attachmentName={m.attachmentName}
                       onEdit={(newText) => handleEditResend(m.id, newText)}
                       onRetry={() => handleSubmit(m.content)} />
                   </div>
@@ -1408,6 +1581,7 @@ export default function QueryPage() {
               )
             }
             const isLatest = m.id === lastAssistantId
+            const precedingUser = messages[idx - 1]
             return (
               <div key={m.id}>
                 {divider}
@@ -1419,6 +1593,19 @@ export default function QueryPage() {
                     so it can only ever make the scroll spacer over-reserve by
                     a frame, never under-reserve (see the spacerPx effect). */}
                 <div ref={isLatest ? lastMessageRef : undefined} className="mt-4">
+                  {/* Only appears on a turn that's been edited - see
+                      previousVersion's type comment for why this is a
+                      one-step toggle, not a full branch tree. */}
+                  {m.data.previousVersion && precedingUser?.role === "user" && (
+                    <button
+                      onClick={() => handleSwapVersion(precedingUser.id, m.id)}
+                      className="flex items-center gap-1 text-meta-xs text-muted-foreground hover:text-foreground px-1 mb-1.5 transition-colors"
+                    >
+                      <ChevronLeft className="w-3 h-3" />
+                      {m.data.isPreviousVersion ? "Viewing the version before your edit" : "Viewing your edited version"}
+                      <ChevronRight className="w-3 h-3" />
+                    </button>
+                  )}
                   <ChatAnswerMessage
                     data={m.data}
                     onFollowup={(q) => handleSubmit(q)}

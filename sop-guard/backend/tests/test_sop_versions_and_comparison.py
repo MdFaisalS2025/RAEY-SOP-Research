@@ -48,12 +48,15 @@ def test_full_bundle_coverage_is_aligned():
     assert result["summary"]["overall_alignment"] == "Aligned"
 
 
-@pytest.mark.parametrize("sop_id", ["SOP-ICU-003", "SOP-NEURO-011"])
+_EXPANDED_FALLBACK_SOP_IDS = ["SOP-ICU-003", "SOP-NEURO-011", "SOP-EM-009"]
+
+
+@pytest.mark.parametrize("sop_id", _EXPANDED_FALLBACK_SOP_IDS)
 def test_expanded_curated_fallback_entries_are_well_formed(sop_id):
     reference = REFERENCE_PROTOCOLS[sop_id]
     assert reference["steps"], f"{sop_id} must carry at least one reference step"
     for step in reference["steps"]:
-        # Neither new entry's primary source could be fetched directly
+        # None of these entries' primary sources could be fetched directly
         # during verification (see reference_protocols.py's module
         # docstring) - every step must therefore be honestly marked as a
         # paraphrase of a secondary source, never claimed verbatim.
@@ -63,7 +66,7 @@ def test_expanded_curated_fallback_entries_are_well_formed(sop_id):
 
 
 def test_expanded_curated_fallback_full_coverage_is_aligned():
-    for sop_id in ("SOP-ICU-003", "SOP-NEURO-011"):
+    for sop_id in _EXPANDED_FALLBACK_SOP_IDS:
         steps = REFERENCE_PROTOCOLS[sop_id]["steps"]
         result = compare_sop_to_reference(sop_id, [s["text"] for s in steps])
         assert result["summary"]["match_count"] == len(steps)

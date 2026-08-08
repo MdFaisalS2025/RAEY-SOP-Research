@@ -19,17 +19,31 @@ cultures, antibiotics, fluids, vasopressors) are verbatim/Strong; the other
 Hour-1 Bundle elements, so they are marked paraphrase/Moderate rather than
 implied to carry the bundle's own authority.
 
-SOP-ICU-003 and SOP-NEURO-011 below are held to the same standard, with one
-honest difference worth stating plainly: their primary-source pages
-(cdc.gov, stroke.org) returned HTTP 403 to a direct fetch during
-verification (the same bot-mitigation already documented elsewhere in this
-codebase - see cdc.py's and clinicaltrials.py's module docstrings), so
-every step for these two SOPs is marked `fidelity: paraphrase` rather than
-`verbatim` - each was checked against a real secondary source (an NCBI
-Bookshelf/StatPearls article summarizing the same CDC bundle and AHA/ASA
-guideline, respectively) rather than the primary document's own wording,
-and `source_locus` says so explicitly. No step in this file is ever marked
-verbatim without the primary document's own text in hand.
+SOP-ICU-003, SOP-NEURO-011 and SOP-EM-009 below are held to the same
+standard, with one honest difference worth stating plainly: their
+primary-source pages (cdc.gov, stroke.org, professional.heart.org)
+returned HTTP 403 to a direct fetch during verification - the same
+bot-mitigation already documented elsewhere in this codebase (see cdc.py's
+and clinicaltrials.py's module docstrings) - so every step for these three
+SOPs is marked `fidelity: paraphrase` rather than `verbatim`: each was
+checked against a real secondary source (an NCBI Bookshelf/StatPearls
+article summarizing the same guideline) rather than the primary document's
+own wording, and `source_locus` says so explicitly. No step in this file
+is ever marked verbatim without the primary document's own text in hand.
+
+A real AABB 2016 transfusion-threshold guideline was also verified during
+this pass, but deliberately was NOT added here: SOP-GEN-002 (Blood
+Transfusion Protocol) - the only demo SOP it would honestly attach to - is
+already used throughout test_sop_versions_and_comparison.py as the
+canonical example of "a SOP with no curated fallback," specifically to
+exercise the dynamic-mode (live-retrieval) comparison path. Giving it a
+curated entry would have silently broken that test's premise; forcing the
+AABB content onto an unrelated SOP instead would have been a worse
+dishonesty (the reference comparison feature exists specifically so a
+clinician can trust that the cited guideline is actually about the SOP
+being compared). Adding transfusion-guideline coverage stays open, gated
+on either updating those tests to pick a different no-curated-bundle
+example or accepting SOP-GEN-002 no longer demonstrates that case.
 """
 
 from __future__ import annotations
@@ -163,6 +177,39 @@ REFERENCE_PROTOCOLS: dict[str, dict[str, Any]] = {
                 "fidelity": "paraphrase",
                 "source_locus": "AHA/ASA acute ischemic stroke guideline, outcome-related recommendation - a stated rationale for the 60-minute target, not itself a separate mandated threshold",
                 "grade": "Moderate",
+            },
+        ],
+    },
+    "SOP-EM-009": {
+        "source_name": "AHA Advanced Cardiovascular Life Support (ACLS) Guidelines",
+        "source_type": "Professional Society Guideline",
+        "publisher": "American Heart Association",
+        "year": 2020,
+        "url": "https://cpr.heart.org",
+        "steps": [
+            {
+                "text": "Compress the chest at a rate of 100 to 120 compressions per minute",
+                "fidelity": "paraphrase",
+                "source_locus": "ACLS guideline, chest compression rate - verified via a secondary NCBI Bookshelf/StatPearls summary of the guideline, not cpr.heart.org directly (see module docstring)",
+                "grade": "Strong",
+            },
+            {
+                "text": "Compress the chest to a depth of 5 to 6 cm in an average adult",
+                "fidelity": "paraphrase",
+                "source_locus": "ACLS guideline, chest compression depth",
+                "grade": "Strong",
+            },
+            {
+                "text": "Give 2 breaths for every 30 compressions when an advanced airway is not in place",
+                "fidelity": "paraphrase",
+                "source_locus": "ACLS guideline, compression-to-ventilation ratio (30:2)",
+                "grade": "Strong",
+            },
+            {
+                "text": "Administer 1 mg of epinephrine IV or IO every 3 to 5 minutes during cardiac arrest",
+                "fidelity": "paraphrase",
+                "source_locus": "ACLS guideline, epinephrine dosing interval",
+                "grade": "Strong",
             },
         ],
     },

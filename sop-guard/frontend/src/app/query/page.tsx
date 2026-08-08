@@ -8,10 +8,12 @@ import {
   History,
   RotateCcw,
   ShieldAlert,
+  AlertCircle,
   Square,
   Pencil,
   MessageSquare,
   Trash2,
+  Download,
 } from "lucide-react"
 import { type InlineCitation } from "@/components/query/citation-chip"
 import { AnswerRenderer } from "@/components/query/answer-renderer"
@@ -22,7 +24,7 @@ import { SafetyNote } from "@/components/ui/safety-note"
 import { VoiceRecorder } from "@/components/voice/voice-recorder"
 import { usePhiGuard, useVoiceEnabled } from "@/lib/use-phi-guard"
 import { mapCitations } from "@/lib/citations"
-import { cn } from "@/lib/utils"
+import { cn, formatMessageTime } from "@/lib/utils"
 
 const suggestedQueries = [
 "What are the steps for sepsis management?",
@@ -74,6 +76,7 @@ const REVEAL_BASE_CPS = 45
 const REVEAL_MAX_MS = 2200
 
 const CHAT_SESSION_KEY = "meridian-chat-session"
+const DRAFT_QUERY_KEY = "meridian-draft-query"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -136,8 +139,30 @@ function extractEvidenceScore(reasoning: string): number | null {
 }
 
 type ChatMessage =
-  | { id: string; role: "user"; content: string }
+  | { id: string; role: "user"; content: string; createdAt: number }
   | { id: string; role: "assistant"; data: AssistantData }
+
+/** Shared by both message variants - assistant messages already carry a
+ * timestamp on `data.answeredAt`, user messages carry it directly. Kept as
+ * one accessor so the day-divider/timestamp rendering below doesn't need
+ * to know which variant it's looking at. */
+function messageTimestamp(m: ChatMessage): number {
+  return m.role === "user" ? m.createdAt : m.data.answeredAt
+}
+
+/** "Today" / "Yesterday" / a real date - only shown when the calendar day
+ * actually changes between two messages, so a normal single-sitting
+ * conversation never shows one. Uses the reader's local calendar day, not
+ * UTC, so "yesterday" matches what they'd actually expect. */
+function dayDividerLabel(ts: number): string {
+  const d = new Date(ts)
+  const today = new Date()
+  const startOfDay = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime()
+  const diffDays = Math.round((startOfDay(today) - startOfDay(d)) / 86_400_000)
+  if (diffDays === 0) return "Today"
+  if (diffDays === 1) return "Yesterday"
+  return d.toLocaleDateString(undefined, { month: "long", day: "numeric", year: d.getFullYear() !== today.getFullYear() ? "numeric" : undefined })
+}
 
 function emptyVerification(): VerificationData {
   return { status: "warning", confidence: 0.5, thresholdChecks: [], sequenceChecks: [], contraindicationChecks: [] }
@@ -291,7 +316,7 @@ function AnswerLoadingIndicator() {
 // pattern) - editing and saving discards this message and everything
 // after it, then resubmits the edited text as a new turn, exactly like
 // asking again with a corrected question.
-function UserMessageBubble({ content, onEdit }: { content: string; onEdit: (newText: string) => void }) {
+function UserMessageBubble({ content, timestamp, failed, onEdit, onRetry }: { content: string; timestamp: number; failed: boolean; onEdit: (newText: string) => void; onRetry: () => void }) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(content)
   const taRef = useRef<HTMLTextAreaElement | null>(null)
@@ -327,14 +352,35 @@ function UserMessageBubble({ content, onEdit }: { content: string; onEdit: (newT
   }
 
   return (
-    <div className="group flex items-center gap-1 justify-end">
-      <button onClick={() => setEditing(true)} title="Edit and resend" aria-label="Edit and resend"
-        className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted shrink-0">
-        <Pencil className="w-3.5 h-3.5" />
-      </button>
-      <div className="max-w-[85%] sm:max-w-[65%] px-4 py-2.5 rounded-2xl rounded-br-md bg-muted border border-border text-chat text-foreground whitespace-pre-wrap">
-        {content}
+    <div className="group flex flex-col items-end">
+      <div className="flex items-center gap-1">
+        <button onClick={() => setEditing(true)} title="Edit and resend" aria-label="Edit and resend"
+          className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted shrink-0">
+          <Pencil className="w-3.5 h-3.5" />
+        </button>
+        <div className={cn(
+          "max-w-[85%] sm:max-w-[65%] px-4 py-2.5 rounded-2xl rounded-br-md text-chat text-foreground whitespace-pre-wrap",
+          failed ? "bg-danger-soft border border-danger-soft-border" : "bg-muted border border-border",
+        )}>
+          {content}
+        </div>
       </div>
+      {/* Failed sends get a permanent, not hover-only, marker - the whole
+          point is to be visible without the reader having to guess to
+          hover over the exact question that didn't go through. A normal
+          send's timestamp stays hover-only (see the ChatGPT/Claude
+          precedent this thread otherwise follows) since there's nothing
+          urgent about it. */}
+      {failed ? (
+        <button onClick={onRetry} className="flex items-center gap-1 text-meta-xs text-danger-soft-fg mt-1 mr-1 hover:underline">
+          <AlertCircle className="w-3 h-3" />
+          Failed to send &middot; Retry
+        </button>
+      ) : (
+        <span className="text-meta-xs text-muted-foreground mt-1 mr-1 opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true">
+          {formatMessageTime(timestamp)}
+        </span>
+      )}
     </div>
   )
 }
@@ -383,6 +429,23 @@ export default function QueryPage() {
   const [serverHistory, setServerHistory] = useState<Array<{ id: number; query: string; confidence: number; query_type: string; timestamp: string }>>([])
   const [readingLevel, setReadingLevel] = useState<ReadingLevel>("clinical")
   const { phi, phiAcknowledged, setPhiAcknowledged, scanForPhiBeforeSend } = usePhiGuard(query)
+
+  // Real connectivity state, not a guess - the browser's own online/offline
+  // events (fired on actual network interface changes, not on a single
+  // failed fetch, which could just as easily be a backend hiccup with the
+  // network itself fine). Lazy-initialized from navigator.onLine so the
+  // banner doesn't flash on a page that loaded offline.
+  const [isOnline, setIsOnline] = useState(() => typeof navigator === "undefined" || navigator.onLine)
+  useEffect(() => {
+    const goOnline = () => setIsOnline(true)
+    const goOffline = () => setIsOnline(false)
+    window.addEventListener("online", goOnline)
+    window.addEventListener("offline", goOffline)
+    return () => {
+      window.removeEventListener("online", goOnline)
+      window.removeEventListener("offline", goOffline)
+    }
+  }, [])
 
   // Lets Stop actually cancel an in-flight generation - see handleStop.
   const abortControllerRef = useRef<AbortController | null>(null)
@@ -490,6 +553,30 @@ export default function QueryPage() {
     } catch { /* ignore */ }
   }, [])
 
+  // Draft persistence: an unsent composer draft survives a reload/tab close,
+  // the same way Gmail/Slack keep an unsent draft. Restored once on mount
+  // (not tied to a specific session - a draft you were mid-typing when you
+  // opened a past conversation or closed the tab is still worth getting
+  // back). Saved with a short debounce rather than on every keystroke, and
+  // cleared the instant a message actually sends (see handleSubmit).
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(DRAFT_QUERY_KEY)
+      if (saved) setQuery(saved)
+    } catch { /* ignore */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      try {
+        if (query.trim()) localStorage.setItem(DRAFT_QUERY_KEY, query)
+        else localStorage.removeItem(DRAFT_QUERY_KEY)
+      } catch { /* ignore */ }
+    }, 400)
+    return () => clearTimeout(t)
+  }, [query])
+
   const changeReadingLevel = (v: ReadingLevel) => {
     setReadingLevel(v)
     try { localStorage.setItem(READING_LEVEL_KEY, v) } catch { /* ignore */ }
@@ -512,7 +599,7 @@ export default function QueryPage() {
         for (const m of session.messages) {
           if (m.role === "user") {
             pendingQuery = String(m.content ?? "")
-            restored.push({ id: nextId(), role: "user" as const, content: pendingQuery })
+            restored.push({ id: nextId(), role: "user" as const, content: pendingQuery, createdAt: m.created_at ? new Date(m.created_at).getTime() : Date.now() })
             continue
           }
           const extra = (m.extra && typeof m.extra === "object") ? m.extra : {}
@@ -708,10 +795,72 @@ export default function QueryPage() {
     }
   }, [showConversations])
 
+  // Keyboard shortcuts: "/" focuses the composer from anywhere on the page
+  // (Slack/Linear convention), Ctrl/Cmd+Shift+O starts a new chat (the same
+  // binding ChatGPT and Claude both use, so it's muscle memory rather than
+  // something to learn). Both are ignored while focus is already inside a
+  // text field, so they never hijack normal typing - "/" as the first
+  // character of a real message is a legitimate thing to type.
+  useEffect(() => {
+    const isTypingTarget = (el: Element | null) => {
+      if (!el) return false
+      const tag = el.tagName
+      return tag === "INPUT" || tag === "TEXTAREA" || (el as HTMLElement).isContentEditable
+    }
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "o") {
+        e.preventDefault()
+        resetConversation()
+        return
+      }
+      if (e.key === "/" && !isTypingTarget(document.activeElement)) {
+        e.preventDefault()
+        textareaRef.current?.focus()
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown)
+    return () => document.removeEventListener("keydown", handleKeyDown)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const handleOpenConversation = async (id: number) => {
     setShowConversations(false)
     const ok = await loadSession(String(id))
     if (ok) { try { localStorage.setItem(CHAT_SESSION_KEY, String(id)) } catch { /* ignore */ } }
+  }
+
+  // Conversation-level export - the whole thread as shown, not a single
+  // re-run query (that's what Print Report/api/query/export already did
+  // per-answer, and re-running every question in a long thread just to
+  // export it would be slow and could legitimately answer differently the
+  // second time). Built entirely from `messages`, the same data already on
+  // screen - no network call, so what's exported is exactly what was seen.
+  const handleExportConversation = () => {
+    if (messages.length === 0) return
+    const lines: string[] = [
+      "# Meridian Conversation Export",
+      `Exported ${new Date().toLocaleString()}`,
+      "Research prototype. Not for clinical use.",
+      "",
+    ]
+    for (const m of messages) {
+      if (m.role === "user") {
+        lines.push(`## Q — ${formatMessageTime(m.createdAt)}`, m.content, "")
+      } else {
+        lines.push(`### A${m.data.error ? " (failed)" : ""}`, m.data.answer || "(no answer)")
+        if (m.data.sources.length > 0) {
+          lines.push("", `Sources: ${m.data.sources.map(s => s.sop_title).filter(Boolean).join(", ")}`)
+        }
+        lines.push("")
+      }
+    }
+    const blob = new Blob([lines.join("\n")], { type: "text/markdown;charset=utf-8" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `meridian-conversation-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}.md`
+    a.click()
+    URL.revokeObjectURL(url)
   }
 
   const handleDeleteConversation = async (id: number, e: React.MouseEvent) => {
@@ -793,7 +942,8 @@ export default function QueryPage() {
     }
 
     setQuery("")
-    if (!skipUserMessage) setMessages(prev => [...prev, { id: nextId(), role: "user", content: q }])
+    try { localStorage.removeItem(DRAFT_QUERY_KEY) } catch { /* ignore */ }
+    if (!skipUserMessage) setMessages(prev => [...prev, { id: nextId(), role: "user", content: q, createdAt: Date.now() }])
     setLoading(true)
     setStreamingText("")
     setRevealedText("")
@@ -964,6 +1114,18 @@ export default function QueryPage() {
   const canSend = !!query.trim() && !loading && !(phi?.has_phi && !phiAcknowledged)
 
   const composer = (
+    <>
+      {/* Only appears when genuinely offline (see the isOnline effect above)
+          - not shown for a single failed request, which is already handled
+          per-message by the error card and the failed-to-send marker on the
+          question bubble. This is specifically "your device has no network
+          connection right now", the one case both of those can't explain. */}
+      {!isOnline && (
+        <div className="flex items-center gap-1.5 px-3 py-1.5 mb-2 rounded-lg bg-warn-soft border border-warn-soft-border text-meta-xs text-warn-soft-fg">
+          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+          You're offline - messages won't send until your connection is back.
+        </div>
+      )}
     <div className="rounded-2xl border border-border bg-muted focus-within:ring-2 focus-within:ring-primary/40 transition-shadow">
       <textarea
         ref={textareaRef}
@@ -975,7 +1137,24 @@ export default function QueryPage() {
         rows={1}
         className="w-full bg-transparent border-0 px-4 pt-3.5 pb-1 resize-none focus:outline-none focus:ring-0 text-foreground placeholder:text-subtle caret-primary text-compose max-h-[200px] overflow-y-auto"
       />
-      <div className="flex items-center justify-end gap-1.5 px-2.5 pb-2.5">
+      <div className="flex items-center justify-between gap-1.5 px-2.5 pb-2.5">
+        {/* Only appears once it's actually true - the backend truncates
+            each turn to 200 chars when building context for a later
+            follow-up (routes_chat.py's history_lines), so a long question
+            silently loses its tail from the model's point of view on
+            future turns even though the full text is still shown and
+            answered now. A permanent counter under every keystroke would
+            be noise; this only says something once there's something to
+            say. */}
+        {query.length > 200 ? (
+          <span
+            className="text-meta-xs text-muted-foreground shrink-0"
+            title="Only the first 200 characters of this message will be remembered if you ask a follow-up later - the full text is still used to answer it now."
+          >
+            {query.length} chars &middot; first 200 remembered later
+          </span>
+        ) : <span />}
+        <div className="flex items-center gap-1.5 shrink-0">
         {voiceInputEnabled && (
           <VoiceRecorder onTranscript={(t) => {
             // Append to, rather than replace, anything already typed -
@@ -992,6 +1171,7 @@ export default function QueryPage() {
           className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-primary hover:bg-primary-hover disabled:opacity-40 disabled:cursor-not-allowed text-primary-foreground transition-colors shrink-0">
           {loading ? <Square className="w-3.5 h-3.5 fill-current" /> : <Send className="w-4 h-4" />}
         </button>
+        </div>
       </div>
       {/* Only surfaces when a patient identifier is actually detected - a
           permanent "all clear" line under every keystroke is reassurance
@@ -1019,6 +1199,7 @@ export default function QueryPage() {
         </div>
       )}
     </div>
+    </>
   )
 
   // Focus-mode chrome (see AppShell's chrome="minimal"): New chat,
@@ -1045,10 +1226,22 @@ export default function QueryPage() {
         {showConversations && (
           <motion.div initial={{ opacity: 0, y: -6, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }}
             className="absolute right-0 top-full mt-1.5 z-30 w-80 max-w-[calc(100vw-2rem)] p-4 rounded-2xl bg-card border border-border shadow-lg">
-            <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-              <MessageSquare className="w-4 h-4 text-primary" />
-              Conversations
-            </h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold flex items-center gap-2">
+                <MessageSquare className="w-4 h-4 text-primary" />
+                Conversations
+              </h3>
+              {/* Exports the thread currently open, not whichever row is
+                  hovered - conversations in the list below aren't loaded
+                  into `messages` unless clicked open first. */}
+              {messages.length > 0 && (
+                <button onClick={handleExportConversation} title="Export this conversation" aria-label="Export this conversation"
+                  className="inline-flex items-center gap-1 text-meta-xs font-medium text-muted-foreground hover:text-foreground px-1.5 py-1 rounded-lg hover:bg-muted transition-colors">
+                  <Download className="w-3.5 h-3.5" />
+                  Export
+                </button>
+              )}
+            </div>
             {conversations === null ? (
               <p className="text-sm text-muted-foreground py-4 text-center">Loading…</p>
             ) : conversations.length === 0 ? (
@@ -1180,32 +1373,62 @@ export default function QueryPage() {
             styling already expects elsewhere). */}
         <div className="flex flex-col">
           {messages.map((m, idx) => {
+            // A day divider only when the calendar day actually changed
+            // since the previous message - most conversations happen in
+            // one sitting and never trigger this.
+            const prevTs = idx > 0 ? messageTimestamp(messages[idx - 1]) : null
+            const ts = messageTimestamp(m)
+            const showDivider = prevTs !== null && new Date(prevTs).toDateString() !== new Date(ts).toDateString()
+            const divider = showDivider ? (
+              <div className="flex items-center justify-center mt-8 mb-2" role="separator" aria-label={dayDividerLabel(ts)}>
+                <span className="text-meta-xs font-medium text-muted-foreground px-3 py-1 rounded-full bg-muted">
+                  {dayDividerLabel(ts)}
+                </span>
+              </div>
+            ) : null
+
             if (m.role === "user") {
+              // The answer to this question is the very next message in the
+              // thread (messages are always appended in question/answer
+              // pairs) - if it exists and came back as an error, the send
+              // itself effectively failed, so the question bubble gets its
+              // own failed-state marker rather than leaving the only signal
+              // on the answer card below it.
+              const next = messages[idx + 1]
+              const failed = next?.role === "assistant" && !!next.data.error
               return (
-                <div key={m.id} id={`msg-${m.id}`} className={cn("scroll-mt-20", idx > 0 && "mt-10")}>
-                  <UserMessageBubble content={m.content} onEdit={(newText) => handleEditResend(m.id, newText)} />
+                <div key={m.id}>
+                  {divider}
+                  <div id={`msg-${m.id}`} className={cn("scroll-mt-20", idx > 0 && !showDivider && "mt-10")}>
+                    <UserMessageBubble content={m.content} timestamp={m.createdAt} failed={failed}
+                      onEdit={(newText) => handleEditResend(m.id, newText)}
+                      onRetry={() => handleSubmit(m.content)} />
+                  </div>
                 </div>
               )
             }
             const isLatest = m.id === lastAssistantId
             return (
-              // The ref only matters for the latest message (see the
-              // spacer effect's settle branch, which measures it the
-              // instant `loading` flips false) - harmless no-op for
-              // every earlier message. mt-4 gives the question->answer gap
-              // its own margin - excluded from this element's offsetHeight,
-              // so it can only ever make the scroll spacer over-reserve by
-              // a frame, never under-reserve (see the spacerPx effect).
-              <div key={m.id} ref={isLatest ? lastMessageRef : undefined} className="mt-4">
-                <ChatAnswerMessage
-                  data={m.data}
-                  onFollowup={(q) => handleSubmit(q)}
-                  onRetry={m.data.error ? () => handleSubmit(m.data.query) : undefined}
-                  onRegenerate={isLatest && !m.data.error && !m.data.stopped ? () => handleRegenerate(m.data.query) : undefined}
-                  readingLevel={readingLevel}
-                  onReadingLevelChange={changeReadingLevel}
-                  isLatest={isLatest}
-                />
+              <div key={m.id}>
+                {divider}
+                {/* The ref only matters for the latest message (see the
+                    spacer effect's settle branch, which measures it the
+                    instant `loading` flips false) - harmless no-op for
+                    every earlier message. mt-4 gives the question->answer gap
+                    its own margin - excluded from this element's offsetHeight,
+                    so it can only ever make the scroll spacer over-reserve by
+                    a frame, never under-reserve (see the spacerPx effect). */}
+                <div ref={isLatest ? lastMessageRef : undefined} className="mt-4">
+                  <ChatAnswerMessage
+                    data={m.data}
+                    onFollowup={(q) => handleSubmit(q)}
+                    onRetry={m.data.error ? () => handleSubmit(m.data.query) : undefined}
+                    onRegenerate={isLatest && !m.data.error && !m.data.stopped ? () => handleRegenerate(m.data.query) : undefined}
+                    readingLevel={readingLevel}
+                    onReadingLevelChange={changeReadingLevel}
+                    isLatest={isLatest}
+                  />
+                </div>
               </div>
             )
           })}

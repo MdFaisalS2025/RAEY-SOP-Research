@@ -16,11 +16,11 @@ import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   ShieldCheck, AlertTriangle, FileText, ExternalLink, GitCompare, History,
-  BookOpen, Printer, PlusCircle, HelpCircle,
+  BookOpen, Printer, PlusCircle, HelpCircle, Shield,
   Check, Loader2, CheckCircle2, ClipboardEdit, Languages, RotateCcw, Square, Copy, Info,
 } from "lucide-react"
 import { type InlineCitation } from "@/components/query/citation-chip"
-import { cn } from "@/lib/utils"
+import { cn, formatMessageTime } from "@/lib/utils"
 import { Card } from "@/components/ui/card"
 import { IconTile } from "@/components/ui/icon-tile"
 import { EvidenceDrawer } from "@/components/query/evidence-drawer"
@@ -400,17 +400,27 @@ export function ChatAnswerMessage({
         )}
       </AnimatePresence>
 
-      {/* Message header - one caption line only (SOP + version, generation
-          mode, context-degraded notice). No dashboard chrome (grounding-bar
-          pills / staleness banner / quick facts all removed from the main
-          flow; review status lives in Trust & Audit). Collapse and the
-          reading-level toggle used to live here as always-visible chrome
-          above every answer before the reader had read a word - collapse is
-          gone (the thread scrolls; collapsing is a panel idiom this isn't),
-          and reading level moved into the action toolbar's overflow menu
-          below. */}
-      {(metadataLine || generationTag || data.contextDegraded) && (
+      {/* Message header - a role label plus one caption line (SOP + version,
+          generation mode, context-degraded notice). No dashboard chrome
+          (grounding-bar pills / staleness banner / quick facts all removed
+          from the main flow; review status lives in Trust & Audit).
+          Collapse and the reading-level toggle used to live here as
+          always-visible chrome above every answer before the reader had
+          read a word - collapse is gone (the thread scrolls; collapsing is
+          a panel idiom this isn't), and reading level moved into the action
+          toolbar's overflow menu below. Always rendered now (not gated on
+          metadataLine/generationTag existing) because the role label
+          itself - the one thing distinguishing "Meridian answered" from
+          "you asked" beyond the user bubble's own right-alignment - has to
+          be unconditional to mean anything. */}
         <div className="min-w-0 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-meta px-1">
+          <span className="inline-flex items-center gap-1.5 shrink-0" title="Meridian">
+            <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-primary/10">
+              <Shield className="w-2.5 h-2.5 text-primary" />
+            </span>
+            <span className="text-muted-foreground font-medium">Meridian</span>
+          </span>
+          {(metadataLine || generationTag || data.contextDegraded) && <span className="text-subtle">·</span>}
           {metadataLine && <span className="text-muted-foreground">{metadataLine}</span>}
           {generationTag && (
             <>
@@ -434,8 +444,12 @@ export function ChatAnswerMessage({
               </span>
             </>
           )}
+          {data.answeredAt > 0 && (
+            <span className="text-meta-xs text-muted-foreground/70 ml-auto shrink-0" title={new Date(data.answeredAt).toLocaleString()}>
+              {formatMessageTime(data.answeredAt)}
+            </span>
+          )}
         </div>
-      )}
 
       {isAbstained ? (
         <Card padding="lg" className="sm:p-8">

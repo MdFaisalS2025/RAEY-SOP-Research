@@ -311,6 +311,11 @@ class ChatSessionRecord(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     title = Column(String(512), default="")
     created_at = Column(DateTime, default=_utcnow)
+    # Owner (StaffUser.id). Nullable - rows created before this column existed
+    # have no owner on record; routes_chat.py treats NULL as legacy/visible
+    # rather than as "belongs to nobody, therefore hidden from everybody",
+    # so pre-migration sessions don't silently disappear.
+    user_id = Column(Integer, nullable=True)
 
     messages = relationship(
         "ChatMessageRecord", back_populates="session", cascade="all, delete-orphan"
@@ -343,7 +348,13 @@ class ChatMessageRecord(Base):
 
 
 class NotificationRecord(Base):
-    """A real-event notification for the UI."""
+    """A real-event notification for the UI. Broadcast, not per-user - one
+    row is shared by every role it's relevant to (e.g. "a proposal needs
+    review" is the same notification for every governance_compliance
+    account). `read` is legacy and no longer written to by routes_governance.py
+    - it made "read" a single fact shared by everyone, so one user opening a
+    notification silently cleared it for every other user who hadn't seen it
+    yet. Real per-user read state now lives in NotificationReadRecord."""
     __tablename__ = "notification_records"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -355,6 +366,21 @@ class NotificationRecord(Base):
     read = Column(Boolean, default=False)
     link = Column(String(512), default="")
     created_at = Column(DateTime, default=_utcnow)
+
+
+class NotificationReadRecord(Base):
+    """Per-user read receipt for a broadcast NotificationRecord. One row per
+    (notification, user) that has actually seen it - existence means read,
+    absence means unread for that user. A brand-new table (not an ALTER-added
+    column), so Base.metadata.create_all handles it with no migration step -
+    see db.py's init_db, which must import this class for create_all to
+    find it."""
+    __tablename__ = "notification_read_records"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    notification_id = Column(Integer, nullable=False, index=True)
+    user_id = Column(Integer, nullable=False, index=True)
+    read_at = Column(DateTime, default=_utcnow)
 
 
 # ── Override capture ───────────────────────────────────────────

@@ -23,6 +23,7 @@ from app.models.models import (
     AcknowledgmentRecord,
     QueryLogRecord,
     NotificationRecord,
+    NotificationReadRecord,
     SOP,
     StaffUser,
 )
@@ -646,7 +647,7 @@ async def query_log(limit: int = 50, db: AsyncSession = Depends(get_db)):
 # ── Notifications ──────────────────────────────────────────────
 
 
-def _notification_dict(n: NotificationRecord) -> dict:
+def _notification_dict(n: NotificationRecord, read_ids: set[int]) -> dict:
     return {
         "id": n.id,
         "type": n.type,
@@ -654,7 +655,7 @@ def _notification_dict(n: NotificationRecord) -> dict:
         "description": n.description,
         "priority": n.priority,
         "tier": n.tier or "passive",
-        "read": bool(n.read),
+        "read": n.id in read_ids,
         "link": n.link,
         "created_at": n.created_at.isoformat() if n.created_at else "",
     }
@@ -664,12 +665,20 @@ def _notification_dict(n: NotificationRecord) -> dict:
 async def list_notifications(
     limit: int = QueryParam(20, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
+    user: StaffUser = Depends(get_current_user),
 ):
+    """Read state is per-viewer (NotificationReadRecord), not the shared
+    NotificationRecord.read column - see that model's docstring for why."""
     result = await db.execute(
         select(NotificationRecord).order_by(NotificationRecord.created_at.desc()).limit(limit)
     )
     rows = result.scalars().all()
-    unread = sum(1 for r in rows if not r.read)
+
+    read_ids_result = await db.execute(
+        select(NotificationReadRecord.notification_id).where(NotificationReadRecord.user_id == user.id)
+    )
+    read_ids = set(read_ids_result.scalars().all())
+    unread = sum(1 for r in rows if r.id not in read_ids)
 
     today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
     today_count_result = await db.execute(
@@ -680,7 +689,7 @@ async def list_notifications(
     )
     interruptive_count_today = today_count_result.scalar() or 0
     return {
-        "notifications": [_notification_dict(r) for r in rows],
+        "notifications": [_notification_dict(r, read_ids) for r in rows],
         "unread_count": unread,
         "interruptive_count_today": interruptive_count_today,
     }
@@ -692,14 +701,20 @@ async def mark_notification_read(
     db: AsyncSession = Depends(get_db),
     user: StaffUser = Depends(get_current_user),
 ):
-    result = await db.execute(
-        select(NotificationRecord).where(NotificationRecord.id == notification_id)
-    )
-    record = result.scalar_one_or_none()
-    if record is None:
+    exists = (await db.execute(
+        select(NotificationRecord.id).where(NotificationRecord.id == notification_id)
+    )).scalar_one_or_none()
+    if exists is None:
         raise HTTPException(status_code=404, detail=f"Notification {notification_id} not found.")
-    record.read = True
-    await db.commit()
+    already = (await db.execute(
+        select(NotificationReadRecord.id).where(
+            NotificationReadRecord.notification_id == notification_id,
+            NotificationReadRecord.user_id == user.id,
+        )
+    )).scalar_one_or_none()
+    if already is None:
+        db.add(NotificationReadRecord(notification_id=notification_id, user_id=user.id))
+        await db.commit()
     return {"ok": True}
 
 
@@ -708,12 +723,15 @@ async def mark_all_notifications_read(
     db: AsyncSession = Depends(get_db),
     user: StaffUser = Depends(get_current_user),
 ):
-    result = await db.execute(select(NotificationRecord).where(NotificationRecord.read == False))  # noqa: E712
-    rows = result.scalars().all()
-    for r in rows:
-        r.read = True
+    all_ids = set((await db.execute(select(NotificationRecord.id))).scalars().all())
+    already_read = set((await db.execute(
+        select(NotificationReadRecord.notification_id).where(NotificationReadRecord.user_id == user.id)
+    )).scalars().all())
+    to_mark = all_ids - already_read
+    for notification_id in to_mark:
+        db.add(NotificationReadRecord(notification_id=notification_id, user_id=user.id))
     await db.commit()
-    return {"ok": True, "marked": len(rows)}
+    return {"ok": True, "marked": len(to_mark)}
 
 
 async def seed_notifications_if_empty(db: AsyncSession) -> None:

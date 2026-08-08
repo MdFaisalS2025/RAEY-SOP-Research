@@ -72,7 +72,7 @@ async def init_db() -> None:
             SOP, SOPChunk, Query, Feedback, SOPUpdate,
             ProposalRecord, VoteRecord, AttestationRecord,
             AcknowledgmentRecord, QueryLogRecord,
-            ChatSessionRecord, ChatMessageRecord, NotificationRecord,
+            ChatSessionRecord, ChatMessageRecord, NotificationRecord, NotificationReadRecord,
             OverrideRecord, CreditRecord,
             IncidentRecord, CAPARecord, ExceptionRecord,
             SOPVersionRecord, SOPGapReportRecord,
@@ -164,6 +164,11 @@ async def init_db() -> None:
         # stored span, purpose-built for that check. NULL-able, no default -
         # see models.py.
         "ALTER TABLE sop_chunks ADD COLUMN offset_anchor TEXT",
+        # Chat session ownership: without this, any authenticated user could
+        # list, open, or delete any other user's conversation (no user_id
+        # column existed to check against at all). NULL-able, no default -
+        # see models.py and routes_chat.py's NULL-is-legacy handling.
+        "ALTER TABLE chat_session_records ADD COLUMN user_id INTEGER",
     ):
         try:
             from sqlalchemy import text

@@ -15,14 +15,25 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.db import get_db
-from app.models.models import ChatSessionRecord, ChatMessageRecord
+from app.models.models import ChatSessionRecord, ChatMessageRecord, StaffUser
 from app.agents.pipeline import MeridianPipeline
 from app.services.chunk_loader import load_chunks
 from app.services.activity import log_activity
 from app.services.query_log import log_query_result
 from app.privacy.phi_guard import get_phi_provider
+from app.services.auth import get_current_user
 
 router = APIRouter(tags=["Chat"])
+
+
+def _assert_owns(session: ChatSessionRecord, user: StaffUser, session_id: int) -> None:
+    """Raise 404 (not 403) if `session` belongs to someone else, so a
+    guessed/enumerated session_id can't even confirm another user's session
+    exists. NULL user_id means the row predates this ownership column
+    (created before the migration) - treated as legacy/visible rather than
+    unowned-therefore-hidden, so pre-existing sessions don't vanish."""
+    if session.user_id is not None and session.user_id != user.id:
+        raise HTTPException(status_code=404, detail=f"Chat session {session_id} not found.")
 
 
 def _audit_phi(content: str) -> None:
@@ -67,10 +78,13 @@ def _message_to_dict(m: ChatMessageRecord) -> dict:
 
 
 @router.post("/api/chat/sessions")
-async def create_session(req: Optional[ChatSessionCreate] = None, db: AsyncSession = Depends(get_db)):
-    """Create a new chat session."""
+async def create_session(
+    req: Optional[ChatSessionCreate] = None, db: AsyncSession = Depends(get_db),
+    user: StaffUser = Depends(get_current_user),
+):
+    """Create a new chat session, owned by the authenticated caller."""
     title = (req.title if req else "") or "New conversation"
-    session = ChatSessionRecord(title=title)
+    session = ChatSessionRecord(title=title, user_id=user.id)
     db.add(session)
     await db.flush()
     return {
@@ -81,13 +95,19 @@ async def create_session(req: Optional[ChatSessionCreate] = None, db: AsyncSessi
 
 
 @router.get("/api/chat/sessions")
-async def list_sessions(limit: int = 50, db: AsyncSession = Depends(get_db)):
+async def list_sessions(
+    limit: int = 50, db: AsyncSession = Depends(get_db),
+    user: StaffUser = Depends(get_current_user),
+):
     """List chat sessions, most recent first, for the conversation sidebar.
     Sessions with zero messages (created but abandoned - e.g. the request
     that would have sent the first message failed) are left out rather
-    than shown as an empty, unopenable row."""
+    than shown as an empty, unopenable row. Scoped to the caller's own
+    sessions plus any legacy (NULL user_id) rows - see _assert_owns."""
     sessions = (await db.execute(
-        select(ChatSessionRecord).order_by(ChatSessionRecord.created_at.desc()).limit(limit)
+        select(ChatSessionRecord)
+        .where((ChatSessionRecord.user_id == user.id) | (ChatSessionRecord.user_id.is_(None)))
+        .order_by(ChatSessionRecord.created_at.desc()).limit(limit)
     )).scalars().all()
     result = []
     for s in sessions:
@@ -106,26 +126,34 @@ async def list_sessions(limit: int = 50, db: AsyncSession = Depends(get_db)):
 
 
 @router.delete("/api/chat/sessions/{session_id}")
-async def delete_session(session_id: int, db: AsyncSession = Depends(get_db)):
+async def delete_session(
+    session_id: int, db: AsyncSession = Depends(get_db),
+    user: StaffUser = Depends(get_current_user),
+):
     """Delete a chat session and its messages (cascade)."""
     session = (await db.execute(
         select(ChatSessionRecord).where(ChatSessionRecord.id == session_id)
     )).scalar_one_or_none()
     if not session:
         raise HTTPException(status_code=404, detail=f"Chat session {session_id} not found.")
+    _assert_owns(session, user, session_id)
     await db.delete(session)
     await db.commit()
     return {"deleted": True}
 
 
 @router.get("/api/chat/sessions/{session_id}")
-async def get_session(session_id: int, db: AsyncSession = Depends(get_db)):
+async def get_session(
+    session_id: int, db: AsyncSession = Depends(get_db),
+    user: StaffUser = Depends(get_current_user),
+):
     """Get a chat session with all its messages."""
     session = (await db.execute(
         select(ChatSessionRecord).where(ChatSessionRecord.id == session_id)
     )).scalar_one_or_none()
     if not session:
         raise HTTPException(status_code=404, detail=f"Chat session {session_id} not found.")
+    _assert_owns(session, user, session_id)
 
     messages = (await db.execute(
         select(ChatMessageRecord)
@@ -243,7 +271,8 @@ async def _try_special_intent(pipeline, db: AsyncSession, query: str):
 
 @router.post("/api/chat/sessions/{session_id}/messages")
 async def post_message(
-    session_id: int, req: ChatMessageCreate, db: AsyncSession = Depends(get_db)
+    session_id: int, req: ChatMessageCreate, db: AsyncSession = Depends(get_db),
+    user: StaffUser = Depends(get_current_user),
 ):
     """Send a message in a chat session and get a pipeline-generated answer."""
     session = (await db.execute(
@@ -251,6 +280,7 @@ async def post_message(
     )).scalar_one_or_none()
     if not session:
         raise HTTPException(status_code=404, detail=f"Chat session {session_id} not found.")
+    _assert_owns(session, user, session_id)
 
     history, history_context = await _build_context(session_id, db)
     # Retrieval runs on the new message alone (retrieval_query defaults to
@@ -292,7 +322,8 @@ async def post_message(
 
 @router.post("/api/chat/sessions/{session_id}/messages/stream")
 async def post_message_stream(
-    session_id: int, req: ChatMessageCreate, db: AsyncSession = Depends(get_db)
+    session_id: int, req: ChatMessageCreate, db: AsyncSession = Depends(get_db),
+    user: StaffUser = Depends(get_current_user),
 ):
     """Streaming variant of post_message: tokens arrive live over SSE, the
     final event carries the same payload shape (plus session_id/message_id)
@@ -303,6 +334,7 @@ async def post_message_stream(
     )).scalar_one_or_none()
     if not session:
         raise HTTPException(status_code=404, detail=f"Chat session {session_id} not found.")
+    _assert_owns(session, user, session_id)
 
     history, history_context = await _build_context(session_id, db)
     # See the matching comment in post_message above: context_query (not

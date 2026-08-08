@@ -17,8 +17,9 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 import app.models.models  # noqa: F401 - register models on Base
 from app.main import app as fastapi_app
 from app.database.db import Base, get_db
-from app.models.models import SOP, SOPChunk, SOPVersionRecord
+from app.models.models import SOP, SOPChunk, SOPVersionRecord, StaffUser
 from app.services.sop_comparison import REFERENCE_PROTOCOLS
+from app.services.auth import get_current_user
 
 
 async def _seed_sepsis_sop(session_factory):
@@ -82,11 +83,21 @@ async def client_with_sop(tmp_path):
                 await session.rollback()
                 raise
 
+    # Chat session endpoints now require a session (ownership check) -
+    # fixed-identity override, same pattern as test_chat_cds_entity_notifications.py.
+    async def _override_current_user() -> StaffUser:
+        return StaffUser(
+            id=1, staff_id="test-admin", name="Test Admin", role="system_admin",
+            department="Test", title="Test", password_hash="",
+        )
+
     fastapi_app.dependency_overrides[get_db] = _override_get_db
+    fastapi_app.dependency_overrides[get_current_user] = _override_current_user
     transport = ASGITransport(app=fastapi_app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
     fastapi_app.dependency_overrides.pop(get_db, None)
+    fastapi_app.dependency_overrides.pop(get_current_user, None)
     await engine.dispose()
 
 

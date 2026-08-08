@@ -97,11 +97,21 @@ async def client_with_sop(tmp_path):
                 await session.rollback()
                 raise
 
+    # Chat session endpoints now require a session (ownership check) - fixed-
+    # identity override, same as `client` above.
+    async def _override_current_user() -> StaffUser:
+        return StaffUser(
+            id=1, staff_id="test-admin", name="Test Admin", role="system_admin",
+            department="Test", title="Test", password_hash="",
+        )
+
     fastapi_app.dependency_overrides[get_db] = _override_get_db
+    fastapi_app.dependency_overrides[get_current_user] = _override_current_user
     transport = ASGITransport(app=fastapi_app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
     fastapi_app.dependency_overrides.pop(get_db, None)
+    fastapi_app.dependency_overrides.pop(get_current_user, None)
     await engine.dispose()
 
 
@@ -161,6 +171,53 @@ async def test_chat_message_logs_query_with_route(client_with_sop):
 async def test_chat_session_not_found(client):
     resp = await client.get("/api/chat/sessions/999999")
     assert resp.status_code == 404
+
+
+async def test_chat_session_ownership_blocks_other_users(client):
+    """The real gap this closes: routes_chat.py previously had no user_id
+    column to check at all, so any authenticated user could list, open, or
+    delete any other user's conversation. Created as user 1 (the `client`
+    fixture's fixed identity); re-override to user 2 mid-test to prove that
+    user can't read, post into, or delete user 1's session - each surfaces
+    as a 404, not a 403, so a guessed session_id can't even confirm the
+    session exists."""
+    created = await client.post("/api/chat/sessions", json={"title": "User 1's session"})
+    session_id = created.json()["id"]
+
+    async def _override_as_user_2() -> StaffUser:
+        return StaffUser(
+            id=2, staff_id="test-other", name="Other User", role="clinical_staff",
+            department="Test", title="Test", password_hash="",
+        )
+
+    fastapi_app.dependency_overrides[get_current_user] = _override_as_user_2
+    try:
+        got = await client.get(f"/api/chat/sessions/{session_id}")
+        assert got.status_code == 404
+
+        posted = await client.post(
+            f"/api/chat/sessions/{session_id}/messages", json={"content": "snooping"}
+        )
+        assert posted.status_code == 404
+
+        deleted = await client.delete(f"/api/chat/sessions/{session_id}")
+        assert deleted.status_code == 404
+
+        listed = await client.get("/api/chat/sessions")
+        assert session_id not in [s["id"] for s in listed.json()["sessions"]]
+    finally:
+        # Restore user 1 so the fixture's own teardown pop() targets the
+        # override it actually installed.
+        async def _override_current_user() -> StaffUser:
+            return StaffUser(
+                id=1, staff_id="test-admin", name="Test Admin", role="system_admin",
+                department="Test", title="Test", password_hash="",
+            )
+        fastapi_app.dependency_overrides[get_current_user] = _override_current_user
+
+    # User 1 (the owner) can still reach it.
+    still_owner = await client.get(f"/api/chat/sessions/{session_id}")
+    assert still_owner.status_code == 200
 
 
 # ── CDS Hooks ────────────────────────────────────────────────────
@@ -309,3 +366,78 @@ async def test_notifications_crud(client):
 async def test_mark_missing_notification_404(client):
     resp = await client.post("/api/notifications/999999/read")
     assert resp.status_code == 404
+
+
+@pytest.fixture
+async def client_with_notification(tmp_path):
+    """Same isolated-DB pattern as `client`, but seeds one real
+    NotificationRecord directly (there's no public POST endpoint to create
+    one - they're only emitted internally via _emit_notification), so the
+    per-user read-state test below has something real to mark read."""
+    from app.models.models import NotificationRecord
+
+    db_url = f"sqlite+aiosqlite:///{tmp_path / 'test_notif.db'}"
+    engine = create_async_engine(db_url, connect_args={"check_same_thread": False})
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    TestSession = async_sessionmaker(engine, expire_on_commit=False)
+
+    async with TestSession() as session:
+        session.add(NotificationRecord(
+            type="info", title="Test notification", description="",
+            priority="normal", tier="passive",
+        ))
+        await session.commit()
+
+    async def _override_get_db():
+        async with TestSession() as session:
+            try:
+                yield session
+                await session.commit()
+            except Exception:
+                await session.rollback()
+                raise
+
+    fastapi_app.dependency_overrides[get_db] = _override_get_db
+    transport = ASGITransport(app=fastapi_app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        yield ac
+    fastapi_app.dependency_overrides.pop(get_db, None)
+    await engine.dispose()
+
+
+async def test_notification_read_state_is_per_user(client_with_notification):
+    """The real bug this closes: NotificationRecord.read used to be one
+    boolean shared by every viewer, so user A marking a notification read
+    silently cleared it for user B too, even though B never opened it."""
+    client = client_with_notification
+
+    async def _as_user(user_id: str, role: str = "clinical_staff"):
+        async def _override() -> StaffUser:
+            return StaffUser(
+                id=1 if user_id == "user-a" else 2, staff_id=user_id, name=user_id,
+                role=role, department="Test", title="Test", password_hash="",
+            )
+        fastapi_app.dependency_overrides[get_current_user] = _override
+
+    await _as_user("user-a")
+    listed = await client.get("/api/notifications")
+    notification_id = listed.json()["notifications"][0]["id"]
+    assert listed.json()["notifications"][0]["read"] is False
+    assert listed.json()["unread_count"] == 1
+
+    marked = await client.post(f"/api/notifications/{notification_id}/read")
+    assert marked.status_code == 200
+
+    # User A now sees it as read.
+    after_a = await client.get("/api/notifications")
+    assert after_a.json()["notifications"][0]["read"] is True
+    assert after_a.json()["unread_count"] == 0
+
+    # User B, who never marked anything, still sees it unread.
+    await _as_user("user-b")
+    as_b = await client.get("/api/notifications")
+    assert as_b.json()["notifications"][0]["read"] is False
+    assert as_b.json()["unread_count"] == 1
+
+    fastapi_app.dependency_overrides.pop(get_current_user, None)

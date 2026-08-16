@@ -12,7 +12,7 @@ string, so they are correct by construction, not estimated.
 This is a genuinely different corpus from backend/app/demo_data/ - do not
 import from demo_data here, and do not import this module from the main
 application; it exists only for the research-evaluation harness in
-pilot_eval.py, kept fully separate from Meridian's own SOP corpus so the two
+pilot_eval.py, kept fully separate from RAEY's own SOP corpus so the two
 can never be confused.
 """
 
@@ -105,34 +105,81 @@ def _parse_adversarial_decoy_markers(body: str) -> list[dict]:
     return _parse_core_practices(body[anchor:], offset=anchor)
 
 
-_PARSERS = {
-    "cdc_core_practices": _parse_core_practices,
-    "cdc_disinfection_sterilization": _parse_disinfection_sterilization,
+#: Single source of truth per document, replacing the two separate
+#: _PARSERS/_SOURCE_URLS dicts a document used to need entries in (a real
+#: bug class: nothing enforced they stayed in sync, and a doc_id present
+#: in one but not the other raised a bare KeyError deep inside
+#: load_real_corpus() rather than a clear error at the point of the
+#: mistake). Adding a document is one dict entry, validated below at
+#: import time rather than discovered lazily on first load. A document
+#: needs a bespoke `parser` only if its numbering shape is new - both AHRQ
+#: entries below reuse `_parse_core_practices` unchanged. `license` and
+#: `retrieved` mirror what's already recorded in the raw .txt file's own
+#: provenance header (see raw/*.txt) - duplicated here in a structured,
+#: machine-checkable form rather than left as free text a caller would
+#: have to re-parse to answer "is this document's license actually open".
+_REGISTRY: dict[str, dict] = {
+    "cdc_core_practices": {
+        "parser": _parse_core_practices,
+        "source_url": "https://www.cdc.gov/infection-control/hcp/core-practices/index.html",
+        "license": "US federal government work, public domain (17 U.S.C. 105)",
+        "retrieved": "2026-08-06",
+    },
+    "cdc_disinfection_sterilization": {
+        "parser": _parse_disinfection_sterilization,
+        "source_url": "https://www.cdc.gov/infection-control/hcp/disinfection-sterilization/summary-recommendations.html",
+        "license": "US federal government work, public domain (17 U.S.C. 105)",
+        "retrieved": "2026-08-06",
+    },
     # Same numbering shape as core_practices (digit + period + text, one
     # item per line-through-next-heading block) - but AHRQ's numbers are
     # CSS list-style-type output reconstructed at retrieval time, not
     # literal characters in the source HTML, and each item is 3-6 sentences
     # rather than core_practices' short bullets. See the raw .txt headers.
-    "ahrq_cauti_appropriate_indications": _parse_core_practices,
-    "ahrq_cauti_inappropriate_indications": _parse_core_practices,
-    "adversarial_decoy_markers": _parse_adversarial_decoy_markers,
+    "ahrq_cauti_appropriate_indications": {
+        "parser": _parse_core_practices,
+        "source_url": "https://www.ahrq.gov/hai/cauti-tools/guides/implguide-pt3.html",
+        "license": "US federal government work, public domain (17 U.S.C. 105) - AHRQ, HHS",
+        "retrieved": "2026-08-06",
+    },
+    "ahrq_cauti_inappropriate_indications": {
+        "parser": _parse_core_practices,
+        "source_url": "https://www.ahrq.gov/hai/cauti-tools/guides/implguide-pt3.html",
+        "license": "US federal government work, public domain (17 U.S.C. 105) - AHRQ, HHS",
+        "retrieved": "2026-08-06",
+    },
+    "adversarial_decoy_markers": {
+        "parser": _parse_adversarial_decoy_markers,
+        "source_url": "n/a - synthetic fixture, not a real URL",
+        "license": "Original construction, no external copyright content reproduced",
+        "retrieved": "n/a - constructed 2026-08-06, not scraped",
+    },
 }
 
-_SOURCE_URLS = {
-    "cdc_core_practices": "https://www.cdc.gov/infection-control/hcp/core-practices/index.html",
-    "cdc_disinfection_sterilization": "https://www.cdc.gov/infection-control/hcp/disinfection-sterilization/summary-recommendations.html",
-    "ahrq_cauti_appropriate_indications": "https://www.ahrq.gov/hai/cauti-tools/guides/implguide-pt3.html",
-    "ahrq_cauti_inappropriate_indications": "https://www.ahrq.gov/hai/cauti-tools/guides/implguide-pt3.html",
-    "adversarial_decoy_markers": "n/a - synthetic fixture, not a real URL",
-}
+_REQUIRED_REGISTRY_FIELDS = {"parser", "source_url", "license", "retrieved"}
+
+
+def _validate_registry() -> None:
+    """Fail loudly at import time, not lazily on first load_real_corpus()
+    call, and not with a bare KeyError pointing nowhere useful."""
+    for doc_id, entry in _REGISTRY.items():
+        missing = _REQUIRED_REGISTRY_FIELDS - entry.keys()
+        if missing:
+            raise ValueError(f"_REGISTRY[{doc_id!r}] is missing required field(s): {sorted(missing)}")
+        if not entry["license"]:
+            raise ValueError(f"_REGISTRY[{doc_id!r}] has an empty license - see Phase X plan item 16: "
+                              f"a document with unverified/ambiguous licensing must not be included.")
+
+
+_validate_registry()
 
 
 def load_real_corpus() -> list[RealDocument]:
     docs = []
-    for doc_id, parser in _PARSERS.items():
+    for doc_id, entry in _REGISTRY.items():
         _, body = _load_raw(f"{doc_id}.txt")
-        items = parser(body)
-        docs.append(RealDocument(doc_id=doc_id, source_url=_SOURCE_URLS[doc_id], raw_text=body, items=items))
+        items = entry["parser"](body)
+        docs.append(RealDocument(doc_id=doc_id, source_url=entry["source_url"], raw_text=body, items=items))
     return docs
 
 

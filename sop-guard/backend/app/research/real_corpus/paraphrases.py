@@ -12,7 +12,8 @@ with the corpus/method separation the Phase U plan requires. Written by
 reading each item's real text and rewording it without consulting the
 anchoring code's behavior.
 
-24 pairs across both documents, chosen to be unambiguous item_ids only -
+38 pairs across five documents (2 CDC, 2 AHRQ, 1 synthetic adversarial
+decoy fixture - see corpus.py), chosen to be unambiguous item_ids only -
 core_practices.py's 5a-5f duplicate (see corpus.py's docstring finding) are
 deliberately excluded here so this fixture measures anchoring accuracy, not
 ID-disambiguation, which is a separate, real, and harder problem flagged in
@@ -21,7 +22,11 @@ the Phase U plan for the full-scale corpus.
 Selected across a real range of structural depth: category-level (core
 practices, depth 1) and recommendation-level at every real nesting depth
 found in the disinfection/sterilization document (1.a = depth 2, 2.b.i =
-depth 3, 5.n.1 = depth 3, 7.aa = depth 2 double-letter).
+depth 3, 5.n.1 = depth 3, 7.aa = depth 2 double-letter), plus the longer
+multi-sentence AHRQ items and the adversarial decoy-marker set. Every
+number in this docstring should match len(PARAPHRASES) below and
+pilot_eval.py's own count assertions - see run_pilot()'s n_pairs field for
+the authoritative count at run time, since this comment can drift again.
 """
 
 PARAPHRASES: list[dict] = [
@@ -124,3 +129,57 @@ PARAPHRASES: list[dict] = [
     {"doc_id": "adversarial_decoy_markers", "item_id": "5",
      "paraphrase": "At every shift handoff, write down the specific reason each indwelling device is still in place, so a device with no current justification gets flagged for removal instead of staying by default."},
 ]
+
+# Every entry above is project-authored (Tier A) per this module's own
+# docstring - tagged uniformly here rather than on all 38 individual dict
+# literals, both to avoid 38 near-identical edits and so a future Tier B
+# entry (authored by someone other than this project - see the docstring's
+# "held-out generator" note) has an obvious, single place its tier value
+# would actually differ from this default.
+for _pair in PARAPHRASES:
+    _pair.setdefault("tier", "A")
+del _pair
+
+
+def split_dev_test(test_doc_ids: set[str] | None = None) -> tuple[list[dict], list[dict]]:
+    """Document-disjoint dev/test split: every pair from a given doc_id
+    goes entirely into one split, never divided within a document - chunks
+    from one guideline leak structure (shared vocabulary, shared numbering
+    conventions), so splitting within a document isn't a real held-out test.
+
+    Every threshold in pilot_eval.py (_MARKER_MIN_CONTAINMENT and the two
+    inline floors in method_fuzzy/method_embed_span) must be calibrated
+    using ONLY the dev split; the test split's numbers get reported exactly
+    once, at the end - this is the single most reviewer-visible weakness
+    FINDINGS.md's own §9 names ("every number in this log is a pilot
+    number, calibrated and tested on the same data"), and this function is
+    the fix for it going forward, not yet exercised by pilot_eval.py's
+    current run_pilot() (which still evaluates everything as one set - see
+    Phase X plan item 14 for wiring this in as thresholds get frozen).
+
+    Defaults to holding out `adversarial_decoy_markers` as test - the one
+    document built as a deliberate adversarial stress-test rather than an
+    organic draw from the corpus, so it's a meaningful held-out check now
+    even before the corpus scales past 5 documents. At only 5 documents
+    total, a document-level split is necessarily coarse (a handful of
+    possible partitions, not a statistically meaningful random draw) -
+    stated honestly rather than presented as more rigorous than it is.
+    Revisit the default once the corpus reaches the 30-60 document target
+    in Phase X3, where a genuine random per-source split becomes possible.
+    """
+    if test_doc_ids is None:
+        test_doc_ids = {"adversarial_decoy_markers"}
+    dev = [p for p in PARAPHRASES if p["doc_id"] not in test_doc_ids]
+    test = [p for p in PARAPHRASES if p["doc_id"] in test_doc_ids]
+    return dev, test
+
+
+def assert_document_disjoint(dev: list[dict], test: list[dict]) -> None:
+    """Raise if any doc_id appears in both splits - the one invariant this
+    whole scheme exists to guarantee. Call this in a test, not just here,
+    so a future edit to split_dev_test can't silently violate it."""
+    dev_docs = {p["doc_id"] for p in dev}
+    test_docs = {p["doc_id"] for p in test}
+    overlap = dev_docs & test_docs
+    if overlap:
+        raise AssertionError(f"dev/test split is not document-disjoint - shared doc_id(s): {sorted(overlap)}")

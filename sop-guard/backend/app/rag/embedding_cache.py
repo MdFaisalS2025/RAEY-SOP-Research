@@ -1,5 +1,5 @@
 """
-Meridian Embedding Cache
+RAEY Embedding Cache
 Process-wide singleton for the embedding provider plus an in-memory vector
 cache, so the model loads once and chunk embeddings are computed once per
 process lifetime rather than on every query.

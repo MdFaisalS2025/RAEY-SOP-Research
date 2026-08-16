@@ -1,0 +1,2178 @@
+{
+  "generated_at": "2026-08-15T18:43:48.189104+00:00",
+  "n_pairs": 38,
+  "n_documents": 5,
+  "embed_span_available": true,
+  "embedding_model_id": "BAAI/bge-small-en-v1.5",
+  "thresholds": {
+    "marker_min_containment": 0.6,
+    "fuzzy_min_ratio": 0.3,
+    "embed_span_min_similarity": 0.5
+  },
+  "corpus_hash": "41d45128b1f927ad118e51a1a1c1c6bdd274f022",
+  "summary": {
+    "quote": {
+      "n": 38,
+      "n_non_null": 0,
+      "localization_accuracy": 0.0,
+      "mean_iou": 0.0,
+      "coverage": 0.0,
+      "false_anchor_rate": 0.0,
+      "false_anchor_examples": []
+    },
+    "fuzzy": {
+      "n": 38,
+      "n_non_null": 28,
+      "localization_accuracy": 0.893,
+      "mean_iou": 0.346,
+      "coverage": 0.737,
+      "false_anchor_rate": 0.107,
+      "false_anchor_examples": [
+        {
+          "item_id": "3",
+          "doc_id": "cdc_core_practices"
+        },
+        {
+          "item_id": "1.a",
+          "doc_id": "cdc_disinfection_sterilization"
+        },
+        {
+          "item_id": "9.a",
+          "doc_id": "cdc_disinfection_sterilization"
+        }
+      ]
+    },
+    "embed_span": {
+      "n": 38,
+      "n_non_null": 38,
+      "localization_accuracy": 1.0,
+      "mean_iou": 0.837,
+      "coverage": 1.0,
+      "false_anchor_rate": 0.0,
+      "false_anchor_examples": []
+    },
+    "whole_doc": {
+      "n": 38,
+      "n_non_null": 38,
+      "localization_accuracy": 1.0,
+      "mean_iou": 0.08,
+      "coverage": 1.0,
+      "false_anchor_rate": 0.0,
+      "false_anchor_examples": []
+    },
+    "structural": {
+      "n": 38,
+      "n_non_null": 20,
+      "localization_accuracy": 1.0,
+      "mean_iou": 0.526,
+      "coverage": 0.526,
+      "false_anchor_rate": 0.0,
+      "false_anchor_examples": []
+    },
+    "structural_margin": {
+      "n": 38,
+      "n_non_null": 35,
+      "localization_accuracy": 0.943,
+      "mean_iou": 0.868,
+      "coverage": 0.921,
+      "false_anchor_rate": 0.057,
+      "false_anchor_examples": [
+        {
+          "item_id": "2",
+          "doc_id": "adversarial_decoy_markers"
+        },
+        {
+          "item_id": "4",
+          "doc_id": "adversarial_decoy_markers"
+        }
+      ]
+    }
+  },
+  "raw_results": {
+    "quote": [
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "1",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "2",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "3",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "4",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "6",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "7",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "8",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "1.a",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "1.e",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "2.b",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "3.a",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "4.b",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "5.g",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "5.n",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "6.a",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "7.a",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "7.b",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "7.aa",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "7.am",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "8.a",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "9.a",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "2.b.i",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "5.n.1",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "7.am.1",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "ahrq_cauti_appropriate_indications",
+        "item_id": "1",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "ahrq_cauti_appropriate_indications",
+        "item_id": "2",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "ahrq_cauti_appropriate_indications",
+        "item_id": "3",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "ahrq_cauti_appropriate_indications",
+        "item_id": "4",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "ahrq_cauti_appropriate_indications",
+        "item_id": "5",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "ahrq_cauti_appropriate_indications",
+        "item_id": "6",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "ahrq_cauti_inappropriate_indications",
+        "item_id": "1",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "ahrq_cauti_inappropriate_indications",
+        "item_id": "2",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "ahrq_cauti_inappropriate_indications",
+        "item_id": "3",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "adversarial_decoy_markers",
+        "item_id": "1",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "adversarial_decoy_markers",
+        "item_id": "2",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "adversarial_decoy_markers",
+        "item_id": "3",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "adversarial_decoy_markers",
+        "item_id": "4",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "adversarial_decoy_markers",
+        "item_id": "5",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      }
+    ],
+    "fuzzy": [
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "1",
+        "span": [
+          572,
+          749
+        ],
+        "overlaps": true,
+        "iou": 0.2156
+      },
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "2",
+        "span": [
+          1008,
+          1200
+        ],
+        "overlaps": true,
+        "iou": 0.2197
+      },
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "3",
+        "span": [
+          1984,
+          2114
+        ],
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "4",
+        "span": [
+          1980,
+          2159
+        ],
+        "overlaps": true,
+        "iou": 0.2993
+      },
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "6",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "7",
+        "span": [
+          11220,
+          11359
+        ],
+        "overlaps": true,
+        "iou": 0.3131
+      },
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "8",
+        "span": [
+          11562,
+          11729
+        ],
+        "overlaps": true,
+        "iou": 0.1412
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "1.a",
+        "span": [
+          595,
+          737
+        ],
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "1.e",
+        "span": [
+          1242,
+          1351
+        ],
+        "overlaps": true,
+        "iou": 0.7353
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "2.b",
+        "span": [
+          1575,
+          1717
+        ],
+        "overlaps": true,
+        "iou": 0.7933
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "3.a",
+        "span": [
+          3325,
+          3465
+        ],
+        "overlaps": true,
+        "iou": 0.5283
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "4.b",
+        "span": [
+          4263,
+          4459
+        ],
+        "overlaps": true,
+        "iou": 0.2624
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "5.g",
+        "span": [
+          6615,
+          6813
+        ],
+        "overlaps": true,
+        "iou": 0.1021
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "5.n",
+        "span": [
+          9310,
+          9451
+        ],
+        "overlaps": true,
+        "iou": 0.2435
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "6.a",
+        "span": [
+          11356,
+          11426
+        ],
+        "overlaps": true,
+        "iou": 0.1628
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "7.a",
+        "span": [
+          12024,
+          12168
+        ],
+        "overlaps": true,
+        "iou": 0.6636
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "7.b",
+        "span": [
+          12247,
+          12395
+        ],
+        "overlaps": true,
+        "iou": 0.7115
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "7.aa",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "7.am",
+        "span": [
+          22212,
+          22357
+        ],
+        "overlaps": true,
+        "iou": 0.9119
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "8.a",
+        "span": [
+          23033,
+          23158
+        ],
+        "overlaps": true,
+        "iou": 0.2111
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "9.a",
+        "span": [
+          24358,
+          24512
+        ],
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "2.b.i",
+        "span": [
+          1764,
+          1911
+        ],
+        "overlaps": true,
+        "iou": 0.6967
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "5.n.1",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "7.am.1",
+        "span": [
+          22368,
+          22464
+        ],
+        "overlaps": true,
+        "iou": 0.9412
+      },
+      {
+        "doc_id": "ahrq_cauti_appropriate_indications",
+        "item_id": "1",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "ahrq_cauti_appropriate_indications",
+        "item_id": "2",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "ahrq_cauti_appropriate_indications",
+        "item_id": "3",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "ahrq_cauti_appropriate_indications",
+        "item_id": "4",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "ahrq_cauti_appropriate_indications",
+        "item_id": "5",
+        "span": [
+          6165,
+          6346
+        ],
+        "overlaps": true,
+        "iou": 0.4905
+      },
+      {
+        "doc_id": "ahrq_cauti_appropriate_indications",
+        "item_id": "6",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "ahrq_cauti_inappropriate_indications",
+        "item_id": "1",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "ahrq_cauti_inappropriate_indications",
+        "item_id": "2",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "ahrq_cauti_inappropriate_indications",
+        "item_id": "3",
+        "span": [
+          2860,
+          3037
+        ],
+        "overlaps": true,
+        "iou": 0.5619
+      },
+      {
+        "doc_id": "adversarial_decoy_markers",
+        "item_id": "1",
+        "span": [
+          559,
+          731
+        ],
+        "overlaps": true,
+        "iou": 0.763
+      },
+      {
+        "doc_id": "adversarial_decoy_markers",
+        "item_id": "2",
+        "span": [
+          817,
+          989
+        ],
+        "overlaps": true,
+        "iou": 0.789
+      },
+      {
+        "doc_id": "adversarial_decoy_markers",
+        "item_id": "3",
+        "span": [
+          1012,
+          1196
+        ],
+        "overlaps": true,
+        "iou": 0.8835
+      },
+      {
+        "doc_id": "adversarial_decoy_markers",
+        "item_id": "4",
+        "span": [
+          1216,
+          1368
+        ],
+        "overlaps": true,
+        "iou": 0.8352
+      },
+      {
+        "doc_id": "adversarial_decoy_markers",
+        "item_id": "5",
+        "span": [
+          1344,
+          1538
+        ],
+        "overlaps": true,
+        "iou": 0.678
+      }
+    ],
+    "embed_span": [
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "1",
+        "span": [
+          53,
+          195
+        ],
+        "overlaps": true,
+        "iou": 0.173
+      },
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "2",
+        "span": [
+          939,
+          1049
+        ],
+        "overlaps": true,
+        "iou": 0.1259
+      },
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "3",
+        "span": [
+          1784,
+          1922
+        ],
+        "overlaps": true,
+        "iou": 0.6188
+      },
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "4",
+        "span": [
+          1994,
+          2096
+        ],
+        "overlaps": true,
+        "iou": 0.1706
+      },
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "6",
+        "span": [
+          9624,
+          9904
+        ],
+        "overlaps": true,
+        "iou": 0.1962
+      },
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "7",
+        "span": [
+          11081,
+          11338
+        ],
+        "overlaps": true,
+        "iou": 0.5788
+      },
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "8",
+        "span": [
+          11495,
+          11773
+        ],
+        "overlaps": true,
+        "iou": 0.235
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "1.a",
+        "span": [
+          36,
+          465
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "1.e",
+        "span": [
+          1215,
+          1342
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "2.b",
+        "span": [
+          1568,
+          1747
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "3.a",
+        "span": [
+          3262,
+          3527
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "4.b",
+        "span": [
+          4248,
+          4995
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "5.g",
+        "span": [
+          6750,
+          7232
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "5.n",
+        "span": [
+          8984,
+          9563
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "6.a",
+        "span": [
+          11333,
+          11431
+        ],
+        "overlaps": true,
+        "iou": 0.2279
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "7.a",
+        "span": [
+          11975,
+          12192
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "7.b",
+        "span": [
+          12193,
+          12401
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "7.aa",
+        "span": [
+          19161,
+          19820
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "7.am",
+        "span": [
+          22204,
+          22363
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "8.a",
+        "span": [
+          22921,
+          23513
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "9.a",
+        "span": [
+          24879,
+          25402
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "2.b.i",
+        "span": [
+          1748,
+          1959
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "5.n.1",
+        "span": [
+          9564,
+          10265
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "7.am.1",
+        "span": [
+          22364,
+          22466
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "ahrq_cauti_appropriate_indications",
+        "item_id": "1",
+        "span": [
+          1771,
+          2778
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "ahrq_cauti_appropriate_indications",
+        "item_id": "2",
+        "span": [
+          2780,
+          3844
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "ahrq_cauti_appropriate_indications",
+        "item_id": "3",
+        "span": [
+          3846,
+          4862
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "ahrq_cauti_appropriate_indications",
+        "item_id": "4",
+        "span": [
+          4864,
+          6088
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "ahrq_cauti_appropriate_indications",
+        "item_id": "5",
+        "span": [
+          6090,
+          6459
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "ahrq_cauti_appropriate_indications",
+        "item_id": "6",
+        "span": [
+          6461,
+          6865
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "ahrq_cauti_inappropriate_indications",
+        "item_id": "1",
+        "span": [
+          96,
+          998
+        ],
+        "overlaps": true,
+        "iou": 0.655
+      },
+      {
+        "doc_id": "ahrq_cauti_inappropriate_indications",
+        "item_id": "2",
+        "span": [
+          1475,
+          2529
+        ],
+        "overlaps": true,
+        "iou": 0.8293
+      },
+      {
+        "doc_id": "ahrq_cauti_inappropriate_indications",
+        "item_id": "3",
+        "span": [
+          2748,
+          3063
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "adversarial_decoy_markers",
+        "item_id": "1",
+        "span": [
+          570,
+          770
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "adversarial_decoy_markers",
+        "item_id": "2",
+        "span": [
+          771,
+          989
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "adversarial_decoy_markers",
+        "item_id": "3",
+        "span": [
+          990,
+          1194
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "adversarial_decoy_markers",
+        "item_id": "4",
+        "span": [
+          1195,
+          1377
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "adversarial_decoy_markers",
+        "item_id": "5",
+        "span": [
+          1378,
+          1580
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      }
+    ],
+    "whole_doc": [
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "1",
+        "span": [
+          0,
+          12616
+        ],
+        "overlaps": true,
+        "iou": 0.0651
+      },
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "2",
+        "span": [
+          0,
+          12616
+        ],
+        "overlaps": true,
+        "iou": 0.0693
+      },
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "3",
+        "span": [
+          0,
+          12616
+        ],
+        "overlaps": true,
+        "iou": 0.0177
+      },
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "4",
+        "span": [
+          0,
+          12616
+        ],
+        "overlaps": true,
+        "iou": 0.0474
+      },
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "6",
+        "span": [
+          0,
+          12616
+        ],
+        "overlaps": true,
+        "iou": 0.1131
+      },
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "7",
+        "span": [
+          0,
+          12616
+        ],
+        "overlaps": true,
+        "iou": 0.0352
+      },
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "8",
+        "span": [
+          0,
+          12616
+        ],
+        "overlaps": true,
+        "iou": 0.0938
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "1.a",
+        "span": [
+          0,
+          25729
+        ],
+        "overlaps": true,
+        "iou": 0.0167
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "1.e",
+        "span": [
+          0,
+          25729
+        ],
+        "overlaps": true,
+        "iou": 0.0049
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "2.b",
+        "span": [
+          0,
+          25729
+        ],
+        "overlaps": true,
+        "iou": 0.007
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "3.a",
+        "span": [
+          0,
+          25729
+        ],
+        "overlaps": true,
+        "iou": 0.0103
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "4.b",
+        "span": [
+          0,
+          25729
+        ],
+        "overlaps": true,
+        "iou": 0.029
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "5.g",
+        "span": [
+          0,
+          25729
+        ],
+        "overlaps": true,
+        "iou": 0.0187
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "5.n",
+        "span": [
+          0,
+          25729
+        ],
+        "overlaps": true,
+        "iou": 0.0225
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "6.a",
+        "span": [
+          0,
+          25729
+        ],
+        "overlaps": true,
+        "iou": 0.0167
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "7.a",
+        "span": [
+          0,
+          25729
+        ],
+        "overlaps": true,
+        "iou": 0.0084
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "7.b",
+        "span": [
+          0,
+          25729
+        ],
+        "overlaps": true,
+        "iou": 0.0081
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "7.aa",
+        "span": [
+          0,
+          25729
+        ],
+        "overlaps": true,
+        "iou": 0.0256
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "7.am",
+        "span": [
+          0,
+          25729
+        ],
+        "overlaps": true,
+        "iou": 0.0062
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "8.a",
+        "span": [
+          0,
+          25729
+        ],
+        "overlaps": true,
+        "iou": 0.023
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "9.a",
+        "span": [
+          0,
+          25729
+        ],
+        "overlaps": true,
+        "iou": 0.0203
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "2.b.i",
+        "span": [
+          0,
+          25729
+        ],
+        "overlaps": true,
+        "iou": 0.0082
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "5.n.1",
+        "span": [
+          0,
+          25729
+        ],
+        "overlaps": true,
+        "iou": 0.0272
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "7.am.1",
+        "span": [
+          0,
+          25729
+        ],
+        "overlaps": true,
+        "iou": 0.004
+      },
+      {
+        "doc_id": "ahrq_cauti_appropriate_indications",
+        "item_id": "1",
+        "span": [
+          0,
+          6865
+        ],
+        "overlaps": true,
+        "iou": 0.1467
+      },
+      {
+        "doc_id": "ahrq_cauti_appropriate_indications",
+        "item_id": "2",
+        "span": [
+          0,
+          6865
+        ],
+        "overlaps": true,
+        "iou": 0.155
+      },
+      {
+        "doc_id": "ahrq_cauti_appropriate_indications",
+        "item_id": "3",
+        "span": [
+          0,
+          6865
+        ],
+        "overlaps": true,
+        "iou": 0.148
+      },
+      {
+        "doc_id": "ahrq_cauti_appropriate_indications",
+        "item_id": "4",
+        "span": [
+          0,
+          6865
+        ],
+        "overlaps": true,
+        "iou": 0.1783
+      },
+      {
+        "doc_id": "ahrq_cauti_appropriate_indications",
+        "item_id": "5",
+        "span": [
+          0,
+          6865
+        ],
+        "overlaps": true,
+        "iou": 0.0538
+      },
+      {
+        "doc_id": "ahrq_cauti_appropriate_indications",
+        "item_id": "6",
+        "span": [
+          0,
+          6865
+        ],
+        "overlaps": true,
+        "iou": 0.0588
+      },
+      {
+        "doc_id": "ahrq_cauti_inappropriate_indications",
+        "item_id": "1",
+        "span": [
+          0,
+          3063
+        ],
+        "overlaps": true,
+        "iou": 0.4496
+      },
+      {
+        "doc_id": "ahrq_cauti_inappropriate_indications",
+        "item_id": "2",
+        "span": [
+          0,
+          3063
+        ],
+        "overlaps": true,
+        "iou": 0.415
+      },
+      {
+        "doc_id": "ahrq_cauti_inappropriate_indications",
+        "item_id": "3",
+        "span": [
+          0,
+          3063
+        ],
+        "overlaps": true,
+        "iou": 0.1028
+      },
+      {
+        "doc_id": "adversarial_decoy_markers",
+        "item_id": "1",
+        "span": [
+          0,
+          1580
+        ],
+        "overlaps": true,
+        "iou": 0.1266
+      },
+      {
+        "doc_id": "adversarial_decoy_markers",
+        "item_id": "2",
+        "span": [
+          0,
+          1580
+        ],
+        "overlaps": true,
+        "iou": 0.138
+      },
+      {
+        "doc_id": "adversarial_decoy_markers",
+        "item_id": "3",
+        "span": [
+          0,
+          1580
+        ],
+        "overlaps": true,
+        "iou": 0.1291
+      },
+      {
+        "doc_id": "adversarial_decoy_markers",
+        "item_id": "4",
+        "span": [
+          0,
+          1580
+        ],
+        "overlaps": true,
+        "iou": 0.1152
+      },
+      {
+        "doc_id": "adversarial_decoy_markers",
+        "item_id": "5",
+        "span": [
+          0,
+          1580
+        ],
+        "overlaps": true,
+        "iou": 0.1278
+      }
+    ],
+    "structural": [
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "1",
+        "span": [
+          0,
+          822
+        ],
+        "overlaps": true,
+        "iou": 0.9988
+      },
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "2",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "3",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "4",
+        "span": [
+          1924,
+          2523
+        ],
+        "overlaps": true,
+        "iou": 0.9983
+      },
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "6",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "7",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "8",
+        "span": [
+          11433,
+          12616
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "1.a",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "1.e",
+        "span": [
+          1215,
+          1343
+        ],
+        "overlaps": true,
+        "iou": 0.9922
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "2.b",
+        "span": [
+          1568,
+          1747
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "3.a",
+        "span": [
+          3262,
+          3527
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "4.b",
+        "span": [
+          4248,
+          4995
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "5.g",
+        "span": [
+          6750,
+          7232
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "5.n",
+        "span": [
+          8984,
+          9563
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "6.a",
+        "span": [
+          11333,
+          11764
+        ],
+        "overlaps": true,
+        "iou": 0.9977
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "7.a",
+        "span": [
+          11975,
+          12192
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "7.b",
+        "span": [
+          12193,
+          12401
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "7.aa",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "7.am",
+        "span": [
+          22204,
+          22363
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "8.a",
+        "span": [
+          22921,
+          23513
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "9.a",
+        "span": [
+          24879,
+          25403
+        ],
+        "overlaps": true,
+        "iou": 0.9981
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "2.b.i",
+        "span": [
+          1748,
+          1959
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "5.n.1",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "7.am.1",
+        "span": [
+          22364,
+          22466
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "ahrq_cauti_appropriate_indications",
+        "item_id": "1",
+        "span": [
+          1771,
+          2779
+        ],
+        "overlaps": true,
+        "iou": 0.999
+      },
+      {
+        "doc_id": "ahrq_cauti_appropriate_indications",
+        "item_id": "2",
+        "span": [
+          2780,
+          3845
+        ],
+        "overlaps": true,
+        "iou": 0.9991
+      },
+      {
+        "doc_id": "ahrq_cauti_appropriate_indications",
+        "item_id": "3",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "ahrq_cauti_appropriate_indications",
+        "item_id": "4",
+        "span": [
+          4864,
+          6089
+        ],
+        "overlaps": true,
+        "iou": 0.9992
+      },
+      {
+        "doc_id": "ahrq_cauti_appropriate_indications",
+        "item_id": "5",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "ahrq_cauti_appropriate_indications",
+        "item_id": "6",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "ahrq_cauti_inappropriate_indications",
+        "item_id": "1",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "ahrq_cauti_inappropriate_indications",
+        "item_id": "2",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "ahrq_cauti_inappropriate_indications",
+        "item_id": "3",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "adversarial_decoy_markers",
+        "item_id": "1",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "adversarial_decoy_markers",
+        "item_id": "2",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "adversarial_decoy_markers",
+        "item_id": "3",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "adversarial_decoy_markers",
+        "item_id": "4",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "adversarial_decoy_markers",
+        "item_id": "5",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      }
+    ],
+    "structural_margin": [
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "1",
+        "span": [
+          0,
+          822
+        ],
+        "overlaps": true,
+        "iou": 0.9988
+      },
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "2",
+        "span": [
+          823,
+          1698
+        ],
+        "overlaps": true,
+        "iou": 0.9989
+      },
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "3",
+        "span": [
+          1699,
+          1923
+        ],
+        "overlaps": true,
+        "iou": 0.9955
+      },
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "4",
+        "span": [
+          1924,
+          2523
+        ],
+        "overlaps": true,
+        "iou": 0.9983
+      },
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "6",
+        "span": [
+          9558,
+          10986
+        ],
+        "overlaps": true,
+        "iou": 0.9993
+      },
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "7",
+        "span": [
+          10987,
+          11432
+        ],
+        "overlaps": true,
+        "iou": 0.9978
+      },
+      {
+        "doc_id": "cdc_core_practices",
+        "item_id": "8",
+        "span": [
+          11433,
+          12616
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "1.a",
+        "span": [
+          36,
+          465
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "1.e",
+        "span": [
+          1215,
+          1343
+        ],
+        "overlaps": true,
+        "iou": 0.9922
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "2.b",
+        "span": [
+          1568,
+          1747
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "3.a",
+        "span": [
+          3262,
+          3527
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "4.b",
+        "span": [
+          4248,
+          4995
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "5.g",
+        "span": [
+          6750,
+          7232
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "5.n",
+        "span": [
+          8984,
+          9563
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "6.a",
+        "span": [
+          11333,
+          11764
+        ],
+        "overlaps": true,
+        "iou": 0.9977
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "7.a",
+        "span": [
+          11975,
+          12192
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "7.b",
+        "span": [
+          12193,
+          12401
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "7.aa",
+        "span": [
+          19161,
+          19820
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "7.am",
+        "span": [
+          22204,
+          22363
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "8.a",
+        "span": [
+          22921,
+          23513
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "9.a",
+        "span": [
+          24879,
+          25403
+        ],
+        "overlaps": true,
+        "iou": 0.9981
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "2.b.i",
+        "span": [
+          1748,
+          1959
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "5.n.1",
+        "span": [
+          9564,
+          10265
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "cdc_disinfection_sterilization",
+        "item_id": "7.am.1",
+        "span": [
+          22364,
+          22466
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "ahrq_cauti_appropriate_indications",
+        "item_id": "1",
+        "span": [
+          1771,
+          2779
+        ],
+        "overlaps": true,
+        "iou": 0.999
+      },
+      {
+        "doc_id": "ahrq_cauti_appropriate_indications",
+        "item_id": "2",
+        "span": [
+          2780,
+          3845
+        ],
+        "overlaps": true,
+        "iou": 0.9991
+      },
+      {
+        "doc_id": "ahrq_cauti_appropriate_indications",
+        "item_id": "3",
+        "span": [
+          3846,
+          4863
+        ],
+        "overlaps": true,
+        "iou": 0.999
+      },
+      {
+        "doc_id": "ahrq_cauti_appropriate_indications",
+        "item_id": "4",
+        "span": [
+          4864,
+          6089
+        ],
+        "overlaps": true,
+        "iou": 0.9992
+      },
+      {
+        "doc_id": "ahrq_cauti_appropriate_indications",
+        "item_id": "5",
+        "span": [
+          6090,
+          6460
+        ],
+        "overlaps": true,
+        "iou": 0.9973
+      },
+      {
+        "doc_id": "ahrq_cauti_appropriate_indications",
+        "item_id": "6",
+        "span": [
+          6461,
+          6865
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "ahrq_cauti_inappropriate_indications",
+        "item_id": "1",
+        "span": [
+          96,
+          1474
+        ],
+        "overlaps": true,
+        "iou": 0.9993
+      },
+      {
+        "doc_id": "ahrq_cauti_inappropriate_indications",
+        "item_id": "2",
+        "span": [
+          1475,
+          2747
+        ],
+        "overlaps": true,
+        "iou": 0.9992
+      },
+      {
+        "doc_id": "ahrq_cauti_inappropriate_indications",
+        "item_id": "3",
+        "span": [
+          2748,
+          3063
+        ],
+        "overlaps": true,
+        "iou": 1.0
+      },
+      {
+        "doc_id": "adversarial_decoy_markers",
+        "item_id": "1",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "adversarial_decoy_markers",
+        "item_id": "2",
+        "span": [
+          118,
+          217
+        ],
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "adversarial_decoy_markers",
+        "item_id": "3",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "adversarial_decoy_markers",
+        "item_id": "4",
+        "span": [
+          333,
+          455
+        ],
+        "overlaps": false,
+        "iou": 0.0
+      },
+      {
+        "doc_id": "adversarial_decoy_markers",
+        "item_id": "5",
+        "span": null,
+        "overlaps": false,
+        "iou": 0.0
+      }
+    ]
+  }
+}

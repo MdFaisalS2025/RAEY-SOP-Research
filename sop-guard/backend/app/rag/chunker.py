@@ -1,5 +1,5 @@
 """
-Meridian SOP-Aware Chunker
+RAEY SOP-Aware Chunker
 Creates typed chunks that preserve clinical structure.
 Research prototype. Not for clinical use.
 """

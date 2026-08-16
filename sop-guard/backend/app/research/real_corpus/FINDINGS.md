@@ -37,7 +37,7 @@ confident. Two different acceptance-gate designs have been tried here; see §5�
 All documents are real, public-domain (US federal, 17 U.S.C. §105, no territorial restriction)
 government guideline text, retrieved live via a browser tool (not simulated), stored under `raw/`
 with a provenance header per file (source URL, retrieval date, publisher, license, numbering
-scheme, and any construction notes). **Never mix this corpus with `app/demo_data/` (Meridian's own
+scheme, and any construction notes). **Never mix this corpus with `app/demo_data/` (RAEY's own
 synthetic SOP corpus) — they exist for entirely different purposes and must not be conflated.**
 
 | doc_id | Source | Items | Structure |
@@ -76,8 +76,17 @@ example rather than quietly fixed, because it demonstrates the gate catching a r
 ## 3. Methods evaluated (`pilot_eval.py`)
 
 All five baselines plus the method under test are implemented standalone with zero import
-dependency on the production pipeline, so this evaluation cannot be silently coupled to
-implementation details that later drift.
+dependency on the demo-SOP pipeline or `app/demo_data`. **Correction (Phase X):** this
+previously claimed zero dependency on production code at all, which was overstated in two
+concrete ways, now fixed rather than just disclosed: (a) `embed_span` and `structural_margin`
+depend on `app.rag.embedding_cache`'s configured dense model - a real, load-bearing coupling,
+now made explicit and loud-failing instead of hidden behind a bare `except: pass`; (b) the
+containment stopword list used to gate `structural`'s accept/reject decision was a separate,
+independently-drifted 28-word copy of `app/rag/chunker.py`'s 24-word list - meaning the "same
+0.60 threshold" this pilot and production both cite was actually being applied to two different
+metrics. `pilot_eval.py` now imports `chunker._CONTAINMENT_STOPWORDS` and `chunker._containment`
+directly rather than reimplementing them, so the threshold is genuinely shared. See
+`pilot_eval.py`'s module docstring for the full, current dependency list.
 
 1. **`quote`** — W3C-`TextQuoteSelector`-style: exact substring, then whitespace-normalized
    substring. This is what `_locate_span` in `app/rag/chunker.py` already does for verbatim content.
@@ -101,6 +110,18 @@ truth — the headline safety metric per the never-fabricate design principle: a
 is worse than an abstention).
 
 Reproduce any result in this document: `cd sop-guard/backend && python -m app.research.real_corpus.pilot_eval`
+(also writes a timestamped JSON snapshot to `results/`, added in Phase X so runs are diffable
+instead of only living in hand-transcribed tables like the ones below).
+
+**A note on reproducibility of §4 and §5 specifically.** Those two sections record pilot runs
+against smaller, earlier states of the corpus (24 pairs / 2 CDC docs, then 33 pairs / 4 docs) that
+no longer exist as an isolated subset in `paraphrases.py` - the fixture has only ever grown, and
+running `pilot_eval.py` today always evaluates the full current 38-pair / 5-document corpus. Their
+tables are kept verbatim below as the historical narrative record (the falsified-hypothesis
+finding in §5 is real and stands), but treat them as a written record, not something byte-for-byte
+reproducible by re-running today's code - and note both fixes described in §8.1 postdate them, so
+even the same subset would score slightly differently under current code. §8.1's corrected table is
+the one that's actually reproducible right now.
 
 ---
 
@@ -266,6 +287,52 @@ content (e.g., a structural cue like "does this occur after a References/Bibliog
 a minimum recommendation-language signal on the candidate line) — not just the accept/reject gate
 sitting on top of it. This is flagged as unbuilt future work, not attempted yet (see §9).
 
+### 8.1 Corrected re-run (Phase X, 2026-08-15)
+
+Two real bugs in `pilot_eval.py` were found and fixed, and every table above predates both:
+
+1. **`localization_accuracy` divided by all pairs, not non-null spans**, contradicting its own
+   documented definition ("fraction of non-null spans overlapping ground truth" — §3, §4). For a
+   method with zero false anchors (like `structural` in every table above), this silently made
+   `localization_accuracy` numerically identical to `coverage` by construction — it was never
+   actually measuring precision-when-it-fires as a distinct number from how often it fires.
+2. **Two different stopword lists were governing the same "0.60 containment" threshold** — see §3's
+   correction above. Unifying them onto `chunker.py`'s real list changes which paraphrases clear the
+   `structural` gate.
+
+Both fixes change real numbers, not just bookkeeping. Full corrected run, same 38-pair / 5-document
+corpus as §8 above, `corpus_hash 41d45128b1f9`, `embedding_model BAAI/bge-small-en-v1.5`:
+
+| method | coverage | localization_accuracy | mean_iou | false_anchor_rate |
+|---|---|---|---|---|
+| `quote` | 0.0 | 0.0 | 0.0 | 0.0 |
+| `fuzzy` | 0.737 | 0.893 | 0.346 | 0.107 |
+| `embed_span` | 1.0 | 1.0 | 0.837 | 0.0 |
+| `whole_doc` | 1.0 | 1.0 | 0.08 | 0.0 |
+| `structural` (lexical gate) | **0.526** | **1.0** | 0.526 | 0.0 |
+| `structural_margin` (relative gate) | 0.921 | 0.943 | 0.868 | 0.057 |
+
+What actually moved and why, stated plainly rather than left for a reader to notice:
+
+- **`structural`'s coverage moved from 0.500 to 0.526** (one more pair now clears the containment
+  gate) — a direct, real effect of unifying the stopword list, not noise. `false_anchor_rate` and
+  `mean_iou`-when-it-fires are unaffected: the method is exactly as precise as before, it just now
+  fires on slightly more of the corpus.
+- **`structural`'s `localization_accuracy` is now genuinely reported as 1.0, decoupled from its
+  0.526 coverage**, correcting the conflation bug above. This is the more important correction:
+  the headline claim for `structural` was always "when it answers, it's right" (precision) plus a
+  separate, honest "it doesn't always answer" (coverage) — the bug had those two numbers silently
+  collapsed into one.
+- `structural_margin`'s numbers are unchanged (0.921 / 0.943 / 0.868 / 0.057) — its coverage gate
+  doesn't use the containment stopword list at all (it's a relative-ranking comparison, not a
+  lexical-overlap threshold), so neither fix touches it. This is expected, not a null result to
+  worry about.
+- `embed_span`, `whole_doc`, `quote`, `fuzzy` are all unaffected by either fix, as expected — none
+  of them call `_containment` or depend on the `localization_accuracy` denominator changing their
+  own non-null rate.
+
+Raw per-pair JSON for this run: `results/pilot_run_20260815T184348Z.json`.
+
 ---
 
 ## 9. What this project has vs. what a real paper submission needs
@@ -285,8 +352,22 @@ sitting on top of it. This is flagged as unbuilt future work, not attempted yet 
 
 **Do NOT have yet — needed before a real submission:**
 1. **Scale.** Target from the original plan: 30–60 documents, thousands of Tier-A pairs, a
-   document-disjoint dev/test split. Currently 5 documents, 38 pairs, no split — every number in
-   this log is a pilot number, calibrated and tested on the same data.
+   document-disjoint dev/test split. Currently 5 documents, 38 pairs. The **infrastructure** for
+   scale is now built (Phase X): `corpus._REGISTRY` collapses document registration to one
+   validated entry per doc_id (previously two dicts that could silently drift), and
+   `paraphrases.split_dev_test()` / `assert_document_disjoint()` give every pair a `tier` and a
+   real document-disjoint dev/test split, tested in `tests/test_research_corpus_split.py`. What's
+   still missing is the **data**: acquiring 25-55 more real documents. A real, reproducible blocker
+   was hit attempting this in the same session the infrastructure was built: three independent
+   fetch attempts at CDC field-triage guidance (cdc.gov direct, the MMWR HTML mirror, and a PMC
+   mirror) each failed - two 403s and one reCAPTCHA wall - matching this file's own earlier note
+   that "direct automated fetches of both agencies' own HTML pages 403'd in practice" and that PDF
+   fetches / NCBI Bookshelf mirrors worked better for the AHRQ documents already in this corpus.
+   A fourth attempt against a guessed NASEMSO PDF URL also 403'd, so the blocker isn't
+   cdc.gov-specific - automated WebFetch against these classes of government/association sites is
+   unreliable across at least two hosts here. Acquiring the remaining documents needs a session
+   with a different fetch mechanism (a real browser session, or manual download by the person
+   running this) rather than more guessed URLs against the same automated fetch path.
 2. **Tier B (hand-verified, non-self-authored paraphrases).** All 38 pairs here are Tier A
    (hand-authored by one person, not model-generated, not independently verified). The
    synthetic-vs-real RAG evaluation literature (see `2508.11758`, cited in the original plan)
@@ -312,7 +393,7 @@ sitting on top of it. This is flagged as unbuilt future work, not attempted yet 
    whoever picks this up next.
 
 **Where the code lives:** `app/research/real_corpus/{corpus.py, paraphrases.py, pilot_eval.py, raw/*.txt}`.
-Nothing here is imported by or coupled to Meridian's production pipeline (`app/rag/`,
+Nothing here is imported by or coupled to RAEY's production pipeline (`app/rag/`,
 `app/demo_data/`) — it is a self-contained research module by design, and should stay that way so
 this evaluation can never be silently invalidated by an unrelated app change, and so the production
 app can never accidentally depend on research-only code.

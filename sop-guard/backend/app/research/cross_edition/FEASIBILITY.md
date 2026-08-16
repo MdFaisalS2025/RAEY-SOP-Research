@@ -468,3 +468,63 @@ It is worth recording that `PREREGISTRATION.md` §10 was written to mandate
 exactly that check — and was then not applied to the dev numbers it was written
 alongside. The rule was right; applying it only to future test results was not.
 **§10 should be read as applying to dev results too.**
+
+
+---
+
+## 10. The unmatched tail, decomposed
+
+§9 left 16.2% of items unmatched on the major pair, undecomposed between genuine
+deletion and matching failure. Reporting that as deletion would have overstated
+it badly. `unmatched_probe.py` decomposes it.
+
+| Cause | n | % of tail | Reading |
+|---|---|---|---|
+| U1 guideline unmatched | 156 | 21.0% | parser debt — items under the 2–3 guidelines that never matched |
+| U2 section absent for that guideline | 155 | 20.9% | ambiguous |
+| U3 near miss in section | 54 | 7.3% | **recoverable** |
+| U4 blocked by consumed rival | 89 | 12.0% | **recoverable** |
+| U6 weak distant match | 184 | 24.8% | uncertain — plausible counterpart, below the T4 floor |
+| U5 no candidate at all | 104 | 14.0% | **defensible deletion** |
+
+**The 16.2% unmatched contains only 2.3% defensible deletion** (104 of 4,567 old
+items). Roughly 42% of the tail is method or parsing debt, and a further 19% is
+straightforwardly recoverable.
+
+### 10.1 The headline is a floor, not a ceiling
+
+This is the consequential part. U3, U4 and U6 — 327 items, 7.2% of old items —
+would, if recovered, land in **T4 (reworded) or T5 (moved)**, never in T1/T2.
+They are by construction items that an identifier lookup cannot find.
+
+So better matching **raises** "requires more than an identifier" above the
+current 10.9%; it cannot lower it. **10.9% is a lower bound.** That is the
+opposite of the situation in §9, where the headline was inflated by a bug and
+fell when corrected.
+
+### 10.2 Two errors in the decomposition itself, found and fixed
+
+Consistent with §9's standing rule, the first decomposition was checked rather
+than trusted, and was wrong twice:
+
+1. **U3 scored against all section candidates**, while `align_items` only ever
+   considered *unconsumed* ones. U3 was therefore absorbing collision cases that
+   belong in U4. After the fix U4 rose from 21 to 89 and U3 fell from 138 to 54.
+2. **U5 counted items with a plausible distant counterpart as deletions.** One
+   example scored 0.688 corpus-wide — outside its own section, so U3 missed it;
+   below the 0.75 floor, so U4 missed it — and was reported as deleted. These
+   are now U6, and the deletion estimate fell from 6.0% to **2.3%** of old items.
+
+An unchecked decomposition would have claimed nearly three times the true
+deletion rate.
+
+### 10.3 What this changes for the study
+
+- **Deletion recall/precision** (`PREREGISTRATION.md` §6) is measured against a
+  much smaller true-deletion class than the raw tail suggested. Annotation
+  sampling must not assume T6 ≈ deleted.
+- **U1's 156 items depend on 2–3 unparsed guideline titles.** Fixing those is
+  the single highest-yield remaining parser task.
+- **No section disappeared globally** between editions (`performance measures`
+  runs 73 → 63), so U2 is genuinely per-guideline rather than a structural
+  change, and stays classified as ambiguous.

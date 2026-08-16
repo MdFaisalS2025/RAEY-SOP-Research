@@ -176,6 +176,7 @@ def align_items(old_pdf: str, new_pdf: str) -> dict:
         new_by_text[_norm(i.text)].append(i)
 
     tiers = defaultdict(int)
+    unmatched_old: list[Item] = []
     consumed: set[str] = set()
     examples: dict[str, list[tuple[str, str]]] = defaultdict(list)
 
@@ -225,6 +226,7 @@ def align_items(old_pdf: str, new_pdf: str) -> dict:
             continue
 
         note("T6_unmatched_old", a, None)
+        unmatched_old.append(a)
 
     added = [i for i in new_items if i.item_id not in consumed]
     total_old = len(old_items)
@@ -241,6 +243,14 @@ def align_items(old_pdf: str, new_pdf: str) -> dict:
         "requires_more_than_id_pct": round(100 * hard / max(1, total_old), 1),
         "unmatched_pct": round(100 * tiers["T6_unmatched_old"] / max(1, total_old), 1),
         "examples": {k: v for k, v in examples.items()},
+        # Exposed so the unmatched tail can be decomposed into genuine
+        # deletion versus recoverable matching failure (see
+        # unmatched_probe.py). Reporting a 16% tail without knowing
+        # which is which would overstate deletion.
+        "_unmatched_items": unmatched_old,
+        "_consumed_ids": consumed,
+        "_guideline_map": gmap,
+        "_new_items": new_items,
     }
 
 

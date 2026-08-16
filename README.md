@@ -1,10 +1,10 @@
-# Meridian (SOP-Guard)
+# RAEY
 
 **An AI-powered hospital SOP intelligence platform** that combines internal SOP retrieval, procedural faithfulness verification, external clinical evidence retrieval, SOP-vs-evidence comparison, version history, and governance/compliance workflows into a single conversational assistant.
 
 > Research prototype for thesis work on clinical RAG systems. Not for clinical use. All SOP data, patients, and hospital staff referenced in the demo are synthetic.
 
-[![CI](https://github.com/MdFaisalS2025/Meridian-SOP-Research/actions/workflows/ci.yml/badge.svg)](https://github.com/MdFaisalS2025/Meridian-SOP-Research/actions/workflows/ci.yml)
+[![CI](https://github.com/MdFaisalS2025/RAEY-SOP-Research/actions/workflows/ci.yml/badge.svg)](https://github.com/MdFaisalS2025/RAEY-SOP-Research/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](sop-guard/README.md#license)
 
 ---
@@ -27,8 +27,8 @@
 ## Getting the code
 
 ```bash
-git clone https://github.com/MdFaisalS2025/Meridian-SOP-Research.git
-cd Meridian-SOP-Research/sop-guard
+git clone https://github.com/MdFaisalS2025/RAEY-SOP-Research.git
+cd RAEY-SOP-Research/sop-guard
 ```
 
 Then follow [`sop-guard/README.md`](sop-guard/README.md) for setup.

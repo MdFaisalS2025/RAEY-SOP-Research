@@ -81,19 +81,69 @@ numbering used only for within-section item alignment.
 That materially de-risks the study and should be reflected in the method before
 the corpus is built.
 
-### 3.2 Per-guideline revision dates exist — value is across editions, not within
+### 3.2 Per-guideline revision dates — hypothesis tested and DISCONFIRMED
 
 66 `Revision Date` fields were found, but 63 share the single value
-"September 8, 2017" (the v2 release date). **Within one edition they carry almost
-no information.** Their value is in the comparison: if v3.0 (2022) carries
-per-guideline revision dates that differ, then diffing the two editions' date
-fields yields change labels *directly from the documents*, at zero annotation
-cost.
+"September 8, 2017" (the v2 release date). Within one edition they carry almost
+no information. The hope recorded here in the first draft was that their value
+lay in the *comparison*: if consecutive editions carried differing per-guideline
+dates, diffing them would yield change labels directly from the documents, at
+zero annotation cost.
 
-**This is unverified and must not be assumed.** It depends entirely on v3.0's
-content and is the first thing to check once v3.0 is retrieved. If it holds, a
-large part of the study's labelling burden disappears. If it does not, the
-labelling plan from the execution plan stands unchanged.
+**Tested on the 2017 → 2019 pair by `edition_align.py`. It does not hold.**
+
+| | |
+|---|---|
+| Guidelines whose `Revision Date` differs between editions | **0** |
+| Guidelines whose content actually changed | **59** |
+| Agreement between the two signals | **1.7%** |
+
+The date field is essentially static across these editions while roughly
+six guidelines in seven changed materially. **There are no free change labels.**
+The annotation plan in the execution plan stands unchanged, and the labelling
+budget must be planned for in full.
+
+This is worth stating plainly because it was the single most attractive
+shortcut available to the study, and it is gone. It is also exactly the kind of
+assumption that would have been discovered late and expensively — the labelling
+burden would have been "solved" on paper right up until someone checked.
+
+*(Caveat: tested on one edition pair from one publisher. A different protocol
+set may maintain its revision metadata properly. Do not generalise this beyond
+NASEMSO without re-testing — `edition_align.py` reports the agreement figure for
+any pair.)*
+
+### 3.3 Cross-edition alignment by (title, section) — WORKS
+
+The alignment unit proposed in §3.1 was an argument from structure. It has now
+been tested on the 2017 → 2019 pair:
+
+| | |
+|---|---|
+| Guidelines, 2017 edition | 69 |
+| Guidelines, 2019 edition | 69 |
+| **Matched by normalised title** | **60 (87.0%)** |
+| Unmatched | 2 in each edition |
+| Sections compared across matched guidelines | 899 |
+| Sections unchanged | 724 (80.5%) |
+| Sections changed | 175 (19.5%) |
+
+**The 2 unmatched per edition are parser failures, not real additions or
+removals** — they are the `<untitled@…>` entries where title extraction did not
+recover a heading. Counted correctly they would match each other, putting true
+alignment near 90%. That residual is a parsing problem with a known cause, not a
+limitation of the alignment unit.
+
+**A 19.5% section-level change rate is a good working corpus**: high enough that
+there is real signal to study, low enough that unchanged sections provide a
+large negative class. Both are computed, not annotated.
+
+One parser bug was found and fixed during this run rather than worked around:
+the backwards walk for a guideline title picked up the *preceding* guideline's
+`Revision Date` value, splitting Neonatal Resuscitation into a spurious
+removed/added pair (`september 8 2017 neonatal resuscitation` versus
+`june 29 2018 neonatal resuscitation`). Date-like lines are now skipped during
+the title walk. Two `<untitled@…>` failures remain and are the next parser fix.
 
 ### 3.3 Extraction artefacts — recorded, not smoothed over
 
@@ -113,24 +163,35 @@ labelling plan from the execution plan stands unchanged.
 ## 4. What this changes
 
 1. **The corpus is viable.** The blocking risk is cleared. Proceed.
-2. **Retrieval is manual.** Budget a few minutes per document, in a browser.
-   No scraper.
-3. **Align on template sections, not numbering.** See §3.1. This is a method
-   change and should be settled before the study is pre-registered.
-4. **Check v3.0's revision dates first.** See §3.2. It is the cheapest possible
-   test of whether the labelling burden collapses.
+2. **An edition pair already exists locally.** NASEMSO v2.0 (Oct 2017) and
+   v2.2 (Jan 2019), both retrieved, both STRONG. The study's core premise is
+   testable today without waiting for anything.
+3. **Retrieval is manual, with one exception.** `nasemso.org` returns 403,
+   mirrors have rotted, and `mass.gov` serves its site shell — but the **Wayback
+   CDX index** works and served v2.0 directly. Prefer CDX for superseded
+   editions; use a browser for current ones. Do not build a scraper.
+4. **Align on named sections, not numbering** (§3.1), now confirmed empirically
+   at 87% direct match (§3.3).
+5. **There are no free change labels** (§3.2). Budget the annotation in full.
 
 ---
 
 ## 5. Not yet done
 
-- NASEMSO v3.0 (2022) — needed to form the first edition pair. Download manually
-  from `nasemso.org`; the browser works where scripted clients do not.
-- Massachusetts v2025.1 / v2026.1 — the state-level edition pair. Same approach.
-- A real item parser. `corpus_probe.py` is triage only: it counts markers, it
-  does not extract addressable items with stable identifiers.
+- **NASEMSO v3.0 (2022)** — Wayback holds it (`Content-Length: 5,040,475`,
+  `Content-Type: application/pdf`, snapshot `20220324231037`) but returned 503
+  under load on three attempts. Retry, or download manually from `nasemso.org`
+  in a browser. v2.0→v2.2 is a *minor* version bump; v2.2→v3.0 is the major one
+  and will exercise the method harder.
+- Massachusetts v2025.1 / v2026.1 — the state-level pair, for institutional
+  adaptation rather than national guidance.
+- **Fix the 2 remaining `<untitled@…>` title-extraction failures** (§3.3).
+- A real item parser. Both probes work at section granularity; the study needs
+  addressable *items within* sections, with stable identifiers and offsets.
 - A pre-registration for this study. The anchoring study's registrations
   (`prereg-anchoring-v1`, `-v2`) do not cover it, and must not be stretched to.
+  It should now be written against measured numbers rather than guesses — §3.3
+  supplies the base rates a power analysis needs.
 
 ## 6. Reproducing
 

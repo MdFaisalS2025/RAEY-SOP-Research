@@ -6,7 +6,8 @@ of this file, never as edits to the text above it.
 
 **Registered:** 2026-08-15
 **Registration tag:** `prereg-anchoring-v1`
-**Registered by:** MdFaisalS2025 (sindhi@usf.edu) — *from git config; replace with full name before tagging*
+**Registered by:** Mohamed Faisal Sindhi (sindhi@usf.edu, GitHub `MdFaisalS2025`)
+— *corrected 2026-08-15 after tagging; see §12*
 **Target venue:** ECIR 2027, short paper track (abstract 2026-10-05, paper 2026-10-12)
 **Code state at registration:** `119234d117c60513d3d2c55ac62515b2d2a50a03`
 (commit "Pin research module state ahead of anchoring pre-registration", which
@@ -375,7 +376,7 @@ deviation is.
 
 | Date | Deviation | Reason | Effect on interpretation |
 |---|---|---|---|
-| | | | |
+| 2026-08-15 | Header field **Registered by** changed from `MdFaisalS2025 (sindhi@usf.edu)` to `Mohamed Faisal Sindhi (sindhi@usf.edu, GitHub MdFaisalS2025)`. | The field was populated from `git config user.name`, which holds a GitHub handle rather than the registrant's name. A registration should identify a person. | **None.** Identity metadata only. No hypothesis, parameter, metric, split rule, or data-handling procedure is affected. The originally tagged commit `862721d` retains the pre-correction text and remains the authoritative registration timestamp; this change is an amendment to it, not a re-registration. |
 
 ---
 

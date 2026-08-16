@@ -79,9 +79,76 @@ def _sim(a: str, b: str) -> float:
     return len(ta & tb) / len(ta | tb)
 
 
+_TITLE_FLOOR = 0.5
+
+
+def match_guidelines(old_titles: list[str], new_titles: list[str]) -> dict[str, str]:
+    """Map old guideline titles to new ones by token overlap, greedily.
+
+    Exact title matching was the original approach and it is wrong, for two
+    independent reasons that took several parser iterations to separate:
+
+      1. Titles genuinely change between editions. "Crush Injury" becomes
+         "Crush Injury/Crush Syndrome"; "End-of-Life Care/Palliative Care"
+         becomes "End-of-Life Care/Hospice Care"; "...Syncope and
+         Presyncope" becomes "...Syncope and Near Syncope". No parser can
+         make these equal, because they are not.
+      2. Category headings ("General Medical", "OB/GYN", "Resuscitation")
+         sit above titles and leak into extraction asymmetrically between
+         editions, giving "General Medical Abdominal Pain" against
+         "Abdominal Pain".
+
+    Both classes are handled by the same mechanism - token-set overlap with
+    a floor - which is also the honest model of the underlying reality: a
+    guideline persists across editions under a title that may be edited.
+    Chasing exact titles in the parser was fixing the symptom, and it made
+    overlap WORSE (75.8% -> 72.6%) because tightening the category filter
+    truncated genuinely wrapped titles.
+    """
+    def toks(t: str) -> set[str]:
+        return {w for w in _norm(t).split() if len(w) > 2}
+
+    pairs = []
+    for o in old_titles:
+        to = toks(o)
+        if not to:
+            continue
+        for n in new_titles:
+            tn = toks(n)
+            if not tn:
+                continue
+            # Containment-biased: a category prefix on one side should not
+            # be penalised the way a genuine difference is.
+            j = len(to & tn) / min(len(to), len(tn))
+            if j >= _TITLE_FLOOR:
+                pairs.append((j, o, n))
+
+    pairs.sort(reverse=True)
+    mapping: dict[str, str] = {}
+    used_new: set[str] = set()
+    for _, o, n in pairs:
+        if o in mapping or n in used_new:
+            continue
+        mapping[o] = n
+        used_new.add(n)
+    return mapping
+
+
 def align_items(old_pdf: str, new_pdf: str) -> dict:
     old_ed, new_ed = parse(old_pdf), parse(new_pdf)
     old_items, new_items = old_ed.items, new_ed.items
+
+    # Resolve guideline identity FIRST, then rewrite old item ids into the
+    # new edition's title vocabulary so that id comparison is meaningful.
+    gmap = match_guidelines(
+        sorted({i.guideline for i in old_items}),
+        sorted({i.guideline for i in new_items}),
+    )
+    for it in old_items:
+        mapped = gmap.get(it.guideline)
+        if mapped and mapped != it.guideline:
+            it.item_id = it.item_id.replace(_norm(it.guideline), _norm(mapped), 1)
+            it.guideline = mapped
 
     new_by_id = {i.item_id: i for i in new_items}
     # Bucket by (guideline, section) so renumber/reword search stays local.

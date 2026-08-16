@@ -229,6 +229,9 @@ def parse(pdf_path: str, doc_id: str | None = None) -> ParsedEdition:
         if ln.strip().lower().rstrip(":") in _SECTION_NAMES
     ]
 
+    alias_anchors = [i for i, nm in marks if nm == "aliases"]
+    categories = _collect_categories(lines, alias_anchors)
+
     cur_guideline = "<preamble>"
     # Edition-scoped, not section-scoped. A guideline can carry the same
     # section name twice (two "Notes" blocks), and a per-section counter
@@ -238,7 +241,7 @@ def parse(pdf_path: str, doc_id: str | None = None) -> ParsedEdition:
         end = marks[idx + 1][0] if idx + 1 < len(marks) else len(lines)
 
         if name == "aliases":
-            cur_guideline = _title_before(lines, line_no)
+            cur_guideline = _title_before(lines, line_no, categories)
             ed.guidelines.append(cur_guideline)
         if name in ("revision date", "references"):
             continue  # metadata, not recommendations
@@ -254,7 +257,40 @@ def parse(pdf_path: str, doc_id: str | None = None) -> ParsedEdition:
     return ed
 
 
-def _title_before(lines: list[tuple[str, int]], line_no: int) -> str:
+def _collect_categories(lines: list[tuple[str, int]],
+                        anchors: list[int], min_reuse: int = 3) -> set[str]:
+    """Identify category headings by REUSE across guidelines.
+
+    Every guideline in these documents is preceded by a category heading
+    ("Cardiovascular", "General Medical", "OB/GYN", "Universal Care") and
+    then its own title. The category is shared by many guidelines; the title
+    is not. Counting how often each candidate line appears directly above an
+    "Aliases" anchor separates them without hardcoding a list, which matters
+    because the category vocabulary differs between publishers and between
+    editions of the same publisher.
+    """
+    from collections import Counter
+    counts: Counter[str] = Counter()
+    for anchor in anchors:
+        j, seen = anchor - 1, 0
+        while j >= 0 and seen < 4:
+            t = lines[j][0].strip()
+            if not t:
+                j -= 1
+                continue
+            if t.lower().rstrip(":") in _SECTION_NAMES:
+                break
+            if _DATE_LINE.match(t) or len(t) > 70:
+                j -= 1
+                continue
+            counts[t.lower()] += 1
+            seen += 1
+            j -= 1
+    return {t for t, n in counts.items() if n >= min_reuse}
+
+
+def _title_before(lines: list[tuple[str, int]], line_no: int,
+                  categories: set[str] | None = None) -> str:
     parts: list[str] = []
     j = line_no - 1
     while j >= 0 and len(parts) < 3:
@@ -291,12 +327,22 @@ def _title_before(lines: list[tuple[str, int]], line_no: int) -> str:
     kept = [a for k, a in enumerate(uniq)
             if not any(k != m and a.lower() in b.lower() for m, b in enumerate(uniq))]
     kept = kept or uniq
-    # The line nearest "Aliases" is the title; anything before it is the
-    # category heading ("Universal Care", "Cardiovascular"), which is not
-    # part of the guideline's identity and differs in layout between
-    # editions. Keep only the last element.
-    if len(kept) > 1:
-        kept = kept[-1:]
+    # Drop category headings ("Cardiovascular", "General Medical", "OB/GYN"),
+    # which sit above the title and are not part of a guideline's identity.
+    #
+    # An earlier version did this by keeping only the line nearest "Aliases".
+    # That removed categories but truncated every WRAPPED title, producing
+    # "(STEMI)" for "ST-Elevation Myocardial Infarction (STEMI)" and
+    # "Model Process)" for the guideline-model-process title - which then
+    # failed to match across editions and inflated the unmatched tier.
+    #
+    # Categories are instead identified empirically: a category heading is
+    # reused above many different guidelines, whereas a title line is
+    # essentially unique. `categories` is computed in a first pass over the
+    # whole document (see _collect_categories) and passed in.
+    if categories:
+        filtered = [a for a in kept if a.strip().lower() not in categories]
+        kept = filtered or kept
     title = " ".join(kept or parts).strip()
     # v3.0 prefixes guideline titles with "Version 3.0", which made the same
     # guideline unmatchable across editions.

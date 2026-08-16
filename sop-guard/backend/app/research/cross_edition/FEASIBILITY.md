@@ -323,3 +323,79 @@ This is the second time in this study that a paper-flattering result turned out
 to be a parser bug. Both were caught by disbelieving a convenient number and
 checking the intermediate output. Any future result that suddenly favours the
 paper should be treated the same way.
+
+
+---
+
+## 8. Title matching fixed; the decision experiment settles
+
+§7 flagged that guideline-title overlap of 75.8% made the unmatched tier
+uninterpretable. Fixed. Guideline matching is now **95.2% (59/62)**, and the
+decision experiment can be read.
+
+**What the fix was, and what it was not.** Three parser iterations tried to
+extract titles exactly, and the third made things *worse* (overlap 75.8% ->
+72.6%) because tightening the category filter truncated genuinely wrapped
+titles into fragments like `(STEMI)` and `Model Process)`. The mistake was
+treating this as a parsing problem. It is two problems:
+
+1. **Titles genuinely change between editions.** `Crush Injury` becomes
+   `Crush Injury/Crush Syndrome`; `End-of-Life Care/Palliative Care` becomes
+   `End-of-Life Care/Hospice Care`; `Syncope and Presyncope` becomes
+   `Syncope and Near Syncope`. No parser can make these equal, because they
+   are not equal.
+2. **Category headings leak asymmetrically** between editions, giving
+   `General Medical Abdominal Pain` against `Abdominal Pain`.
+
+Both are handled by token-overlap matching with a floor
+(`item_align.match_guidelines`), which is also the honest model of the
+underlying reality: a guideline persists across editions under a title that may
+be edited. Three guidelines remain unmatched - two `<untitled@…>` parse
+failures and `Pulmonary Edema`, which may be a genuine removal.
+
+### 8.1 Final decision-experiment numbers
+
+| | minor v2.0→v2.2 | major v2.2→v3.0 |
+|---|---|---|
+| T1 id exact | 89.9% | 35.0% |
+| T2 id, text changed | 2.0% | 21.3% |
+| **T3 renumbered** | 1.0% | **12.3%** |
+| **T4 reworded** | 0.0% | **4.6%** |
+| **T5 moved** | 2.7% | **5.7%** |
+| T6 unmatched | 4.5% | 21.1% |
+| **Trivially alignable** | **91.9%** | **56.3%** |
+| **Needs more than an id** | **3.6%** | **22.6%** |
+
+**The headline is T3 at 12.3%.** Those are items whose text is *identical*
+across editions but whose marker path changed. An identifier lookup reports
+each one as a deletion plus an unrelated insertion, destroying the provenance
+link, when in fact nothing about the recommendation changed at all. Together
+with T4 and T5, **22.6% of items in a major revision cannot be tracked by
+identifier**, against 3.6% in a maintenance revision.
+
+That magnitude-dependence is the finding, and it is now measured on alignment
+that has been checked rather than assumed.
+
+### 8.2 Why these numbers are more trustworthy than §7's
+
+Three independent reasons, worth recording because §7's numbers were wrong
+twice:
+
+- Guideline matching is 95.2% and the pairs were inspected by hand
+  (`OB/GYN Childbirth` → `Childbirth`, `Conducted Electrical Weapon Injury
+  (e.g. TASER)` → `(i.e., TASER)`).
+- The correction moved items in the **expected direction** — out of unmatched
+  and into renumbered/reworded. A fix that shuffled items arbitrarily, or that
+  inflated the interesting tiers while leaving unmatched untouched, would have
+  been a red flag.
+- The minor-bump numbers are **unchanged**, which is correct: that pair never
+  had a title problem, so a title fix should not have moved it.
+
+### 8.3 Remaining known weaknesses
+
+- 21.1% unmatched on the major bump still mixes genuine deletions with
+  residual parse failures. It is reported, not claimed as deletion.
+- Two `<untitled@…>` guidelines never parse a title in any edition.
+- `Cyanide Exposure` → `Exposure` matched on a truncated v3.0 title; the
+  containment-biased overlap is permissive by design and will occasionally
+  pair loosely. Worth a manual audit before publication.

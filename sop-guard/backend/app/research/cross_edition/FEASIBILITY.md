@@ -145,7 +145,7 @@ removed/added pair (`september 8 2017 neonatal resuscitation` versus
 `june 29 2018 neonatal resuscitation`). Date-like lines are now skipped during
 the title walk. Two `<untitled@…>` failures remain and are the next parser fix.
 
-### 3.3 Extraction artefacts — recorded, not smoothed over
+### 3.4 Extraction artefacts — recorded, not smoothed over
 
 - **Bullet glyphs do not map to Unicode** and arrive as U+FFFD. Harmless for
   item extraction, but any parser must not treat them as content.
@@ -160,7 +160,7 @@ the title walk. Two `<untitled@…>` failures remain and are the next parser fix
 
 ---
 
-### 3.4 Item parser — built and working
+### 3.5 Item parser — built and working
 
 `item_parser.py` takes a protocol PDF to addressable items with stable
 identifiers and character offsets. Both editions parse cleanly:
@@ -399,3 +399,72 @@ twice:
 - `Cyanide Exposure` → `Exposure` matched on a truncated v3.0 title; the
   containment-biased overlap is permissive by design and will occasionally
   pair loosely. Worth a manual audit before publication.
+
+
+---
+
+## 9. CORRECTION: an identifier-remapping bug inflated §8's headline
+
+Found during a verification pass before corpus retrieval. **§8.1's numbers were
+wrong and are superseded by the table below.**
+
+### 9.1 The bug
+
+`item_align.align_items` rewrites old-edition item identifiers into the new
+edition's guideline vocabulary before comparing them, so that a guideline which
+was renamed does not make all of its items look deleted. It did this with
+
+```python
+it.item_id.replace(_norm(it.guideline), _norm(mapped), 1)
+```
+
+`item_id` is built with `_norm_title`, which **keeps** `/` and `-`
+(`ob/gyn childbirth`). `_norm` **strips** them (`obgyn childbirth`). The
+substring was therefore never found, `replace` silently did nothing, and every
+guideline whose title contains punctuation — `OB/GYN Childbirth`,
+`End-of-Life Care/Hospice Care`, `Crush Injury/Crush Syndrome`,
+`Toxins and Environmental Poisoning/Overdose` — kept its old identifier and
+could not match by id, even though guideline matching had correctly paired it.
+Those items fell through to the harder tiers.
+
+Fixed by rebuilding the identifier from components (`_norm_title(mapped)` /
+section / marker path, preserving any `#N` disambiguation suffix) rather than
+by string surgery.
+
+### 9.2 Corrected numbers
+
+| | minor v2.0→v2.2 | major v2.2→v3.0 (was) | major v2.2→v3.0 (**corrected**) |
+|---|---|---|---|
+| T1 id exact | 89.9% | 35.0% | **42.8%** |
+| T2 id, text changed | 2.0% | 21.3% | **30.0%** |
+| T3 renumbered | 1.0% | 12.3% | **4.0%** |
+| T4 reworded | 0.0% | 4.6% | **1.3%** |
+| T5 moved | 2.7% | 5.7% | **5.6%** |
+| T6 unmatched | 4.5% | 21.1% | **16.2%** |
+| **Trivially alignable** | **91.9%** | 56.3% | **72.9%** |
+| **Needs more than an id** | **3.6%** | 22.6% | **10.9%** |
+
+**The headline halved: 22.6% → 10.9%.** T3, which §8.1 called "the headline",
+fell from 12.3% to 4.0%.
+
+The minor-bump numbers are **unchanged at 3.6%**, which is the correct control:
+that pair contains few punctuated guideline titles to remap, so a remapping bug
+should not have affected it — and did not.
+
+### 9.3 What this does to the study
+
+The claim is weaker but not dead. **10.9% of items in a major revision still
+cannot be tracked by identifier, against 3.6% in a maintenance revision** — a
+threefold contrast rather than the sixfold one previously reported. A further
+16.2% are unmatched and remain undecomposed between genuine deletion and
+residual failure.
+
+**This was the fourth paper-flattering result in this line of work to turn out
+to be a bug** (after the two in §7.1/§8.2 and the anchoring study's H6 probe).
+Three of the four were caught by the same move: disbelieving a number that
+favoured the study and inspecting intermediate output.
+
+It is worth recording that `PREREGISTRATION.md` §10 was written to mandate
+exactly that check — and was then not applied to the dev numbers it was written
+alongside. The rule was right; applying it only to future test results was not.
+**§10 should be read as applying to dev results too.**

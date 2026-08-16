@@ -327,7 +327,7 @@ after registration.
 
 | Date | Deviation | Reason | Effect on interpretation |
 |---|---|---|---|
-| | | | |
+| 2026-08-16 | **§2's exploratory background numbers are superseded.** A verification pass found an identifier-remapping bug in `item_align.align_items` (documented in `FEASIBILITY.md` §9). Corrected major-bump figures: T3 12.3%→**4.0%**, T4 4.6%→**1.3%**, T6 21.1%→**16.2%**, "requires more than an identifier" 22.6%→**10.9%**. Minor-bump figures unchanged at 3.6%. Code state moves from `2ea8ba2` to the commit carrying this entry. | The remap used `_norm` while identifiers are built with `_norm_title`; the two differ on `/` and `-`, so `str.replace` silently failed for every guideline with punctuation in its title, pushing true identifier matches into the harder tiers. | **No hypothesis, metric, threshold, split rule, baseline or frozen parameter is changed.** §2 is exploratory background and its correction does not affect what is being tested. **But H1's 10% threshold is now marginal rather than comfortable:** it was chosen while dev showed 22.6%, and dev now shows 10.9%. **The threshold is deliberately NOT revised.** Lowering a pre-registered threshold after dev evidence moves against the hypothesis is precisely the behaviour registration exists to prevent, even where technically permitted by the absence of test data. H1 may well be disconfirmed, and that is an acceptable outcome. |
 
 ---
 

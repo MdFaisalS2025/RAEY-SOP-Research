@@ -56,6 +56,7 @@ import sys
 from collections import defaultdict
 
 from app.research.cross_edition.item_parser import parse, Item
+from app.research.cross_edition.edition_align import _norm_title
 
 # Text-similarity floor for calling two items "the same recommendation,
 # reworded". Deliberately high: this probe should under-claim matches rather
@@ -147,7 +148,22 @@ def align_items(old_pdf: str, new_pdf: str) -> dict:
     for it in old_items:
         mapped = gmap.get(it.guideline)
         if mapped and mapped != it.guideline:
-            it.item_id = it.item_id.replace(_norm(it.guideline), _norm(mapped), 1)
+            # Rebuild the id from components rather than string-replacing the
+            # guideline inside it.
+            #
+            # The first version did `item_id.replace(_norm(old), _norm(new))`,
+            # which silently did NOTHING whenever the title contained
+            # punctuation. item_id is built with _norm_title (which keeps "/"
+            # and "-", giving "ob/gyn childbirth") while _norm strips them
+            # ("obgyn childbirth"), so the substring was never found. Every
+            # guideline with a slash or hyphen - OB/GYN Childbirth,
+            # End-of-Life Care/Hospice Care, Crush Injury/Crush Syndrome -
+            # kept its old-edition id and could never match, inflating the
+            # harder tiers with what were really identifier matches.
+            suffix = ""
+            if "#" in it.item_id:
+                suffix = "#" + it.item_id.rsplit("#", 1)[1]
+            it.item_id = f"{_norm_title(mapped)}/{it.section}/{it.marker_path}{suffix}"
             it.guideline = mapped
 
     new_by_id = {i.item_id: i for i in new_items}

@@ -262,3 +262,64 @@ python -m app.research.cross_edition.corpus_probe /path/to/candidate.pdf
 
 Run this on any candidate **before** investing in parsing it. The verdict line is
 the triage decision: REJECT (no text layer), WEAK (few markers), USABLE, STRONG.
+
+---
+
+## 7. Decision experiment: is the alignment task actually hard?
+
+`edition_align.py` matched 87% of guidelines on exact normalised title — a
+trivial method. If items behave the same way, cross-edition provenance is a
+dictionary lookup and there is no method contribution. `item_align.py` tests
+that, with tiers designed so the answer cannot flatter the paper: T1/T2 are free
+(identifier survives), T3–T5 require real matching, T6 is unmatched.
+
+**The answer depends on the magnitude of the revision, which is itself the
+finding.**
+
+| | minor bump<br>v2.0→v2.2 | major bump<br>v2.2→v3.0 |
+|---|---|---|
+| Old → new items | 4,745 → 4,567 | 4,567 → 5,047 |
+| New-only items | 36 | **1,843** |
+| T1 id exact | 89.9% | 35.2% |
+| T2 id, text changed | 2.0% | 21.4% |
+| T3 renumbered | 1.0% | 2.0% |
+| T4 reworded | 0.0% | 0.9% |
+| T5 moved | 2.7% | 10.6% |
+| T6 unmatched | 4.5% | **29.8%** |
+| **Trivially alignable** | **91.9%** | **56.7%** |
+| **Needs more than an id** | **3.6%** | **13.5%** |
+
+On a maintenance revision the trivial method is nearly sufficient. On a full
+review it accounts for barely half the items, leaving ~43% either requiring real
+matching or unaccounted for.
+
+**Honest limits on this number.** Cross-edition guideline-title overlap is
+currently 75.8%, so roughly a quarter of guidelines fail to match by title and
+push their items into T6 regardless of whether they were genuinely restructured.
+**The 13.5% (T3–T5) is therefore a floor on real difficulty; the 29.8% (T6) is a
+mixture of genuine deletion and parser failure and must not be quoted as
+evidence.** Separating those two is the next parser task and is prerequisite to
+any publishable claim.
+
+### 7.1 A parsing artefact that nearly became a finding
+
+The first v2.2→v3.0 run reported 38.9% needing more than an id and 57.6%
+unmatched, and the tool printed "that is a real method contribution."
+
+It was not. The 2022 edition uses different page furniture — `NASEMSO`,
+`National Model EMS Clinical Guidelines`, `Go To TOC` — which the hardcoded
+running-header regex did not match, so it survived into guideline titles
+(`version 3 0 universal care guideline`). Identical items were scored as *moved*
+or *unmatched* purely because their titles no longer matched.
+
+Two fixes: running headers are now detected **empirically**, as short lines
+recurring on more than half the pages, which generalises to any publisher rather
+than to one document's layout; and title extraction handles the 2022 layout,
+where the title is printed twice before `Aliases` (`category / title / title`) —
+the containment-based dedupe had been dropping *both* copies, since each
+contains the other, and falling back to joining the category in.
+
+This is the second time in this study that a paper-flattering result turned out
+to be a parser bug. Both were caught by disbelieving a convenient number and
+checking the intermediate output. Any future result that suddenly favours the
+paper should be treated the same way.

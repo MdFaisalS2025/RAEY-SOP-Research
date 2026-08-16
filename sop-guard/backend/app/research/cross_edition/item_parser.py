@@ -124,15 +124,48 @@ class ParsedEdition:
     unparsed_sections: int = 0
 
 
-def _clean_to_canonical(text: str) -> tuple[str, list[tuple[str, int]]]:
+def _detect_running_lines(lines: list[str], n_pages: int) -> set[str]:
+    """Find repeated header/footer lines EMPIRICALLY rather than by pattern.
+
+    The hardcoded `_RUNNING_HEADER` regex was written against the 2017/2019
+    editions ("Updated January 5, 2019" plus bare page numbers). The 2022
+    edition uses entirely different furniture - "NASEMSO", "National Model
+    EMS Clinical Guidelines", "Go To TOC" - which the regex does not match,
+    so all of it survived into the canonical text and into guideline titles.
+
+    That was not a cosmetic problem. It corrupted title extraction
+    ("version 3 0 universal care guideline"), which broke cross-edition
+    title matching, which pushed identical items into the "moved" and
+    "unmatched" tiers and flipped the study's decision experiment from
+    "no method contribution" to "real method contribution" on what was
+    purely a parsing artefact.
+
+    Detecting furniture by repetition instead of by pattern generalises to
+    any publisher, which is what a corpus spanning multiple agencies needs.
+    A line is furniture if it is short and recurs on a large fraction of
+    pages - real content does not repeat 400 times.
+    """
+    from collections import Counter
+    counts = Counter(ln.strip() for ln in lines if ln.strip())
+    floor = max(10, int(n_pages * 0.5))
+    return {
+        text for text, n in counts.items()
+        if n >= floor and len(text) <= 70
+    }
+
+
+def _clean_to_canonical(text: str, n_pages: int = 0) -> tuple[str, list[tuple[str, int]]]:
     """Drop running headers and page numbers; return the canonical text and
     a list of (line, char_offset_into_canonical) for every kept line."""
+    all_lines = text.split("\n")
+    furniture = _detect_running_lines(all_lines, n_pages) if n_pages else set()
+
     kept: list[tuple[str, int]] = []
     out: list[str] = []
     cursor = 0
-    for ln in text.split("\n"):
+    for ln in all_lines:
         s = ln.rstrip()
-        if _RUNNING_HEADER.match(s):
+        if _RUNNING_HEADER.match(s) or s.strip() in furniture:
             continue
         kept.append((s, cursor))
         out.append(s)
@@ -182,7 +215,7 @@ def _strip_marker(line: str) -> str:
 
 def parse(pdf_path: str, doc_id: str | None = None) -> ParsedEdition:
     raw, pages = extract_text(pdf_path)
-    canonical, lines = _clean_to_canonical(raw)
+    canonical, lines = _clean_to_canonical(raw, pages)
 
     ed = ParsedEdition(
         doc_id=doc_id or pdf_path.rsplit("/", 1)[-1].rsplit(".", 1)[0],
@@ -244,9 +277,31 @@ def _title_before(lines: list[tuple[str, int]], line_no: int) -> str:
     # "Universal Care Guideline"), which the naive join turned into
     # "universal care universal care guideline". Drop any part contained in
     # another.
-    kept = [a for k, a in enumerate(parts)
-            if not any(k != m and a.lower() in b.lower() for m, b in enumerate(parts))]
-    return " ".join(kept or parts).strip() or f"<untitled@{line_no}>"
+    # Exact duplicates first, keeping one. v3.0 prints the guideline title
+    # twice before "Aliases" (category / title / title), and a pure
+    # containment filter dropped BOTH copies - each contains the other -
+    # which then fell back to joining the category in as well.
+    seen: set[str] = set()
+    uniq: list[str] = []
+    for a in parts:
+        if a.lower() in seen:
+            continue
+        seen.add(a.lower())
+        uniq.append(a)
+    kept = [a for k, a in enumerate(uniq)
+            if not any(k != m and a.lower() in b.lower() for m, b in enumerate(uniq))]
+    kept = kept or uniq
+    # The line nearest "Aliases" is the title; anything before it is the
+    # category heading ("Universal Care", "Cardiovascular"), which is not
+    # part of the guideline's identity and differs in layout between
+    # editions. Keep only the last element.
+    if len(kept) > 1:
+        kept = kept[-1:]
+    title = " ".join(kept or parts).strip()
+    # v3.0 prefixes guideline titles with "Version 3.0", which made the same
+    # guideline unmatchable across editions.
+    title = re.sub(r"(?i)^version\s*[\d.]+\s*", "", title).strip()
+    return title or f"<untitled@{line_no}>"
 
 
 def _parse_section_items(

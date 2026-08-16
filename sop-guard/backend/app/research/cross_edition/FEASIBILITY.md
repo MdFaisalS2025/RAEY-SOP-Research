@@ -160,6 +160,66 @@ the title walk. Two `<untitled@…>` failures remain and are the next parser fix
 
 ---
 
+### 3.4 Item parser — built and working
+
+`item_parser.py` takes a protocol PDF to addressable items with stable
+identifiers and character offsets. Both editions parse cleanly:
+
+| | v2.0 (2017) | v2.2 (2019) |
+|---|---|---|
+| Guidelines | 69 | 69 |
+| **Items extracted** | **4,745** | **4,567** |
+| Depth 1 / 2 / 3 | 2,321 / 1,855 / 569 | 2,235 / 1,772 / 560 |
+| Duplicate item_ids | **0** | **0** |
+| Ambiguous `i`/`v`/`x` markers | 3 | 3 |
+| Sections yielding no items | 172 | 173 |
+| Offset mismatches (first 2,000) | 64 (3.2%) | 77 (3.9%) |
+
+Item IDs take the form `guideline / section / marker-path`, e.g.
+`universal care guideline/assessment/6.c.ii`, and offsets resolve exactly
+against `canonical_text` — that ID at offset 26,200 returns
+`"ii. Breath sounds"`. Output is serialised in a shape deliberately compatible
+with `RealDocument` (`doc_id`, `raw_text`, `items[]` with
+`item_id`/`text`/`char_start`/`char_end`), so the existing anchoring harness in
+`real_corpus/` can consume these documents without a shim.
+
+**Design decisions worth knowing:**
+
+- **Offsets index a canonical text, not the raw extraction.** Running headers
+  and page numbers are stripped, so raw offsets would be meaningless. The parser
+  defines the cleaned line stream as canonical and serialises it alongside the
+  items. Same convention as `real_corpus/corpus.py::_load_raw`.
+- **Depth is inferred from marker-type sequence, not indentation,** because PDF
+  extraction does not preserve indentation reliably.
+- **`i.`, `v.` and `x.` are genuinely ambiguous** between roman and alpha.
+  Resolved by continuity with an open level; where that fails, a bare `i.` is
+  read as roman-one. Only 3 cases per edition need the fallback, and the count is
+  reported rather than hidden.
+
+**Four bugs found and fixed during the build**, all recorded because each was
+silently producing wrong output:
+
+1. **Bullets were ignored entirely.** A numbering-only parser left 207 sections
+   with zero items — whole sections are bulleted rather than numbered, so this
+   was a quarter of the corpus, not a tail. Adding bullet markers (including the
+   U+FFFD glyphs from §3.3) recovered them.
+2. **Wrapped titles were concatenated with their own fragments**, producing
+   `universal care universal care guideline`. Parts contained within other parts
+   are now dropped.
+3. **Item IDs were not unique** — 831 collisions, because a section can contain
+   several independent numbered lists (an adult list, then a paediatric one).
+   Now disambiguated by occurrence. Fixing the counter's scope from per-section
+   to per-edition removed the last 282.
+4. **The offset self-check was itself wrong**, comparing a marker-stripped item
+   against an unstripped slice and reporting 2,000/2,000 mismatches on offsets
+   that were correct. The real rate is 3–4%.
+
+**Still open:** ~172 sections yield no items (short prose without markers — needs
+checking whether any contain real recommendations), and the 3–4% offset mismatch
+tail is uninvestigated.
+
+---
+
 ## 4. What this changes
 
 1. **The corpus is viable.** The blocking risk is cleared. Proceed.

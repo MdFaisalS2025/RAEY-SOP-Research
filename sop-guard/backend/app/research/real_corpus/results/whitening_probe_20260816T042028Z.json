@@ -1,0 +1,182 @@
+{
+  "generated_at": "2026-08-16T04:20:27.884499+00:00",
+  "status": "EXPLORATORY / DEV-ONLY - see module docstring",
+  "include_adversarial": false,
+  "n_documents": 4,
+  "n_paraphrase_pairs": 33,
+  "n_unique_texts": 157,
+  "embedding_dim": 384,
+  "decision_rule": {
+    "target_recall": 0.95,
+    "max_fpr": 0.05
+  },
+  "whitening_diagnostics": {
+    "n_samples": 157,
+    "n_dims": 384,
+    "n_components_kept": 52,
+    "rank_deficient": true,
+    "explained_variance_ratio": 0.8363,
+    "smallest_kept_singular_value": 0.001787701869534582,
+    "max_amplification": 23.65,
+    "warning": "n <= d: covariance is rank-deficient. PCA-whitening applied with reduced components. Interpret with caution and re-run on the expanded corpus."
+  },
+  "invalid_absolute_schemes": {
+    "minmax": "tautological - pins the argmax to 1.0; equivalent to the rank-1 test"
+  },
+  "schemes": {
+    "raw+none": {
+      "absolute": {
+        "auc": 0.9908,
+        "n_pos": 33,
+        "n_neg": 1767,
+        "pos_mean": 0.8442,
+        "pos_min": 0.6981,
+        "neg_mean": 0.5938,
+        "neg_max": 0.8693,
+        "best_at_target_recall": {
+          "threshold": 0.7015689555003602,
+          "recall": 0.9696969696969697,
+          "fpr": 0.0967741935483871
+        },
+        "separating_threshold_exists": false
+      },
+      "relative": {
+        "n": 33,
+        "rank1_accuracy": 1.0,
+        "margin_mean": 0.1058,
+        "margin_min": 0.0169,
+        "margin_p05": 0.0321,
+        "margin_negative_count": 0
+      }
+    },
+    "raw+zscore": {
+      "absolute": {
+        "auc": 0.9915,
+        "n_pos": 33,
+        "n_neg": 1767,
+        "pos_mean": 3.1748,
+        "pos_min": 1.329,
+        "neg_mean": -0.0593,
+        "neg_max": 3.0975,
+        "best_at_target_recall": {
+          "threshold": 1.3995475942158009,
+          "recall": 0.9696969696969697,
+          "fpr": 0.05602716468590832
+        },
+        "separating_threshold_exists": false
+      },
+      "relative": {
+        "n": 33,
+        "rank1_accuracy": 1.0,
+        "margin_mean": 1.603,
+        "margin_min": 0.3007,
+        "margin_p05": 0.4609,
+        "margin_negative_count": 0
+      }
+    },
+    "raw+minmax": {
+      "absolute": {
+        "auc": 1.0,
+        "n_pos": 33,
+        "n_neg": 1767,
+        "pos_mean": 1.0,
+        "pos_min": 1.0,
+        "neg_mean": 0.3447,
+        "neg_max": 0.9429,
+        "best_at_target_recall": {
+          "threshold": 1.0,
+          "recall": 1.0,
+          "fpr": 0.0
+        },
+        "separating_threshold_exists": null
+      },
+      "relative": {
+        "n": 33,
+        "rank1_accuracy": 1.0,
+        "margin_mean": 0.3672,
+        "margin_min": 0.0571,
+        "margin_p05": 0.0995,
+        "margin_negative_count": 0
+      },
+      "absolute_invalid_reason": "tautological - pins the argmax to 1.0; equivalent to the rank-1 test"
+    },
+    "whitened+none": {
+      "absolute": {
+        "auc": 0.9998,
+        "n_pos": 33,
+        "n_neg": 1767,
+        "pos_mean": 0.6759,
+        "pos_min": 0.4194,
+        "neg_mean": -0.0188,
+        "neg_max": 0.5525,
+        "best_at_target_recall": {
+          "threshold": 0.41938431834179213,
+          "recall": 1.0,
+          "fpr": 0.0011318619128466328
+        },
+        "separating_threshold_exists": true
+      },
+      "relative": {
+        "n": 33,
+        "rank1_accuracy": 1.0,
+        "margin_mean": 0.4468,
+        "margin_min": 0.1371,
+        "margin_p05": 0.1687,
+        "margin_negative_count": 0
+      }
+    },
+    "whitened+zscore": {
+      "absolute": {
+        "auc": 0.9947,
+        "n_pos": 33,
+        "n_neg": 1767,
+        "pos_mean": 4.1933,
+        "pos_min": 1.3714,
+        "neg_mean": -0.0783,
+        "neg_max": 3.8285,
+        "best_at_target_recall": {
+          "threshold": 1.410075872545472,
+          "recall": 0.9696969696969697,
+          "fpr": 0.03678551216751556
+        },
+        "separating_threshold_exists": true
+      },
+      "relative": {
+        "n": 33,
+        "rank1_accuracy": 1.0,
+        "margin_mean": 2.7044,
+        "margin_min": 0.9776,
+        "margin_p05": 1.1899,
+        "margin_negative_count": 0
+      }
+    },
+    "whitened+minmax": {
+      "absolute": {
+        "auc": 1.0,
+        "n_pos": 33,
+        "n_neg": 1767,
+        "pos_mean": 1.0,
+        "pos_min": 1.0,
+        "neg_mean": 0.2531,
+        "neg_max": 0.8266,
+        "best_at_target_recall": {
+          "threshold": 1.0,
+          "recall": 1.0,
+          "fpr": 0.0
+        },
+        "separating_threshold_exists": null
+      },
+      "relative": {
+        "n": 33,
+        "rank1_accuracy": 1.0,
+        "margin_mean": 0.5132,
+        "margin_min": 0.1734,
+        "margin_p05": 0.2135,
+        "margin_negative_count": 0
+      },
+      "absolute_invalid_reason": "tautological - pins the argmax to 1.0; equivalent to the rank-1 test"
+    }
+  },
+  "mean_pairwise_cosine_raw": 0.6165,
+  "mean_pairwise_cosine_whitened": -0.0062
+}

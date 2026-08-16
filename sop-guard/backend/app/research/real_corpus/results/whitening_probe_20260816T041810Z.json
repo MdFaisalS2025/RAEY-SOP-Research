@@ -1,0 +1,167 @@
+{
+  "generated_at": "2026-08-16T04:18:10.487419+00:00",
+  "status": "EXPLORATORY / DEV-ONLY - see module docstring",
+  "include_adversarial": false,
+  "n_documents": 4,
+  "n_paraphrase_pairs": 33,
+  "n_unique_texts": 157,
+  "embedding_dim": 384,
+  "decision_rule": {
+    "target_recall": 0.95,
+    "max_fpr": 0.05
+  },
+  "schemes": {
+    "raw+none": {
+      "absolute": {
+        "auc": 0.9908,
+        "n_pos": 33,
+        "n_neg": 1767,
+        "pos_mean": 0.8442,
+        "pos_min": 0.6981,
+        "neg_mean": 0.5938,
+        "neg_max": 0.8693,
+        "best_at_target_recall": {
+          "threshold": 0.7015689555003602,
+          "recall": 0.9696969696969697,
+          "fpr": 0.0967741935483871
+        },
+        "separating_threshold_exists": false
+      },
+      "relative": {
+        "n": 33,
+        "rank1_accuracy": 1.0,
+        "margin_mean": 0.1058,
+        "margin_min": 0.0169,
+        "margin_p05": 0.0321,
+        "margin_negative_count": 0
+      }
+    },
+    "raw+zscore": {
+      "absolute": {
+        "auc": 0.9915,
+        "n_pos": 33,
+        "n_neg": 1767,
+        "pos_mean": 3.1748,
+        "pos_min": 1.329,
+        "neg_mean": -0.0593,
+        "neg_max": 3.0975,
+        "best_at_target_recall": {
+          "threshold": 1.3995475942158009,
+          "recall": 0.9696969696969697,
+          "fpr": 0.05602716468590832
+        },
+        "separating_threshold_exists": false
+      },
+      "relative": {
+        "n": 33,
+        "rank1_accuracy": 1.0,
+        "margin_mean": 1.603,
+        "margin_min": 0.3007,
+        "margin_p05": 0.4609,
+        "margin_negative_count": 0
+      }
+    },
+    "raw+minmax": {
+      "absolute": {
+        "auc": 1.0,
+        "n_pos": 33,
+        "n_neg": 1767,
+        "pos_mean": 1.0,
+        "pos_min": 1.0,
+        "neg_mean": 0.3447,
+        "neg_max": 0.9429,
+        "best_at_target_recall": {
+          "threshold": 1.0,
+          "recall": 1.0,
+          "fpr": 0.0
+        },
+        "separating_threshold_exists": true
+      },
+      "relative": {
+        "n": 33,
+        "rank1_accuracy": 1.0,
+        "margin_mean": 0.3672,
+        "margin_min": 0.0571,
+        "margin_p05": 0.0995,
+        "margin_negative_count": 0
+      }
+    },
+    "whitened+none": {
+      "absolute": {
+        "auc": 0.9984,
+        "n_pos": 33,
+        "n_neg": 1767,
+        "pos_mean": -0.0064,
+        "pos_min": -0.0064,
+        "neg_mean": -0.0064,
+        "neg_max": -0.0064,
+        "best_at_target_recall": {
+          "threshold": -0.0064097623137808965,
+          "recall": 0.9696969696969697,
+          "fpr": 0.016411997736276173
+        },
+        "separating_threshold_exists": true
+      },
+      "relative": {
+        "n": 33,
+        "rank1_accuracy": 0.9697,
+        "margin_mean": 0.0,
+        "margin_min": -0.0,
+        "margin_p05": 0.0,
+        "margin_negative_count": 1
+      }
+    },
+    "whitened+zscore": {
+      "absolute": {
+        "auc": 0.9959,
+        "n_pos": 33,
+        "n_neg": 1767,
+        "pos_mean": 4.2609,
+        "pos_min": 1.3844,
+        "neg_mean": -0.0796,
+        "neg_max": 2.8866,
+        "best_at_target_recall": {
+          "threshold": 1.413238106120579,
+          "recall": 0.9696969696969697,
+          "fpr": 0.027730616864742503
+        },
+        "separating_threshold_exists": true
+      },
+      "relative": {
+        "n": 33,
+        "rank1_accuracy": 0.9697,
+        "margin_mean": 3.0184,
+        "margin_min": -0.5075,
+        "margin_p05": 1.5227,
+        "margin_negative_count": 1
+      }
+    },
+    "whitened+minmax": {
+      "absolute": {
+        "auc": 0.9997,
+        "n_pos": 33,
+        "n_neg": 1767,
+        "pos_mean": 0.9968,
+        "pos_min": 0.8952,
+        "neg_mean": 0.3118,
+        "neg_max": 1.0,
+        "best_at_target_recall": {
+          "threshold": 1.0,
+          "recall": 0.9696969696969697,
+          "fpr": 0.0005659309564233164
+        },
+        "separating_threshold_exists": true
+      },
+      "relative": {
+        "n": 33,
+        "rank1_accuracy": 0.9697,
+        "margin_mean": 0.5147,
+        "margin_min": -0.1048,
+        "margin_p05": 0.2326,
+        "margin_negative_count": 1
+      }
+    }
+  },
+  "mean_pairwise_cosine_raw": 0.6165,
+  "mean_pairwise_cosine_whitened": -0.0064
+}

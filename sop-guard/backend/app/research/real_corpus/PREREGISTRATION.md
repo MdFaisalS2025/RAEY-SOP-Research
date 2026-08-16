@@ -4,8 +4,13 @@
 cut; changes go in §12 (Deviations) as dated, reasoned entries appended to the end
 of this file, never as edits to the text above it.
 
-**Registered:** 2026-08-15
-**Registration tag:** `prereg-anchoring-v1`
+**Registered:** 2026-08-15 (v1) · **Amended:** 2026-08-16 (v2)
+**Registration tag:** `prereg-anchoring-v2` — supersedes `prereg-anchoring-v1`,
+which remains tagged and unmodified at commit `862721d`. The v2 amendment adds
+hypothesis H6 (§8) and baselines 7–11 (§4.2) after a literature review
+identified competing explanations for the §2 observations that require
+controls. **No test document existed and none had been inspected at the time of
+amendment** — see §12 for the full entry.
 **Registered by:** Mohamed Faisal Sindhi (sindhi@usf.edu, GitHub `MdFaisalS2025`)
 — *corrected 2026-08-15 after tagging; see §12*
 **Target venue:** ECIR 2027, short paper track (abstract 2026-10-05, paper 2026-10-12)
@@ -163,6 +168,30 @@ except where §5 specifies. Method names below are the exact function names.
 | `structural` | `method_structural` | Marker-located block, gated by absolute asymmetric lexical containment. |
 | `structural_margin` | `method_structural_margin` | Marker-located block, gated by strict relative ranking against all sibling items in the same document. |
 
+### 4.2 Competing-explanation controls, added in v2
+
+Added 2026-08-16. The §2 observations are consistent with at least three
+established explanations that v1 did not control for: global embedding
+anisotropy (transformer embeddings occupy a narrow cone; mean pairwise cosine
+reported at 0.8–0.99), the long-standing incomparability of raw retrieval scores
+across queries (score-distribution modelling, TREC Filtering), and the analytic
+result that cosine over learned embeddings can be arbitrary in absolute terms
+(Steck et al., WWW 2024). Without controls, the v1 mechanism claim is not
+attributable and the study cannot distinguish its hypothesis from known effects.
+
+| # | Condition | Purpose |
+|---|---|---|
+| 7 | **Whitened embeddings + absolute gate** — closed-form whitening (mean→0, covariance→identity), **fit on dev vectors only and applied unchanged to test** | The anisotropy control. Primary test of H6. |
+| 8 | **Per-document score normalisation + absolute gate** — z-score and min–max over the sibling set | Tests whether per-query rescaling alone rescues absolute gating, which would make relative-margin gating redundant. |
+| 9 | **Score-distribution threshold optimisation** — normal–exponential mixture over positive/negative score distributions | The IR-canonical threshold-setting method. Tests whether principled threshold estimation succeeds where a fixed constant fails. |
+| 10 | **Conformal abstention** — split-conformal calibration of the candidate-minus-best-sibling margin, calibrated on dev | Converts the v1 safety claim from an empirical zero into a distribution-free bound. See §6.1. |
+| 11 | **Cross-encoder reranker** | Controls for "a stronger scoring model would fix it." |
+
+All transforms, thresholds, mixtures and conformal quantiles in conditions 7–11
+are **fit on dev documents only**. Applying a dev-fitted transform to test data
+is permitted; refitting anything on test data is a contamination event under
+§11 item 4.
+
 ### 4.1 One new method, declared in advance
 
 `structural_margin_decoy_robust` — identical to `structural_margin` except that the
@@ -309,6 +338,37 @@ reduces that rate.
 
 ---
 
+### H6 — The failure is local-semantic, not global-geometric *(added v2)*
+Applying isotropy whitening (fit on dev only), per-document score normalisation,
+or score-distribution threshold optimisation does **not** restore absolute-gate
+separability within documents: under each correction, no threshold achieves
+recall ≥ 0.95 at FPR ≤ 0.05 over same-document negative pairs in the test set.
+
+- **Confirmed if:** no such threshold exists under any of the three corrections.
+- **Disconfirmed if:** such a threshold exists under any correction. *In that
+  case the mechanism claimed in H2 is attributable to the known global effect,
+  and the paper is reframed around that finding rather than around a distinct
+  local one. This outcome is reported, not suppressed.*
+- **Reported regardless:** the separability delta before and after each
+  correction, quantifying how much of the compression is global-geometric and
+  how much is local-semantic; and mean pairwise cosine before and after
+  whitening, as a check that the anisotropy framing applies to this backend at
+  all.
+- **Relationship to H2:** H6 is the attribution control for H2. H2 without H6 is
+  not interpretable, because H2's result is predicted by prior work.
+
+### H7 — Rank-1 discrimination survives where absolute gating fails *(added v2)*
+On the same test pairs and under the same scoring, rank-1 accuracy (the true
+item outscoring every sibling) is ≥ 0.90 in conditions where no separating
+absolute threshold exists.
+
+- **Confirmed if:** both hold simultaneously.
+- **Disconfirmed if:** rank-1 accuracy is also degraded, which would indicate
+  the embedding carries no usable signal at all rather than signal that is
+  usable only relatively — a materially different and weaker paper.
+- **Note:** H7 states the paper's central dissociation explicitly. It was
+  implicit in v1 and is registered here so it can fail.
+
 ## 9. Analysis plan
 
 1. **One evaluation run on the test set.** A single execution of the harness over
@@ -323,10 +383,25 @@ reduces that rate.
    resamples.
 4. **Stratified reporting**, pre-declared: by `intended_distance` (near / far), by
    `author` (A / B), by numbering scheme, and by adversarial condition.
-5. **Multiplicity.** Five hypotheses, each with one pre-declared primary test.
-   Benjamini–Hochberg correction is applied across the H1–H5 family. Stratified
-   analyses in item 4 are **descriptive and exploratory** and are reported without
-   correction and labelled as such.
+5. **Multiplicity.** Seven hypotheses, each with one pre-declared primary test.
+   Benjamini–Hochberg correction is applied across the **H1–H7** family
+   *(widened from H1–H5 in v2)*. Stratified analyses in item 4 are
+   **descriptive and exploratory** and are reported without correction and
+   labelled as such.
+
+### 9.1 Conformal calibration protocol *(added v2)*
+
+Condition 10 uses split conformal prediction. The nonconformity score is the
+negated margin between the marker-located candidate and its highest-scoring
+sibling. The quantile is estimated on **dev pairs only** at a pre-declared
+target false-anchor rate of **α = 0.05**, and applied unchanged to test.
+
+The guarantee assumes exchangeability between calibration and test data. The
+adversarial documents (§3.3) **deliberately violate it**. Results are therefore
+reported in two strata — exchangeable and adversarial — and the guarantee is
+claimed only for the first. Any observed bound violation on the adversarial
+stratum is reported as a finding about the limits of the method, not as
+experimental error.
 6. **Dev results are reported separately** and labelled exploratory, alongside test
    results, in every table. A dev/test gap is reported and discussed, not
    suppressed.
@@ -376,6 +451,7 @@ deviation is.
 
 | Date | Deviation | Reason | Effect on interpretation |
 |---|---|---|---|
+| 2026-08-16 | **v2 amendment.** Added hypotheses H6 and H7 (§8), competing-explanation controls 7–11 (§4.2), and the conformal calibration protocol (§9.1). Widened the multiplicity family from H1–H5 to H1–H7. Tagged `prereg-anchoring-v2`. | A literature review conducted after v1 identified three established explanations for the §2 observations that v1 did not control for: global embedding anisotropy, cross-query score incomparability (score-distribution modelling), and the analytic arbitrariness of absolute cosine values. Without these controls the v1 mechanism claim is not attributable and cannot be distinguished from known effects. | **Strengthens the study; does not weaken any v1 claim.** No hypothesis, threshold, metric, split rule, or corpus decision from v1 was removed or relaxed — v2 is strictly additive. Critically, **no test document existed and none had been inspected at the time of amendment**, so this is a design change made in ignorance of the outcome data, which is the only condition under which amendment preserves the confirmatory status of the study. `prereg-anchoring-v1` (commit `862721d`) remains tagged and unmodified for comparison. A dev-only exploratory probe of H6 (`whitening_probe.py`) may be run before corpus expansion; it touches no test data and its results are exploratory. |
 | 2026-08-15 | Header field **Registered by** changed from `MdFaisalS2025 (sindhi@usf.edu)` to `Mohamed Faisal Sindhi (sindhi@usf.edu, GitHub MdFaisalS2025)`. | The field was populated from `git config user.name`, which holds a GitHub handle rather than the registrant's name. A registration should identify a person. | **None.** Identity metadata only. No hypothesis, parameter, metric, split rule, or data-handling procedure is affected. The originally tagged commit `862721d` retains the pre-correction text and remains the authoritative registration timestamp; this change is an amendment to it, not a re-registration. |
 
 ---

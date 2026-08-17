@@ -1429,3 +1429,94 @@ as it stands, not a defect to be quietly patched away.
 useful outcome, but is not yet a test set — `PREREGISTRATION.md` §3.2 needs
 ≥ 4 pairs (minimum viable) or ≥ 6 (target) that actually work, and Delaware
 demonstrates that not every retrieval attempt will produce one.
+
+
+---
+
+## 22. Second blind-test round: three attempts, zero clean additions to the test set
+
+Continuing §21's discipline exactly: retrieve a publisher untouched by any
+code in this repository, run `corpus_probe` and `parse()` with **zero
+modification**, report whatever comes out, do not fix failures.
+
+### 22.1 Wisconsin — inaccessible, not a test result
+
+Two dated editions exist on `dhs.wisconsin.gov` (2021, 2023, same document
+number P-02875), but both URLs resolve to a Drupal HTML landing page rather
+than the PDF itself, even with a referer header set. Not a blind-test
+outcome either way — the document was never retrieved. Not pursued further
+today; a different retrieval path (browser-rendered download, not curl)
+would be needed.
+
+### 22.2 South Carolina — failed, same mechanism as Delaware
+
+Real edition pair retrieved (EMS Clinical Operating Guidelines, Aug 2025 and
+Nov 2025, both real PDFs, 262 pages). `corpus_probe`: **WEAK** on both
+(1.5% numbered lines). `parse()` chose `differential` as the anchor —
+genuinely a recurring label, but a **differential-diagnosis flowchart
+heading**, not a protocol title. Guideline "titles" extracted under it are
+diagnosis-criteria fragments (`Weakness Dehydration Deep / rapid
+breathing`, `Irritability`, `Sepsis`), not protocol names. 46 of 72 (64%)
+guidelines came back with zero items. **Not fixed** — documented and
+excluded, per §19.4.
+
+### 22.3 Rhode Island — the interesting case: real titles, real coverage gap
+
+Real edition pair retrieved (2022 via a third-party mirror hosting the
+original state PDF, 2026 direct from `health.ri.gov`; both genuine
+multi-page text-layer PDFs — an initial file-size/page-count mismatch on the
+2022 file turned out to be a `file`(1) metadata quirk, not a scan, confirmed
+directly against PyMuPDF's own page count).
+
+**Where the anchor fires, it is genuinely correct.** `parse()` chose
+`indication` and produced clean, real, correctly-scoped titles: `Procedure -
+Cricothyrotomy`, `Vascular Access - Peripheral Intravenous Access`,
+`Procedure - Continuous Positive Airway Pressure (CPAP)`. 47 of 49
+guidelines titled (96%) — the best title ratio of any blind attempt so far,
+better even than some of the hand-tuned dev publishers on first pass.
+
+**But 44.3% of items (101 of 228) land under `<preamble>`** — everything
+before the document's first `indication` anchor, which does not fire until
+well into the document. Inspecting those items shows real content, not
+noise: scope-of-practice material (`Training and Education Plan`,
+`Continuous Quality Improvement Program`) and genuine EMR/EMT skill items
+(`Basic patient assessment`, `Airway maintenance utilizing the head-tilt
+chin lift`) that never get attached to any guideline. The downstream
+edition-pair alignment confirms the damage: **65.0% unmatched** — far higher
+than any other publisher's honest T6 rate — directly attributable to the
+unattributed preamble content corrupting the comparison.
+
+**Not fixed.** This is a genuinely different failure mode from Delaware and
+South Carolina — the title mechanism itself works — but the practical
+consequence (most of the document's content is unusable) is the same:
+Rhode Island is **not currently usable as clean test data**.
+
+### 22.4 Running total across all genuine blind attempts
+
+| Publisher | Anchor found | Titles | Verdict |
+|---|---|---|---|
+| Delaware (§21) | body-text fragment | ~50% garbage | **Failed** |
+| Wisconsin | — | — | **Inaccessible** (not tested) |
+| South Carolina | real label, wrong content class | ~64% garbage | **Failed** |
+| Rhode Island | genuinely correct | 96% real | **Partial — unusable due to preamble gap** |
+
+**Zero of three genuine blind attempts this round produced clean, usable
+test data.** Combined with §21, that is zero clean additions across four
+attempts total. This is itself the honest finding: generalising the three
+frozen strategies to arbitrary, previously unseen institutional protocol
+documents is materially harder than the four already-fitted publishers
+suggested, and the search for a valid test set is the current bottleneck —
+not the annotation tooling, which has been ready since §20.
+
+### 22.5 What Rhode Island suggests, without acting on it
+
+Unlike Delaware and South Carolina, Rhode Island's failure has a specific,
+nameable shape: **content preceding the first anchor occurrence is silently
+orphaned.** That is a generic risk in the anchor-marks-a-boundary design
+used by every strategy so far (NASEMSO, New York, Rhode Island all share
+it — Maine and Connecticut do not, because their boundary detection works
+differently). Naming this is not the same as fixing it; per §19.4's
+discipline, it is recorded as a candidate explanation for future
+investigation, not acted on now, because acting on it would mean writing
+code in response to Rhode Island's specific content — exactly the
+contamination this round exists to avoid.

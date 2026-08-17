@@ -1364,3 +1364,68 @@ under the discipline in §19.4. Building the instrument now, ahead of that,
 was possible because tooling construction is not itself a confirmatory use —
 but the moment valid test data exists, annotation can begin immediately
 rather than waiting on further engineering.
+
+
+---
+
+## 21. First genuine blind test: Delaware BLS, retrieved and run unmodified
+
+Following §19's contamination finding, the discipline in §19.4 was applied
+for the first time: retrieve a publisher untouched by any of this session's
+development work, run the existing pipeline **with zero code changes**, and
+report whatever comes out.
+
+### 21.1 Retrieval
+
+Delaware DPH BLS statewide protocols, 2022 and 2024 editions, both real PDFs
+(103 pages each), retrieved directly from `dhss.delaware.gov`. Genuinely
+untouched — no code in this repository was written with knowledge of this
+document's content. (A companion ALS 2022→2024 pair was sought from the same
+page but the 2024 link 404s under a generic WordPress page; not pursued
+further, since the BLS pair alone is sufficient for a first blind test.)
+
+### 21.2 Result: the frozen pipeline does not generalise, honestly
+
+```
+corpus_probe verdict:  USABLE (not STRONG) on both editions — 6.0% numbered
+                        lines, only 1 template slot discovered
+parse() anchor chosen: "follow general patient care protocol." — a body-text
+                        sentence fragment, not a structural marker
+guidelines found:      15 / 16
+titled:                8 / 16 (2024) — roughly HALF are <untitled@N>
+```
+
+None of the three frozen strategies (fixed section anchor, per-page footer
+counter, ToC row-alignment) fit Delaware's actual structure. The auto-detect
+fallback did what §13.1 said it would: produced a plausible-looking anchor
+that is wrong, exactly as it did for Maine's `normal` and Connecticut's
+`indications` before those were fixed by hand.
+
+### 21.3 The discipline: excluded, not fixed
+
+**This result is not fixed.** Per §19.4, inspecting Delaware's content
+further and writing a fourth detection strategy would reproduce the exact
+contamination this test exists to avoid. Delaware BLS is therefore
+**documented and excluded from the test set**, not repaired.
+
+This is the correct and, importantly, the *useful* outcome of an honest
+blind test — it demonstrates the test methodology can produce a negative
+result, not only positive ones. A blind test that only ever confirms the
+method would not be a test.
+
+### 21.4 What this implies
+
+The three strategies built during §12–§18 generalise across four publishers
+sharing enough structural similarity (all four, on inspection, turned out to
+have *some* per-protocol recurring marker — a label, a footer, or a ToC —
+even though the specific marker differed each time). Delaware apparently
+does not share that property, at least not one the existing strategies
+recognise. **The honest characterisation of the current parser is "handles
+several concrete conventions," not "generalises to institutional clinical
+protocols broadly."** That is a real limitation of the corpus-building work
+as it stands, not a defect to be quietly patched away.
+
+**The test-set search continues.** One genuine negative result is a valid,
+useful outcome, but is not yet a test set — `PREREGISTRATION.md` §3.2 needs
+≥ 4 pairs (minimum viable) or ≥ 6 (target) that actually work, and Delaware
+demonstrates that not every retrieval attempt will produce one.

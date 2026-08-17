@@ -1,20 +1,44 @@
 """
 Annotation instrument: stratified sampling, packet generation, kappa.
 
-STATUS AS OF WRITING: the mechanics only. `PREREGISTRATION.md` section 11's
-2026-08-17 contamination entry found that NONE of the four currently
-retrieved publishers (NASEMSO, New York, Maine, Connecticut) qualify as
-held-out test data under section 3.4's quarantine - generalising the parser
-to each required reading that publisher's actual content, which is exactly
-what the quarantine prohibits. See FEASIBILITY.md section 19 for the full
-account.
+STATUS AS OF WRITING: real confirmatory data now exists. PREREGISTRATION.md
+section 11's 2026-08-17 entries (the Connecticut-reset entry and the two
+that follow it) record that four edition pairs meet section 3.2's
+minimum-viable confirmatory test set (>=4 pairs, >=3 publishers), verified
+against git history and each publisher's own official records, and
+classified from each document's own front matter (not inferred) as minor
+revisions:
 
-This module may be exercised against that dev data as a DRY RUN to prove the
-sampling and packet mechanics work end-to-end - and every function that
-touches real documents says so in its output - but nothing produced by a
-dry run may be treated as, or reported as, confirmatory annotation. Real
-sampling waits on a genuinely unread edition pair, per PREREGISTRATION.md
-section 11's 2026-08-17 entry.
+    - Tennessee 2017 -> 2018
+    - Pennsylvania 2021 -> 2023v1-2
+    - Connecticut v2022.1 -> v2023.1
+    - Connecticut v2023.1 -> v2024.1
+
+Sampling and packets generated from these four pairs ARE confirmatory,
+not a dry run, and may be reported as such once independently annotated
+per section 5.3.
+
+One live limitation: all four pairs are MINOR revisions. H1 and H2 (section
+7) require a MAJOR revision pair, and a genuine, criteria-gated search
+(PREREGISTRATION.md section 11, 2026-08-17 stopping-rule entries) found
+none available and was stopped deliberately rather than left open-ended.
+H1 and H2 are therefore untestable with the current dataset - not
+disconfirmed, simply without the required stratum. H3 and H4 do not
+require a major/minor split and are testable on the four pairs above.
+
+This module may still be exercised against dev data (NASEMSO, or the
+NY/Maine editions that showed clean parsing but poor alignment quality -
+see FEASIBILITY.md section 42) as a mechanics check - every function that
+touches real documents says so in its output - but nothing produced against
+dev data may be treated as, or reported as, confirmatory annotation.
+
+WHAT THIS MODULE CANNOT DO: section 5.3 requires two annotators to label
+independently, having "not seen any method output for the item they are
+labelling." Whoever built and inspected this pipeline's output extensively
+throughout retrieval and testing cannot serve as one of those two
+annotators without violating that independence requirement. This module
+prepares the sample and the packets; it does not and cannot perform the
+actual labelling.
 
 WHAT THIS IMPLEMENTS, AND WHERE IT COMES FROM
 ----------------------------------------------
@@ -306,9 +330,10 @@ def main(argv: list[str]) -> int:
     cmd = argv[1]
     if cmd == "sample" and len(argv) >= 5:
         old_pdf, new_pdf, out_dir = argv[2], argv[3], argv[4]
-        print("[DRY RUN NOTICE] see module docstring: no publisher currently")
-        print("qualifies as held-out test data. This run is a mechanics")
-        print("check only, not confirmatory sampling.\n")
+        print("[STATUS] see module docstring for which edition pairs are")
+        print("confirmatory (the four minor pairs listed there) versus dev")
+        print("data usable only for a mechanics check. This tool does not")
+        print("know which one you passed - verify before reporting results.\n")
         r = stratified_sample(old_pdf, new_pdf)
         print(f"population by tier: {r['population_by_tier']}")
         print(f"drawn by tier:       {r['drawn_by_tier']}")

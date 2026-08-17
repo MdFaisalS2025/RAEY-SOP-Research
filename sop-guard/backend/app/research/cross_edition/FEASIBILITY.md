@@ -3379,3 +3379,60 @@ checked so far). This is a genuine decision point for the user: spend
 cap slots on Option 2, or invoke the terminal condition now and proceed
 to annotation with H1/H2 documented as untestable. Not decided
 unilaterally here.
+
+## 47. Stopping rule invoked; real (not dry-run) annotation packets generated for all four confirmatory pairs
+
+Asked directly "what should we do now," the terminal condition was
+invoked deliberately rather than spending candidate-cap budget on
+Option 2's already-assessed low expected value (logged in
+`PREREGISTRATION.md` §11). The dataset is frozen at 4 minor pairs from 3
+publishers. H1 and H2 are documented as untestable with the current
+dataset — an absence of the required stratum, not a disconfirmation of
+either hypothesis, and not silently omitted from the eventual paper.
+
+**`annotation.py`'s docstring and CLI notice were updated** — not the
+sampling/kappa logic, which is unchanged and was never part of the
+frozen pipeline (`PREREGISTRATION.md`'s pinned file list is
+`corpus_probe.py`, `item_parser.py`, `item_align.py` only). The module's
+own comments explicitly anticipated this moment ("Real sampling waits on
+a genuinely unread edition pair"); updating a stale status notice once
+that condition is met is adherence to the plan, not a deviation from it.
+The unconditional `[DRY RUN NOTICE]` — which would now falsely mislabel
+a real confirmatory run — is replaced with a neutral status message
+pointing at the docstring's explicit list of which four pairs are
+confirmatory.
+
+**Real stratified samples and annotation packets generated for all four
+pairs** (`app/research/cross_edition/annotation_packets/`), 60 items
+each via `stratified_sample()`/`write_annotation_packet()`, zero code
+changes to the sampling logic itself:
+
+| Pair | Population (T1/T2/T3/T4/T5/T6) | Drawn (T1/T2/T3/T4/T5/T6) |
+|---|---|---|
+| Tennessee 2017→2018 | 1194/196/36/5/28/41 | 15/10/10/5/10/10 |
+| Pennsylvania 2021→2023 | 1267/238/14/4/62/114 | 16/10/10/4/10/10 |
+| Connecticut v2022.1→v2023.1 | 790/246/12/3/92/69 | 16/11/10/3/10/10 |
+| Connecticut v2023.1→v2024.1 | 1190/327/6/2/0/7 | 30/15/6/2/0/7 |
+
+**Total: 240 annotated items across 4 pairs** — short of §5.1's target
+(≥360 across ≥6 pairs), a direct, expected consequence of having 4
+pairs rather than 6, not a new problem. The shortfall-redistribution
+rule (§5.1, corrected 2026-08-17) fired correctly for Connecticut's
+second pair, whose T5 population is genuinely zero and T6 population is
+only 7 — the sampler correctly redistributed the resulting 47-item
+shortfall toward T1/T2 (the only tiers with enough remaining
+population) rather than failing or drawing fewer than 60.
+
+**What remains, and cannot be done by this process**: §5.3 requires two
+annotators who have "not seen any method output for the item they are
+labelling" to label independently. Every item in these four packets has
+already been read, in context, by whoever built and blind-tested this
+pipeline across the entire retrieval and verification effort — that
+disqualifies serving as one of the two required independent annotators.
+This phase produced the sample and the packets (CSV + full-context JSON
++ a per-packet README with the exact task instructions from §5.2); it
+did not and structurally cannot perform the labelling itself. Two
+independent human annotators (the user, or others) completing
+`annotator_correspondence` and `annotator_relation` in each packet's CSV
+is the next required step before `compute_kappa()` can produce a real
+§5.3 reliability statistic.

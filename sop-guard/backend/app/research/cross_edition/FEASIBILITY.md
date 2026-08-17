@@ -1691,3 +1691,47 @@ publisher** (Tennessee) usable so far from blind testing, on top of the
 pre-existing (contaminated, dev-only) NASEMSO/NY/Maine/CT corpus. Minimum
 viable (4 pairs, 3 publishers) is not yet met from genuinely blind data
 alone; the search continues.
+
+
+---
+
+## 25. Fifth blind-test round: Kentucky — a formulary masquerading as a protocol document
+
+Real pair retrieved: Kentucky State EMS Protocols, September 2021 and
+2025-04-30, both directly from `kbems.ky.gov`, both real multi-page PDFs
+(412 and 426 pages). `corpus_probe`: WEAK on both (1.7% numbered lines).
+`parse()` chose `class` as anchor, found 46/46 and 51/51 titled — 100% on
+both, no `<untitled@N>` — which looked promising by the numbers alone.
+
+**Inspection shows why the numbers lied.** The titles are drug names, not
+protocol names: `ADENOSINE`, `ALBUTEROL`, `AMIODARONE`, `ATROPINE SULFATE`,
+`CEFAZOLIN (ANCEF)`. `class` is a real, recurring label — but it belongs to
+a **medication formulary appendix**, not the clinical protocol body. **290
+of 293 items (99.0%) land under `<preamble>`** — the actual 412-page
+protocol document is essentially entirely unattributed; only the small
+drug-reference appendix was ever captured.
+
+This is a variant of the omission failure named for Rhode Island (§22.5),
+but total rather than partial: where Rhode Island lost 44% of its document
+to the gap before the first anchor, Kentucky loses essentially all of it,
+because the only structural marker the frozen strategies could find belongs
+to a small appendix rather than the main body.
+
+**Not fixed.** Documented and excluded.
+
+### 25.1 Running total
+
+| Publisher | Titled | Preamble/fragmentation | Unmatched (T6) | Verdict |
+|---|---|---|---|---|
+| Delaware | ~50% | — | — | Failed |
+| South Carolina | ~36% | — | — | Failed |
+| Rhode Island | 96% | 44.3% preamble | 65.0% | Partial — unusable |
+| Vermont | 100% | fragmentation | 65.4% | Partial — unusable |
+| **Tennessee** | 98.6% | 5.0% preamble, 0 fragmentation | 2.7% | **CLEAN** |
+| Kentucky | 100% | 99.0% preamble (formulary, not protocols) | — | Failed |
+
+Eight genuine blind attempts, one clean pass. Dropped at retrieval without
+testing (no valid pair found): Wisconsin, Alabama, Georgia, Ohio. Searched
+without a usable candidate surfacing: Louisiana, Oklahoma, Mississippi,
+Nevada, Iowa, Illinois, Alaska, Hawaii — in each case either no statewide
+protocol document exists, or only one dated edition could be confirmed.

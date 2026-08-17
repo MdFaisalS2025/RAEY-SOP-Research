@@ -125,7 +125,42 @@ class ParsedEdition:
     anchor: str = ""
 
 
-def detect_section_names(lines: list[str], min_reuse: int = 5) -> set[str]:
+# Anchors observed to work, tried in this order. Kept next to
+# detect_section_names because both need it: this list is used both to seed
+# guideline-boundary detection (detect_guideline_anchor) and, below, to
+# calibrate the spacing filter that keeps detect_section_names from admitting
+# noise. See _known_anchor_min_gap.
+_KNOWN_ANCHORS = ("aliases", "criteria")
+
+
+def _positions(lines: list[tuple[str, int]] | list[str], name: str) -> list[int]:
+    if lines and isinstance(lines[0], tuple):
+        return [i for i, (ln, _) in enumerate(lines)
+                if ln.strip().lower().rstrip(":") == name]
+    return [i for i, ln in enumerate(lines)
+            if ln.strip().lower().rstrip(":") == name]
+
+
+def _known_anchor_stats(lines: list[tuple[str, int]]) -> tuple[int, int] | None:
+    """(occurrence count, minimum gap) for whichever known anchor this
+    document uses, or None if neither is present in useful quantity.
+
+    Computed directly against raw lines - independent of
+    `detect_section_names` - so it can calibrate that function rather than
+    depend on it. See `detect_section_names` for why this exists."""
+    for name in _KNOWN_ANCHORS:
+        pos = _positions(lines, name)
+        if len(pos) < 15:
+            continue
+        gaps = [pos[i + 1] - pos[i] for i in range(len(pos) - 1)]
+        if gaps:
+            return len(pos), min(gaps)
+    return None
+
+
+def detect_section_names(
+    lines: list[tuple[str, int]], min_reuse: int = 5,
+) -> set[str]:
     """Discover a document's section template EMPIRICALLY.
 
     `_SECTION_NAMES` is NASEMSO's template — Aliases, Patient Care Goals,
@@ -135,35 +170,88 @@ def detect_section_names(lines: list[str], min_reuse: int = 5) -> set[str]:
     so guideline segmentation found 0 guidelines and every one of its 862
     extracted items landed under `<preamble>`.
 
-    New York is not less structured — 42% of its lines carry an item marker.
-    It is structured on a different axis, by provider certification level
-    rather than by clinical section:
+    A section header is identified by behaviour: a short line, carrying no
+    item marker, that recurs across the document. Content lines do not
+    repeat sixty times; template slots do.
 
-        90  CFR AND ALL PROVIDER LEVELS      45  CFR STOP
-        67  MEDICAL CONTROL CONSIDERATIONS   39  PARAMEDIC STOP
-        62  CRITERIA                         33  ADVANCED STOP
+    FREQUENCY ALONE IS NOT ENOUGH, and admitting it was a real bug, not a
+    theoretical one. On NASEMSO v3.0 a frequency floor alone accepted dozens
+    of guideline TITLES pulled from what is apparently a table of contents or
+    differential-diagnosis list — "general medical" (67x), "trauma" (47x),
+    "bradycardia" (count high enough) — indistinguishable by count from real
+    slots like "quality improvement" (70x). One of these, "guideline" (7x,
+    the tail end of wrapped "Universal Care Guideline" titles), then became a
+    phantom SECTION, and every item on that "guideline" pseudo-section
+    matched against every other, corrupting the T4/T5 tiers of the alignment
+    study: "requires more than an identifier" moved from 10.2% to 19.2%
+    between two runs with the SAME edition pair, which is what surfaced this.
 
-    A section header is therefore identified by behaviour, not by name: a
-    short line, carrying no item marker, that recurs many times across the
-    document. Content lines do not repeat sixty times; template slots do.
+    The discriminator that actually separates them is spacing, not frequency.
+    A real template slot appears once per guideline, so its occurrences are
+    spaced at least as far apart as the document's known anchor. A TOC entry
+    or category label repeats much more densely. Measured on NASEMSO v3.0:
+    real slots have a minimum gap of 70-87 lines between occurrences; the
+    noise candidates above have minimum gaps of 2-39 lines, well under half
+    the anchor's. This ratio (not an absolute line count) is what generalises
+    across publishers, since NASEMSO's guidelines run far longer than New
+    York's (anchor min-gap ~85 vs ~16) and an absolute floor tuned to one
+    would wrongly reject the other's genuine sections.
+
+    Spacing alone is not sufficient either: "guideline" (7 occurrences, the
+    tail of wrapped "Universal Care Guideline" titles) happened to have all
+    seven occurrences thousands of lines apart, by chance, and cleared the
+    spacing filter on the first version of this fix while remaining exactly
+    the noise it was meant to catch. A second, independent condition is
+    needed - occurrence COUNT close to the anchor's own count, since a real
+    template slot fires once per guideline and the anchor's count IS the
+    guideline count. "guideline" (n=7) against an anchor count of 69 fails
+    this cleanly; every real slot (59-72) passes it.
+
+    Requires `_known_anchor_stats` (computed on the SAME lines) to apply
+    either filter. Without it - an unrecognised publisher - neither filter
+    can run and this function is honestly less reliable; that document's
+    discovered sections should be spot-checked before use, exactly as
+    `FEASIBILITY.md` §13.1 already requires for the anchor itself.
 
     The hardcoded set is unioned in rather than replaced, so NASEMSO parsing
     cannot regress.
     """
     from collections import Counter
     counts: Counter[str] = Counter()
-    for ln in lines:
+    for ln, _ in lines:
         t = ln.strip().rstrip(":")
         if not (4 < len(t) <= 50):
             continue
-        # A line that begins with an item marker is content, not a header.
         if any(p.match(ln) for _, p in _MARKER_PATTERNS):
             continue
-        # Headers are ALL CAPS or Title Case, not sentence-case prose.
         if not (t.isupper() or t == t.title() or t.istitle()):
             continue
+        if _DATE_LINE.match(t):
+            # A revision date VALUE, not a header. It passes both the count
+            # and spacing filters cleanly - it really does occur once per
+            # guideline, right after "Revision Date" - so those filters
+            # cannot catch it; it needs its own check.
+            continue
         counts[t.lower()] += 1
-    return {t for t, n in counts.items() if n >= min_reuse} | _SECTION_NAMES
+
+    candidates = {t for t, n in counts.items() if n >= min_reuse}
+
+    stats = _known_anchor_stats(lines)
+    if stats is not None:
+        anchor_count, anchor_min_gap = stats
+        kept = set()
+        for name in candidates:
+            pos = _positions(lines, name)
+            if len(pos) < 2:
+                continue
+            if len(pos) < 0.5 * anchor_count:
+                continue  # too rare to be a per-guideline template slot
+            gaps = [pos[i + 1] - pos[i] for i in range(len(pos) - 1)]
+            if min(gaps) >= 0.4 * anchor_min_gap:
+                kept.add(name)
+        candidates = kept
+
+    return candidates | _SECTION_NAMES
 
 
 def detect_boilerplate(lines: list[str], min_reuse: int = 20) -> set[str]:
@@ -396,7 +484,7 @@ def parse(pdf_path: str, doc_id: str | None = None) -> ParsedEdition:
     # Section template discovered from THIS document, unioned with the
     # NASEMSO names so that corpus regressions are impossible. See
     # detect_section_names() for why hardcoding was wrong.
-    section_names = detect_section_names([ln for ln, _ in lines])
+    section_names = detect_section_names(lines)
     boilerplate = detect_boilerplate([ln for ln, _ in lines])
     anchor = detect_guideline_anchor(lines, section_names, boilerplate)
     ed.anchor = anchor

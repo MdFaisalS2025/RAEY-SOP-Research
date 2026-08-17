@@ -737,3 +737,143 @@ Item counts moved on every document (NASEMSO v2.2 4,567 → 4,741; v3.0 5,047 �
 5,534). Every tier and tail figure in §8–§11 predates this and must be recomputed
 before use. NASEMSO major-pair guideline matching moved 98.4% → 93.5% for the
 same reason.
+
+
+---
+
+## 14. Dev numbers recomputed — and a serious bug caught in the process
+
+§13.2 flagged that item counts had moved and every tier/tail figure predated
+the fix. Recomputing surfaced a second, more serious bug than the one being
+fixed, caught only because the standing rule (§10) was applied to the very
+first recompute.
+
+### 14.1 The bug: unfiltered `detect_section_names` admitted noise
+
+The first recompute of the NASEMSO major pair moved "requires more than an
+identifier" from 10.2% to **19.2%** — a jump large enough to distrust on sight.
+`T5_moved` alone was 17.6% of all old items, implausibly high. Inspecting
+examples showed why:
+
+```
+universal care guideline/assessment/5#2  ->  universal care guideline/guideline/5
+```
+
+`section = "guideline"`. `detect_section_names` (added in §12 to generalise
+across publishers) accepted any short, non-marker, title-cased line recurring
+≥ 5 times, with no check that it behaved like a real template slot. On
+NASEMSO v3.0 this admitted **~55 spurious "sections"** — guideline titles
+apparently pulled from a table of contents (`general medical` 67×, `trauma`
+47×, `bradycardia`, `cyanide exposure`, …), indistinguishable by count alone
+from genuine slots (`quality improvement` 70×). One of them, `guideline` (7×,
+the tail of wrapped "Universal Care Guideline" titles), became a phantom
+section that every item under it was compared against, corrupting T4/T5.
+
+**Frequency could not separate real slots from noise** — noise counts (67, 81)
+overlapped the real range (59–72) directly. The working discriminator was
+**spacing relative to the document's own known anchor**: a real template slot
+fires once per guideline, so its occurrences are spaced at least as far apart
+as the anchor's; noise clusters more densely. Measured on NASEMSO v3.0, real
+slots have a minimum gap of 70–87 lines; noise candidates had minimum gaps of
+2–39 lines — under half the anchor's. This is a *ratio*, not an absolute line
+count, which is what lets it generalise: NASEMSO's guidelines run far longer
+than New York's (anchor min-gap ~85 vs ~16), so an absolute floor tuned to one
+publisher would misclassify the other's genuine sections.
+
+**Spacing alone still let one item through.** `guideline` (n=7) happened to
+have all seven occurrences thousands of lines apart by chance, clearing the
+spacing filter while remaining exactly the noise it was meant to catch. A
+second, independent condition closed it: occurrence **count** close to the
+anchor's own count, since the anchor's count *is* the guideline count and a
+real slot fires once per guideline. `n=7` against an anchor count of 69 fails
+this cleanly. A third leak (`september 8, 2017`, a Revision Date *value* that
+legitimately recurs once per guideline and therefore passed both structural
+filters) needed a `_DATE_LINE` check, since no spacing or count property
+distinguishes a value from a header.
+
+Three filters were needed, not one, and each was found only because the
+previous fix's result was inspected rather than trusted:
+
+1. count ≥ `min_reuse` (unchanged from §12);
+2. count ≥ 50% of the anchor's own count;
+3. minimum gap ≥ 40% of the anchor's minimum gap;
+4. not a date line.
+
+Verified clean on all seven documents: NASEMSO now discovers **zero**
+non-hardcoded section names on every edition. New York's non-hardcoded
+discoveries (`criteria`, `cfr stop`, `medical control considerations`, …) are
+retained, and are genuine per-provider-level structure, not noise — confirming
+the filter separates the two correctly rather than simply rejecting everything
+unfamiliar.
+
+### 14.2 Corrected dev numbers, all four edition pairs
+
+| | NASEMSO minor<br>v2.0→v2.2 | NASEMSO major<br>v2.2→v3.0 | NY Collaborative<br>v25.1→v26.0 | NY BLS<br>v25.1→v26.0 |
+|---|---|---|---|---|
+| Old → new items | 4,745 → 4,567 | 4,567 → 5,047 | 2,194 → 2,156 | 1,224 → 1,281 |
+| T1 id exact | 92.6% | 40.6% | 26.6% | 75.7% |
+| T2 id, text changed | 2.1% | 26.4% | 14.9% | 10.7% |
+| T3 renumbered | 1.0% | 3.9% | 9.1% | 2.6% |
+| T4 reworded | 0.0% | 1.2% | 0.7% | 0.1% |
+| T5 moved | 0.5% | 6.5% | 29.5% | 5.7% |
+| T6 unmatched | 3.8% | 21.3% | 19.1% | 5.1% |
+| **Trivially alignable** | **94.7%** | **67.0%** | **41.5%** | **86.4%** |
+| **Needs more than an ID** | **1.5%** | **11.7%** | **39.3%** | **8.4%** |
+
+### 14.3 A caveat on NY Collaborative that must not be reported without it
+
+**39.3% is not a clean number.** Guideline title extraction resolves only
+55/62 (old) and 56/63 (new) NY Collaborative guidelines — roughly 11%
+`<untitled@N>`. Items under an unresolved guideline carry a placeholder in
+their `item_id` (`untitled 152`, `untitled 153`, …) that differs by
+coincidence of position across editions, so they can never match on
+identifier and fall through to text-similarity matching. Inspecting T5
+examples confirmed this directly:
+
+```
+untitled 152/criteria/•  ->  untitled 153/criteria/•
+```
+
+Same content, same section, genuinely the same recommendation — reported as
+"moved" only because neither side has a real guideline name. **A meaningful
+share of NY Collaborative's 39.3% is title-extraction debt, not evidence about
+revision difficulty**, exactly the same class of problem §11 diagnosed and
+fixed for NASEMSO's two long titles. It has not yet been fixed for New York.
+NASEMSO major (67.0% trivially alignable, titled 68/69) is comparatively
+trustworthy; NY Collaborative is not, until this is addressed.
+
+### 14.4 Major-pair tail decomposition, recomputed
+
+| Cause | n | % of tail |
+|---|---|---|
+| U1 guideline unmatched | 322 | 33.1% |
+| U2 section absent | 159 | 16.4% |
+| U3 near miss | 53 | 5.5% |
+| U4 consumed rival | 104 | 10.7% |
+| U6 weak distant match | 219 | 22.5% |
+| U5 no candidate | 115 | 11.8% |
+
+**U5 (defensible deletion) held at 2.5% of old items (115/4,567)** — identical
+to §10's figure before this entire round of section-detection changes. That
+stability across a substantial rewrite of the matching pipeline is a genuine,
+useful consistency check: the deletion estimate is not an artefact of the
+matching machinery around it.
+
+**U1 rose to 33.1% of the tail** and needs the same treatment as §14.3: it is
+dominated by unresolved guideline titles, not genuine unmatched content, and
+should not be read as evidence until title extraction is more complete.
+
+### 14.5 What this changes going forward
+
+1. **Every dev number now stated in this document is current as of commit
+   pinned at the top of §15's changelog entry** (see `PREREGISTRATION.md`
+   "Current code state").
+2. **Guideline title extraction is the dominant remaining source of noise**
+   across both publishers, not the alignment method itself. `_title_before`
+   and `_looks_like_title` (§13) were tuned against NASEMSO and need the same
+   inspect-and-fix treatment for New York before its numbers can be trusted.
+3. **§10's standing rule earned its keep again.** A recompute that was
+   expected to be routine surfaced a bug larger than the one motivating it.
+   The rule — inspect intermediate output before reporting any number that
+   moves — should be applied to every remaining recompute, not treated as
+   satisfied by having been written down once.

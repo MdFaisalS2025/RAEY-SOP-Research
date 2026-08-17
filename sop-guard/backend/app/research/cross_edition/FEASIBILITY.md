@@ -3474,3 +3474,38 @@ not a method judgment, so showing it carries no bias risk.
 plain non-technical language, replacing the original README's
 column-hiding instruction with the structural fact that the columns are
 simply not there.
+
+## 49. Single self-contained Excel workbook per annotator, replacing the scattered CSV/JSON/README handoff
+
+Consolidated §48's per-pair CSV + JSON + separate instructions file into
+one workbook per annotator
+(`Annotator_A/Annotator_A_ANNOTATION.xlsx`,
+`Annotator_B/Annotator_B_ANNOTATION.xlsx`,
+built by `annotation_packets/build_annotator_workbooks.py`, a one-off
+formatting script, not part of the pipeline itself). Each workbook has a
+plain-language "READ ME FIRST" sheet plus one tab per pair (240 rows
+total across the two files combined, 60 per tab, identical between the
+two annotators). The full corresponding new-edition guideline text is
+embedded directly in a column on each row — no separate JSON lookup
+required — and the three columns the annotator must fill in are
+highlighted and validated: `annotator_relation` is a genuine Excel
+dropdown restricted to the six §5.2 relation labels, and the two other
+fill-in columns are visually marked with a distinct fill color.
+
+One real defect caught and fixed while building this: PDF text
+extraction had left stray XML-illegal control characters in a handful of
+items (found via a hard `IllegalCharacterError` from openpyxl on one
+Connecticut poisoning/overdose guideline specifically) — added a
+sanitizer stripping characters outside XML 1.0's legal range before
+writing any cell, rather than silently truncating the workbook build or
+corrupting the affected rows. Re-ran clean afterward and confirmed via a
+full-workbook scan that no cell was accidentally interpreted as a
+formula (no value starts with `=`), so no `recalc.py` pass was needed —
+this workbook is data and formatting only, no formulas.
+
+The original per-pair CSV/JSON files (§47-48) are retained in the repo,
+unchanged — they remain the working data for post-annotation merge-back
+(`compute_kappa()`, and the §6 metric computation that needs the
+method's original predictions, deliberately absent from anything the
+annotators see). The two `.xlsx` files are the actual hand-off
+deliverable.

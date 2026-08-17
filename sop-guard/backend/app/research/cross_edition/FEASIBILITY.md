@@ -2371,3 +2371,115 @@ effort to fix one of the now well-catalogued failure mechanisms (garbage
 anchor, majority preamble, fragmentation, footer-echo, item-count
 collapse) and re-run the full blind-test battery from scratch afterward
 — both of which remain the user's call, not something to act on now.
+
+## 37. Wayback Machine recovery round: two more genuine blind tests unlocked, three more confirmed closed
+
+Internet Archive was unreachable for the entire five-round survey above
+(§32-§36); it came back partway through this round (after an initial
+429 rate-limit that cleared), which reopened the "real document, only
+one live edition" states logged in §34 and §36 as worth a future retry.
+Each recovered snapshot was downloaded and, where it produced a genuine
+second edition, run through the exact same frozen, unmodified pipeline
+as every other blind-test state.
+
+**Utah — thirteenth blind-test round, failed.** Recovered the October
+2023 edition (`2023-Utah-EMS-Protocol-Guidelines-Final-10.19.2023.pdf`)
+from a Wayback snapshot dated 2023-11-02, paired against the 2025
+edition already in hand. `corpus_probe`: WEAK on both (0.3% / 0.1%
+numbered lines — the lowest numbered-line density of any state tested
+this phase). `parse()` produces the single worst item-detection result
+of the entire phase: **11 items total from 94 pages, then 3 items total
+from 106 pages** — worse than Hawaii's 2018 collapse (23 items) and
+Alabama's (89 items). `item_align.py`: 0 matched in any tier, **0.0%
+trivially alignable, 100.0% unmatched**. The underlying marker-detection
+step, not just guideline attribution, essentially does not fire on this
+document's formatting at all. **Not fixed.** Documented and excluded.
+
+**Oklahoma — fourteenth blind-test round, failed.** Recovered the 2013
+edition via `digitalprairie.ok.gov` — Oklahoma's own official state
+digital archive (CONTENTdm), not a third-party mirror — as a genuine
+first-party government source, distinct in kind from every other
+Wayback-recovered file this round. Paired against the already-confirmed
+2018 edition. `corpus_probe`: STRONG on 2013 (12.4%), USABLE on 2018
+(7.3%) — both promising by the numbers. **Inspection shows a new
+failure signature**: 47.8% of 2013's items and 57.8% of 2018's are
+`<untitled@N>` (no guideline assigned at all, distinct from
+`<preamble>`), and where a label *is* assigned it is algorithm-flowchart
+box text rather than a protocol name — `'ADULT'`,
+`'PEDIATRIC: IV NS 20 mL/kg BOLUS IF SYS BP < (70 + 2x age in years)
+mmHg...'`, `'LIMIT INTUBATION COMPRESSION PAUSE TO MAXIMUM OF 10
+SECONDS...'`. This is the garbage-anchor family (Delaware, South
+Carolina, Nebraska, New Jersey, Maryland) but with a distinctive
+signature of its own: very high `<untitled@N>` share rather than
+`<preamble>` share, consistent with a flowchart-heavy document layout
+where individual algorithm boxes get mistaken for section anchors.
+`item_align.py`: 4.4% trivially alignable, **60.0% unmatched**.
+**Not fixed.** Documented and excluded.
+
+**New Mexico — confirmed closed, not reopened.** Checked Wayback for a
+snapshot of the current publication-ID URL earlier than its own
+last-modified date; the earliest capture found (2022-03-25) predates the
+file's own last-modified header (2022-03-26) by one day — this *is* the
+first version, not a recovered prior edition. No second edition exists
+to find. Stays logged as real-but-single-edition-only.
+
+**Georgia — reclassified with stronger evidence.** A direct search for
+a pre-NASEMSO-adoption Georgia document returned an explicit statement
+that "Georgia lacks state EMS guidelines" — confirming this is a
+standing structural fact about Georgia's EMS system, not a recent
+policy switch away from a former state-authored document. No amount of
+looking at older years would find anything, because nothing was ever
+there.
+
+**Arizona and Montana — real snapshots located, retrieval currently
+unreliable.** Wayback confirmed genuine captures exist for both (Arizona:
+a 2020-06-29 snapshot of the T3G advisory-version URL; Montana: a
+2021-04-30 snapshot of the Board of Medical Examiners protocol URL), but
+both snapshots consistently returned "503 Service Unavailable" from
+Wayback's own storage layer across six retry attempts each — a different
+failure from "no snapshot exists" (confirmed present in the Wayback
+calendar) and different from Utah's transient 503 (which cleared on
+retry). Logged as found-but-not-yet-retrievable; worth another attempt
+in a future round, since this looks like Archive.org node-level flakiness
+rather than a permanent block.
+
+**Idaho and Arkansas — re-searched, no PDF-era editions surfaced** beyond
+what was already found (Idaho's stale 2015/2017 mirror copies; Arkansas's
+app-only distribution). No new evidence either way on whether either
+state ever published a compiled PDF the current app superseded.
+
+### 37.1 Running total
+
+| Publisher | Titled | Preamble/fragmentation | Unmatched (T6) | Verdict |
+|---|---|---|---|---|
+| Delaware | ~50% | — | — | Failed |
+| South Carolina | ~36% | — | — | Failed |
+| Rhode Island | 96% | 44.3% preamble | 65.0% | Partial — unusable |
+| Vermont | 100% | fragmentation | 65.4% | Partial — unusable |
+| **Tennessee** | 98.6% | 5.0% preamble, 0 fragmentation | 2.7% | **CLEAN** |
+| Kentucky | 100% | 99.0% preamble (formulary, not protocols) | — | Failed |
+| West Virginia | 100%\* | 59.4% / 52.2% preamble + uncleaned footer labels | 39.7% | Failed |
+| Nebraska | 100%\* | 0% preamble, garbage anchor (drug/diagnosis noise) | — | Failed |
+| **Pennsylvania** | 97.2% | 0% preamble, 51 real titles both editions | 6.7% | **CLEAN** |
+| New Jersey | ~65%\* | 0% preamble, garbage anchor (dose/sentence fragments) | 57.8% | Failed |
+| Alabama | ~30%\* | 61.8% / 73.4% preamble + garbage anchor + item collapse | 58.4% | Failed |
+| Maryland | ~44%\* | 55.7% / 56.1% preamble + garbage anchor (STRONG verdict, failed anyway) | 26.5% | Failed |
+| Hawaii | ~91%\* | 0% / 38.7% preamble + item collapse + raw page-counter anchor | 52.2% | Failed |
+| Utah | 100%\* | total item-detection collapse (11 then 3 items) | 100.0% | Failed |
+| Oklahoma | ~52%\* | 47.8% / 57.8% untitled + flowchart-box garbage anchor | 60.0% | Failed |
+
+\* "Titled" means no `<untitled@N>` placeholder appeared — not that the
+label is a real protocol name. For Oklahoma, "titled" is inverted from
+`<untitled@N>` share, since that is the dominant failure signal there
+rather than `<preamble>`.
+
+Seventeen genuine blind attempts, two clean passes, across fifteen
+distinct states with full pipeline data. Full 50-state accounting is
+now: 15 tested (Utah and Oklahoma both moved from earlier buckets — Utah
+from single-edition-only, Oklahoma from structurally-ineligible, since
+both now have a real completed pipeline run), 3 contaminated dev
+publishers, 3 real-but-unreachable (MA, NH, NC), 1 real-but-single-
+edition-only (NM), 2 real-snapshot-found-but-currently-unretrievable
+(AZ, MT), 26 confirmed structurally ineligible. Still short of the
+pre-registration's minimum viable test set (≥4 pairs/≥3 publishers) at
+two clean pairs from two publishers.

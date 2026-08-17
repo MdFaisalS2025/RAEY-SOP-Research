@@ -69,7 +69,21 @@ from pathlib import Path
 # Structural marker: "1." / "1.2." / "a." / "iv." / "(3)" at line start,
 # followed by real content. Deliberately permissive - this is triage, not
 # the production parser.
-_MARKER = re.compile(r"^\s*((?:\d+\.)+|[a-z]\.|[ivxlc]+\.|\([a-z0-9]+\))\s+\S")
+# Must stay in step with item_parser._MARKER_PATTERNS. It did not, and the
+# divergence was dangerous: this pattern omitted BULLETS, so the New York
+# protocol set triaged at 0.2-0.3% "numbered lines" and scored WEAK, when the
+# actual parser finds a marker on 42% of its lines. Triage that rejects usable
+# documents is worse than no triage, because the rejection is never revisited.
+_MARKER = re.compile(
+    r"^\s*("
+    r"(?:\d+\.)+"           # 1.  /  1.2.
+    r"|[a-z]\."             # a.
+    r"|[ivxlc]+\."          # iv.
+    r"|\([a-z0-9]+\)"       # (1) / (a)
+    r"|[�•▪●‣⁃-]"  # bullets, incl. unmapped glyphs
+    r"|o"                   # sub-bullet
+    r")\s+\S"
+)
 
 # Dose / threshold / time-window values. These are what a divergence
 # detector actually compares between editions.

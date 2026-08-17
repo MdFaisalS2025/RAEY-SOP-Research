@@ -124,6 +124,47 @@ class ParsedEdition:
     unparsed_sections: int = 0
 
 
+def detect_section_names(lines: list[str], min_reuse: int = 5) -> set[str]:
+    """Discover a document's section template EMPIRICALLY.
+
+    `_SECTION_NAMES` is NASEMSO's template — Aliases, Patient Care Goals,
+    Assessment, and so on. Hardcoding it made the parser publisher-specific in
+    a way that only surfaced on retrieving a second publisher: the New York
+    statewide protocols matched **2** of those names in a 184-page document,
+    so guideline segmentation found 0 guidelines and every one of its 862
+    extracted items landed under `<preamble>`.
+
+    New York is not less structured — 42% of its lines carry an item marker.
+    It is structured on a different axis, by provider certification level
+    rather than by clinical section:
+
+        90  CFR AND ALL PROVIDER LEVELS      45  CFR STOP
+        67  MEDICAL CONTROL CONSIDERATIONS   39  PARAMEDIC STOP
+        62  CRITERIA                         33  ADVANCED STOP
+
+    A section header is therefore identified by behaviour, not by name: a
+    short line, carrying no item marker, that recurs many times across the
+    document. Content lines do not repeat sixty times; template slots do.
+
+    The hardcoded set is unioned in rather than replaced, so NASEMSO parsing
+    cannot regress.
+    """
+    from collections import Counter
+    counts: Counter[str] = Counter()
+    for ln in lines:
+        t = ln.strip().rstrip(":")
+        if not (4 < len(t) <= 50):
+            continue
+        # A line that begins with an item marker is content, not a header.
+        if any(p.match(ln) for _, p in _MARKER_PATTERNS):
+            continue
+        # Headers are ALL CAPS or Title Case, not sentence-case prose.
+        if not (t.isupper() or t == t.title() or t.istitle()):
+            continue
+        counts[t.lower()] += 1
+    return {t for t, n in counts.items() if n >= min_reuse} | _SECTION_NAMES
+
+
 def _detect_running_lines(lines: list[str], n_pages: int) -> set[str]:
     """Find repeated header/footer lines EMPIRICALLY rather than by pattern.
 
@@ -222,11 +263,14 @@ def parse(pdf_path: str, doc_id: str | None = None) -> ParsedEdition:
         source_path=pdf_path, canonical_text=canonical, n_pages=pages,
     )
 
-    # Section marks, as in edition_align.
+    # Section template discovered from THIS document, unioned with the
+    # NASEMSO names so that corpus regressions are impossible. See
+    # detect_section_names() for why hardcoding was wrong.
+    section_names = detect_section_names([ln for ln, _ in lines])
     marks = [
         (i, ln.strip().lower().rstrip(":"))
         for i, (ln, _) in enumerate(lines)
-        if ln.strip().lower().rstrip(":") in _SECTION_NAMES
+        if ln.strip().lower().rstrip(":") in section_names
     ]
 
     alias_anchors = [i for i, nm in marks if nm == "aliases"]

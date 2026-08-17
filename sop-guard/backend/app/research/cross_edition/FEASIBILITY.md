@@ -602,3 +602,78 @@ unrevised, per the §11 deviation entry.
 | U4 consumed rival | 104 | greedy-collision; fixable with global assignment |
 | U1 guideline unmatched | 68 | traces to `Pulmonary Edema` and residual mismatches |
 | U3 near miss | 54 | fixable by lowering the T4 floor, at a precision cost |
+
+
+---
+
+## 12. Second publisher retrieved — the method is only half general
+
+Retrieval before further method work, per the plan. **New York State statewide
+protocols**, four documents forming **two independent edition pairs**:
+
+| | v25.1 | v26.0 |
+|---|---|---|
+| Collaborative Protocols | 186 pp | 184 pp |
+| BLS Protocols | 118 pp | 129 pp |
+
+All four have real text layers. Retrieved directly from `health.ny.gov`, which —
+unlike `nasemso.org` and `mass.gov` — does not block scripted clients.
+
+### 12.1 `corpus_probe` was giving dangerously wrong triage
+
+The probe scored all four New York documents at **0.2–0.3% numbered lines**,
+verdict **WEAK**, "low value for this study".
+
+**That was wrong.** The actual parser finds a marker on **42.0%** of New York's
+lines. The probe's marker regex omitted bullets, and New York's protocols are
+heavily bulleted.
+
+Triage that wrongly rejects usable documents is worse than no triage, because a
+rejection is never revisited — those four documents would simply have been
+dropped. The probe's pattern is now kept in step with `item_parser`'s, and any
+future divergence between the two should be treated as a defect.
+
+### 12.2 The real problem: guideline segmentation is publisher-specific
+
+New York is not less structured than NASEMSO. It is structured **on a different
+axis**. NASEMSO organises each guideline by clinical section; New York organises
+by **provider certification level**:
+
+```
+90  CFR AND ALL PROVIDER LEVELS      45  CFR STOP
+67  MEDICAL CONTROL CONSIDERATIONS   39  PARAMEDIC STOP
+62  CRITERIA                         33  ADVANCED STOP
+```
+
+Only **2** of NASEMSO's ~20 hardcoded section names appear anywhere in a
+184-page New York document.
+
+**Fixed:** `detect_section_names()` now discovers a document's template
+empirically — short lines, carrying no item marker, in caps or title case,
+recurring above a floor — unioned with the hardcoded set so NASEMSO cannot
+regress. New York's extracted items rose **862 → 2,156**; NASEMSO held at 69
+guidelines and gained items (4,567 → 4,741; 5,047 → 5,534) as previously missed
+sections were picked up.
+
+**Not fixed, and this is now the study's central open problem:** New York still
+segments to **0 guidelines**. Guideline boundaries are detected via the `Aliases`
+anchor, which is a NASEMSO convention. Every New York item therefore lands under
+`<preamble>`, and `item_id` — `guideline/section/marker_path` — has no guideline
+component to carry.
+
+### 12.3 What this means for the study
+
+1. **The item layer generalises; the document layer does not.** Marker parsing,
+   depth inference, offsets and section discovery all transfer to a second
+   publisher. Guideline segmentation does not.
+2. **`PREREGISTRATION.md` §3.2 requires ≥ 4 publishers.** On this evidence each
+   will need its own guideline-boundary signal, or a general one must be found.
+   That is real work and it is the highest-value remaining task.
+3. **The dev numbers move again.** NASEMSO item counts changed, so every tier
+   and tail figure in §8–§11 must be recomputed before use. They are stale as of
+   this section.
+4. **A finding worth keeping regardless of the method's fate:** protocol
+   publishers structure the same content on incompatible axes — clinical section
+   versus certification level. Any cross-publisher provenance tool must discover
+   structure rather than assume it. That is a characterisation result the corpus
+   supports on its own.

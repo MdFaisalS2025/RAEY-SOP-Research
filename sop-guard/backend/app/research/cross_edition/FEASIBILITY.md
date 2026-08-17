@@ -677,3 +677,63 @@ component to carry.
    versus certification level. Any cross-publisher provenance tool must discover
    structure rather than assume it. That is a characterisation result the corpus
    supports on its own.
+
+
+---
+
+## 13. Guideline segmentation now works across both publishers
+
+§12 left New York segmenting to zero guidelines. Fixed, and the pipeline now
+runs end to end on **7 documents / 3 edition pairs / 2 publishers**.
+
+| Document | Anchor | Guidelines | Titled | Items |
+|---|---|---|---|---|
+| NASEMSO v2.0 (2017) | `aliases` | 69 | 68 | 4,857 |
+| NASEMSO v2.2 (2019) | `aliases` | 69 | 68 | 4,741 |
+| NASEMSO v3.0 (2022) | `aliases` | 69 | 68 | 5,534 |
+| NY Collaborative v25.1 | `criteria` | 62 | 55 | 2,194 |
+| NY Collaborative v26.0 | `criteria` | 63 | 56 | 2,156 |
+| NY BLS v25.1 | `criteria` | 52 | 48 | 1,224 |
+| NY BLS v26.0 | `criteria` | 58 | 54 | 1,281 |
+
+Cross-edition guideline matching: **NASEMSO major 93.5%**, **NY Collaborative
+87.1%**, **NY BLS 92.3%**.
+
+Three new empirical detectors were added, each replacing something hardcoded:
+`detect_section_names` (the template), `detect_boilerplate` (recurring non-
+furniture lines such as New York's "Applies to adult and pediatric patients",
+which sits between every title and its anchor), and `_looks_like_title`.
+
+### 13.1 Anchor detection is a curated prior, not a general solution
+
+**Stated plainly because the code could be mistaken for more than it is.**
+`detect_guideline_anchor` tries a short list of known anchors first —
+`aliases`, `criteria` — and only falls back to scoring.
+
+Pure auto-detection was attempted and **failed three times**, and the failures
+share a mechanism worth remembering: the scorer rewards "a title-like line sits
+above this section", which cannot distinguish a title from short content. It
+chose:
+
+- `60–100` on NASEMSO v3.0 (6 occurrences, lucky perfect score) → 69 guidelines
+  collapsed to 6;
+- `key documentation elements` on NASEMSO, whose preceding lines are NEMSIS
+  reporting codes (`9914165 – Other …`) → 68 guidelines, all titles garbage;
+- `patient care goals` on NASEMSO v3.0, whose preceding lines are the alias
+  list (`Loss of consciousness`) → 71 guidelines, all titles garbage.
+
+**In every case the guideline COUNT looked plausible.** Only inspecting the
+extracted titles revealed the boundaries were wrong. Counts are not a sufficient
+check on segmentation, and any future publisher must have its titles inspected
+by hand before its documents enter the corpus.
+
+`PREREGISTRATION.md` §3.2 requires ≥ 4 publishers. Two are covered by the prior;
+the remaining two will each need either a new entry in it or a genuinely general
+detector. **This is the largest known limitation of the method as it stands.**
+
+### 13.2 Dev numbers are stale again
+
+Item counts moved on every document (NASEMSO v2.2 4,567 → 4,741; v3.0 5,047 →
+5,534). Every tier and tail figure in §8–§11 predates this and must be recomputed
+before use. NASEMSO major-pair guideline matching moved 98.4% → 93.5% for the
+same reason.

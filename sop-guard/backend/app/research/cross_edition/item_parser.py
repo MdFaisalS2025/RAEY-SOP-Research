@@ -122,6 +122,7 @@ class ParsedEdition:
     items: list[Item] = field(default_factory=list)
     ambiguous_markers: int = 0
     unparsed_sections: int = 0
+    anchor: str = ""
 
 
 def detect_section_names(lines: list[str], min_reuse: int = 5) -> set[str]:
@@ -163,6 +164,135 @@ def detect_section_names(lines: list[str], min_reuse: int = 5) -> set[str]:
             continue
         counts[t.lower()] += 1
     return {t for t, n in counts.items() if n >= min_reuse} | _SECTION_NAMES
+
+
+def detect_boilerplate(lines: list[str], min_reuse: int = 20) -> set[str]:
+    """Short lines that recur often but are not page furniture.
+
+    Distinct from `_detect_running_lines`, which needs recurrence on ~half of
+    all pages. New York prints "Applies to adult and pediatric patients"
+    directly above each protocol's anchor, 36 times in 184 pages — far too
+    infrequent for the furniture filter, but still boilerplate, and it sits
+    exactly where the title walk looks. Without this, every New York protocol
+    title would be that sentence.
+    """
+    from collections import Counter
+    counts = Counter(ln.strip() for ln in lines if 4 < len(ln.strip()) <= 70)
+    return {t for t, n in counts.items() if n >= min_reuse}
+
+
+def _looks_like_title(t: str) -> bool:
+    """Is this line plausibly a guideline title?
+
+    The anchor scorer originally accepted any short non-section line above a
+    candidate. That was too weak: NASEMSO prints NEMSIS reporting codes
+    ("9914165 - Other (no specific NEMSIS protocol matching this guideline)")
+    under `Key Documentation Elements`, and those are short and non-section,
+    so that section scored higher than the true anchor `Aliases`. The
+    guideline COUNT still looked plausible (68), which is why the failure was
+    invisible until the titles themselves were inspected.
+
+    A title starts with a letter, is not predominantly digits, and is not a
+    fragment of running prose.
+    """
+    t = t.strip()
+    if not (4 < len(t) <= 140):
+        return False
+    if not t[:1].isalpha():
+        return False
+    digits = sum(c.isdigit() for c in t)
+    if digits > len(t) * 0.25:
+        return False
+    if t.endswith((".", ";", ",", ":")):
+        return False
+    letters = [c for c in t if c.isalpha()]
+    if letters and sum(c.isupper() for c in letters) / len(letters) < 0.04:
+        return False   # all-lowercase => prose continuation
+    return True
+
+
+def detect_guideline_anchor(
+    lines: list[tuple[str, int]], section_names: set[str], boilerplate: set[str],
+) -> str:
+    """Discover which section name marks the START of a guideline.
+
+    NASEMSO opens every guideline with `Aliases`; New York opens every
+    protocol with `CRITERIA`. Hardcoding `aliases` meant New York segmented
+    into **zero** guidelines and all 2,156 of its items landed under
+    `<preamble>` — the single largest generality failure found so far.
+
+    The anchor is identified by behaviour: of all discovered section names, it
+    is the one most consistently preceded by something that looks like a
+    title. A section that appears mid-guideline (Assessment, Treatment) is
+    preceded by prose; the opening section is preceded by the guideline's
+    name.
+
+    Scoring is the fraction of a candidate's occurrences that have a
+    plausible title above, requiring a minimum number of occurrences so that
+    a rare section with one lucky title cannot win.
+    """
+    from collections import Counter
+    counts = Counter(
+        ln.strip().lower().rstrip(":") for ln, _ in lines
+        if ln.strip().lower().rstrip(":") in section_names
+    )
+
+    # The anchor fires roughly once per guideline, so it is among the most
+    # frequent section names. Without a floor relative to the document, a rare
+    # candidate whose handful of occurrences happen to sit under title-like
+    # lines scores a perfect 1.0 and wins: on the 2022 NASEMSO edition that
+    # elected "60-100" (6 occurrences) over "aliases" (69), collapsing 69
+    # guidelines to 6.
+    max_n = max(counts.values()) if counts else 0
+    floor = max(15, int(0.35 * max_n))
+
+    # KNOWN ANCHORS FIRST. Pure auto-detection proved unreliable and this is
+    # recorded rather than hidden: the scorer below rewards "a title-like line
+    # sits above this section", which cannot distinguish a title from short
+    # content. It chose `key documentation elements` on NASEMSO (whose
+    # preceding lines are NEMSIS reporting codes) and `patient care goals` on
+    # the 2022 edition (whose preceding lines are the alias list). In both
+    # cases the guideline COUNT looked right - 68, 71 - and only inspecting
+    # the extracted titles revealed the boundaries were wrong.
+    #
+    # So: a short curated prior of anchors observed to work, checked in order,
+    # with auto-detection as the fallback for unseen publishers. This is an
+    # honest partial solution, not a general one. A new publisher whose anchor
+    # is not listed gets auto-detection and MUST have its titles inspected
+    # before its documents enter the corpus (see FEASIBILITY).
+    for known in ("aliases", "criteria"):
+        if counts.get(known, 0) >= floor:
+            return known
+
+    best_name, best_score = "aliases", -1.0
+    for name, n in counts.items():
+        if n < floor or n > 400:
+            continue
+        positions = [
+            i for i, (ln, _) in enumerate(lines)
+            if ln.strip().lower().rstrip(":") == name
+        ]
+        with_title = 0
+        for pos in positions:
+            j, steps = pos - 1, 0
+            while j >= 0 and steps < 5:
+                t = lines[j][0].strip()
+                if not t or _DATE_LINE.match(t) or t in boilerplate:
+                    j -= 1
+                    steps += 1
+                    continue
+                if t.lower().rstrip(":") in section_names:
+                    break
+                if _looks_like_title(t) and not any(
+                        p.match(lines[j][0]) for _, p in _MARKER_PATTERNS):
+                    with_title += 1
+                break
+        score = with_title / n
+        # Prefer higher title-consistency; break ties toward more occurrences,
+        # since the anchor fires once per guideline.
+        if score > best_score or (score == best_score and n > counts.get(best_name, 0)):
+            best_name, best_score = name, score
+    return best_name
 
 
 def _detect_running_lines(lines: list[str], n_pages: int) -> set[str]:
@@ -267,13 +397,16 @@ def parse(pdf_path: str, doc_id: str | None = None) -> ParsedEdition:
     # NASEMSO names so that corpus regressions are impossible. See
     # detect_section_names() for why hardcoding was wrong.
     section_names = detect_section_names([ln for ln, _ in lines])
+    boilerplate = detect_boilerplate([ln for ln, _ in lines])
+    anchor = detect_guideline_anchor(lines, section_names, boilerplate)
+    ed.anchor = anchor
     marks = [
         (i, ln.strip().lower().rstrip(":"))
         for i, (ln, _) in enumerate(lines)
         if ln.strip().lower().rstrip(":") in section_names
     ]
 
-    alias_anchors = [i for i, nm in marks if nm == "aliases"]
+    alias_anchors = [i for i, nm in marks if nm == anchor]
     categories = _collect_categories(lines, alias_anchors)
 
     cur_guideline = "<preamble>"
@@ -284,8 +417,8 @@ def parse(pdf_path: str, doc_id: str | None = None) -> ParsedEdition:
     for idx, (line_no, name) in enumerate(marks):
         end = marks[idx + 1][0] if idx + 1 < len(marks) else len(lines)
 
-        if name == "aliases":
-            cur_guideline = _title_before(lines, line_no, categories)
+        if name == anchor:
+            cur_guideline = _title_before(lines, line_no, categories, boilerplate)
             ed.guidelines.append(cur_guideline)
         if name in ("revision date", "references"):
             continue  # metadata, not recommendations
@@ -334,7 +467,8 @@ def _collect_categories(lines: list[tuple[str, int]],
 
 
 def _title_before(lines: list[tuple[str, int]], line_no: int,
-                  categories: set[str] | None = None) -> str:
+                  categories: set[str] | None = None,
+                  boilerplate: set[str] | None = None) -> str:
     parts: list[str] = []
     j = line_no - 1
     while j >= 0 and len(parts) < 3:
@@ -347,6 +481,11 @@ def _title_before(lines: list[tuple[str, int]], line_no: int,
         if s.lower().rstrip(":") in _SECTION_NAMES:
             break
         if _DATE_LINE.match(s):
+            j -= 1
+            continue
+        # Skip recurring boilerplate sitting between the title and the anchor
+        # (New York: "Applies to adult and pediatric patients").
+        if boilerplate and s in boilerplate:
             j -= 1
             continue
         # Stop at obvious body text - titles are short. But the length guard
@@ -364,6 +503,12 @@ def _title_before(lines: list[tuple[str, int]], line_no: int,
         # items: 21% of the entire unmatched tail, as cause U1.
         limit = 140 if j == line_no - 1 else 70
         if len(s) > limit or s.endswith((".", ";", ",")):
+            break
+        # Reject prose fragments and reporting codes outright - see
+        # _looks_like_title. Without this, wrapped body text was glued onto
+        # real titles ("and agency policy General Approach to Safety
+        # Restraining Devices").
+        if not _looks_like_title(s):
             break
         parts.insert(0, s)
         j -= 1

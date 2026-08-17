@@ -7,6 +7,13 @@ changes are appended to §11 as dated entries.
 **Registration tag:** `prereg-crossedition-v1`
 **Registered by:** Mohamed Faisal Sindhi (sindhi@usf.edu, GitHub `MdFaisalS2025`)
 **Code state at registration:** `2ea8ba28b99464add9964481c762799f70389d7c`
+*(historical fact — not updated. Code has since changed; every change is logged
+in §11 and the current state is recorded on the line below, which IS updated.
+Keeping the registration SHA fixed and tracking drift separately is deliberate:
+silently re-pinning would erase the evidence that anything moved.)*
+
+**Current code state:** `6990776` — update this line, and add a §11 entry, on
+every change to `app/research/cross_edition/*.py` before the test run.
 (commit "Fix cross-edition title matching: 72.6% -> 95.2%, decision experiment
 settles" — pins `corpus_probe.py`, `item_parser.py`, `edition_align.py`,
 `item_align.py` and `FEASIBILITY.md`, i.e. every frozen parameter in §4.3)
@@ -327,6 +334,7 @@ after registration.
 
 | Date | Deviation | Reason | Effect on interpretation |
 |---|---|---|---|
+| 2026-08-16 | **Two further code changes, previously unlogged.** (a) `unmatched_probe.py` added, decomposing the T6 tail; two errors in the decomposition itself corrected (U3 scored against consumed candidates; U5 counted items with plausible distant counterparts as deletions). Defensible deletion 6.0%→**2.5%** of old items. (b) Position-aware title length guard in `item_parser._title_before`, recovering two guidelines whose titles exceed 70 characters. Guideline match 95.2%→**98.4%**; "requires more than an identifier" 10.9%→**10.2%**. Code state moves `2ea8ba2` → `b85b050` → `6990776`. | Both are defect repairs to the measurement apparatus, found by applying §10's standing rule. Neither alters a hypothesis, metric, threshold, split rule or baseline. | **No confirmatory claim is affected — no test document exists.** But recorded here because the header's pinned SHA had drifted from the code that would actually run, and an unlogged drift defeats the purpose of pinning it. **A further consequence must be stated: the dev estimate for H1's quantity has now moved 22.6% → 10.9% → 10.2% across three corrections, against a threshold of 10%. H1 is marginal and may well be disconfirmed.** The threshold remains unrevised. See also `FEASIBILITY.md` §11.3: the earlier claim that this figure was a lower bound was **wrong**, and recovery can move it in either direction. |
 | 2026-08-16 | **§2's exploratory background numbers are superseded.** A verification pass found an identifier-remapping bug in `item_align.align_items` (documented in `FEASIBILITY.md` §9). Corrected major-bump figures: T3 12.3%→**4.0%**, T4 4.6%→**1.3%**, T6 21.1%→**16.2%**, "requires more than an identifier" 22.6%→**10.9%**. Minor-bump figures unchanged at 3.6%. Code state moves from `2ea8ba2` to the commit carrying this entry. | The remap used `_norm` while identifiers are built with `_norm_title`; the two differ on `/` and `-`, so `str.replace` silently failed for every guideline with punctuation in its title, pushing true identifier matches into the harder tiers. | **No hypothesis, metric, threshold, split rule, baseline or frozen parameter is changed.** §2 is exploratory background and its correction does not affect what is being tested. **But H1's 10% threshold is now marginal rather than comfortable:** it was chosen while dev showed 22.6%, and dev now shows 10.9%. **The threshold is deliberately NOT revised.** Lowering a pre-registered threshold after dev evidence moves against the hypothesis is precisely the behaviour registration exists to prevent, even where technically permitted by the absence of test data. H1 may well be disconfirmed, and that is an acceptable outcome. |
 
 ---

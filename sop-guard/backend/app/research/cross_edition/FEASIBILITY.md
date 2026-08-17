@@ -1618,3 +1618,76 @@ Both are candidate targets for a **general** fix (not a per-publisher patch)
 if and when that work is deliberately undertaken — see the user's standing
 instruction to defer this. Recorded here so the two concrete cases exist to
 test any future fix against, rather than needing to be re-discovered.
+
+
+---
+
+## 24. Fourth blind-test round: Tennessee — the first genuine clean pass
+
+Continuing the identical discipline. Two candidates dropped before testing
+(retrieval gate, no fix attempted): **Georgia** has no statewide protocol
+document of any kind — the state explicitly defers to NASEMSO's model
+guidelines rather than publishing its own, confirmed via its own EMS page;
+**Ohio**'s only located "prior" file
+(`ems_Guidelines-Procedures-Manual_STROKE.pdf`) is a 252 KB topic-specific
+stroke addendum, not a full prior edition (the current manual is 3.4 MB) —
+no genuine pair found.
+
+### 24.1 Tennessee — clean
+
+Real pair retrieved: EMS Protocol Guidelines, July 2017 (revised
+11.7.2017) and March 2018 (Rev 7.7.18), both directly from `tn.gov`.
+`corpus_probe`: **STRONG** on both (22.8% / 20.4% numbered lines — the
+highest density of any blind attempt). `parse()` chose `assessment` as
+anchor.
+
+| | 2017 | 2018 |
+|---|---|---|
+| Guidelines | 70 | 70 |
+| Titled | 69 (98.6%) | 69 (98.6%) |
+| Items | 1,500 | 1,492 |
+
+Titles read as genuinely real and distinct throughout —
+`Acute Coronary Syndrome/STEMI`, `Ventricular Tachycardia with a Pulse`,
+`Electrocution / Lightning Injuries` — inspected in full, not sampled.
+**Zero duplicate guideline titles** (no fragmentation, unlike Vermont).
+**5.0% preamble leakage** (75/1,492 items), well below Rhode Island's 44.3%.
+**Only 2 of 70 guidelines (2.9%) have zero items**, far below every prior
+blind attempt.
+
+**Edition-pair alignment confirms it:**
+
+| | |
+|---|---|
+| Trivially alignable | **92.7%** |
+| Needs more than an ID | 4.6% |
+| Unmatched | **2.7%** |
+
+Comparable to NASEMSO's minor bump (94.7%) and NY BLS (90.9%) — a
+well-behaved, honestly-measured minor revision. Furniture-contamination
+spot check: effectively zero (1/1,492, and that one is an incidental
+substring match, not real contamination).
+
+**This is the first genuine clean addition to the test set** across five
+rounds of blind testing (Delaware, South Carolina, Rhode Island, Vermont,
+now Tennessee).
+
+### 24.2 Running total
+
+| Publisher | Titled | Preamble/fragmentation | Unmatched (T6) | Verdict |
+|---|---|---|---|---|
+| Delaware | ~50% | — | — | Failed |
+| South Carolina | ~36% | — | — | Failed |
+| Rhode Island | 96% | 44.3% preamble | 65.0% | Partial — unusable |
+| Vermont | 100% | fragmentation | 65.4% | Partial — unusable |
+| **Tennessee** | **98.6%** | **5.0% preamble, 0 fragmentation** | **2.7%** | **CLEAN — usable** |
+
+Seven genuine blind attempts, **one clean pass.** Georgia and Ohio dropped
+at retrieval (no valid pair exists to test). Wisconsin and Alabama remain
+inaccessible/incomplete from prior rounds.
+
+Test-set status against `PREREGISTRATION.md` §3.2: **1 pair, 1 new
+publisher** (Tennessee) usable so far from blind testing, on top of the
+pre-existing (contaminated, dev-only) NASEMSO/NY/Maine/CT corpus. Minimum
+viable (4 pairs, 3 publishers) is not yet met from genuinely blind data
+alone; the search continues.

@@ -3332,3 +3332,50 @@ shows directly). This is now the single most consequential open gap in
 the study, ahead of padding pair-count toward the §3.2 target — not
 resolved here, and not silently worked around by weakening H1/H2's
 definitions or accepting a badly-parsed pair.
+
+## 46. Pre-committed stopping rule applied: the two free diagnostics, both closed without success; Option 1 exhausted
+
+Per the stopping rule logged in `PREREGISTRATION.md` §11, the two
+cost-free checks (re-analysis of existing data, not new acquisition —
+exempt from the 5-candidate cap) were run before spending any cap slot.
+
+**Rhode Island and Vermont (Option 5)**: both editions' own front matter
+checked directly. Rhode Island: `Version 2022.01` / `Version 2026.02`,
+described only as protocols that "supersede all protocols and standing
+orders previously published" — a living-document framing, no full-review
+or complete-rewrite language. Vermont: the 2025 edition explicitly says
+it "replaces 2023 version," self-described as "a living document...
+reviewed, edited, and approved" — same framing. **Both classify as
+minor** under the identical document-text standard applied in §44.7 to
+Tennessee, Pennsylvania, and Connecticut. Even setting aside that both
+were already rejected on parsing quality (§22.5, §23), neither would
+have helped H1/H2 even if their parsing quality were acceptable. This
+lead is closed.
+
+**New York's modern-era `.0` history (Option 1's one concrete lead)**:
+no confirmed genuine `.0` edition exists outside the dev-touched v26.0.
+The one candidate found, `v25.0`, downloads as a real, complete,
+186-page document — but its own cover reads `Updated 03.05.2025 –
+Effective 07.01.2025*`, the same effective date later carried by
+`v25.1` (`Updated 06.13.2025`). v25.0 was superseded before its
+effective date ever arrived; it was never the operative document any
+EMS provider actually used in the field. Using it as one side of a
+confirmatory pair would not represent a genuine second time-point in
+practice, independent of any parsing-quality question. This lead is
+closed without spending a cap slot, since it fails the eligibility gate
+on evidence quality, not on a failed test.
+
+**Status: Option 1 is now exhausted across all three currently-clean,
+non-NASEMSO publishers** (Tennessee has only 2 editions total, already
+used; Pennsylvania and Connecticut's full available histories show zero
+major-labeled editions anywhere; New York's only confirmed major
+transition is dev-contaminated). **Zero of the 5 candidate-cap slots
+have been used.** The only remaining avenue within the stopping rule is
+Option 2 (entirely new publishers) — assessed in §45.2/the accompanying
+decision-framework analysis as low-probability, since it requires the
+joint occurrence of clean parsing (already rare) and explicit
+major-revision self-description (found in zero of the three publishers
+checked so far). This is a genuine decision point for the user: spend
+cap slots on Option 2, or invoke the terminal condition now and proceed
+to annotation with H1/H2 documented as untestable. Not decided
+unilaterally here.

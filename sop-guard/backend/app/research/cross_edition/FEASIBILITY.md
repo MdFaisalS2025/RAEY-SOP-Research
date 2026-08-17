@@ -1854,3 +1854,95 @@ is split across many per-topic files rather than one compiled PDF, or the
 only two editions findable are separated by a document-series change too
 large to treat as consecutive (e.g. Washington's 2005 EMT-Basic protocols
 vs. its 2024 BLS/ILS guidance).
+
+## 28. Eighth blind-test round: Pennsylvania — a second genuine clean pass
+
+Real pair retrieved: Pennsylvania Statewide ALS Protocols, "2021 FINAL
+9-1-21" and "2023v1-2," both direct PDFs from `pa.gov` (179 and 194
+pages). `corpus_probe`: **STRONG** on both editions (15.7% / 15.4%
+numbered lines) — the first STRONG verdict on any state since the
+contaminated dev publishers, and the first time in this blind-test phase
+that `corpus_probe`'s verdict and `parse()`'s actual output agree.
+
+`parse()` reports 0% preamble in both editions (1699 and 1769 items,
+2.8% / 2.7% `<untitled@N>`) with 51 distinct guidelines in each. **Hand
+inspection confirms these are real protocol names**, not noise: `STROKE`,
+`BURNS`, `GENERAL CARDIAC ARREST`, `NERVE AGENT/PESTICIDE EXPOSURE`,
+`ALTERED LEVEL OF CONSCIOUSNESS - ADULT`/`- PEDIATRIC`,
+`POISONING/TOXIN EXPOSURE`, `STROKE`, `SEIZURE`, `SHOCK / SEPSIS` — the
+full 51-entry lists for both editions were read end to end, not sampled.
+
+`item_align.py` on the pair: 1267 T1, 238 T2, 14 T3, 4 T4, 62 T5, 114 T6
+— **88.6% trivially alignable, 4.7% requires-more-than-id, 6.7%
+unmatched**. This is the strongest alignment result of any blind test so
+far, edging out Tennessee's numbers on trivial-alignable share while
+running at a much larger scale (1699 vs. Tennessee's few hundred items).
+
+This is the second genuine clean pass, and the first on a `STRONG`-rated
+document — evidence the known-anchor and footer strategies are not the
+only route to a clean result; the fallback heuristic can also work
+correctly when the underlying document has dense, regular structural
+markers (PA's protocols are laid out with a strict recurring template the
+fallback scorer picks up reliably). Not fixed, nothing to fix — passed
+as retrieved.
+
+## 29. Ninth blind-test round: New Jersey — garbage anchor, worst case yet
+
+Real pair retrieved: New Jersey EMS Clinical Practice Guidelines, "2022
+Interim" and "FINAL 8.21.2025v1," both direct PDFs from `nj.gov` (182 and
+248 pages). `corpus_probe`: WEAK on 2022 (3.0%), STRONG on 2025 (31.6%) —
+a split verdict between the two editions of the same series, itself a
+new observation (prior states' two editions always fell on the same side
+of the WEAK/STRONG line).
+
+`parse()` shows the same garbage-anchor failure as Delaware, South
+Carolina, and Nebraska, in its worst form yet. 2022's top labels are drug
+doses and procedure fragments (`Droperidol 5-10 mg IM`, `Insert an
+oral/nasal gastric tube; Refer to Nasal/Oral Gastric Tube Insertion
+6.10`), most of it (81+71+44 of 334 items) landing under three different
+`<untitled@N>` placeholders rather than any real anchor. 2025 is worse:
+its top "guidelines" are mid-sentence fragments —
+`'waveform ETCO2 and SPO2 ASAP'`, `'Available for download; "MyLVAD"
+Hospital Locator App'`, dosing instructions for oxytocin and glucagon —
+none of them protocol names.
+
+`item_align.py` confirms: 0.3% trivially alignable, 41.9%
+requires-more-than-id, **57.8% unmatched** — the worst alignment result
+of any state tested this phase, worse even than Rhode Island and
+Vermont's partial failures.
+
+**Not fixed.** Documented and excluded.
+
+### 29.1 Running total
+
+| Publisher | Titled | Preamble/fragmentation | Unmatched (T6) | Verdict |
+|---|---|---|---|---|
+| Delaware | ~50% | — | — | Failed |
+| South Carolina | ~36% | — | — | Failed |
+| Rhode Island | 96% | 44.3% preamble | 65.0% | Partial — unusable |
+| Vermont | 100% | fragmentation | 65.4% | Partial — unusable |
+| **Tennessee** | 98.6% | 5.0% preamble, 0 fragmentation | 2.7% | **CLEAN** |
+| Kentucky | 100% | 99.0% preamble (formulary, not protocols) | — | Failed |
+| West Virginia | 100%\* | 59.4% / 52.2% preamble + uncleaned footer labels | 39.7% | Failed |
+| Nebraska | 100%\* | 0% preamble, garbage anchor (drug/diagnosis noise) | — | Failed |
+| **Pennsylvania** | 97.2% | 0% preamble, 51 real titles both editions | 6.7% | **CLEAN** |
+| New Jersey | ~65%\* | 0% preamble, garbage anchor (dose/sentence fragments) | 57.8% | Failed |
+
+\* "Titled" means no `<untitled@N>` placeholder appeared — not that the
+label is a real protocol name.
+
+Twelve genuine blind attempts, two clean passes (Tennessee, Pennsylvania).
+Also searched this round without a usable statewide compiled-PDF
+candidate surfacing: Michigan, Indiana, Oregon, Colorado, Virginia, North
+Carolina, California, Illinois (all regional/county-based EMS systems,
+no single statewide document); Georgia (its "protocols" page only hosts a
+Scope-of-Practice document and an unmodified adoption of the national
+NASEMSO model guidelines, not an original compiled protocol manual); Iowa
+(the only statewide PDF found is an 18-page Scope of Practice document,
+not a treatment-protocol manual); Massachusetts and New Hampshire (both
+publish real, well-structured statewide protocol PDFs from official `.gov`
+domains with clear edition history, but both are blocked at the network
+level — Massachusetts returns an explicit WAF "Not allowed" page,
+New Hampshire's Akamai edge returns "Access Denied" — rather than a
+missing-document 404; worth another retrieval attempt in a future round
+if the blocking is transient).

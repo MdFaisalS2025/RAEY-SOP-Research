@@ -2126,3 +2126,41 @@ accounting after this round: 12 states tested with real pipeline data, 3
 contaminated dev publishers (NY, ME, CT), 2 real-but-blocked (MA, NH), 7
 now confirmed structurally ineligible with specific evidence (WI, OH, MO,
 LA, OK, MS, NV), leaving 31 states still to be checked.
+
+## 33. Full-coverage survey, round two: Arizona and Montana confirmed single-edition; North Carolina real but unreachable
+
+- **Arizona** — the two distinct AZDHS URLs surfaced for the T3G
+  (Triage, Treatment, and Transport Guidelines) document — a "current"
+  one and an "earlier version" one — resolve to **byte-identical files**
+  (same MD5 hash). Only one edition of this document is actually
+  published; there is no second edition to pair it with.
+- **Montana** — the Board of Medical Examiners' "Prehospital Treatment
+  Protocols" (Version 11, major review 2015, current revision #12 dated
+  November 2020) is real and downloadable from `boards.bsd.dli.mt.gov`,
+  but it is the only working copy found; a third-party mirror that
+  appeared to be an earlier dated cut of the same Version 11 (from
+  `readygallatin.com`, filename dated 3/2019) is itself now a dead link
+  (404). No second edition confirmed.
+- **North Carolina** — real evidence of a compiled document exists
+  (`ncems.org/protocols/allprotocols.pdf`, referred to directly by
+  search results as the "NCCEP Treatment Protocols"), but `ncems.org` is
+  currently unreachable by both direct fetch and browser navigation
+  (connection failures, not a 404), and the Internet Archive Wayback
+  Machine was also down for the entire duration of this round
+  ("Temporarily Offline" / 502 on every attempt), so no snapshot check
+  could be completed either. Logged as real-but-currently-unreachable,
+  same category as Massachusetts and New Hampshire — worth a retry in a
+  future round rather than a permanent drop.
+
+Full accounting after this round: 12 states tested with real pipeline
+data, 3 contaminated dev publishers, 3 real-but-currently-unreachable
+(MA, NH, NC), 9 confirmed structurally ineligible with specific evidence
+(WI, OH, MO, LA, OK, MS, NV, AZ, MT), leaving 23 states still to check:
+Alaska, Arkansas, California, Colorado, Hawaii, Idaho, Illinois, Indiana,
+Kansas, Michigan, Minnesota, New Mexico, North Dakota, Oregon, South
+Dakota, Utah, Virginia, Washington, Wyoming, plus re-confirmation passes
+on the earlier-round drops that were based on search snippets alone
+rather than a direct department-page visit (Florida, Georgia, Iowa,
+Texas already re-confirmed with direct evidence; the rest of the
+original round-two/round-three drop list has not yet had the same
+direct-page treatment).

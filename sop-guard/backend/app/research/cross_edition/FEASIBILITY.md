@@ -2294,3 +2294,80 @@ AK, ID, AR, ND, SD to the prior 12), leaving 9 states still to check with
 a direct department-page visit: California, Colorado, Illinois, Indiana,
 Michigan, Oregon, Virginia, Washington, and a final re-check of any state
 whose earlier drop relied only on search snippets.
+
+## 36. Full-coverage survey, round five (final): the last eight states, all regional/county systems — full 50-state accounting
+
+The last eight untested states were each checked against their official
+EMS-authority page directly. All eight confirm the same structural
+pattern already seen repeatedly this phase — no single statewide
+compiled clinical-protocol document, because the state delegates
+protocol authorship to regional or county medical control authorities:
+
+- **California** — EMSA's own former public guidelines page
+  (`emsa.ca.gov/guidelines/`) now redirects to a login-only "Central
+  Registry" portal; EMS system management is explicitly the
+  responsibility of 34 local EMS agencies (LEMSAs), not EMSA itself.
+- **Colorado** — CDPHE's "EMS medical direction" page covers medical
+  director registration, scope-of-practice waivers, and an FAQ — no
+  compiled protocol document at all; protocols are set by individual EMS
+  medical directors per Colorado's own regulatory framework.
+- **Illinois** — IDPH's EMS page describes a three-tiered
+  regional/area-wide/local trauma-center system dating to 1971; protocols
+  are Regional Standing Medical Orders set by each of Illinois's EMS
+  regions (Region 1, Region IX/NWC, Region XI/Chicago, etc.), not IDPH.
+- **Indiana** — no statewide compiled PDF found; every protocol document
+  located is either a metro-area document (Indianapolis) or a specific
+  hospital system's own protocols (Ascension St. Vincent), referencing
+  Indiana DHS standards rather than being published by DHS itself.
+- **Michigan** — MDHHS confirms directly: protocols are developed and
+  maintained by each regional Medical Control Authority (MCA) and merely
+  "approved by MDHHS," not authored or compiled by the state into one
+  document.
+- **Oregon** — OHA's EMS Program page has no compiled statewide document;
+  every protocol document found is county-level (Multnomah, Lane, etc.).
+- **Virginia** — no compiled statewide protocol document found on
+  `vdh.virginia.gov`; Virginia's EMS system runs through regional councils
+  (e.g., Lord Fairfax) that each publish their own regional protocols.
+- **Washington** — DOH does publish a real, current, single-document
+  statewide protocol guidance (DOH 530-281, "2024 BLS/ILS Protocol
+  Guidance") but only one edition is currently linked; the only
+  candidate "prior edition" (DOH 530-006, "EMT Field Protocols") is a
+  different, much older document series (revision dated September 2005)
+  at a different scope level — already logged as too large a gap to
+  treat as consecutive editions (§29 round).
+
+### 36.1 Full 50-state accounting
+
+| Category | Count | States |
+|---|---|---|
+| **Tested — pipeline run, real result** | 13 | Delaware, South Carolina, Rhode Island, Vermont, **Tennessee (CLEAN)**, Kentucky, West Virginia, Nebraska, **Pennsylvania (CLEAN)**, New Jersey, Alabama, Maryland, Hawaii |
+| **Contaminated dev publishers** (§19 — not usable as test data) | 3 | New York, Maine, Connecticut |
+| **Real document, currently unreachable** (network/access blocked, not absent) | 3 | Massachusetts, New Hampshire, North Carolina |
+| **Real document, only one edition confirmed** (not yet a pair) | 2 | Utah, New Mexico |
+| **Confirmed structurally ineligible**, with specific direct evidence per state | 29 | Wisconsin (login-gated), Ohio (single living URL), Missouri (no doc), Louisiana (admin, not clinical), Oklahoma (single edition), Mississippi (adopted NASEMSO only), Nevada (forthcoming), Arizona (single edition — two URLs identical), Montana (single edition, mirror dead), Kansas (curates other states' docs), Wyoming (adopted NASEMSO only), Minnesota (adopted NASEMSO + county doc only), Alaska (no compiled doc), Idaho (app-only), Arkansas (app-only), North Dakota (single version, explicitly editable template), South Dakota (single 2010 edition), Georgia (adopted NASEMSO only, §29 round), Iowa (18-page Scope of Practice only, not treatment protocols), Florida (regional/county), Texas (regional/county), California (34 LEMSAs), Colorado (individual medical directors), Illinois (regional Standing Medical Orders), Indiana (metro/hospital-system only), Michigan (regional MCAs), Oregon (county-level only), Virginia (regional councils), Washington (single edition, prior series too old/different scope) |
+
+**50 of 50 states now accounted for.** No parser code was touched during
+this five-round survey — every non-tested state's status rests on direct
+evidence (an official department page visited, a stable download
+attempted, or a byte-for-byte URL comparison), not assumption. The
+states in the "unreachable" and "single-edition-only" rows are not
+closed — Massachusetts, New Hampshire, and North Carolina each have a
+real, well-structured statewide document and are worth another retrieval
+attempt if their current blocks (WAF, Akamai, and a general connection
+failure respectively) prove transient; Utah and New Mexico are worth
+revisiting if a stable prior-edition URL or a working Wayback Machine
+snapshot becomes available.
+
+Final running total: **fifteen genuine blind attempts across thirteen
+distinct states with real pipeline data, two clean passes (Tennessee,
+Pennsylvania)**. This is still short of the pre-registration's §3.2
+minimum viable test set (≥4 pairs from ≥3 distinct publishers) — two
+clean pairs from two distinct publishers is real progress from zero, but
+not yet sufficient on its own. Closing that gap requires either (a) more
+blind rounds against the states logged above as real-but-currently-
+unreachable or real-but-single-edition-only, in case access improves or
+a second edition surfaces, or (b) a deliberate, explicitly-scoped future
+effort to fix one of the now well-catalogued failure mechanisms (garbage
+anchor, majority preamble, fragmentation, footer-echo, item-count
+collapse) and re-run the full blind-test battery from scratch afterward
+— both of which remain the user's call, not something to act on now.

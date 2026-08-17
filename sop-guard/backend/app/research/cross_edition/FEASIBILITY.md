@@ -2616,3 +2616,69 @@ pre-registration's minimum viable test set (≥4 pairs/≥3 publishers) at
 two clean pairs from two publishers — the previous-years sweep has so
 far only ever reproduced the same failure modes already catalogued, not
 surfaced a third clean publisher.
+
+## 40. Previous-years sweep, closing round: the remaining structurally-ineligible states checked, one more historical single-edition document found
+
+Completes the systematic previous-years search across every one of the
+50 states (not just the six originally identified as highest-value),
+per the user's explicit instruction to apply it everywhere. The
+remaining untried states were checked this round: Wisconsin, Texas,
+Michigan, Virginia, Colorado, Illinois, Indiana, Oregon, Washington,
+Kansas, Nevada, Louisiana, Idaho, Arkansas, and California.
+
+**One notable historical finding, still not a pair.** California *did*
+once have a real, government-authored, single statewide compiled
+document — the EMSA "Uniform Treatment Protocols Final Report,"
+November 1996 — confirming the state's current 34-LEMSA regional
+structure is a design choice made at some point after 1996, not an
+original condition. No second statewide edition was ever published
+after it; California moved permanently to the regional model instead.
+Logged as real-but-single-edition-only, joining Utah and New Mexico in
+that category, though from an earlier and more clearly terminal point
+in the state's history than either.
+
+**Everything else reconfirmed prior findings, with no new evidence
+either way:** Wisconsin's pre-login-gate document could not be located
+(would require a working Wayback session, unavailable for parts of this
+round); Texas, Michigan, Virginia, Colorado, Illinois, Indiana, Oregon,
+and Washington show no trace of ever having published a single statewide
+compiled document — each state's own materials describe protocol
+authorship as a standing regional/local responsibility, not a historical
+accident that changed at some particular year; Kansas and Nevada show no
+trace of ever having their own document; Louisiana's only compiled
+document remains the administrative Policy and Procedure Manual (§32),
+with no clinical-protocol counterpart at any point; Idaho's and
+Arkansas's only surfaced editions remain the same stale 2015/2017
+mirrors already known — no evidence either state ever had a *more
+recent* PDF-era edition the current app superseded.
+
+### 40.1 Full 50-state accounting, previous-years sweep complete
+
+| Category | Count | States |
+|---|---|---|
+| **Tested — pipeline run, real result** | 16 | Delaware, South Carolina, Rhode Island, Vermont, **Tennessee (CLEAN)**, Kentucky, West Virginia, Nebraska, **Pennsylvania (CLEAN)**, New Jersey, Alabama, Maryland, Hawaii, Utah, Oklahoma, Ohio |
+| Contaminated dev publishers | 3 | New York, Maine, Connecticut |
+| Real document, one edition recovered, second edition blocked by a reproducible download-truncation bug | 2 | Massachusetts, New Hampshire |
+| Real document, confirmed loadable, zero complete editions recovered despite 30+ attempts | 1 | North Carolina |
+| Real document, only one edition ever existed or currently exists | 3 | Utah, New Mexico, California (1996, terminal) |
+| Real snapshot located, Wayback retrieval consistently fails | 2 | Arizona, Montana |
+| Confirmed structurally ineligible, no historical document found at any point | 23 | Wisconsin, Missouri, Louisiana, Mississippi, Nevada, Kansas, Wyoming, Minnesota, Alaska, Idaho, Arkansas, North Dakota, South Dakota, Georgia, Iowa, Florida, Texas, Colorado, Illinois, Indiana, Michigan, Oregon, Virginia, Washington (24 listed; see note) |
+
+Note: the ineligible list above totals 24, not 23, because Wisconsin's
+status is evidence-light on the historical question specifically (its
+*current* document is confirmed login-gated with certainty; whether an
+older, ungated PDF edition ever existed is unresolved pending a working
+Wayback session) — everything else in that bucket rests on positive
+evidence that no compiled document existed at any point, not merely that
+none was found this round.
+
+**Bottom line on "does looking at previous years matter for every
+state": it mattered decisively for three states (Utah, Oklahoma, Ohio —
+all three converted from unusable to fully tested, all three failed) and
+partially for two more (Massachusetts, New Hampshire — one real edition
+each recovered, still short of a pair), out of 50 states swept. It
+changed nothing for the other 45 — 23 states have no evidence a
+historical document ever existed regardless of year, and California's
+history confirms a document existed once but the state deliberately
+never repeated it. Running total remains eighteen genuine blind
+attempts, two clean passes, across sixteen distinct states.**

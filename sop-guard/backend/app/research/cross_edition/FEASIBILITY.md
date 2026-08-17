@@ -2164,3 +2164,54 @@ rather than a direct department-page visit (Florida, Georgia, Iowa,
 Texas already re-confirmed with direct evidence; the rest of the
 original round-two/round-three drop list has not yet had the same
 direct-page treatment).
+
+## 34. Full-coverage survey, round three: Utah and New Mexico are real single-edition documents; Kansas, Wyoming, Minnesota confirmed no state document
+
+- **Utah** — genuinely promising: the Bureau of EMS's "Utah EMS
+  Protocol Guidelines" is Utah's own document (developed by a Utah panel,
+  incorporating but not merely reproducing NASEMSO's model guidelines),
+  and a current 2025 edition downloaded cleanly (106 pages, confirmed via
+  page-count extraction after `file`'s magic-byte page estimate turned
+  out unreliable on this particular PDF's structure). However, **every
+  URL for a prior edition that appeared in search results — three
+  different dated revisions of the "2023" edition, on two different
+  subdomains — 404s on the live site**; Utah's WordPress-style CMS
+  appears to reorganize asset paths faster than search engines can index
+  them, and a Wayback Machine check could not be completed (Internet
+  Archive remained unreachable for this entire session). Logged as
+  real-document-but-no-confirmed-second-edition; worth another retrieval
+  attempt in a future round once a stable prior-edition URL can be found
+  (e.g. by asking the Bureau directly, or retrying Wayback).
+- **New Mexico** — also real: `nmhealth.org`'s "EMS Treatment
+  Guidelines" (internal filename `SOP-Guidelines-Treatment.pdf`, 91
+  pages) downloads cleanly from a stable publication-ID URL. But like
+  Ohio, this appears to be a living document at a single unversioned
+  publication ID (last-modified header read March 2022 despite being
+  presented as the current document); no distinct second-edition URL was
+  found. Same category as Utah — real, single-edition-only for now.
+- **Kansas** — confirmed no state-authored document: the Board of EMS's
+  own "Sample Protocols" page is literally a curated list of *other*
+  jurisdictions' protocol documents (El Dorado County CA, North Carolina,
+  Boston, Sacramento, San Francisco, DCFD) offered as examples for local
+  agencies to reference — Kansas does not publish its own compiled
+  protocol document at all.
+- **Wyoming** — confirmed adopted-NASEMSO-only, the same pattern already
+  seen in Georgia, Mississippi, and Iowa: the Department of Health's own
+  EMS page hosts the National Model EMS Clinical Guidelines verbatim, not
+  a Wyoming-authored document.
+- **Minnesota** — same pattern again: OEMS's "Model Clinical Guidelines"
+  page links only to the adopted National Model EMS Clinical Guidelines
+  and a county-level document (Hennepin EMS Protocols), not a
+  Minnesota-authored statewide compiled protocol manual.
+
+No parser code touched; nothing reached `parse()` this round (Utah and
+New Mexico both lack a confirmed second edition, so there is no pair to
+run). Full accounting after this round: 12 states tested with real
+pipeline data, 3 contaminated dev publishers, 3 real-but-unreachable (MA,
+NH, NC), 2 real-but-single-edition-only (UT, NM), 12 confirmed
+structurally ineligible with specific evidence (WI, OH, MO, LA, OK, MS,
+NV, AZ, MT, KS, WY, MN), leaving 14 states still to check with a direct
+department-page visit: Alaska, Arkansas, California, Colorado, Hawaii,
+Idaho, Illinois, Indiana, Michigan, North Dakota, Oregon, South Dakota,
+Virginia, Washington. This full-coverage pass will continue in future
+rounds.

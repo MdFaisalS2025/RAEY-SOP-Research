@@ -1520,3 +1520,101 @@ discipline, it is recorded as a candidate explanation for future
 investigation, not acted on now, because acting on it would mean writing
 code in response to Rhode Island's specific content — exactly the
 contamination this round exists to avoid.
+
+
+---
+
+## 23. Third blind-test round: Vermont, plus two dropped candidates
+
+Continuing the identical discipline. Two candidates were retrieved but
+dropped before testing because a genuine edition PAIR could not be
+confirmed (no fix attempted on either — this is a retrieval gate, not a
+parser judgement):
+
+- **Wisconsin** — still inaccessible (§22.1's Drupal file-node problem
+  persists; not retried).
+- **Alabama** — the current (11th) edition is real, but the 10th edition
+  (2022) URL found via search is dead (404, served as HTML), and the live
+  rules-and-protocols page links only the current edition. No second
+  edition found without further search; dropped rather than proceeding with
+  a single-edition non-pair.
+
+### 23.1 Vermont — real content, a third distinct failure mode
+
+Real pair retrieved: `VTEMS Protocols 2023 - Hyperlinked.pdf` (the correct
+URL, found on the actual policies page after a first guessed filename
+404'd) and the 2025 edition, both genuine multi-page PDFs (270 and 283
+pages). `corpus_probe`: USABLE on both. `parse()` chose `adult & pediatric`
+as anchor and found **44/44 and 58/58 titled — 100%, zero
+`<untitled@N>` entries in either edition**, the cleanest title-coverage
+result of any blind attempt so far.
+
+**But inspecting the full title list reveals two distinct structural
+problems, not one:**
+
+1. **Certification-level subsection headers captured as titles**, not real
+   protocol names — `PARAMEDIC STANDING ORDER – ADULT & PEDIATRIC PARAMEDIC
+   EXTEN…`, `EMT/ADVANCED EMT/PARAMEDIC EXTENDED CARE ORDERS Diabetic
+   Eme…`. The anchor phrase legitimately appears in these subsection labels
+   too, and nothing distinguishes "the anchor marking a new protocol" from
+   "the anchor appearing inside a certification-level header within an
+   existing one."
+2. **Single real protocols fragmented into multiple guideline entries** —
+   `Burns/Electrocution/Lightning` appears 3 times in the guideline list,
+   `Restraints` 3 times, `Traumatic Brain Injury` and `Traumatic Cardiac
+   Arrest (TCA)` twice each. The anchor recurs *within* one protocol's
+   multi-page span (once per certification level, or once per adult/
+   paediatric split within the same protocol) rather than marking only its
+   start, so each recurrence wrongly opens a new guideline.
+
+Sample item content is genuine and correctly extracted where it lands
+(`Epinephrine (1 mg/mL): Patient < 25 kg: Administer 0.15 mg (0.15 mL) IM`)
+— this is not a content-extraction failure, only a boundary one, similar in
+spirit to Rhode Island but via fragmentation rather than omission.
+
+**Downstream damage is comparable to Rhode Island's despite the different
+mechanism:** old/new item counts are wildly asymmetric (1,525 vs 715 — the
+2023 edition yields more than double the 2025 edition's items, tracking the
+raw marker-density gap already visible in `corpus_probe`'s 7.4% vs 3.1%),
+and edition-pair alignment shows **65.4% unmatched** — within 0.4 points of
+Rhode Island's 65.0%, despite Vermont having zero preamble leakage and
+100% title coverage where Rhode Island had 96% titles and a 44% preamble
+gap. Two structurally different failures converge on almost the same
+downstream damage.
+
+**Not fixed.** Documented and excluded, per §19.4.
+
+### 23.2 Running total, all rounds
+
+| Publisher | Titled | Preamble/fragmentation | Unmatched (T6) | Verdict |
+|---|---|---|---|---|
+| Delaware | ~50% | — | not computed (anchor itself was garbage) | **Failed** |
+| South Carolina | ~36% | — | not computed (anchor itself was garbage) | **Failed** |
+| Rhode Island | 96% | 44.3% preamble | 65.0% | **Partial — unusable** |
+| Vermont | **100%** | fragmentation, not preamble | 65.4% | **Partial — unusable** |
+
+Six genuine blind attempts, zero clean additions to the test set. The two
+"partial" cases are the most informative failures so far — both have title
+mechanisms that mostly or entirely work, yet both land at essentially the
+same ~65% unmatched rate through unrelated mechanisms. That convergence is
+worth noting without reading too much into two data points: it may mean
+~65% is roughly what "the anchor mechanism basically works but has one
+uncorrected structural gap" costs in this document class, or it may be
+coincidence.
+
+### 23.3 What this round adds to the standing conclusion
+
+§22.4's finding stands and sharpens: retrieval, not annotation tooling, is
+the bottleneck, and near-misses (Rhode Island, now Vermont) are accumulating
+faster than clean passes. Two different generic risk categories are now
+named without being acted on:
+
+- **Boundary omission** (Rhode Island) — content before the first anchor
+  occurrence is orphaned.
+- **Boundary over-firing** (Vermont) — the anchor recurs inside a single
+  protocol's span and wrongly re-opens a new guideline each time.
+
+Both are candidate targets for a **general** fix (not a per-publisher patch)
+if and when that work is deliberately undertaken — see the user's standing
+instruction to defer this. Recorded here so the two concrete cases exist to
+test any future fix against, rather than needing to be re-discovered.

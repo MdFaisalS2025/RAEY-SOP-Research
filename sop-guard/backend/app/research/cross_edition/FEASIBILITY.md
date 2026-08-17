@@ -2009,3 +2009,68 @@ Pennsylvania), out of eleven distinct states with full pipeline data
 West Virginia, Nebraska, Pennsylvania, New Jersey, Alabama). Dropped this
 round without testing: Florida, Texas (both regional/county EMS systems,
 no single statewide compiled document).
+
+## 31. Eleventh blind-test round: Maryland — majority preamble plus garbage anchor
+
+Real pair retrieved: Maryland Medical Protocols for EMS, 2024 (effective
+2024-06-12) and 2025 (effective 2025-04-28), both direct PDFs from
+`miemss.org` (510 and 523 pages — the largest documents tested this
+phase). `corpus_probe`: **STRONG** on both (20.3% / 19.7% numbered
+lines), the second STRONG-on-both-editions result of the phase after
+Pennsylvania.
+
+Unlike Pennsylvania, a STRONG verdict did not predict success here.
+`parse()` finds 3903 and 3889 items — the largest item counts of the
+phase — but **55.7% / 56.1% land under `<preamble>`**, and a further
+28.3% / 23.1% are `<untitled@N>`. The non-preamble, non-untitled
+remainder is dominated by garbage anchors of the same family as
+Delaware/South Carolina/Nebraska/New Jersey: drug-dosing fragments
+(`'Adult – 4 mg IM every 1 hour as needed up to max dose of'`) and
+mid-sentence clinical text (`'NP/RN team or telemedicine support) and
+referrals'`), not protocol names.
+
+`item_align.py`: 531 T1, 519 T2, 108 T3, 6 T4, 1703 T5, 1036 T6 — 26.9%
+trivially alignable, 46.6% requires-more-than-id, 26.5% unmatched.
+Confirms `corpus_probe`'s STRONG verdict is necessary but not
+sufficient — Pennsylvania's dense, regular per-protocol template
+produced a clean result under the fallback heuristic; Maryland's equally
+dense numbering is apparently structured around something the fallback
+mismatches (its numbered lines are page-reference and drug-dosing lists,
+not protocol boundaries). **Not fixed.** Documented and excluded.
+
+Also confirmed again this round: Massachusetts and New Hampshire's
+statewide protocol PDFs remain inaccessible. Massachusetts blocks even a
+browser-driven fetch (curl gets an explicit WAF "Not allowed" page from
+multiple direct document URLs, with and without a Referer header
+matching the real listing page); New Hampshire now blocks the entire
+`advlifesup` section at the site level — even the plain HTML index page
+returns "Forbidden" to a direct browser navigation, not just the PDF
+links. Both remain logged as real-document-but-inaccessible rather than
+dropped-for-no-document.
+
+### 31.1 Running total
+
+| Publisher | Titled | Preamble/fragmentation | Unmatched (T6) | Verdict |
+|---|---|---|---|---|
+| Delaware | ~50% | — | — | Failed |
+| South Carolina | ~36% | — | — | Failed |
+| Rhode Island | 96% | 44.3% preamble | 65.0% | Partial — unusable |
+| Vermont | 100% | fragmentation | 65.4% | Partial — unusable |
+| **Tennessee** | 98.6% | 5.0% preamble, 0 fragmentation | 2.7% | **CLEAN** |
+| Kentucky | 100% | 99.0% preamble (formulary, not protocols) | — | Failed |
+| West Virginia | 100%\* | 59.4% / 52.2% preamble + uncleaned footer labels | 39.7% | Failed |
+| Nebraska | 100%\* | 0% preamble, garbage anchor (drug/diagnosis noise) | — | Failed |
+| **Pennsylvania** | 97.2% | 0% preamble, 51 real titles both editions | 6.7% | **CLEAN** |
+| New Jersey | ~65%\* | 0% preamble, garbage anchor (dose/sentence fragments) | 57.8% | Failed |
+| Alabama | ~30%\* | 61.8% / 73.4% preamble + garbage anchor + item collapse | 58.4% | Failed |
+| Maryland | ~44%\* | 55.7% / 56.1% preamble + garbage anchor (STRONG verdict, failed anyway) | 26.5% | Failed |
+
+\* "Titled" means no `<untitled@N>` placeholder appeared — not that the
+label is a real protocol name.
+
+Fourteen genuine blind attempts, two clean passes, across twelve distinct
+states with full pipeline data. Of the 50 states, current status: 12
+tested, 3 contaminated dev publishers (New York, Maine, Connecticut — not
+usable as test data per §19), 2 confirmed real-but-network-blocked
+(Massachusetts, New Hampshire), and the remainder still to be worked
+through systematically rather than assumed ineligible.

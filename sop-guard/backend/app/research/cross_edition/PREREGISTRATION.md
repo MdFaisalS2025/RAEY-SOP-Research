@@ -12,7 +12,7 @@ in §11 and the current state is recorded on the line below, which IS updated.
 Keeping the registration SHA fixed and tracking drift separately is deliberate:
 silently re-pinning would erase the evidence that anything moved.)*
 
-**Current code state:** `6562e8c` — update this line, and add a §11 entry, on
+**Current code state:** `d3068ee` — update this line, and add a §11 entry, on
 every change to `app/research/cross_edition/*.py` before the test run.
 (commit "Fix cross-edition title matching: 72.6% -> 95.2%, decision experiment
 settles" — pins `corpus_probe.py`, `item_parser.py`, `edition_align.py`,

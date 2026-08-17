@@ -877,3 +877,92 @@ should not be read as evidence until title extraction is more complete.
    The rule — inspect intermediate output before reporting any number that
    moves — should be applied to every remaining recompute, not treated as
    satisfied by having been written down once.
+
+
+---
+
+## 15. New York title extraction fixed — most, not all, of the debt clears
+
+§14.3 flagged that NY Collaborative's 39.3% figure was substantially inflated
+by unresolved guideline titles (7 of 62/63, ~11%), the same class of defect
+§11 fixed for two NASEMSO titles but not yet for New York. Diagnosed and
+mostly fixed.
+
+### 15.1 Three distinct causes, two fixed
+
+Inspecting all 7 untitled cases directly (not inferred) found:
+
+**Cause 1 (4 of 7): boilerplate detection only catches exact, frequent
+strings.** New York's "Applies to ... patients ..." scope line has a dozen
+audience-specific wordings — `Applies to adolescent patients only`,
+`Applies to pediatric patients under 2 years of age`, `Applies to adult
+patients only` — and only the single most common exact string (`Applies to
+adult and pediatric patients`, 36×) cleared `detect_boilerplate`'s 20-
+occurrence floor. The rarer variants survived as ordinary lines and broke the
+title walk before it reached the real title above them. **Fixed** with a
+pattern (`_SCOPE_LINE = r"(?i)^applies\s+to\s+.{0,60}patients?"`) matched
+by structure rather than frequency, so a wording seen once is still caught.
+
+**Cause 2 (1 of 7): a cross-reference line with no recognisable title shape**
+(`"Dif Breathing – Pediatric: Stridor"`, in curly quotes) sat between the real
+title and the anchor. A leading curly quote fails `_looks_like_title`'s
+alphabetic-start check, and the original code stopped at the *first*
+non-title line regardless of whether any title text had yet been found —
+producing an empty result instead of looking one line further back. **Fixed**
+with a bounded skip: up to 3 leading junk lines may now be passed over while
+nothing has been collected yet; once real title text *is* collected, the
+original strict stop-at-first-non-title behaviour applies unchanged. The
+bound exists specifically so this cannot degrade into an unconditional walk
+into unrelated prose.
+
+**Cause 3 (2 of 7, and 2 remain): not title-extraction bugs.** One is the
+document's own front-matter/introduction, correctly not a guideline. The
+other is a nested, lowercase `criteria` appearing mid-protocol — genuinely
+ambiguous document structure (§12's tail decomposition already flagged this
+kind of case), not something a title-extraction fix should paper over.
+
+### 15.2 Verified clean, no regression
+
+| | before | after |
+|---|---|---|
+| NASEMSO (all 3 editions) | 68/69 titled | **68/69 titled — unchanged** |
+| NY Collaborative v25.1 / v26.0 | 55/62, 56/63 | **60/62, 61/63** |
+| NY BLS v25.1 / v26.0 | 48/52, 54/58 | **51/52, 57/58** |
+
+### 15.3 Recomputed tiers
+
+| | NY Collaborative<br>v25.1→v26.0 | NY BLS<br>v25.1→v26.0 |
+|---|---|---|
+| | before → after | before → after |
+| Trivially alignable | 41.5% → 44.0% | 86.4% → **90.9%** |
+| **Needs more than an ID** | 39.3% → **36.8%** | 8.4% → **4.2%** |
+| Unmatched | 19.1% → 19.1% | 5.1% → 4.9% |
+
+**NY BLS improved sharply and cleanly** — consistent with the fix addressing
+genuine title debt rather than moving noise around.
+
+**NY Collaborative improved only modestly.** T5 (moved) barely changed
+(29.5% → 26.8%), which is the honest result to report rather than the one
+that would look best: most of NY Collaborative's difficulty is not an
+extraction artefact. Two plausible reasons, not yet distinguished: real
+matching difficulty in a more heavily revised document (this is, after all,
+the *content*-facing collaborative protocol set, plausibly revised more than
+the *procedural* BLS set), or residual noise from the two still-untitled
+cases. **NY Collaborative's 36.8% should be read as more trustworthy than
+39.3% was, but not yet as clean as NASEMSO or NY BLS's figures.**
+
+### 15.4 Updated read on the corpus overall
+
+Across four edition pairs, two publishers, three of which are now reasonably
+clean:
+
+| | NASEMSO minor | NASEMSO major | NY Collaborative | NY BLS |
+|---|---|---|---|---|
+| Needs more than an ID | 1.5% | 11.7% | 36.8%⚠ | **4.2%** |
+| Title debt remaining | minimal | minimal | 2/62 untitled | 1/52 untitled |
+
+The spread across pairs (1.5% to 36.8%) is now more likely to reflect genuine
+variation in revision practice than parser noise — which is itself a finding
+worth keeping: **different protocol sets, and different documents within the
+same set, appear to be revised with very different intensity**, and a single
+"cross-edition alignment is X% hard" number would have hidden that.

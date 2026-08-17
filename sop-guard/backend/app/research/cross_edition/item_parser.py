@@ -554,11 +554,18 @@ def _collect_categories(lines: list[tuple[str, int]],
     return {t for t, n in counts.items() if n >= min_reuse}
 
 
+_SCOPE_LINE = re.compile(r"(?i)^applies\s+to\s+.{0,60}patients?\b")
+
+
 def _title_before(lines: list[tuple[str, int]], line_no: int,
                   categories: set[str] | None = None,
                   boilerplate: set[str] | None = None) -> str:
     parts: list[str] = []
     j = line_no - 1
+    # How many non-title lines have been skipped WITHOUT yet finding any
+    # title text. Bounded (see below) so this cannot turn into an unbounded
+    # walk into unrelated body text.
+    skipped_before_any_title = 0
     while j >= 0 and len(parts) < 3:
         s = lines[j][0].strip()
         if not s:
@@ -576,6 +583,19 @@ def _title_before(lines: list[tuple[str, int]], line_no: int,
         if boilerplate and s in boilerplate:
             j -= 1
             continue
+        # SAME PATTERN, LOW FREQUENCY. Boilerplate detection is exact-string
+        # and needs >= 20 occurrences (detect_boilerplate). New York's scope
+        # line has a dozen wordings by audience - "Applies to adolescent
+        # patients only", "Applies to pediatric patients under 2 years of
+        # age" - none frequent enough on its own to pass that floor, so most
+        # of them survived as ordinary lines and broke the title walk before
+        # it reached the real (often two-line-wrapped) title above them.
+        # This accounted for 4 of New York Collaborative's 7 untitled
+        # guidelines. Matched by PATTERN instead of frequency, so a variant
+        # seen only once is still recognised.
+        if _SCOPE_LINE.match(s):
+            j -= 1
+            continue
         # Stop at obvious body text - titles are short. But the length guard
         # must be POSITION-AWARE: the line immediately above "Aliases" is the
         # title with very high reliability (verified across 69 guidelines in
@@ -591,13 +611,34 @@ def _title_before(lines: list[tuple[str, int]], line_no: int,
         # items: 21% of the entire unmatched tail, as cause U1.
         limit = 140 if j == line_no - 1 else 70
         if len(s) > limit or s.endswith((".", ";", ",")):
-            break
+            if parts or skipped_before_any_title >= 3:
+                break
+            skipped_before_any_title += 1
+            j -= 1
+            continue
         # Reject prose fragments and reporting codes outright - see
         # _looks_like_title. Without this, wrapped body text was glued onto
         # real titles ("and agency policy General Approach to Safety
         # Restraining Devices").
+        #
+        # BOUNDED LOOKBACK PAST NON-TITLE JUNK. New York sometimes inserts a
+        # cross-reference between the real title and the anchor - a "see
+        # also" note in curly quotes ('"Dif Breathing - Pediatric: Stridor"')
+        # - which is neither boilerplate, a date, nor a title, and which
+        # immediately failed `_looks_like_title` (a leading curly quote is
+        # not alphabetic). The original code treated the FIRST non-title line
+        # as the end of the title, so hitting junk before any real title text
+        # had been collected produced an empty result. Now: up to 3 leading
+        # junk lines are skipped while nothing has been collected yet: once
+        # any real title text IS collected, behaviour reverts to the original
+        # strict stop-at-first-non-title rule, so this cannot absorb
+        # unrelated prose paragraphs the way an unconditional skip would.
         if not _looks_like_title(s):
-            break
+            if parts or skipped_before_any_title >= 3:
+                break
+            skipped_before_any_title += 1
+            j -= 1
+            continue
         parts.insert(0, s)
         j -= 1
     # Wrapped titles can repeat a fragment across lines ("Universal Care" /

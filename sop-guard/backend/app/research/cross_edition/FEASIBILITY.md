@@ -3263,3 +3263,72 @@ pre-registration's stated procedure, and is recorded as one in
 publishers — is now confirmed **and** properly classified, not merely
 provisional. No parser code was touched anywhere in this audit or its
 resolution.
+
+## 45. A real problem the classification resolution surfaces: zero major pairs, and H1/H2 are currently untestable
+
+§7 defines H1 (the study's *primary* hypothesis — identifier lookup
+loses provenance on major revisions) and H2 (the loss is
+revision-magnitude dependent) as requiring **major** test pairs
+specifically; H2 requires both major and minor pairs to compare. §44.7
+classified all four confirmatory pairs as **minor**. The direct
+consequence, not previously stated plainly: **the current confirmatory
+test set cannot test H1 or H2 at all** — not "weakly," not "with wide
+confidence intervals," but literally has zero pairs in the required
+stratum. H3 and H4 remain testable, since neither requires a
+major/minor split.
+
+### 45.1 A genuine attempt to find an untouched major pair
+
+Dev's NY Collaborative pair (v25.1→v26.0) was explicitly tracked during
+dev as NY's *major* pair (§13-14, compared directly against "NASEMSO
+major"), confirming NY's `vYY.Z` scheme (leading number increments,
+trailing sub-version resets to `.0`) genuinely mirrors §3.3's own
+`2.x → 3.0` example — but that specific pair is dev-contaminated and
+cannot be reused. Checked for an untouched equivalent elsewhere in NY's
+history and found one with strong independent evidence of being a real
+major transition: a **2017** Collaborative edition (regional-council
+mirror, `wremac.com`) whose own cover reads `2016 - 2` — an old
+`YEAR-N` numbering scheme — paired against a **2019** edition
+(`hvremsco.org` mirror) whose cover reads `Version 002` — a wholly
+different numbering scheme. The publisher's own versioning *convention*
+changed between these two editions, not just the number within a
+convention — about as strong a "full revision / re-basing" signal as
+metadata can give, and neither edition had been touched by any prior
+work in this study (dev only ever used v25.1/v26.0).
+
+`corpus_probe`: STRONG on both (41.5% / 39.8% numbered lines). But
+`parse()` fails badly: **58.7% and 69.3% of items are `<untitled@N>`**
+— not preamble, genuinely unattached to any guideline — and the small
+minority of items that *do* get a label are the same garbage-anchor
+family already catalogued five times this phase: `'o Equipment
+failure'`, `'Delivery'`, `'Suspected'`, `'For the pediatric patient,
+"Pediatric: Shock / Hypoperfusion"'` — sentence and cross-reference
+fragments, not protocol names. `item_align.py`: 6.8% trivially
+alignable, 44.5% unmatched. **This is a genuine parsing failure, not a
+legitimate hard case for H1/H2** — the older (pre-2019) NY document
+generation apparently doesn't carry the `criteria` anchor the parser's
+`_KNOWN_ANCHORS` strategy depends on in a form the fallback can reliably
+find, the same structural-generation sensitivity seen throughout this
+study (West Virginia's footer format, Connecticut's pre-2022 layout in
+§43). Applying the identical standard used to reject every other
+garbage-anchor state this phase, **this pair is rejected** — not used,
+regardless of how badly it would need to fail in order to "confirm" H1.
+Using a pair the parser cannot reliably segment to test a hypothesis
+about the *aligner's* failure mode would conflate two different kinds
+of failure and invalidate any resulting claim.
+
+### 45.2 Where this leaves the study
+
+No parser code was touched in this attempt either. The honest state of
+the confirmatory test set: **4 valid minor pairs (meeting minimum-viable
+§3.2), 0 valid major pairs, H1 and H2 currently untestable, H3 and H4
+testable now.** Closing this gap requires finding a publisher with (a) a
+genuine, metadata-evidenced major revision, and (b) a document
+generation the frozen pipeline actually parses cleanly on *both* sides
+of that transition — which is a materially harder combination than
+finding any clean pair at all, since major revisions are disproportionately
+likely to also be accompanied by a format change (as this NY attempt
+shows directly). This is now the single most consequential open gap in
+the study, ahead of padding pair-count toward the §3.2 target — not
+resolved here, and not silently worked around by weakening H1/H2's
+definitions or accepting a badly-parsed pair.

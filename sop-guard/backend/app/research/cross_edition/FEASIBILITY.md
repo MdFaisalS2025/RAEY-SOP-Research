@@ -3436,3 +3436,41 @@ independent human annotators (the user, or others) completing
 `annotator_correspondence` and `annotator_relation` in each packet's CSV
 is the next required step before `compute_kappa()` can produce a real
 §5.3 reliability statistic.
+
+## 48. Blind, per-annotator packets generated once two real annotators were available
+
+The original packets (§47) followed §5.2's instruction to hide the
+method's prediction from the annotator, but implemented it as a
+column-hiding *instruction* in the README ("cover it... hide that column
+until after your first pass") — a discipline that depends on the
+annotator's own care, not a structural guarantee. §5.3's actual
+requirement is broader than just the predicted item: annotators must
+"not have seen **any method output** for the item they are labelling."
+`tier` (T1-T6) is itself a method output — it is `item_align.py`'s own
+classification of how well the item aligned — and showing it (e.g.
+"T6_unmatched_old") could prime an annotator toward concluding NONE
+before they have looked, the same risk as showing the predicted item
+directly.
+
+Tightened this once real annotators were available: generated a
+**BLIND** CSV per pair per annotator
+(`annotator_A/annotation_packet_BLIND.csv`,
+`annotator_B/annotation_packet_BLIND.csv`) containing only
+`sample_id, old_item_id, old_guideline, old_section, old_marker_path,
+old_text` plus the three blank columns the annotator fills in.
+`tier`, `sample_weight`, `method_similarity`,
+`method_predicted_item_id`, and `method_predicted_text` are absent from
+these files entirely — not hidden, removed — retained only in the
+original master CSV (§47) for later metric computation
+(`item_align.py`'s tier assignment is compared against the adjudicated
+answer to compute correspondence accuracy and tier precision, per §6 —
+that comparison happens after annotation, on the master file, not
+before). Each annotator gets their own physical copy so two people
+working the same pair cannot collide or see each other's in-progress
+answers. `annotation_context.json` (the full corresponding new-edition
+guideline text) is unchanged and shared — it is source-document text,
+not a method judgment, so showing it carries no bias risk.
+`ANNOTATOR_INSTRUCTIONS.md` written to accompany the blind packets, in
+plain non-technical language, replacing the original README's
+column-hiding instruction with the structural fact that the columns are
+simply not there.

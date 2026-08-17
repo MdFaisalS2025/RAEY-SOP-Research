@@ -1799,8 +1799,58 @@ grouped; recorded for completeness only.
 \* "Titled" means no `<untitled@N>` placeholder appeared — not that the
 label is a real protocol name; see footer-echo note above.
 
-Nine genuine blind attempts, one clean pass. Dropped at retrieval without
-testing (no valid pair found): Wisconsin, Alabama, Georgia, Ohio. Searched
-without a usable candidate surfacing: Louisiana, Oklahoma, Mississippi,
-Nevada, Iowa, Illinois, Alaska, Hawaii — in each case either no statewide
-protocol document exists, or only one dated edition could be confirmed.
+## 27. Seventh blind-test round: Nebraska — garbage anchor again
+
+Real pair retrieved: Nebraska DHHS "EMS Model Protocols," 2024 and the
+current (May 2026) edition, both direct PDFs from `dhhs.ne.gov` (270 pages
+each). `corpus_probe`: WEAK on both (1.4% / 1.9% numbered lines).
+
+`parse()` reports 0% preamble in both editions (296 and 421 items) — by
+count alone the best-looking result since Tennessee. **Inspection shows
+it is the same failure as Delaware and South Carolina (§21-22): the
+fallback heuristic locked onto the wrong recurring text.** The dominant
+"guideline" is `Vecuronium` (207 items in 2024, 254 in 2026) — a drug
+name from a medications table, not a protocol title — followed by
+`Nausea Fever (Infection) Dehydration` (a differential-diagnosis
+fragment) and similar non-title phrases (`Protocol 15`, `Post
+Resuscitation`, `Adult Tachycardia Narrow Complex (QRS < 120 ms)`). Only
+14 (2024) and 20 (2026) distinct labels surface, most of them this kind
+of noise rather than the ~90+ named protocols the template-slot counts in
+`corpus_probe` (93-167 "Protocol" occurrences) imply the document
+actually contains.
+
+Zero preamble here is not a sign of health — it is the same anchor
+choosing a very frequent, very wrong recurring string and attaching
+almost everything to a couple of buckets, rather than at least isolating
+the unmatched remainder honestly. Confirms Delaware/South Carolina's
+garbage-anchor failure is not a one-off.
+
+**Not fixed.** Documented and excluded.
+
+### 27.1 Running total
+
+| Publisher | Titled | Preamble/fragmentation | Unmatched (T6) | Verdict |
+|---|---|---|---|---|
+| Delaware | ~50% | — | — | Failed |
+| South Carolina | ~36% | — | — | Failed |
+| Rhode Island | 96% | 44.3% preamble | 65.0% | Partial — unusable |
+| Vermont | 100% | fragmentation | 65.4% | Partial — unusable |
+| **Tennessee** | 98.6% | 5.0% preamble, 0 fragmentation | 2.7% | **CLEAN** |
+| Kentucky | 100% | 99.0% preamble (formulary, not protocols) | — | Failed |
+| West Virginia | 100%\* | 59.4% / 52.2% preamble + uncleaned footer labels | 39.7% | Failed |
+| Nebraska | 100%\* | 0% preamble, garbage anchor (drug/diagnosis noise) | — | Failed |
+
+\* "Titled" means no `<untitled@N>` placeholder appeared — not that the
+label is a real protocol name.
+
+Ten genuine blind attempts, one clean pass. Dropped at retrieval without
+testing (no valid pair found): Wisconsin, Alabama, Georgia, Ohio, Missouri,
+Arizona, Idaho, New Mexico, Kansas, Montana, Wyoming, Utah, Arkansas,
+North Dakota, Washington. Searched without a usable candidate surfacing:
+Louisiana, Oklahoma, Mississippi, Nevada, Iowa, Illinois, Alaska, Hawaii,
+South Dakota, Minnesota — in each case either no statewide protocol
+document exists, only one dated edition could be confirmed, the document
+is split across many per-topic files rather than one compiled PDF, or the
+only two editions findable are separated by a document-series change too
+large to treat as consecutive (e.g. Washington's 2005 EMT-Basic protocols
+vs. its 2024 BLS/ILS guidance).

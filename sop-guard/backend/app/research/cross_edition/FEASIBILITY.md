@@ -2956,3 +2956,232 @@ No parser code was touched in reaching any of these three results —
 same frozen pipeline, same zero-reaction discipline, applied to
 publishers whose *name* was previously dev but whose *specific tested
 editions* were not.
+
+## 43. Fourth clean pair: Connecticut v2023.1 → v2024.1 — minimum-viable test set now complete
+
+Two more untouched Connecticut editions were pursued to close the
+remaining pair-count gap. **v2017.1** (`portal.ct.gov`, an older edition
+predating the modern ToC-based layout the parser's `detect_ct_toc_anchors`
+strategy depends on) was tried first, paired against the already-held
+v2022.1 — and **failed**: only 195 items detected (against v2022.1's
+1212, in a document of comparable page count), 33.3% untitled, and the
+dominant label is a garbage continuation-header fragment,
+`'Procedure Continued EMT STANDING ORDERS'` (63.1% of items).
+`item_align.py`: 0.0% trivially alignable, 74.9% unmatched — a real,
+honest failure, kept as data rather than discarded: Connecticut's clean
+parsing is specific to its modern (2022+) document format, not an
+automatic property of the publisher across all history, consistent with
+the format-era sensitivity seen throughout this study (e.g. West
+Virginia's footer format changing between the tested editions, §26).
+
+**v2024.1** (also untouched, sitting between the two already-confirmed
+2022-1/2023.1 clean editions and the dev-touched v2025.1) was tried
+next, paired against v2023.1 — and is the **cleanest result of the
+entire study**: 0% preamble/untitled on both editions (1532 and 1552
+items, 93 distinct guidelines each), and the full v2024.1 title list was
+read end to end — every one of its 93 entries is a real protocol name
+(`Acute Coronary Syndrome – Adult`, `Rapid Sequence Intubation (RSI) -
+Adult`, `Traumatic Brain Injury – Adult & Pediatric`, `Prehospital Blood
+Product Transfusion`, a small number of appendix entries, and two minor
+cosmetic artifacts — a stray numbering prefix on one title and a "NEW"
+tag on three others — neither affecting parseability). `item_align.py`:
+1190 T1, 327 T2, 6 T3, 2 T4, 0 T5, 7 T6 — **99.0% trivially alignable,
+0.5% requires-more-than-id, 0.5% unmatched** — better than every other
+result in the study, consistent with this being only a one-year minor
+revision (the same "minor bumps align far better than major ones"
+pattern noted for NASEMSO and New York BLS during dev, §17.3).
+
+This is the **fourth genuine clean pair** of the study.
+
+### 43.1 Final confirmatory test set
+
+| # | Publisher | Pair | Trivially alignable | Unmatched |
+|---|---|---|---|---|
+| 1 | Tennessee | 2017 → 2018 | 92.7% | 2.7% |
+| 2 | Pennsylvania | 2021 → 2023v1-2 | 88.6% | 6.7% |
+| 3 | Connecticut | v2022.1 → v2023.1 | 85.5% | 5.7% |
+| 4 | Connecticut | v2023.1 → v2024.1 | **99.0%** | **0.5%** |
+
+(Correction: an earlier draft of this table quoted Tennessee's 98.6%
+*titled* rate in the trivially-alignable column. The actual
+trivially-alignable figure, from §24.1, is 92.7%. Caught during the
+audit in §44 below.)
+
+**The pre-registration's §3.2 minimum-viable confirmatory test set (≥4
+pairs from ≥3 distinct publishers) is now met in full**: 4 pairs, 3
+distinct publishers (Tennessee, Pennsylvania, Connecticut — Connecticut
+contributing 2 of the 4 pairs, which the pre-registration's wording
+permits since the requirement is stated as a floor on both pairs and
+publishers independently, not one pair per publisher). The target
+(≥6 pairs / ≥4 publishers) is not yet met — reaching it would need
+either 2 more pairs from these three publishers, or a fourth clean
+publisher, neither undertaken here without further instruction.
+
+No parser code was touched in reaching this result.
+
+## 44. Correctness audit of the confirmatory test set
+
+Requested directly by the user ("double check if everything we have done
+till now is correct"), before treating §43's minimum-viable claim as
+settled. This is a genuine audit, not a formality — it found one real
+error (now fixed, §43.1) and one real open compliance question (not
+resolved here, left for explicit decision below), alongside several
+things that checked out cleanly.
+
+### 44.1 Quarantine discipline — verified against git history, not self-report
+
+Every round since the blind-test phase began has claimed "no parser code
+touched." That claim was never previously checked against the actual
+commit history — only asserted. Checked now:
+
+```
+git log --oneline --name-only d3068ee..HEAD -- 'app/research/cross_edition/*.py'
+```
+
+returns **zero results**. No `.py` file under `cross_edition/` has
+changed since the code state was frozen at `d3068ee`, across all 20+
+blind-test rounds, the five-round US-states coverage survey, the Wayback
+recovery rounds, and this round's NY/ME/Connecticut work. The
+quarantine-discipline claim is confirmed, not just asserted.
+
+### 44.2 §3.2 eligibility criteria — computed explicitly for all four pairs, all pass
+
+Criteria 2 (`corpus_probe` USABLE/STRONG) and part of criterion 1 were
+checked informally as each pair was tested, but criterion 4 (≥200 items,
+<5% duplicate identifiers per edition) had **never been explicitly
+computed and reported** for any of the four confirmatory pairs. Computed
+now, using the exact same duplicate-identifier definition already in
+`item_parser.py`'s own `main()` (`len(items) - len({item_id})`):
+
+| Pair | Edition | Items | Duplicate IDs | Duplicate % |
+|---|---|---|---|---|
+| Tennessee | 2017 | 1,500 | 0 | 0.0% |
+| Tennessee | 2018 | 1,492 | 0 | 0.0% |
+| Pennsylvania | 2021 | 1,699 | 0 | 0.0% |
+| Pennsylvania | 2023v1-2 | 1,769 | 0 | 0.0% |
+| Connecticut #1 | v2022.1 | 1,212 | 0 | 0.0% |
+| Connecticut #1/#2 | v2023.1 | 1,532 | 0 | 0.0% |
+| Connecticut #2 | v2024.1 | 1,552 | 0 | 0.0% |
+
+All eight editions clear ≥200 items by a wide margin (well over 1,000 in
+every case) and all have **zero** duplicate item identifiers, not merely
+under the 5% ceiling. Criterion 4 is fully satisfied.
+
+### 44.3 "Consecutive editions" — verified against each publisher's own official version list, not assumed
+
+Checked directly rather than assumed, since Pennsylvania's pair spans
+two calendar years (2021→2023) and Connecticut publishes sub-annual
+revisions in some periods:
+
+- **Pennsylvania** — its own EMS Regulations page lists only 2020, 2021,
+  and 2023 ALS Protocol editions; **no 2022 edition was ever published**.
+  2021→2023 is therefore genuinely the next available edition, not a
+  skipped one.
+- **Connecticut** — its own Statewide EMS Protocols page publishes the
+  complete archived-version list: `...v2022.1, v2023.1, v2024.1,
+  v2025.1, v2025.2 (current)...`. No `v2022.2` or `v2023.2` exists in
+  the 2022-2024 window this study tested (Connecticut does publish
+  sub-annual revisions in other periods, e.g. three releases in 2020
+  alone — but not in the window used here). **Both tested Connecticut
+  pairs are confirmed genuinely consecutive**, and so is the dev pair
+  (v2025.1→v2025.2, the two most recent entries before the current
+  release).
+- **Tennessee** — no evidence of an intervening edition between the two
+  tested dates; not independently re-verified against an official
+  version-history page this round, since none was located with a
+  complete list the way Pennsylvania's and Connecticut's were.
+
+### 44.4 One real error found and fixed: §43.1's Tennessee row
+
+The first draft of §43.1's summary table quoted Tennessee's **98.6%
+titled** rate (from §24.1) in the trivially-alignable column. The actual
+trivially-alignable figure for Tennessee, also from §24.1, is **92.7%**.
+Corrected in place. This was a transcription mistake made while writing
+§43, not a re-computation error — the correct number was already sitting
+in §24.1 the whole time.
+
+### 44.5 §3.3 revision-magnitude classification — never done prospectively; applying it now surfaces a genuine open question
+
+§3.3 requires every pair to be labelled **major** or **minor** "from
+publisher metadata only, never from measured change," and states the
+rule must be applied "before retrieval" in spirit (the section header
+reads "declared before retrieval") — meaning before alignment numbers
+exist, so the label cannot be influenced by how well or badly a pair
+turns out to align. **This was never done for Tennessee, Pennsylvania,
+or either Connecticut pair before this audit.** All four pairs' alignment
+percentages were already known before any magnitude label was assigned.
+This is itself a deviation from §3.3's procedure, independent of what
+the labels turn out to be.
+
+Attempting the classification now, from metadata alone (not from the
+already-known alignment numbers), surfaces a real ambiguity the
+pre-registration's own worked example doesn't resolve cleanly:
+
+- **Connecticut's version scheme is `YEAR.subversion`** (`2022.1`,
+  `2023.1`, `2024.1`, `2025.1`, `2025.2`). Mapping §3.3's own example
+  (`2.x → 3.0` = major, pre-decimal component increments) onto this
+  scheme the natural way — treating the year as the pre-decimal
+  "leading version component" and the trailing digit as the minor
+  tracker — means **every year-to-year Connecticut transition is a
+  major revision**, and only a same-year sub-version bump (like dev's
+  v2025.1→v2025.2) is minor. Under this reading, **both tested
+  Connecticut pairs (v2022.1→v2023.1, v2023.1→v2024.1) are MAJOR
+  revisions**, not minor. This is a defensible reading — Connecticut's
+  own page describes the annual cycle as where substantive review
+  happens, with interim same-year updates reserved for narrow
+  "emergency" or "desired change" requests — but it is an interpretation
+  applied to a versioning convention §3.3's `2.x → 3.0` example was not
+  written with in mind, not a mechanical, unambiguous application of the
+  rule.
+- **Tennessee has no version-number scheme at all** — the two tested
+  editions are dated "July 2017 (revised 11.7.2017)" and "March 2018
+  (Rev 7.7.18)," with no major/minor-style numbering and no "full
+  review" language found anywhere in publicly available Tennessee EMS
+  material. §3.3 states plainly: **"Pairs whose magnitude cannot be
+  determined from publisher metadata are excluded, not guessed."** By
+  that letter, Tennessee's magnitude may not be determinable from
+  metadata at all — which would mean the Tennessee pair does not
+  currently have a valid classification under the pre-registration's own
+  rule, a real compliance gap.
+- **Pennsylvania**: 2021 → 2023v1-2 spans two calendar years with a
+  confirmed-absent 2022 edition (§44.3), and Pennsylvania's own EMS
+  Information Bulletin (EMSIB 2023-17/18/25) explicitly announced it as
+  a "2023 PA DOH Statewide Protocol Update" — publisher-described update
+  language exists, though "Update" is weaker than §3.3's example phrase
+  "full review/revision." Leans toward major given the multi-year gap
+  and the explicit bulletin, but is not as clean-cut as Connecticut's
+  year-line reading.
+
+**This is deliberately not resolved unilaterally here.** It has real
+consequences for how the confirmatory result should be described: if
+two of the four clean pairs are genuinely major revisions that still
+aligned at 85.5%/99.0%, that is a *stronger* finding than if all four
+were routine minor bumps, given dev evidence repeatedly showed major
+revisions align worse (§17.3, §18.4). Conversely, if Tennessee's
+magnitude genuinely cannot be determined from metadata, §3.3's own
+stated consequence is exclusion — which would drop the confirmatory set
+to 3 pairs from 2 fully-classified publishers (Pennsylvania and
+Connecticut), **below both the pair-count and, depending on how
+Pennsylvania's classification lands, potentially the publisher-count
+minimum-viable thresholds** — reopening the question §43 treated as
+closed. Flagged here for the user's explicit decision rather than
+silently classified in whichever direction keeps the minimum-viable
+claim intact, which would be exactly the kind of motivated
+post-hoc reasoning pre-registration exists to prevent.
+
+### 44.6 Overall assessment
+
+The blind-test discipline itself — the core methodological commitment of
+this entire multi-week effort — checks out: verified against git
+history, not just claimed. The newly-added Connecticut pairs and the
+NY/Maine "clean parse, high genuine revision" findings are sound; their
+underlying `parse()`/`item_align.py` numbers were independently
+recomputed during this audit and match what was previously reported. One
+real transcription error was found and fixed. But the confirmatory
+claim in §43 — "minimum-viable test set now met in full" — was written
+**before** the required revision-magnitude classification had been
+attempted at all, and attempting it now shows the classification is not
+a formality: it is genuinely unresolved for Tennessee, and genuinely
+consequential for how the two Connecticut pairs should be read. §43's
+headline claim should be treated as provisional until this is resolved,
+not final.

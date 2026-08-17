@@ -2483,3 +2483,67 @@ edition-only (NM), 2 real-snapshot-found-but-currently-unretrievable
 (AZ, MT), 26 confirmed structurally ineligible. Still short of the
 pre-registration's minimum viable test set (≥4 pairs/≥3 publishers) at
 two clean pairs from two publishers.
+
+## 38. Wayback recovery attempt on the three unreachable states — one real edition each for MA and NH, North Carolina still fully blocked
+
+At the user's request to extend the previous-years search to every
+state rather than the six flagged as highest-value, this round targeted
+Massachusetts, New Hampshire, and North Carolina specifically — the
+three states already known to have real, well-structured documents
+blocked only by network access. Wayback snapshots exist for all three,
+but retrieval proved far harder than for Utah/Oklahoma, surfacing a new
+failure mode of its own.
+
+**A systematic truncation bug, not a block.** Multiple download attempts
+across all three states repeatedly produced files of *exactly* 1,048,576
+bytes (1 MiB) or 5,242,880 bytes (5 MiB) — suspiciously round sizes that
+turned out to be corrupt: one such file identified as a `.docx` (a zip
+container) and failed a zip-integrity check outright; PDF-typed ones
+ended mid-object-stream with no `%%EOF` trailer. This reproduces
+consistently for specific Wayback captures and appears tied to how that
+particular capture streams (likely chunked transfer without a
+declared `Content-Length`, hitting a fixed buffer in this environment's
+network path) — genuinely-complete downloads in the same session (e.g.
+Utah's 1.8MB recovery, this round's 10.9MB and 25MB successes below)
+came through with non-round byte counts and no truncation, so this is
+capture-specific behavior, not a hard cap on all downloads.
+
+- **Massachusetts** — recovered one genuine, complete edition: Version
+  2023.2 (effective 2023-05-04), 10,891,471 bytes, 175 pages, confirmed
+  with real extractable text (338,525 characters). A second edition
+  (Version 2025.1) was located in Wayback and loads fine in-browser, but
+  every direct-download attempt (6 tries) truncated at exactly 5,242,880
+  bytes and failed a zip-validity check. **One real edition in hand, no
+  usable second edition yet.**
+- **New Hampshire** — recovered one genuine, complete edition: Version
+  8.0 draft (`version8.0patientcareprotocolsdraft.pdf`), 25,148,585
+  bytes, 170 pages, confirmed with real extractable text (411,329
+  characters). Also discovered NH's EMS office has migrated to new
+  subdomains (`fstems.dos.nh.gov` for the public page, `mm.nh.gov` for
+  the actual document host) — but both are behind the **same** Akamai
+  WAF as the original `www.nh.gov` path (confirmed: identical
+  `errors.edgesuite.net` "Access Denied" response), so the subdomain
+  migration doesn't route around the block. Every Wayback snapshot
+  attempted for a second edition (v8.2, v9.0, and the current
+  `mm.nh.gov` URL) either 500/502/503'd outright or hit the same
+  truncation pattern. **One real edition in hand, no usable second
+  edition yet.**
+- **North Carolina** — worse than the other two: **zero complete
+  editions recovered** despite trying three distinct Wayback snapshot
+  dates (2022-12-25, 2023-09-27, 2025-03-19) across more than 30 total
+  download attempts. Every attempt either 503'd outright or truncated at
+  exactly 1 MiB or 5 MiB. The underlying URL (`ncems.org/protocols/
+  allprotocols.pdf`) is confirmed to load with HTTP 200 in-browser on
+  every check: this is a genuinely reproducible retrieval problem for
+  this document, not absence or a block. Logged as real-but-completely-
+  unretrievable-so-far, the only state in this category.
+
+All three remain **not yet tested** — none of this changes the running
+total of 17 blind attempts / 2 clean passes. This is deliberately logged
+as its own distinct access category (reproducible download truncation)
+rather than folded into "unreachable," since the underlying documents
+are now partially in hand (MA, NH) or confirmed loadable (NC) — a
+qualitatively different, more solvable problem than an outright WAF
+block. Worth a retry with a different retrieval method (e.g. a tool that
+handles chunked transfer encoding without a fixed read buffer) rather
+than more of the same approach.

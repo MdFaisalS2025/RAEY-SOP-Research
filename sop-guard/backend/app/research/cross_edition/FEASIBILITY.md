@@ -1261,3 +1261,64 @@ substance, not merely in document count, for the first time this session.
 - 15 zero-item guidelines were spot-checked in aggregate by category, not
   individually confirmed one by one; a small number could still be genuine
   gaps rather than front matter or prose-only content.
+
+
+---
+
+## 19. Contamination finding: no publisher currently qualifies as held-out test data
+
+Before building the annotation instrument, checked whether the four retrieved
+non-NASEMSO publishers actually satisfy `PREREGISTRATION.md` §3.4's
+quarantine. **They do not.**
+
+### 19.1 What happened
+
+Generalising the item parser to New York, Maine and Connecticut required, in
+each case, reading that publisher's actual document structure and writing
+code in direct response to what was found:
+
+| Publisher | What was inspected | What was built in response |
+|---|---|---|
+| New York | Untitled-guideline cases, read line by line | `_SCOPE_LINE`, the bounded junk-skip in `_title_before` |
+| Maine | The `#1`/`#2`/`#3` footer text, `Blue N` tags, "Applies to…" variants | `detect_footer_anchors`, `_parse_footer_protocol`, `_COLOR_TAG_LINE` |
+| Connecticut | The ToC table layout, the legal disclaimer's wrapping, bullet-on-own-line pattern | `_ct_toc_entries`, `_ct_clean_with_pages`, `_merge_bare_markers`, `_CT_BOILERPLATE` |
+
+This is precisely what §3.4 prohibits: *"no threshold, regex, matcher
+parameter or tier definition may be modified in response to anything observed
+in a test document."* Every commit implementing cross-publisher support did
+exactly that, and did so necessarily — a footer-based anchor cannot be written
+without reading a footer.
+
+### 19.2 Why this was not caught earlier
+
+§3.1 designated NASEMSO alone as dev, on the reasoning that it generated the
+study's hypotheses. That framing implicitly assumed the *method* would be
+fixed and applied blind to new documents — the standard train/test posture.
+It did not anticipate that **the extraction method itself would need
+publisher-specific engineering**, discovered only once retrieval moved beyond
+NASEMSO. Once that became true, every publisher touched during generalisation
+work became dev-like by construction, regardless of intent.
+
+### 19.3 What this means concretely
+
+**None of the four retrieved publishers currently qualify for §5's
+confirmatory sampling.** NASEMSO was always dev. New York, Maine and
+Connecticut are now dev in substance too, however they were labelled at
+retrieval time. Genuine test data requires editions that have not been
+inspected during any of this session's parser-development work — either from
+these same four publishers (a fresh pair not yet looked at) or from new
+publishers entirely.
+
+### 19.4 The path forward, not yet taken
+
+The parser now implements three general strategies (fixed section anchor,
+per-page footer counter, ToC row-alignment). A genuinely blind test is
+possible going forward under a specific discipline: retrieve a new pair, run
+`corpus_probe` and `parse()` **without modification**, and include it in the
+test set only if an existing frozen strategy resolves it with clean titles.
+If none do, that publisher is documented but excluded from confirmatory
+testing rather than triggering a fourth hand-tuned strategy — which would
+just reproduce this same contamination on the next document.
+
+This is a real scope change, not a footnote, and is left for explicit
+decision rather than resolved silently.

@@ -1946,3 +1946,66 @@ level — Massachusetts returns an explicit WAF "Not allowed" page,
 New Hampshire's Akamai edge returns "Access Denied" — rather than a
 missing-document 404; worth another retrieval attempt in a future round
 if the blocking is transient).
+
+## 30. Tenth blind-test round: Alabama — near-total detection collapse
+
+Real pair retrieved: Alabama EMS Patient Care Protocols, 10th Edition
+(effective April 29, 2022, from a regional EMS council mirror at
+`bremss.org` — the 10th edition is no longer linked from ADPH's own
+current protocols page, which now lists only the 11th) and 11th Edition
+(effective August 1, 2025, live official link on
+`alabamapublichealth.gov`). 143 and 210 pages. `corpus_probe`: WEAK on
+both (2.3% / 1.4% numbered lines).
+
+`parse()` finds far fewer items than any other state tested this phase
+relative to page count: **89 items from 143 pages, 109 items from 210
+pages** — for comparison, West Virginia found roughly one item per page
+and Pennsylvania nearly ten. Of those few items, the majority are
+`<preamble>` (55/89 = 61.8% in the 10th edition, 80/109 = 73.4% in the
+11th), and what little is left is dominated by sentence fragments rather
+than protocol names: 10th edition's non-preamble labels include
+`'hemorrhage with elevated INR'` and `'Contact OLMD Pain >5/10 with'`
+alongside one genuine title (`Rapid Sequence Intubation`, 14 items);
+11th edition's only substantial non-preamble bucket is a single garbled
+multi-line fragment, `'Reversal of Warfarin (Coumadin) overdose Major
+bleeding with elevated INR Intracranial hemorrhage with elevated INR'`
+(23 items) — evidently several run-together protocol fragments merged
+under one bad anchor match.
+
+`item_align.py`: 2 T1, 3 T2, 22 T3, 2 T4, 8 T5, 52 T6 — 5.6% trivially
+alignable, 36.0% requires-more-than-id, **58.4% unmatched**, on par with
+New Jersey's result as the worst of the phase.
+
+This combines two failure shapes already seen separately — majority
+preamble (Rhode Island, Kentucky, West Virginia) and a garbage,
+sentence-fragment anchor (Delaware, South Carolina, Nebraska, New
+Jersey) — but adds a third element not seen before: the anchor barely
+fires at all, leaving item *counts* themselves implausibly low for the
+document's size, not just badly attributed. **Not fixed.** Documented
+and excluded.
+
+### 30.1 Running total
+
+| Publisher | Titled | Preamble/fragmentation | Unmatched (T6) | Verdict |
+|---|---|---|---|---|
+| Delaware | ~50% | — | — | Failed |
+| South Carolina | ~36% | — | — | Failed |
+| Rhode Island | 96% | 44.3% preamble | 65.0% | Partial — unusable |
+| Vermont | 100% | fragmentation | 65.4% | Partial — unusable |
+| **Tennessee** | 98.6% | 5.0% preamble, 0 fragmentation | 2.7% | **CLEAN** |
+| Kentucky | 100% | 99.0% preamble (formulary, not protocols) | — | Failed |
+| West Virginia | 100%\* | 59.4% / 52.2% preamble + uncleaned footer labels | 39.7% | Failed |
+| Nebraska | 100%\* | 0% preamble, garbage anchor (drug/diagnosis noise) | — | Failed |
+| **Pennsylvania** | 97.2% | 0% preamble, 51 real titles both editions | 6.7% | **CLEAN** |
+| New Jersey | ~65%\* | 0% preamble, garbage anchor (dose/sentence fragments) | 57.8% | Failed |
+| Alabama | ~30%\* | 61.8% / 73.4% preamble + garbage anchor + item collapse | 58.4% | Failed |
+
+\* "Titled" means no `<untitled@N>` placeholder appeared — not that the
+label is a real protocol name.
+
+Thirteen genuine blind attempts, two clean passes (Tennessee,
+Pennsylvania), out of eleven distinct states with full pipeline data
+(Delaware, South Carolina, Rhode Island, Vermont, Tennessee, Kentucky,
+West Virginia, Nebraska, Pennsylvania, New Jersey, Alabama). Dropped this
+round without testing: Florida, Texas (both regional/county EMS systems,
+no single statewide compiled document).

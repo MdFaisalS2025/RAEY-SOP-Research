@@ -179,13 +179,21 @@ def align_items(old_pdf: str, new_pdf: str) -> dict:
     unmatched_old: list[Item] = []
     consumed: set[str] = set()
     examples: dict[str, list[tuple[str, str]]] = defaultdict(list)
+    # Every item's assignment, not just the first 3 per tier. `examples`
+    # exists only for the CLI printout; sampling (annotation.py) needs the
+    # full population per tier, which nothing before this needed to keep.
+    all_results: list[dict] = []
 
-    def note(tier: str, a: Item, b: Item | None):
+    def note(tier: str, a: Item, b: Item | None, similarity: float = 1.0):
         tiers[tier] += 1
         if len(examples[tier]) < 3:
             examples[tier].append(
                 (f"{a.item_id}", f"{b.item_id}" if b else "-")
             )
+        all_results.append({
+            "tier": tier, "old_item": a,
+            "new_item": b, "similarity": round(similarity, 4),
+        })
 
     for a in old_items:
         # T1 / T2 - identifier survives
@@ -214,7 +222,7 @@ def align_items(old_pdf: str, new_pdf: str) -> dict:
                 best, best_s = x, s
         if best is not None and best_s >= _SIM_FLOOR:
             consumed.add(best.item_id)
-            note("T4_reworded", a, best)
+            note("T4_reworded", a, best, best_s)
             continue
 
         # T5 - same text, different section or guideline (moved)
@@ -222,7 +230,7 @@ def align_items(old_pdf: str, new_pdf: str) -> dict:
                       if x.item_id not in consumed), None)
         if moved is not None and len(_norm(a.text)) > 25:
             consumed.add(moved.item_id)
-            note("T5_moved", a, moved)
+            note("T5_moved", a, moved, 1.0)
             continue
 
         note("T6_unmatched_old", a, None)
@@ -243,6 +251,7 @@ def align_items(old_pdf: str, new_pdf: str) -> dict:
         "requires_more_than_id_pct": round(100 * hard / max(1, total_old), 1),
         "unmatched_pct": round(100 * tiers["T6_unmatched_old"] / max(1, total_old), 1),
         "examples": {k: v for k, v in examples.items()},
+        "_all_results": all_results,
         # Exposed so the unmatched tail can be decomposed into genuine
         # deletion versus recoverable matching failure (see
         # unmatched_probe.py). Reporting a 16% tail without knowing

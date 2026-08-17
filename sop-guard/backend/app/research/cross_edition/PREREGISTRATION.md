@@ -177,11 +177,19 @@ There are no free labels (§2 item 1). Ground truth is **annotated**.
 
 ### 5.1 Sampling
 
-From each test edition pair, draw a **stratified random sample of 60 old items**,
-allocated across the tiers the method assigns (12 per tier T1–T5, and any T6
-shortfall redistributed proportionally). Stratifying by predicted tier
-oversamples rare tiers deliberately; all reported rates are **reweighted to the
-population** and the weights are recorded.
+From each test edition pair, draw a **stratified random sample of 60 old
+items**, **10 items per tier across all six tiers (T1–T6)**. T6 is included
+in the flat per-tier allocation, not treated as a residual — deletion
+recall/precision (§6) cannot be computed without T6 samples, so T6 must be
+represented by design, not by leftover shortfall. Where a tier's population
+is below 10, the shortfall is redistributed proportionally across the
+remaining tiers' *undrawn* population, so the total stays at 60. Stratifying
+by predicted tier oversamples rare tiers deliberately; all reported rates are
+**reweighted to the population** and the weights are recorded.
+
+*(Corrected 2026-08-17 from an internally inconsistent original: "12 per
+tier T1–T5" is 60 only if T6 is excluded from the flat allocation, which
+contradicts §6 naming T6-dependent metrics as primary. See §11.)*
 
 Target **≥ 360 annotated items** across ≥ 6 pairs.
 

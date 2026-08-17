@@ -1322,3 +1322,45 @@ just reproduce this same contamination on the next document.
 
 This is a real scope change, not a footnote, and is left for explicit
 decision rather than resolved silently.
+
+
+---
+
+## 20. Annotation instrument built and dry-run verified — real sampling still blocked
+
+Following §19's contamination finding, the annotation *mechanics*
+(`annotation.py`: stratified sampling, packet generation, Cohen's kappa) were
+built and dry-run end to end against dev data. **No output from this section
+is confirmatory** — it verifies the tooling works, not any study result.
+
+### 20.1 A second arithmetic bug in the pre-registration itself, caught by the dry run
+
+`PREREGISTRATION.md` §5.1 originally read "60 old items... 12 per tier
+T1–T5, T6 shortfall redistributed" — internally inconsistent: 12 × 5 already
+equals 60 with T6 excluded from the flat allocation, yet §6 names deletion
+recall/precision as a primary metric, which cannot be computed without T6
+samples. A literal implementation (12 from *every* tier including T6) drew
+**72 items, not 60** on the first dry run — caught by checking the total
+against the stated target, not by trusting the number. Corrected to **10
+items per tier across all six tiers**, T6 on equal footing with T1–T5, in
+both the pre-registration text and the code (§11 carries the dated
+correction).
+
+### 20.2 Verified, on dev data, dry run only
+
+| Check | Result |
+|---|---|
+| Total sample size | **60/60** after the fix (was 72/60 before) |
+| Shortfall redistribution | Tested on NY BLS, whose T4 has only 1 item total: shortfall of 9 flowed entirely to T1 (the largest remaining pool), landing at 19 drawn there — total still exactly 60 |
+| Packet content | Real item text, real guideline context, correct structure (spot-checked directly) |
+| Context file | Full corresponding new-edition guideline attached per sample, not just the single predicted match — §5.2's requirement |
+| Cohen's κ | Tested against two synthetic completed packets with a known 9/60 disagreement pattern: recovered `observed_agreement = 0.85` (51/60) exactly, `κ = 0.8443` |
+
+### 20.3 What remains blocked
+
+Per §19: **no output of an eventual real run of this instrument may be
+treated as confirmatory** until a genuinely unread edition pair exists,
+under the discipline in §19.4. Building the instrument now, ahead of that,
+was possible because tooling construction is not itself a confirmatory use —
+but the moment valid test data exists, annotation can begin immediately
+rather than waiting on further engineering.

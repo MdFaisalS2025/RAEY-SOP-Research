@@ -1055,3 +1055,80 @@ until (a) is done and its titles are re-inspected.
 **Do not use Connecticut or Maine item-level data for anything** — annotation
 sampling, tier statistics, or the pre-registration's confirmatory test —
 until this section is superseded by a dated update showing real titles.
+
+
+---
+
+## 17. Maine footer-based anchor detection implemented
+
+§16.1 diagnosed but did not implement Maine's real structural signal: the
+protocol name printed as a running page footer (`<name> #<page>`), rather
+than a fixed label preceding a title as in NASEMSO (`Aliases`) or New York
+(`CRITERIA`). Implemented now as `detect_footer_anchors` and
+`_parse_footer_protocol`, gated to fire only when `_known_anchor_stats`
+finds neither known anchor — so NASEMSO and New York cannot regress by
+construction, not merely by testing.
+
+### 17.1 Design
+
+`#1` uniquely marks a protocol's first page, confirmed before relying on it:
+45 occurrences on the 2025 edition, zero duplicate names, minimum spacing 38
+lines. Because the title is printed on the anchor line itself, this needed no
+backward title search — unlike `_title_before`, which exists specifically
+because NASEMSO's and New York's titles sit on a *different* line from their
+anchor.
+
+Two furniture patterns needed explicit stripping before item extraction,
+neither catchable by the existing `_detect_running_lines` (which requires
+recurrence of the exact same string): continuation footers (`#2`, `#3`, …)
+and a colour-coded chapter/page tag (`Blue 6`, `Red 3`) that changes every
+page. Left unstripped, both would have been appended as junk continuation
+text onto whichever item preceded them.
+
+**Deliberately deferred:** sub-sectioning by certification level
+(`EMT/ADVANCED EMT`, `PARAMEDIC`, …), which Maine's protocols do contain.
+Reusing `detect_section_names` here would mean applying a filter that
+explicitly documents itself as unreliable without a known-anchor calibration
+— which, by construction, this document doesn't have. Rather than risk a
+fourth plausible-looking-but-wrong result in this session, every item within
+a protocol is extracted at one flat level (`section = "protocol"`), stated
+as a named simplification rather than silently accepted as complete.
+
+### 17.2 Verified
+
+| | before | after |
+|---|---|---|
+| NASEMSO (all 3 editions) | 68/69 titled | **68/69 — byte-identical item counts, confirming zero regression** |
+| NY Collaborative / BLS | 60-61/62-63, 51/52 | **unchanged** |
+| Maine 2023 / 2025 | 19 guidelines, garbage titles | **39 / 42 guidelines, all titled, real protocol names** |
+| Items contaminated with footer/colour-tag text | — | **0 / 1,720** |
+
+All 42 titles in the 2025 edition were read by hand (`Adult Cardiac Arrest`,
+`Stroke`, `Universal Pain Management`, `Do Not Resuscitate (DNR) Guidelines`,
+…) — real, distinct protocol names, not table values or fragments.
+
+### 17.3 Edition-pair alignment, Maine 2023 → 2025
+
+| | |
+|---|---|
+| Trivially alignable | **89.1%** |
+| Needs more than an ID | 6.2% |
+| Unmatched | 4.7% |
+
+In the same range as NASEMSO's minor bump (94.7%) and NY BLS (90.9%) — Maine
+2023→2025 reads as a moderate, not a drastic, revision. This is now usable
+alongside NASEMSO and NY for the study.
+
+### 17.4 Publisher status, corrected
+
+| Publisher | Item-level status |
+|---|---|
+| NASEMSO | usable |
+| New York (Collaborative, BLS) | usable, NY Collaborative caveated per §15.3 |
+| **Maine** | **usable as of this section** |
+| Connecticut | **not usable** — tabular content, needs table-aware extraction (§16.2), unchanged |
+
+Three of four publishers now have trustworthy item-level data — a real
+improvement on §16's honest "2 of 4," though `PREREGISTRATION.md` §3.2's
+requirement of ≥ 4 usable publishers is still not fully met until Connecticut
+is addressed or a fourth is substituted.

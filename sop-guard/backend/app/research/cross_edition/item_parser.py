@@ -472,6 +472,148 @@ def _strip_marker(line: str) -> str:
     return line.strip()
 
 
+# Maine: "<Protocol Name> #<page-within-protocol>". Confirmed on the 2025
+# edition - 45 "#1" occurrences, zero duplicate names, minimum spacing 38
+# lines - before relying on it. See detect_footer_anchors.
+_FOOTER_LINE = re.compile(r"^(.{3,55}?)\s+#(\d+)\s*$")
+
+# Maine's other per-page furniture: a colour-coded chapter tag plus a
+# document-wide page number ("Blue 6", "Red 3"). Unlike NASEMSO's running
+# headers, the NUMBER changes on every page, so `_detect_running_lines`
+# (which needs the exact same string to recur) cannot catch it - it needs
+# its own pattern.
+_COLOR_TAG_LINE = re.compile(
+    r"(?i)^(blue|red|green|gold|purple|gray|grey|orange|yellow|white|black)\s+\d+\s*$"
+)
+
+
+def detect_footer_anchors(
+    lines: list[tuple[str, int]], min_count: int = 10,
+) -> list[tuple[int, str]] | None:
+    """Guideline boundaries from a running per-protocol page footer, as an
+    ALTERNATIVE to the `Aliases`/`CRITERIA`-style "look above a fixed
+    section label" model used by NASEMSO and New York.
+
+    Neither of those publishers' anchors exist in Maine's documents: instead
+    of a constant label preceding a title, Maine repeats the protocol's own
+    NAME as a footer on every page of that protocol, with a page-within-
+    protocol counter - "Respiratory Distress with Bronchospasm #1", then
+    "#2", "#3" on the following pages, before the name changes to the next
+    protocol. The auto-detected fallback anchor scoring (`detect_
+    guideline_anchor`) has no way to find this, because there is no
+    recurring FIXED label at all - every "anchor line" has different text.
+    Applying that scoring to Maine chose `normal`, a vital-signs table
+    column heading, and produced an implausible 19 guidelines for a 200+
+    page manual; inspecting the extracted "titles" showed they were table
+    values, not protocol names, and the underlying error was diagnosed
+    before this function was written (see FEASIBILITY.md §16.1).
+
+    `#1` uniquely marks a protocol's FIRST page, so it is both the boundary
+    and the title, on the same line - no backward title search is needed
+    here, unlike `_title_before`.
+
+    Returns None (not an empty list) when too few `#1`-style lines are
+    found, so a caller can distinguish "this publisher doesn't use this
+    convention" from "this publisher has zero protocols" and fall through to
+    another strategy rather than silently producing an empty corpus.
+    """
+    hits: list[tuple[int, str]] = []
+    seen_names: set[str] = set()
+    for i, (ln, _) in enumerate(lines):
+        m = _FOOTER_LINE.match(ln.strip())
+        if not m or m.group(2) != "1":
+            continue
+        name = m.group(1).strip()
+        if not _looks_like_title(name) or name in seen_names:
+            continue  # duplicate #1 would mean a real anchor collision
+        seen_names.add(name)
+        hits.append((i, name))
+    return hits if len(hits) >= min_count else None
+
+
+def _parse_footer_protocol(
+    lines: list[tuple[str, int]], start: int, end: int,
+    guideline: str, seen_ids: dict[str, int],
+) -> tuple[list[Item], int]:
+    """Item extraction within one footer-delimited protocol span.
+
+    Reuses the same marker classification as `_parse_section_items`
+    (`_classify`/`_strip_marker`/roman-alpha disambiguation), with two
+    differences forced by Maine's structure rather than chosen for
+    convenience:
+
+    (a) Continuation footers (`<name> #2`, `#3`, ...) and colour-tag lines
+        (`Blue 7`) are page furniture, not content, and are skipped
+        entirely - not treated as markers, and NOT appended as a
+        continuation of the previous item, which is what would otherwise
+        happen to any unrecognised line. Leaving them in would contaminate
+        item text with junk like "Blue 7" and the protocol's own name.
+    (b) Section is a single constant, `"protocol"`. Maine's certification-
+        level headers (EMT/ADVANCED EMT, PARAMEDIC, ...) look, from a first
+        pass, like they could be discovered the same way New York's
+        provider-level sections were - but that reuses `detect_section_
+        names`' count/spacing filter, which explicitly documents itself as
+        unreliable without a `_known_anchor_stats` result to calibrate
+        against, and Maine has none. Rather than risk a fourth
+        plausible-looking-but-wrong result this session, sub-sectioning by
+        certification level is left as a named, deferred refinement (see
+        FEASIBILITY.md), and every item in a protocol is extracted at one
+        flat level for now.
+    """
+    items: list[Item] = []
+    stack: list[tuple[str, str]] = []
+    path: list[str] = []
+    ambiguous = 0
+    last: Item | None = None
+
+    for i in range(start, min(end, len(lines))):
+        line, offset = lines[i]
+        if not line.strip():
+            continue
+        if _FOOTER_LINE.match(line.strip()) or _COLOR_TAG_LINE.match(line.strip()):
+            continue
+
+        cls = _classify(line, stack)
+        if cls is None:
+            if last is not None:
+                last.text = (last.text + " " + line.strip()).strip()
+                last.char_end = offset + len(line)
+            continue
+
+        kind, marker = cls
+        if kind == "alpha" and marker in _ROMAN_LETTERS:
+            ambiguous += 1
+
+        existing = next((k for k, (kk, _) in enumerate(stack) if kk == kind), None)
+        if existing is None:
+            stack.append((kind, marker))
+            path.append(marker)
+        else:
+            del stack[existing + 1:]
+            del path[existing + 1:]
+            stack[existing] = (kind, marker)
+            path[existing] = marker
+
+        marker_path = ".".join(path)
+        base_id = f"{_norm_title(guideline)}/protocol/{marker_path}"
+        seen_ids[base_id] = seen_ids.get(base_id, 0) + 1
+        uniq = base_id if seen_ids[base_id] == 1 else f"{base_id}#{seen_ids[base_id]}"
+        item = Item(
+            item_id=uniq, guideline=guideline, section="protocol",
+            marker=marker, marker_path=marker_path, depth=len(path),
+            text=_strip_marker(line),
+            char_start=offset, char_end=offset + len(line),
+        )
+        items.append(item)
+        last = item
+
+    for k, it in enumerate(items):
+        stop = next((items[j].char_start for j in range(k + 1, len(items))
+                     if items[j].depth <= it.depth), None)
+        it.char_end = max(it.char_end, (stop - 1) if stop else it.char_end)
+    return items, ambiguous
+
+
 def parse(pdf_path: str, doc_id: str | None = None) -> ParsedEdition:
     raw, pages = extract_text(pdf_path)
     canonical, lines = _clean_to_canonical(raw, pages)
@@ -480,6 +622,29 @@ def parse(pdf_path: str, doc_id: str | None = None) -> ParsedEdition:
         doc_id=doc_id or pdf_path.rsplit("/", 1)[-1].rsplit(".", 1)[0],
         source_path=pdf_path, canonical_text=canonical, n_pages=pages,
     )
+
+    # FOOTER-BASED PATH, tried only when no known section-style anchor
+    # exists in this document (`_known_anchor_stats` is None). NASEMSO
+    # (`aliases`) and New York (`criteria`) always have one and are
+    # therefore completely unaffected by this branch - it exists for
+    # publishers like Maine that mark protocol boundaries with a repeating
+    # per-page footer instead of a fixed section label. See
+    # detect_footer_anchors for why the two conventions need different
+    # detectors rather than one generalised one.
+    if _known_anchor_stats(lines) is None:
+        footer_anchors = detect_footer_anchors(lines)
+        if footer_anchors is not None:
+            ed.anchor = "footer:#1"
+            ed.guidelines = [title for _, title in footer_anchors]
+            seen_ids: dict[str, int] = {}
+            for idx, (line_no, title) in enumerate(footer_anchors):
+                end = footer_anchors[idx + 1][0] if idx + 1 < len(footer_anchors) else len(lines)
+                items, ambiguous = _parse_footer_protocol(
+                    lines, line_no, end, title, seen_ids,
+                )
+                ed.items.extend(items)
+                ed.ambiguous_markers += ambiguous
+            return ed
 
     # Section template discovered from THIS document, unioned with the
     # NASEMSO names so that corpus regressions are impossible. See

@@ -2547,3 +2547,72 @@ qualitatively different, more solvable problem than an outright WAF
 block. Worth a retry with a different retrieval method (e.g. a tool that
 handles chunked transfer encoding without a fixed read buffer) rather
 than more of the same approach.
+
+## 39. Fifteenth blind-test round: Ohio, recovered via a third-party mirror of a superseded edition — failed
+
+Continuing the systematic previous-years sweep across every remaining
+state (not just the six originally flagged), most searches this round
+confirmed prior findings without new evidence either way: Wyoming and
+Minnesota show no trace of ever having had their own document before
+adopting NASEMSO verbatim; Missouri shows no trace of ever having had a
+statewide compiled document at all; South Dakota's newest confirmed
+edition is still the 2010 3rd edition; North Dakota's 2024 guidelines
+are still "Version 1," nothing newer; Florida's regional-only structure
+is reconfirmed. Iowa's one promising third-party mirror lead
+(`mgmc.org`) turned out to be a dead link.
+
+**Ohio, however, produced a genuine recovered edition.** A third-party
+hospital-system mirror (`amerimed.net`) hosts a copy of the "State of
+Ohio Adult EMS Guidelines and Procedures Manual **2021**" — a real, dated
+prior edition of the same living document whose only other known copy is
+the perpetually-overwritten current URL logged in §32 as
+un-pairable. Paired the recovered 2021 edition against the already-held
+current (2026) edition. `corpus_probe`: USABLE on both (7.5% / 6.9%
+numbered lines).
+
+`parse()` shows the same garbage-anchor failure already catalogued five
+times this phase (Delaware, South Carolina, Nebraska, New Jersey,
+Maryland, Oklahoma), here at its own severity: the dominant label in
+each edition is a fragment from a drug-administration flowchart box —
+`'IM or AUTO-INJECTOR'` (543/881 = 61.6% of 2021's items) and
+`'INSUFFICIENCY ADMINISTER STEROIDS'` (575/973 = 59.1% of 2026's items)
+— alongside other flowchart fragments (`'BASE VITALS SAMPLE HISTORY'`,
+`'ADMINISTER DEXTROSE IN WATER 25 GM IVP or GLUCAGON 1 MG IM'`). Neither
+is a protocol name. `item_align.py`: 31.0% trivially alignable, 38.9%
+unmatched. **Not fixed.** Documented and excluded.
+
+### 39.1 Running total
+
+| Publisher | Titled | Preamble/fragmentation | Unmatched (T6) | Verdict |
+|---|---|---|---|---|
+| Delaware | ~50% | — | — | Failed |
+| South Carolina | ~36% | — | — | Failed |
+| Rhode Island | 96% | 44.3% preamble | 65.0% | Partial — unusable |
+| Vermont | 100% | fragmentation | 65.4% | Partial — unusable |
+| **Tennessee** | 98.6% | 5.0% preamble, 0 fragmentation | 2.7% | **CLEAN** |
+| Kentucky | 100% | 99.0% preamble (formulary, not protocols) | — | Failed |
+| West Virginia | 100%\* | 59.4% / 52.2% preamble + uncleaned footer labels | 39.7% | Failed |
+| Nebraska | 100%\* | 0% preamble, garbage anchor (drug/diagnosis noise) | — | Failed |
+| **Pennsylvania** | 97.2% | 0% preamble, 51 real titles both editions | 6.7% | **CLEAN** |
+| New Jersey | ~65%\* | 0% preamble, garbage anchor (dose/sentence fragments) | 57.8% | Failed |
+| Alabama | ~30%\* | 61.8% / 73.4% preamble + garbage anchor + item collapse | 58.4% | Failed |
+| Maryland | ~44%\* | 55.7% / 56.1% preamble + garbage anchor (STRONG verdict, failed anyway) | 26.5% | Failed |
+| Hawaii | ~91%\* | 0% / 38.7% preamble + item collapse + raw page-counter anchor | 52.2% | Failed |
+| Utah | 100%\* | total item-detection collapse (11 then 3 items) | 100.0% | Failed |
+| Oklahoma | ~52%\* | 47.8% / 57.8% untitled + flowchart-box garbage anchor | 60.0% | Failed |
+| Ohio | ~93%\* | 7.0% / 8.4% preamble + flowchart-box garbage anchor | 38.9% | Failed |
+
+\* "Titled" means no `<untitled@N>` placeholder appeared — not that the
+label is a real protocol name.
+
+Eighteen genuine blind attempts, two clean passes, across sixteen
+distinct states with full pipeline data. Full 50-state accounting: 16
+tested, 3 contaminated dev publishers, 3 real-but-unreachable-or-
+truncating (MA, NH, NC — one edition in hand for MA/NH), 1
+real-but-single-edition-only (NM), 2 real-snapshot-found-but-currently-
+unretrievable (AZ, MT), 25 confirmed structurally ineligible (Ohio moves
+out of this bucket, having now been fully tested). Still short of the
+pre-registration's minimum viable test set (≥4 pairs/≥3 publishers) at
+two clean pairs from two publishers — the previous-years sweep has so
+far only ever reproduced the same failure modes already catalogued, not
+surfaced a third clean publisher.

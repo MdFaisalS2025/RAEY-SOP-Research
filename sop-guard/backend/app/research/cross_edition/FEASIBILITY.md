@@ -2682,3 +2682,116 @@ historical document ever existed regardless of year, and California's
 history confirms a document existed once but the state deliberately
 never repeated it. Running total remains eighteen genuine blind
 attempts, two clean passes, across sixteen distinct states.**
+
+## 41. Dedicated retry round on the five remaining live leads: New Hampshire tested (failed), Arizona confirmed a permanent dead end, Montana's second edition confirmed to exist, Massachusetts and North Carolina still blocked
+
+At the user's request to keep specifically pushing on Massachusetts, New
+Hampshire, North Carolina, Arizona, and Montana, this round used the
+Wayback CDX API directly (`web.archive.org/cdx/search/cdx?url=...`)
+rather than guessing snapshot dates from the browser one at a time — a
+much stronger technique, since it lists every distinct captured version
+of a URL along with a content digest, making it possible to tell whether
+two snapshots are genuinely different documents or duplicate crawls of
+the same unchanged file.
+
+**New Hampshire — sixteenth blind-test round, failed.** The CDX list for
+the Version 8.2 document showed two captures; the second (2024-05-17,
+21.2MB) downloaded completely and cleanly where the first had
+consistently failed. This produced a genuine second NH edition — paired
+against the already-held Version 8.0 draft — and surfaced that the
+earlier `ma_2025.pdf`/`nh_v82` type failures in this session had
+actually been downloading a **DOCX file mislabeled as PDF** in at least
+one case (Massachusetts, see below), a confusion CDX's `mimetype` field
+resolved cleanly. `corpus_probe`: USABLE on both editions. `parse()`
+shows a novel failure shape not seen before: the earlier v8.0 draft
+partially works — 317/803 items (39.5%) land under a real-sounding
+label (`'EMT STANDING ORDERS'`) alongside genuine protocol-name
+fragments (`'Medical Protocol 2.9A Hypoglycemia – Adult'`) mixed with
+garbage — but the later, final v8.2 **collapses to 94.4% preamble**
+(916/970 items), as if whatever page-layout signal the fallback
+heuristic was weakly tracking in the draft disappeared almost entirely
+in the revision to final. `item_align.py`: 3.5% trivially alignable,
+29.6% unmatched. **Not fixed.** Documented and excluded.
+
+**Arizona — confirmed a permanent dead end, not a retrieval problem.**
+The CDX list shows only **one** distinct content digest was ever
+archived for this document; the second URL logged in earlier rounds as
+"an earlier version" is recorded by Wayback itself as a `warc/revisit`
+— a re-crawl that found byte-identical content and was never stored
+separately. There is no second edition to recover, at any snapshot date,
+because none was ever captured. All further retry effort on Arizona is
+retired.
+
+**Montana — a genuine second edition confirmed to exist, blocked by an
+Archive.org outage mid-round.** Montana's CDX history (47 entries
+spanning 2021-2026) shows the document held one stable content digest
+for years, then briefly switched to a **different** digest on exactly
+one capture (2024-07-18, 973,294 bytes) before reverting back to the
+original digest on every subsequent crawl — a real, if short-lived,
+distinct edition. Both the long-standing digest and the 2024-07-18
+outlier were pursued across multiple snapshot timestamps and 15+ retry
+attempts each, but Internet Archive went fully offline
+("Temporarily Offline") partway through this attempt, confirmed by
+inspecting a returned error page's title directly. Montana is the
+strongest remaining lead of the five — the second edition is confirmed
+to exist, not just guessed at — and is worth an immediate retry once
+Archive.org's availability stabilizes.
+
+**Massachusetts — still blocked, but the failure is now understood.**
+CDX revealed the two snapshots for the original "2025.1" URL were both
+served as `application/vnd.openxmlformats-officedocument.wordprocessingml.document`
+(DOCX, not PDF) — explaining why every earlier download attempt in this
+session identified as "Microsoft Word 2007+" and failed a PDF-parsing
+check. The correctly-suffixed PDF URL (`...-0/download`) was located via
+CDX and has four real `application/pdf` snapshots. Every one of them was
+attempted (resume-based and fresh, across all four timestamps): each
+consistently produced a file that is syntactically well-formed at the
+tail (ends with a proper `%%EOF` trailer) but internally broken —
+`pypdf`/`pdfplumber` extraction returns only 1 page and 387 characters
+from an 8.5MB file that should contain roughly 150-200 pages. This
+matches Wayback serving a truncated byte range that happens to end on an
+object boundary rather than a clean file-level cutoff, and does not
+respond to further retries (confirmed with a 40-attempt resume push that
+made zero additional progress past the same fixed byte count). Not yet
+solved; would need either a different retrieval path (e.g. Archive.org's
+IA-item download API instead of the wayback playback route) or for the
+underlying capture to be re-crawled with the corruption absent.
+
+**North Carolina — still fully blocked**, no change from §38. The same
+resume-based CDX-informed approach was not reapplied this round given
+time constraints; §38's finding (confirmed loadable, zero complete
+downloads across 30+ attempts and three snapshot dates) stands.
+
+### 41.1 Running total
+
+| Publisher | Titled | Preamble/fragmentation | Unmatched (T6) | Verdict |
+|---|---|---|---|---|
+| Delaware | ~50% | — | — | Failed |
+| South Carolina | ~36% | — | — | Failed |
+| Rhode Island | 96% | 44.3% preamble | 65.0% | Partial — unusable |
+| Vermont | 100% | fragmentation | 65.4% | Partial — unusable |
+| **Tennessee** | 98.6% | 5.0% preamble, 0 fragmentation | 2.7% | **CLEAN** |
+| Kentucky | 100% | 99.0% preamble (formulary, not protocols) | — | Failed |
+| West Virginia | 100%\* | 59.4% / 52.2% preamble + uncleaned footer labels | 39.7% | Failed |
+| Nebraska | 100%\* | 0% preamble, garbage anchor (drug/diagnosis noise) | — | Failed |
+| **Pennsylvania** | 97.2% | 0% preamble, 51 real titles both editions | 6.7% | **CLEAN** |
+| New Jersey | ~65%\* | 0% preamble, garbage anchor (dose/sentence fragments) | 57.8% | Failed |
+| Alabama | ~30%\* | 61.8% / 73.4% preamble + garbage anchor + item collapse | 58.4% | Failed |
+| Maryland | ~44%\* | 55.7% / 56.1% preamble + garbage anchor (STRONG verdict, failed anyway) | 26.5% | Failed |
+| Hawaii | ~91%\* | 0% / 38.7% preamble + item collapse + raw page-counter anchor | 52.2% | Failed |
+| Utah | 100%\* | total item-detection collapse (11 then 3 items) | 100.0% | Failed |
+| Oklahoma | ~52%\* | 47.8% / 57.8% untitled + flowchart-box garbage anchor | 60.0% | Failed |
+| Ohio | ~93%\* | 7.0% / 8.4% preamble + flowchart-box garbage anchor | 38.9% | Failed |
+| New Hampshire | ~86%\* | 3.5% then 94.4% preamble — collapses between editions | 29.6% | Failed |
+
+\* "Titled" means no `<untitled@N>` placeholder appeared — not that the
+label is a real protocol name.
+
+Nineteen genuine blind attempts, two clean passes, across seventeen
+distinct states with full pipeline data. Of the five states pursued this
+round: one now tested (NH, failed), one confirmed permanently
+unrecoverable (AZ — no second edition was ever archived, full stop),
+one confirmed recoverable in principle with a next step identified (MT —
+retry once Archive.org stabilizes), and two still blocked with the
+specific blocking mechanism now understood (MA — internal corruption in
+every PDF snapshot; NC — unchanged, per §38).

@@ -1132,3 +1132,132 @@ Three of four publishers now have trustworthy item-level data — a real
 improvement on §16's honest "2 of 4," though `PREREGISTRATION.md` §3.2's
 requirement of ≥ 4 usable publishers is still not fully met until Connecticut
 is addressed or a fourth is substituted.
+
+
+---
+
+## 18. Connecticut table extraction fixed via ToC row-alignment
+
+§16.2 diagnosed but did not fix Connecticut: no repeating per-page anchor
+exists (unlike NASEMSO's fixed label or Maine's per-page footer), and its
+content is dosing/triage tables that linear extraction fragments into short
+per-cell lines. Fixed by using the document's own embedded Table of Contents
+instead of anything in the body text.
+
+### 18.1 Design: three techniques, each verified before being relied on
+
+**The ToC exists and is real**, spanning pages 2–7, listing every protocol
+with a target page number. It was not the first signal tried — an embedded
+PDF outline (851 bookmark entries, several literally titled
+`Protocol2.27_NEW_Hospice_complete.pdf`, preserving the source files' names
+from whatever process merged them into one document) looked promising but
+was a dead end: every resolvable entry had `page: -1`, an unresolved
+destination, useless for locating content.
+
+**Row alignment could not use text order.** PyMuPDF's plain extraction
+groups a ToC table's cells by *column* — all protocol codes first, then all
+names, then all page numbers, each top-to-bottom — a layout artefact of the
+source table. Positional `zip()` was tested and rejected: per-page counts of
+codes/names/page-numbers do not match (25/28/27 measured on one page), so
+naive zipping would silently misalign rows. Rows are instead recovered by
+**Y-coordinate grouping** via `get_text('dict')`, matching each span's
+vertical position to others on the same visual row regardless of text-stream
+order.
+
+**The printed-to-physical page offset was calibrated, not assumed.** A body
+page's own footer prints its page number; physical (0-indexed) page 55 was
+confirmed to end with the footer line `"56"` — `printed = physical + 1` —
+before building anything on top of it.
+
+### 18.2 Two bugs found by inspecting output, not by trusting the guideline count
+
+Consistent with every prior fix this session, and directly consistent with
+`PREREGISTRATION.md` §10: the first working version produced item counts
+identical to the *broken* pre-fix version (571, both times) — distrusted on
+sight, and correctly so.
+
+1. **Dotted leaders use Unicode ellipsis (`…`), not ASCII periods.** The name
+   regex matched only `\.{4,}`, so it anchored at the first run of 4+ literal
+   periods rather than the true end of the leader, leaving straggler
+   `……………` characters inside every captured title (`"Dedication and
+   Acknowledgement……………………………...….....") until inspected. Fixed to match
+   `[.…\s]{4,}`.
+2. **Bullets sit on their own line, separated from their content** (`•` on
+   one line, the clinical text on the next) — the same phenomenon checked
+   and correctly ruled out as negligible for Maine (148/9,293 lines, 1.6%)
+   is **dominant** for Connecticut: 1,689 of 14,159 lines, 11.9%, on the
+   *correct* line set. A first measurement against the wrong canonicaliser's
+   output showed a clean 85/12,674 and nearly went unquestioned — caught
+   only by noticing `_clean_to_canonical` and `_ct_clean_with_pages` strip
+   different furniture and therefore index lines differently, so a check
+   against one function's line numbers is meaningless against the other's
+   line list. Fixed with `_merge_bare_markers`, folding a bare-marker line
+   onto the following non-empty line before classification. This one bug
+   accounted for the bulk of the improvement below.
+
+**A third apparent bug was investigated and found to be a mistake in the
+diagnostic script, not the code.** A span inspected under a `'Stroke' in
+title` filter showed Exertional Heat Stroke content — `'Stroke'` matches
+both `Exertional Heat Stroke` and `Stroke – Adult & Pediatric` as a
+substring, and `[0]` silently took the first (wrong) match. Re-checked
+against the exact title, `Stroke – Adult & Pediatric`'s span contains real,
+correctly located stroke content (`BE-FAST Stroke Scale`, `Stroke Alert`).
+Recorded because a careless test is exactly the kind of thing that
+manufactures a false "still broken" finding, which is as costly as a false
+"it works."
+
+### 18.3 Verified
+
+| | before (broken) | after |
+|---|---|---|
+| Guidelines found | 73 (wrong anchor, `indications`) → 120 (ToC, dirty titles) | **125, clean titles** |
+| Items | 571 | **2,240** |
+| Zero-item guidelines | majority | **15/125** — mostly genuine front matter (`Preface`, `Appendix 3: Scope of Practice`) or protocols written as unmarked prose rather than numbered steps, not extraction failures |
+| Boilerplate contamination | — | **0/2,240 items** |
+| NASEMSO (3 editions), NY (2 sets), Maine (2 editions) | — | **byte-identical item counts — zero regression** |
+
+Titles read clean: `Abdominal Pain`, `Allergic Reaction/Anaphylaxis – Adult`,
+`Dedication and Acknowledgement`.
+
+### 18.4 Edition-pair alignment, Connecticut v2025.1 → v2025.2
+
+| | |
+|---|---|
+| Trivially alignable | **96.8%** |
+| Needs more than an ID | 2.2% |
+| Unmatched | 1.0% |
+
+A same-year quarterly revision, and the number reads as a small update —
+consistent with the minor-bump pattern already seen in NASEMSO (94.7%) and
+Maine (89.1%). Usable alongside NASEMSO, New York, and Maine.
+
+### 18.5 Publisher status, corrected again
+
+| Publisher | Item-level status |
+|---|---|
+| NASEMSO | usable |
+| New York (Collaborative, BLS) | usable, Collaborative caveated per §15.3 |
+| Maine | usable |
+| **Connecticut** | **usable as of this section** |
+
+**All four retrieved publishers now have trustworthy item-level data.**
+`PREREGISTRATION.md` §3.2's ≥4-usable-publisher requirement is met in
+substance, not merely in document count, for the first time this session.
+
+### 18.6 Honest residual limitations
+
+- Connecticut's guideline segmentation depends on its embedded ToC existing
+  and being well-formed. This is a **fourth distinct detection strategy**
+  (fixed section label / per-page footer counter / ToC row-alignment),
+  confirming §16.3's finding that no common convention exists even within
+  one domain — now demonstrated four ways instead of three.
+- Item density per protocol is genuinely lower and more variable than
+  NASEMSO or Maine's, for two different real reasons conflated in raw
+  counts: table-heavy protocols (few numbered lines exist in the source) and
+  prose-written protocols (steps exist but are declarative sentences, not a
+  numbered list). Any future analysis comparing item counts across
+  publishers should account for this rather than reading a lower count as
+  worse extraction.
+- 15 zero-item guidelines were spot-checked in aggregate by category, not
+  individually confirmed one by one; a small number could still be genuine
+  gaps rather than front matter or prose-only content.

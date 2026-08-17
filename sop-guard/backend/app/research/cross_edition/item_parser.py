@@ -614,6 +614,281 @@ def _parse_footer_protocol(
     return items, ambiguous
 
 
+# Connecticut's front matter contains a legal disclaimer that wraps across
+# 2-3 lines with INCONSISTENT splits ("accordance with professional
+# standards..." vs "with professional standards...", 215 and 28 occurrences
+# respectively of what is semantically the same sentence). Matched by
+# distinctive substring rather than exact string, unlike NASEMSO/Maine's
+# furniture, because no single exact string covers all wrappings.
+_CT_BOILERPLATE = re.compile(
+    r"(?i)connecticut\s+oems|professional standards|protocol continu(ed|es)"
+)
+_CT_BARE_PAGENUM = re.compile(r"^\d{1,3}$")
+_CT_VERSION_TAG = re.compile(r"^v20\d\d\.\d\s*$")
+
+
+def _ct_toc_entries(pdf_path: str, toc_pages: range = range(1, 8)) -> list[tuple[str, int]]:
+    """(protocol name, target PRINTED page number) pairs from Connecticut's
+    embedded Table of Contents, read by Y-COORDINATE ROW ALIGNMENT rather
+    than positional order.
+
+    Connecticut has no repeating per-page anchor at all - neither a fixed
+    section label (NASEMSO/New York) nor a per-protocol footer counter
+    (Maine): its content is dosing and triage TABLES, which linear text
+    extraction fragments into short per-cell lines with no recoverable row
+    structure (see FEASIBILITY.md §16.2). But the document's own Table of
+    Contents lists every protocol with a target page number, and that IS
+    extractable - just not by naive line order.
+
+    PyMuPDF's plain text extraction groups a ToC table's cells by COLUMN,
+    not by row: all protocol codes first, then all dotted-leader names, then
+    all page numbers, each internally top-to-bottom - a layout artefact of
+    how the source table was authored. This was verified before being ruled
+    out as a shortcut: per-page counts of codes/names/page-numbers do NOT
+    match (25/28/27 on one page), so a positional zip() would silently
+    misalign some rows. Row membership is instead recovered from each text
+    span's actual Y-coordinate via `get_text('dict')`, grouping lines whose
+    vertical centres fall within a few points of each other - the same
+    physical row in the rendered table regardless of the order the text
+    extractor emitted them in.
+    """
+    import fitz
+    doc = fitz.open(pdf_path)
+    # Dotted leader before a page number. Must match the UNICODE ellipsis
+    # (…, U+2026) as well as ASCII periods - the leader is a run of these
+    # mixed, not pure ASCII dots. Matching only `\.{4,}` anchored the tail
+    # match at the first run of 4+ literal periods rather than the true end
+    # of the leader, leaving straggler "…………" characters INSIDE the
+    # captured name on every entry (e.g. "Dedication and
+    # Acknowledgement……………………………...….....") until this was caught by
+    # inspecting extracted titles rather than trusting the guideline count.
+    name_re = re.compile(r"^(.+?)[.…\s]{4,}$")
+    entries: list[tuple[str, int]] = []
+    for pno in toc_pages:
+        if pno >= doc.page_count:
+            break
+        rows: list[tuple[float, str, str]] = []
+        for block in doc[pno].get_text("dict")["blocks"]:
+            for line in block.get("lines", []):
+                text = "".join(s["text"] for s in line["spans"]).strip()
+                if not text:
+                    continue
+                y = (line["bbox"][1] + line["bbox"][3]) / 2
+                if (m := name_re.match(text)):
+                    rows.append((y, "name", m.group(1).strip()))
+                elif _CT_BARE_PAGENUM.fullmatch(text) or text.lower() == "n/a":
+                    rows.append((y, "page", text))
+        rows.sort(key=lambda r: r[0])
+        groups: list[list[tuple[float, str, str]]] = []
+        for r in rows:
+            if groups and abs(groups[-1][0][0] - r[0]) <= 4:
+                groups[-1].append(r)
+            else:
+                groups.append([r])
+        for g in groups:
+            names = [t for _, k, t in g if k == "name"]
+            pages = [t for _, k, t in g if k == "page"]
+            if names and pages and pages[0].lower() != "n/a":
+                try:
+                    entries.append((names[0], int(pages[0])))
+                except ValueError:
+                    continue
+    return entries
+
+
+def _ct_clean_with_pages(
+    pdf_path: str,
+) -> tuple[str, list[tuple[str, int]], list[int]]:
+    """Like `_clean_to_canonical`, but ALSO returns `page_start_line`: the
+    index into the cleaned line list where each physical PDF page begins.
+
+    `_clean_to_canonical` discards page boundaries entirely - every
+    publisher parsed so far needed only a flat line stream. Connecticut's
+    guideline boundaries come from the Table of Contents' target PAGE
+    numbers (`_ct_toc_entries`), so a page-to-canonical-line mapping is a
+    prerequisite that did not exist before this document required it.
+
+    Verified calibration for printed-page -> physical-page-index: a body
+    page's own footer prints its page number, and physical (0-indexed) page
+    55 ends with the footer line "56" - printed_page = physical_index + 1,
+    confirmed directly rather than assumed.
+    """
+    import fitz
+    doc = fitz.open(pdf_path)
+    kept: list[tuple[str, int]] = []
+    page_start_line: list[int] = []
+    cursor = 0
+    for pno in range(doc.page_count):
+        page_start_line.append(len(kept))
+        for ln in doc[pno].get_text().split("\n"):
+            s = ln.rstrip()
+            t = s.strip()
+            if not t:
+                continue
+            if _CT_BOILERPLATE.search(s) or _CT_BARE_PAGENUM.fullmatch(t) or _CT_VERSION_TAG.match(t):
+                continue
+            kept.append((s, cursor))
+            cursor += len(s) + 1
+    return "\n".join(l for l, _ in kept), kept, page_start_line
+
+
+# A marker with NOTHING else on its line - "•" alone, then the content
+# on the NEXT line. Derived from _MARKER_PATTERNS' token shapes but anchored
+# to end-of-line instead of requiring trailing content.
+#
+# The same phenomenon was checked for Maine and found negligible (148 of
+# 9,293 lines, 1.6% - not worth acting on). It is NOT negligible for
+# Connecticut: measured at 1,689 of 14,159 lines (11.9%) on the correct
+# (CT-specific) line set - a first check against the wrong canonicaliser's
+# output looked clean at 85/12,674 and was nearly reported as such, before
+# noticing the two functions strip different furniture and therefore index
+# lines differently. Left unmerged, both the bare marker and the content
+# line following it are silently dropped: a marker-only line matches no
+# _MARKER_PATTERNS entry (all require content immediately after), so it
+# falls to the "continuation of the previous item" branch; the content line
+# after IT then does the same, and if there is no real item yet open in
+# this protocol's span - the common case, since this pattern dominates
+# early in many protocols - both lines vanish with no error. This was the
+# direct cause of 81 of 120 Connecticut "guidelines" showing zero items on
+# the first working version of this function.
+_BARE_MARKER = re.compile(
+    r"^(\(\d+\)|\([a-z]\)|(?:\d+\.){2,}|\d{1,2}\.|[a-z]\.|[ivxlc]+\.|"
+    r"[A-Z]\.|[�•▪●‣⁃-]|o)\s*$"
+)
+
+
+def _merge_bare_markers(
+    lines: list[tuple[str, int]], start: int, end: int,
+) -> list[tuple[str, int]]:
+    """Within one span, fold a bare-marker line into the following non-empty
+    line, so `_classify` sees "1. Consider midazolam..." instead of "1." and
+    "Consider midazolam..." as two separate, individually unclassifiable
+    lines. The bare line's OFFSET is kept (not the content line's), so
+    downstream character offsets still point at the marker where the item
+    visually begins."""
+    merged: list[tuple[str, int]] = []
+    i = start
+    limit = min(end, len(lines))
+    while i < limit:
+        text, offset = lines[i]
+        if _BARE_MARKER.match(text.strip()):
+            j = i + 1
+            while j < limit and not lines[j][0].strip():
+                j += 1
+            if j < limit:
+                merged.append((text.strip() + " " + lines[j][0].strip(), offset))
+                i = j + 1
+                continue
+        merged.append((text, offset))
+        i += 1
+    return merged
+
+
+def _parse_ct_protocol(
+    lines: list[tuple[str, int]], start: int, end: int,
+    guideline: str, seen_ids: dict[str, int],
+) -> tuple[list[Item], int]:
+    """Item extraction within one ToC-delimited Connecticut protocol span.
+
+    Structurally close to `_parse_footer_protocol` (same marker
+    classification, same flat single-section simplification, same
+    per-edition id-uniqueness discipline) but against `_ct_clean_with_pages`
+    output - whose furniture (boilerplate, bare page numbers, version tag)
+    has already been stripped by that function - and with bare markers
+    pre-merged onto their content line by `_merge_bare_markers` (see there
+    for why this step exists and is CT-specific).
+
+    Table-heavy content is expected to yield fewer markers per page than
+    NASEMSO or Maine's prose - much of the actual clinical content is table
+    cells with no numbering at all - which is why the honest per-publisher
+    item-density comparison belongs in FEASIBILITY.md rather than being
+    smoothed over here.
+    """
+    items: list[Item] = []
+    stack: list[tuple[str, str]] = []
+    path: list[str] = []
+    ambiguous = 0
+    last: Item | None = None
+
+    for line, offset in _merge_bare_markers(lines, start, end):
+        if not line.strip():
+            continue
+
+        cls = _classify(line, stack)
+        if cls is None:
+            if last is not None:
+                last.text = (last.text + " " + line.strip()).strip()
+                last.char_end = offset + len(line)
+            continue
+
+        kind, marker = cls
+        if kind == "alpha" and marker in _ROMAN_LETTERS:
+            ambiguous += 1
+
+        existing = next((k for k, (kk, _) in enumerate(stack) if kk == kind), None)
+        if existing is None:
+            stack.append((kind, marker))
+            path.append(marker)
+        else:
+            del stack[existing + 1:]
+            del path[existing + 1:]
+            stack[existing] = (kind, marker)
+            path[existing] = marker
+
+        marker_path = ".".join(path)
+        base_id = f"{_norm_title(guideline)}/protocol/{marker_path}"
+        seen_ids[base_id] = seen_ids.get(base_id, 0) + 1
+        uniq = base_id if seen_ids[base_id] == 1 else f"{base_id}#{seen_ids[base_id]}"
+        item = Item(
+            item_id=uniq, guideline=guideline, section="protocol",
+            marker=marker, marker_path=marker_path, depth=len(path),
+            text=_strip_marker(line),
+            char_start=offset, char_end=offset + len(line),
+        )
+        items.append(item)
+        last = item
+
+    for k, it in enumerate(items):
+        stop = next((items[j].char_start for j in range(k + 1, len(items))
+                     if items[j].depth <= it.depth), None)
+        it.char_end = max(it.char_end, (stop - 1) if stop else it.char_end)
+    return items, ambiguous
+
+
+def detect_ct_toc_anchors(
+    pdf_path: str, min_count: int = 15,
+) -> tuple[list[tuple[str, int]], list[tuple[str, int]], list[int]] | None:
+    """Full pipeline: ToC entries -> deduplicated, page-sorted guideline
+    boundaries. Returns (anchors, lines, page_start_line) where `anchors` is
+    [(canonical_line_index, title), ...] ready for the same span-walking
+    pattern `parse()` already uses for the footer path, or None if too few
+    resolvable ToC entries were found (so a caller can distinguish
+    "this publisher doesn't have an extractable ToC" from "zero protocols").
+    """
+    toc = _ct_toc_entries(pdf_path)
+    if len(toc) < min_count:
+        return None
+    canonical, lines, page_start_line = _ct_clean_with_pages(pdf_path)
+
+    # Multiple ToC rows can point at the same physical page (Adult/Pediatric
+    # variants sometimes share a start page) - keep first-seen only, and
+    # require strictly increasing pages so a mis-read row cannot create a
+    # zero- or negative-length span.
+    seen_pages: set[int] = set()
+    ordered = sorted(toc, key=lambda e: e[1])
+    anchors: list[tuple[int, str]] = []
+    last_page = -1
+    for name, printed_page in ordered:
+        physical = printed_page - 1  # calibrated offset, see _ct_clean_with_pages
+        if physical <= last_page or physical in seen_pages or physical >= len(page_start_line):
+            continue
+        seen_pages.add(physical)
+        last_page = physical
+        anchors.append((page_start_line[physical], name))
+
+    return (anchors, lines, page_start_line) if len(anchors) >= min_count else None
+
+
 def parse(pdf_path: str, doc_id: str | None = None) -> ParsedEdition:
     raw, pages = extract_text(pdf_path)
     canonical, lines = _clean_to_canonical(raw, pages)
@@ -641,6 +916,33 @@ def parse(pdf_path: str, doc_id: str | None = None) -> ParsedEdition:
                 end = footer_anchors[idx + 1][0] if idx + 1 < len(footer_anchors) else len(lines)
                 items, ambiguous = _parse_footer_protocol(
                     lines, line_no, end, title, seen_ids,
+                )
+                ed.items.extend(items)
+                ed.ambiguous_markers += ambiguous
+            return ed
+
+        # CONNECTICUT PATH. Neither a fixed section anchor nor a per-page
+        # footer counter exists here - the document has no repeating
+        # per-page structural marker of any kind (see FEASIBILITY.md §16.2:
+        # content is tables, which fragment under linear extraction). The
+        # only reliable source of guideline boundaries is the document's own
+        # Table of Contents, read via Y-coordinate row alignment
+        # (`detect_ct_toc_anchors`) rather than the line-stream model every
+        # other branch uses. This replaces `lines`/`canonical` entirely with
+        # `_ct_clean_with_pages`'s output, because CT's furniture (a legal
+        # disclaimer wrapping inconsistently across lines, bare page
+        # numbers, a version tag) is not caught by `_clean_to_canonical`.
+        ct = detect_ct_toc_anchors(pdf_path)
+        if ct is not None:
+            ct_anchors, ct_lines, _ = ct
+            ed.anchor = "ct_toc"
+            ed.canonical_text = "\n".join(l for l, _ in ct_lines)
+            ed.guidelines = [title for _, title in ct_anchors]
+            seen_ids = {}
+            for idx, (line_no, title) in enumerate(ct_anchors):
+                end = ct_anchors[idx + 1][0] if idx + 1 < len(ct_anchors) else len(ct_lines)
+                items, ambiguous = _parse_ct_protocol(
+                    ct_lines, line_no, end, title, seen_ids,
                 )
                 ed.items.extend(items)
                 ed.ambiguous_markers += ambiguous

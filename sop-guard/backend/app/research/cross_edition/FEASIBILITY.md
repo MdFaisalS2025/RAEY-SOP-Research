@@ -1735,3 +1735,72 @@ testing (no valid pair found): Wisconsin, Alabama, Georgia, Ohio. Searched
 without a usable candidate surfacing: Louisiana, Oklahoma, Mississippi,
 Nevada, Iowa, Illinois, Alaska, Hawaii — in each case either no statewide
 protocol document exists, or only one dated edition could be confirmed.
+
+## 26. Sixth blind-test round: West Virginia — a third, previously
+uncatalogued failure mode
+
+Real pair retrieved: West Virginia OEMS Statewide Protocols, July 2024 and
+April 2026, both directly from `dhhr.wv.gov` (the 2026 URL 404'd once at a
+stale `thirtydaycomment` path before a corrected `medicaldirection` path
+was found — a retrieval hiccup, not a parsing one). Both real multi-page
+PDFs (242 and 263 pages). `corpus_probe`: WEAK on both (1.8% / 2.3%
+numbered lines).
+
+`parse()` assigned a guideline label to 100% of items in both editions
+(229/229, 322/322) — no `<untitled@N>` placeholders, which by the same
+numbers-alone reading that misled Kentucky would look clean. **Inspection
+shows a third distinct failure shape.** Two things are wrong at once:
+
+1. **Majority preamble.** 136/229 (59.4%) of 2024 items and 168/322
+   (52.2%) of 2026 items land under `<preamble>` — never attached to any
+   detected anchor at all, the same omission shape as Rhode Island (§22.5)
+   and Kentucky (§25), just at an intermediate severity between the two.
+2. **The anchor strategy that fired never cleans its own text.** Where
+   items *did* get a guideline, the label is a raw, uncleaned per-page
+   footer line — edition date, publisher boilerplate, and page-of-page
+   counter all still embedded — not a protocol name, e.g.
+   `'OPTIONAL: VENTILATOR USAGE July 2024             WEST VIRGINIA OFFICE
+   OF EMERGENCY MEDICAL SERVICES-STATEWIDE PROTOCOLS            PG 1 of
+   1'`. Only 13 (2024) and 15 (2026) distinct non-preamble labels surface
+   this way, versus the 60-100+ genuinely distinct protocols a 242-263
+   page statewide manual of this kind actually contains — most real
+   protocols were never separated from one another at all, either
+   swallowed into `<preamble>` or merged under whichever repeating footer
+   string happened to cross the detection threshold.
+
+This is neither the garbage-single-anchor failure (Delaware/South
+Carolina, §21-22), nor pure boundary omission (Rhode Island), nor
+fragmentation (Vermont), nor wrong-section-of-document (Kentucky). It is
+its own thing: an anchor that is structurally real (a recurring footer)
+but whose captured text was never run through any title-cleaning step,
+compounded by the same majority-preamble omission seen elsewhere. Named
+here as the **footer-echo failure**.
+
+Alignment (`item_align.py`, run for completeness despite the parse
+quality): 63 T1, 38 T2, 1 T3, 0 T4, 36 T5, 91 T6 — trivially alignable
+44.1%, requires-more-than-id 16.2%, unmatched 39.7%. These numbers are not
+meaningful as alignment quality signal given how the underlying items were
+grouped; recorded for completeness only.
+
+**Not fixed.** Documented and excluded.
+
+### 26.1 Running total
+
+| Publisher | Titled | Preamble/fragmentation | Unmatched (T6) | Verdict |
+|---|---|---|---|---|
+| Delaware | ~50% | — | — | Failed |
+| South Carolina | ~36% | — | — | Failed |
+| Rhode Island | 96% | 44.3% preamble | 65.0% | Partial — unusable |
+| Vermont | 100% | fragmentation | 65.4% | Partial — unusable |
+| **Tennessee** | 98.6% | 5.0% preamble, 0 fragmentation | 2.7% | **CLEAN** |
+| Kentucky | 100% | 99.0% preamble (formulary, not protocols) | — | Failed |
+| West Virginia | 100%\* | 59.4% / 52.2% preamble + uncleaned footer labels | 39.7% | Failed |
+
+\* "Titled" means no `<untitled@N>` placeholder appeared — not that the
+label is a real protocol name; see footer-echo note above.
+
+Nine genuine blind attempts, one clean pass. Dropped at retrieval without
+testing (no valid pair found): Wisconsin, Alabama, Georgia, Ohio. Searched
+without a usable candidate surfacing: Louisiana, Oklahoma, Mississippi,
+Nevada, Iowa, Illinois, Alaska, Hawaii — in each case either no statewide
+protocol document exists, or only one dated edition could be confirmed.

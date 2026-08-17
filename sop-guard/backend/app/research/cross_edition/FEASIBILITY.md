@@ -2074,3 +2074,55 @@ tested, 3 contaminated dev publishers (New York, Maine, Connecticut — not
 usable as test data per §19), 2 confirmed real-but-network-blocked
 (Massachusetts, New Hampshire), and the remainder still to be worked
 through systematically rather than assumed ineligible.
+
+## 32. Full-coverage survey, round one: seven more states triaged, none reach a pipeline run
+
+The user asked to eventually cover all 50 states, not just reach a
+sample-size target. This section begins a systematic pass through the
+remaining ~38 untested states — verifying eligibility against real
+official sources (department websites, not just search-engine summaries)
+rather than assuming a state is ineligible because an earlier round's
+search snippets didn't surface a document. Seven states were checked this
+round; none produced a two-edition compiled clinical-protocol pair, each
+for a distinct, verified reason:
+
+- **Wisconsin** — the DHS "Scope of Practice and Protocols" page
+  publicly hosts only the Scope of Practice document; the actual "Wisconsin
+  EMS Protocols" text says explicitly that service providers who want the
+  state protocols must go through their regional coordinator, and the
+  E-Licensing portal (login-gated). No public PDF exists at this time —
+  confirmed by browsing the live page directly, not just a stale search
+  snippet (the two direct PDF URLs surfaced by search, `p02875.pdf` and
+  `p02875a.pdf`, both 404 on the current site).
+- **Ohio** — the EMFTS Board's "Guidelines and Procedures Manual" lives
+  at one unversioned URL that is overwritten in place on each revision
+  (currently dated June 17, 2026); there is no separate URL for a prior
+  edition, and a Wayback Machine snapshot check for an October 2023
+  timestamp could not be completed (Internet Archive was returning
+  "Temporarily Offline" at check time) — worth a retry in a future round.
+- **Missouri** — no statewide compiled protocol PDF found on
+  `health.mo.gov`; the department's own pages point to regional/local
+  protocol documents (e.g., Kansas City) rather than a single statewide
+  one.
+- **Louisiana** — `ldh.la.gov` does publish a dated, edition-numbered
+  "Bureau of EMS Policy and Procedure Manual" (2022 → 2025, confirmed
+  downloadable), but its table of contents is entirely administrative
+  (staff onboarding, licensing, disciplinary proceedings, the EMS
+  Commission's charge) — no clinical treatment content at all. Out of
+  scope for this study regardless of parser performance.
+- **Oklahoma** — only a single dated edition (2018) is publicly linked;
+  no second edition confirmed.
+- **Mississippi** — the MSDH "Protocols" page hosts only a field-triage
+  one-pager, a naloxone guideline, and an adopted, unmodified copy of the
+  NASEMSO National Model EMS Clinical Guidelines — the same pattern
+  already confirmed for Georgia (§29 round) and Iowa. No Mississippi-authored
+  compiled document exists.
+- **Nevada** — DPBH's own EMS Policies page states plainly that the
+  state EMS Policy and Procedure Manual is "forthcoming"; it does not
+  exist yet.
+
+No parser code was touched (nothing reached `parse()` this round). Full
+accounting after this round: 12 states tested with real pipeline data, 3
+contaminated dev publishers (NY, ME, CT), 2 real-but-blocked (MA, NH), 7
+now confirmed structurally ineligible with specific evidence (WI, OH, MO,
+LA, OK, MS, NV), leaving 31 states still to be checked.

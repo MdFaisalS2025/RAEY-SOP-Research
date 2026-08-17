@@ -528,3 +528,77 @@ deletion rate.
 - **No section disappeared globally** between editions (`performance measures`
   runs 73 → 63), so U2 is genuinely per-guideline rather than a structural
   change, and stays classified as ambiguous.
+
+
+---
+
+## 11. U1 fixed — and §10.1's "floor" claim was too strong
+
+### 11.1 The fix
+
+The two `<untitled@…>` guidelines were not a hard parsing problem. Their titles
+sit on the line directly above `Aliases`, exactly where the parser looks — but
+both exceed 70 characters:
+
+```
+Do Not Resuscitate Status/Advance Directives/Healthcare Power of Attorney
+Acetylcholinesterase Inhibitors (Carbamates, Nerve Agents, Organophosphates)
+```
+
+`_title_before` broke on `len(s) > 70`, classifying them as body text. The guard
+is now **position-aware**: 140 characters for the line immediately above
+`Aliases` (which is the title with very high reliability across 69 guidelines ×
+3 editions), 70 for lines further back, where a long line really is body text.
+
+**All three editions now parse zero untitled guidelines**, and guideline matching
+rose to **98.4% (61/62)**. The one remaining unmatched guideline is
+`Pulmonary Edema`, which may be a genuine removal — v3.0 appears to have folded
+it elsewhere. That is a content question, not a parser question.
+
+### 11.2 Updated numbers
+
+| | before title fix | **after** |
+|---|---|---|
+| Guideline match | 95.2% | **98.4%** |
+| T1 + T2 trivially alignable | 72.9% | **74.0%** |
+| **Requires more than an identifier** | 10.9% | **10.2%** |
+| Unmatched tail | 16.2% | **15.8%** |
+| U1 guideline unmatched | 156 | **68** |
+| U5 defensible deletion | 2.3% | **2.5%** |
+
+### 11.3 The correction: recovery does not only push one way
+
+§10.1 claimed the headline was a **floor**, on the reasoning that recovered items
+land in T4/T5 and never in T1/T2. **That was too strong, and this fix
+demonstrates why.**
+
+Recovering U1 items moved them into **T1/T2**, because once a guideline title
+matches, its items match by identifier. The headline therefore went *down*
+(10.9% → 10.2%), not up.
+
+The corrected statement:
+
+- Recovering **U3, U4, U6** (378 items) raises the figure — those are by
+  construction items an identifier cannot find.
+- Recovering **U1, U2** (227 items) lowers it — those are items an identifier
+  *could* have found, had the guideline or section matched.
+- The net direction is **not predictable in advance**, and the headline is
+  neither a floor nor a ceiling. It is an estimate whose stability depends on
+  which class of debt gets paid down next.
+
+This matters for `PREREGISTRATION.md` H1, whose threshold is 10%: the dev figure
+has now moved 22.6% → 10.9% → 10.2% across three corrections and sits almost
+exactly on the threshold. **H1 should be expected to be marginal on test data,
+and its disconfirmation would not be surprising.** The threshold remains
+unrevised, per the §11 deviation entry.
+
+### 11.4 What is left in the tail
+
+| Cause | n | Status |
+|---|---|---|
+| U6 weak distant match | 220 | largest single category; needs a matching improvement, not a parser fix |
+| U2 section absent for that guideline | 159 | largest remaining debt; no section vanished globally, so this is per-guideline |
+| U5 no candidate | 115 | **2.5% of old items — the defensible deletion estimate** |
+| U4 consumed rival | 104 | greedy-collision; fixable with global assignment |
+| U1 guideline unmatched | 68 | traces to `Pulmonary Edema` and residual mismatches |
+| U3 near miss | 54 | fixable by lowering the T4 floor, at a precision cost |

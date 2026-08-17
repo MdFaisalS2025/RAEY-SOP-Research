@@ -305,7 +305,21 @@ def _title_before(lines: list[tuple[str, int]], line_no: int,
         if _DATE_LINE.match(s):
             j -= 1
             continue
-        if len(s) > 70 or s.endswith((".", ";", ",")):
+        # Stop at obvious body text - titles are short. But the length guard
+        # must be POSITION-AWARE: the line immediately above "Aliases" is the
+        # title with very high reliability (verified across 69 guidelines in
+        # three editions), whereas lines further back are only wrapped
+        # continuations, where a long line really is body text.
+        #
+        # A flat 70-character limit silently discarded the two longest titles
+        # in the 2019 edition - "Do Not Resuscitate Status/Advance
+        # Directives/Healthcare Power of Attorney" and "Acetylcholinesterase
+        # Inhibitors (Carbamates, Nerve Agents, Organophosphates)" - emitting
+        # <untitled@N> for both. Those two guidelines then failed to match
+        # across editions, and their items were 156 of the 742 unmatched
+        # items: 21% of the entire unmatched tail, as cause U1.
+        limit = 140 if j == line_no - 1 else 70
+        if len(s) > limit or s.endswith((".", ";", ",")):
             break
         parts.insert(0, s)
         j -= 1

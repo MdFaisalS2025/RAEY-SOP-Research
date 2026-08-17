@@ -3177,11 +3177,89 @@ history, not just claimed. The newly-added Connecticut pairs and the
 NY/Maine "clean parse, high genuine revision" findings are sound; their
 underlying `parse()`/`item_align.py` numbers were independently
 recomputed during this audit and match what was previously reported. One
-real transcription error was found and fixed. But the confirmatory
-claim in §43 — "minimum-viable test set now met in full" — was written
-**before** the required revision-magnitude classification had been
-attempted at all, and attempting it now shows the classification is not
-a formality: it is genuinely unresolved for Tennessee, and genuinely
-consequential for how the two Connecticut pairs should be read. §43's
-headline claim should be treated as provisional until this is resolved,
-not final.
+real transcription error was found and fixed. §44.5 left the
+revision-magnitude question open rather than resolved. §44.7 resolves it.
+
+### 44.7 Revision-magnitude classification resolved — from each document's own front matter, not external inference
+
+§44.5's attempt used secondhand search-result summaries and reasoning
+about version-number *shape* in the abstract. That was the wrong source
+to reason from — §3.3 asks for "publisher metadata," and the most direct
+form that takes is what the publisher's own document says about itself
+on its own cover or introductory page. Checked directly, extracting each
+PDF's first ~1,500 characters:
+
+- **Tennessee** — both editions are titled identically in structure:
+  `TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES`, `Revised
+  July 2017` / `Revised March 2018`. No version-number scheme, no "new
+  edition" or "complete rewrite" language — consistently self-described
+  as a **revision**, not a full re-edition.
+- **Pennsylvania** — both cover letters use nearly identical phrasing:
+  *"Pennsylvania has used Statewide ALS Protocols since July 1, 2007,
+  and this edition is an update to the version that was effective on
+  [prior date]."* Both editions explicitly self-describe as an
+  **"update,"** never a full review or major revision, regardless of the
+  2021→2023 pair spanning a 2022 gap year with no published edition.
+- **Connecticut** — all three editions (v2022.1, v2023.1, v2024.1) open
+  with **word-for-word identical boilerplate**: *"These protocols are a
+  'living document'... At the option of the Office of EMS and the
+  Medical Advisory Committee, they can be edited and updated at any
+  time. However, they are formally reviewed, edited, and released every
+  two years."* Nothing in this boilerplate differentiates a year-to-year
+  transition from a same-year sub-version transition as more or less
+  significant — the "formally... every two years" language describes
+  Connecticut's *stated* cadence, not a claim that any specific tested
+  transition was a full review versus a routine edit. §44.5's
+  "year-line = major" reading was an inference from version-number shape
+  alone, unsupported by — and in tension with — the document's own
+  "living document... at any time" self-description. Withdrawn.
+
+**None of the three publishers' own documents describe any of the four
+tested transitions as a full review, complete revision, or major
+version change, anywhere in the front matter.** Applying §3.3's rule as
+written — major requires either a leading-version-component increment
+in a genuine major.minor sense (none of these three publishers use one)
+or explicit "full review/revision" language (none found) — all four
+pairs classify as **minor**:
+
+| Pair | Classification | Basis (publisher's own words) |
+|---|---|---|
+| Tennessee 2017→2018 | **Minor** | Both editions self-described as "Revised," not a new edition |
+| Pennsylvania 2021→2023 | **Minor** | Both editions explicitly self-described as "an update to the version that was effective on..." |
+| Connecticut v2022.1→v2023.1 | **Minor** | Identical "living document... edited... at any time" framing, no full-review language |
+| Connecticut v2023.1→v2024.1 | **Minor** | Same |
+
+Tennessee's classification rests on the thinnest evidence of the four
+(the word "Revised" alone, no explicit continuity statement like
+Pennsylvania's or Connecticut's) but is still real, document-sourced
+metadata — not an absence of metadata. §3.3's exclusion clause ("cannot
+be determined... excluded, not guessed") does not apply here: a
+classification was determined, from the document itself, in all four
+cases.
+
+**Consequence for how the confirmatory result should be read:** this is
+the less dramatic of the two possible outcomes flagged in §44.5 — all
+four pairs are minor revisions, consistent with (not an exception to)
+the dev-phase pattern that minor revisions align well (§17.3, §18.4). It
+is still a valid confirmatory result — the pre-registration's minimum-
+viable test set (≥4 pairs, ≥3 publishers) is met with all four pairs
+now properly classified, not merely counted — but the framing "major
+revisions that still aligned cleanly" floated as a possibility in §44.5
+does not apply to any of the four pairs actually in the confirmatory
+set.
+
+**One procedural deviation remains and is logged as such, not hidden:**
+this classification was performed after every pair's alignment
+percentage was already known, not before, as §3.3 requires in spirit.
+Re-reading the front matter after the fact could not have been biased by
+the alignment numbers in either direction here — the classification
+question (does the document call itself an "update" or a "full
+review"?) is independent of how well `item_align.py` happened to score
+it — but the *order of operations* itself is a deviation from the
+pre-registration's stated procedure, and is recorded as one in
+`PREREGISTRATION.md` §11.
+
+§43's headline claim — minimum-viable test set met, 4 pairs from 3
+publishers — is now confirmed **and** properly classified, not merely
+provisional. No parser code was touched anywhere in this audit or its
+resolution.

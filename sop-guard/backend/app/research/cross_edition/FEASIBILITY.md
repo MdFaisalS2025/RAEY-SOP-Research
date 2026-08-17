@@ -2215,3 +2215,82 @@ department-page visit: Alaska, Arkansas, California, Colorado, Hawaii,
 Idaho, Illinois, Indiana, Michigan, North Dakota, Oregon, South Dakota,
 Virginia, Washington. This full-coverage pass will continue in future
 rounds.
+
+## 35. Full-coverage survey, round four: Alaska/Idaho/Arkansas/North Dakota/South Dakota triaged; Hawaii becomes the twelfth blind-test round (failed)
+
+- **Alaska** — no compiled statewide clinical-protocol PDF found; the
+  department's public documents are a trauma-specific MICP document and
+  scope-of-practice guides, not a full treatment-protocol manual.
+- **Idaho** — confirmed again: the current EMSPC protocols are
+  distributed only through a paid/free mobile app; the only public PDFs
+  findable are stale 2015 and 2017 editions on a third-party fire
+  district mirror, not an official current document.
+- **Arkansas** — confirmed again: distribution is app-only (the
+  "Arkansas EMS" app); no direct current PDF found on `healthy.arkansas.gov`.
+- **North Dakota** — the 2024 EMS Treatment Guidelines exist and are
+  North Dakota's own adaptation of the NASEMSO model (not a verbatim
+  copy, unlike Georgia/Mississippi/Wyoming/Minnesota), but only "Version
+  1" has ever been published, and it is explicitly distributed as an
+  editable template "that must be modified by an EMS agency medical
+  director prior to use" rather than a binding compiled document — no
+  second edition exists yet.
+- **South Dakota** — the only compiled document found is an "EMT
+  Pre-Hospital Treatment Guidelines, 3rd Edition" from 2010; no more
+  recent statewide compiled document is publicly linked.
+
+**Hawaii**, by contrast, is real and has a confirmable pair — General
+Standing Orders (Version 13, dated 12/6/2023, posted January 2024) and a
+2018 edition (`SO2018.pdf`), both direct downloads from `health.hawaii.gov`
+(145 and 286 pages). `corpus_probe`: WEAK on 2018 (1.0% numbered lines,
+**zero** template slots detected at all), USABLE on 2023 (7.4%).
+
+`parse()` produces the most degenerate result of the entire phase. The
+**2018 edition collapses to just 23 items total** from 145 pages, with
+only 2 distinct "guidelines," both garbage fragments (`'For systolic BP <
+90 mmHg which is'`, `'Continuous Positive Airway Pressure]'`) — worse
+than even Alabama's item-count collapse (89 items from 143 pages). The
+**2023 edition adds a new failure shape**: 38.7% preamble, and its
+dominant non-preamble label is `OFLOXACIN` (a drug name, 168 items) —
+but three more of its eight distinct "guidelines" are **literal raw
+page-counter text** (`'Page 2 of 3'`, `'Page 2 of 2'`, `'Page 3 of 3'`,
+`'Page 1 of 3'`, `'Page 1 of 2'`) rather than any protocol-adjacent
+content at all — a more degenerate version of West Virginia's
+footer-echo failure (§26), where even the footer text carried a
+protocol name; here it's bare pagination.
+
+`item_align.py`: 0 T1, 0 T2, 0 T3, 0 T4, 11 T5, 12 T6 — **0.0% trivially
+alignable**, 47.8% requires-more-than-id, 52.2% unmatched — ties New
+Jersey for the worst alignment result of the phase, and is the first
+time trivial alignment has hit exactly zero. **Not fixed.** Documented
+and excluded.
+
+### 35.1 Running total
+
+| Publisher | Titled | Preamble/fragmentation | Unmatched (T6) | Verdict |
+|---|---|---|---|---|
+| Delaware | ~50% | — | — | Failed |
+| South Carolina | ~36% | — | — | Failed |
+| Rhode Island | 96% | 44.3% preamble | 65.0% | Partial — unusable |
+| Vermont | 100% | fragmentation | 65.4% | Partial — unusable |
+| **Tennessee** | 98.6% | 5.0% preamble, 0 fragmentation | 2.7% | **CLEAN** |
+| Kentucky | 100% | 99.0% preamble (formulary, not protocols) | — | Failed |
+| West Virginia | 100%\* | 59.4% / 52.2% preamble + uncleaned footer labels | 39.7% | Failed |
+| Nebraska | 100%\* | 0% preamble, garbage anchor (drug/diagnosis noise) | — | Failed |
+| **Pennsylvania** | 97.2% | 0% preamble, 51 real titles both editions | 6.7% | **CLEAN** |
+| New Jersey | ~65%\* | 0% preamble, garbage anchor (dose/sentence fragments) | 57.8% | Failed |
+| Alabama | ~30%\* | 61.8% / 73.4% preamble + garbage anchor + item collapse | 58.4% | Failed |
+| Maryland | ~44%\* | 55.7% / 56.1% preamble + garbage anchor (STRONG verdict, failed anyway) | 26.5% | Failed |
+| Hawaii | ~91%\* | 0% / 38.7% preamble + item collapse + raw page-counter anchor | 52.2% | Failed |
+
+\* "Titled" means no `<untitled@N>` placeholder appeared — not that the
+label is a real protocol name.
+
+Fifteen genuine blind attempts, two clean passes, across thirteen
+distinct states with full pipeline data. Full accounting after this
+round: 13 states tested, 3 contaminated dev publishers, 3
+real-but-unreachable (MA, NH, NC), 2 real-but-single-edition-only (UT,
+NM), 17 confirmed structurally ineligible with specific evidence (adds
+AK, ID, AR, ND, SD to the prior 12), leaving 9 states still to check with
+a direct department-page visit: California, Colorado, Illinois, Indiana,
+Michigan, Oregon, Virginia, Washington, and a final re-check of any state
+whose earlier drop relied only on search snippets.

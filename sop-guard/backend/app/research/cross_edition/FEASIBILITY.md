@@ -966,3 +966,92 @@ variation in revision practice than parser noise — which is itself a finding
 worth keeping: **different protocol sets, and different documents within the
 same set, appear to be revised with very different intensity**, and a single
 "cross-edition alignment is X% hard" number would have hidden that.
+
+
+---
+
+## 16. Two more publishers retrieved — the prereg's publisher count is met, item-level generality is not
+
+`PREREGISTRATION.md` §3.2 requires >= 4 publishers. Two more retrieved this
+round, both with real consecutive editions, direct from the state site (no
+Wayback needed for either):
+
+| Publisher | Editions | Pages | Retrieval |
+|---|---|---|---|
+| **Connecticut** DPH statewide EMS protocols | v2025.1, v2025.2 | 284, 284 | `portal.ct.gov`, full version history back to 2016 listed directly on the protocols page |
+| **Maine** EMS prehospital protocols | 2023, 2025 | 212, 223 | `maine.gov`, editions explicitly labelled "Archived" back to 2011 |
+
+`corpus_probe` triage: Maine **STRONG** on both editions (1,625–1,739
+numbered lines, 16–17% of non-blank lines); Connecticut **USABLE** on both
+(573 numbered lines, 3.6%) — its own output correctly recommended inspecting
+a sample before committing, which is what the rest of this section does.
+
+**Publisher count: 4/4, satisfying §3.2 numerically.** Item-level parsing
+does **not** yet generalise to either. Per §13.1's own standing instruction —
+titles must be inspected by hand before a publisher's documents enter the
+corpus — they were, and both failed the inspection.
+
+### 16.1 Maine: wrong anchor chosen, and a different (real) structure found
+
+Auto-detection selected `normal` as the guideline anchor. Titles extracted
+under it (`Abnormal`, `Pulse`, `Elevated (>120) Elevated (>140) Blood
+Pressure`) are vital-signs reference-table column headings, not protocol
+titles, and only 19 "guidelines" were found — implausibly few for a 200+ page
+protocol manual. Exactly the failure mode §13.1 already named: a scored
+auto-detected anchor that looks structurally plausible and is not.
+
+**A real, different structural signal was found and confirmed, not yet
+implemented.** Maine prints the protocol name as a **running footer**,
+formatted `<Protocol Name> #<page-within-protocol>` — confirmed directly:
+`Respiratory Distress with Bronchospasm #3`, `Adult Cardiac Arrest #3`,
+`Pediatric Tachycardia #2`, 37 distinct names recurring 2–3× each in a targeted
+sample (an undercount — the check used one strict regex and Maine's protocol
+count is almost certainly well over 60). This is closer to `_detect_running_
+lines` than to `detect_guideline_anchor`: the footer *value* changes once per
+protocol rather than being a constant, so it needs a new detection strategy —
+find short lines that recur 2–4× consecutively before changing — not a
+parameter tweak to the existing one. The "marker sits on its own line,
+separate from its content" pattern spotted in one sample region was checked
+and is **not** the general case (148 of 9,293 lines) and can be set aside.
+
+### 16.2 Connecticut: fundamentally tabular, not marker-prose
+
+Auto-detection selected `indications`, yielding 571 items across 284 pages —
+implausibly sparse. Inspecting raw extraction shows why: Connecticut's content
+is **dosing and triage tables** (drug/dose/monitoring-interval columns, tag-
+colour triage grids), which linear text extraction fragments into many short
+per-cell lines (`Tag Color`, `Yes`, `GREEN`, `Age < 1 year`) with no
+recoverable row structure. Protocols are identified by a **numeric code**
+(`2.15P Nerve Agents / Organophosphate Poisoning – Pediatric`), a third
+distinct convention alongside NASEMSO's `Aliases` and New York's `CRITERIA`.
+
+This is not a small fix. A table-heavy document needs block- or
+table-aware extraction (e.g. PyMuPDF's structured/table APIs) rather than the
+current line-stream model, which assumes content is fundamentally linear
+prose with markers. Attempting a quick patch here would repeat the pattern
+already seen twice this session — a plausible-looking fix that turns out
+wrong on inspection — at higher stakes, since the underlying assumption is
+architectural, not a threshold.
+
+### 16.3 What this means for the study, stated plainly
+
+Three distinct anchor/title conventions are now confirmed across four
+publishers (`Aliases`, `CRITERIA`, and Maine's footer pattern), plus one
+publisher (Connecticut) whose content isn't reliably line-based at all. This
+is itself informative: **institutional EMS protocol documents do not share a
+common machine-readable convention**, even among four public agencies in the
+same domain. A general cross-publisher parser is a larger undertaking than
+extending a curated anchor list, and `PREREGISTRATION.md` §13.1's framing —
+"a curated prior, not a general solution" — is confirmed rather than merely
+theoretical.
+
+**Recommended path, not yet taken:** (a) implement footer-based anchor
+detection for Maine, which is well-understood and scoped after this
+diagnosis; (b) treat Connecticut as requiring a separate extraction strategy
+and either defer it or invest in table-aware parsing as its own task; (c) do
+not add either to `_KNOWN_ANCHORS` or claim §3.2 is satisfied in substance
+until (a) is done and its titles are re-inspected.
+
+**Do not use Connecticut or Maine item-level data for anything** — annotation
+sampling, tier statistics, or the pre-registration's confirmatory test —
+until this section is superseded by a dated update showing real titles.

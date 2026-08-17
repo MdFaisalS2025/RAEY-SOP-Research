@@ -2795,3 +2795,20 @@ one confirmed recoverable in principle with a next step identified (MT —
 retry once Archive.org stabilizes), and two still blocked with the
 specific blocking mechanism now understood (MA — internal corruption in
 every PDF snapshot; NC — unchanged, per §38).
+
+**Immediate follow-up on Montana**: once Archive.org's availability
+recovered mid-round, the long-standing main-digest edition (2021-04-30
+capture) downloaded successfully and cleanly (1,328,248 bytes, confirmed
+valid PDF) — the same content that had failed every earlier attempt in
+this and the prior round, now retrievable simply because the underlying
+service was healthier. The single-day outlier edition (2024-07-18),
+however, still would not download across a further 27 attempts (39
+total across both rounds), consistently returning either a 0-byte
+response or an 11,832-byte "Internet Archive: Temporarily Offline" error
+page — even during stretches when the main-digest file and other
+Archive.org endpoints were confirmed reachable. This points to a
+capture-specific problem (e.g. a corrupted or unusually-stored WARC
+record for that one day) rather than general service health, and is a
+narrower, more specific blocker than "Archive.org is down." **Montana
+still has only one confirmed-retrievable edition; the genuine second
+edition remains real but not yet retrievable.**

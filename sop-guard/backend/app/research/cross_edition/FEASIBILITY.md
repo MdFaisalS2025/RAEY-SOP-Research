@@ -3509,3 +3509,91 @@ unchanged — they remain the working data for post-annotation merge-back
 method's original predictions, deliberately absent from anything the
 annotators see). The two `.xlsx` files are the actual hand-off
 deliverable.
+
+## 50. Four completed annotator workbooks returned; primary and supplementary agreement statistics computed
+
+The user obtained four independent annotators rather than two, all doing
+full redundant labeling (each labeled all 240 items, not a split
+workload). Per the analysis plan pre-committed in `PREREGISTRATION.md`
+§11 (2026-08-17, "Annotation upgraded from two annotators to four") —
+logged *before* any of the four completed workbooks were opened —
+Cohen's kappa on the originally-designated Annotator A/B pair remains
+the primary statistic, Fleiss' kappa across all four is a supplementary
+addition, and majority vote (≥3 of 4) determines adjudicated ground
+truth where a majority exists.
+
+**Completeness check first**: all four workbooks, all four tabs each,
+60/60 rows answered — 960 total judgments, zero blank cells, zero
+case/whitespace-variant formatting issues in either the `NONE` /
+`CANNOT_DETERMINE` vocabulary or the free-typed item-ID answers.
+
+**`annotation.py` extended** (not the frozen pipeline — see §47) with
+`load_completed_xlsx()`, `fleiss_kappa_correspondence()` (the standard
+Fleiss 1971 formula — Cohen's kappa is only defined for exactly two
+raters, so this is the correct generalization for four, not an
+approximation), and `majority_vote()`, which explicitly flags items with
+no majority for real discussion-based adjudication rather than
+resolving them automatically. A one-off driver script
+(`annotation_packets/run_4rater_analysis.py`) runs these against the
+four real files and writes `4rater_analysis_report.json`.
+
+### 50.1 Results
+
+| Pair | Cohen's κ (A/B, primary) | Fleiss' κ (4-rater, supplementary) | Needs adjudication |
+|---|---|---|---|
+| Tennessee 2017→2018 | **1.0** (0/60 disagreements) | 0.8612 | 12/60 |
+| Pennsylvania 2021→2023 | **1.0** (0/60 disagreements) | 0.7868 | 18/60 |
+| Connecticut v2022.1→v2023.1 | **1.0** (0/60 disagreements) | 0.8672 | 11/60 |
+| Connecticut v2023.1→v2024.1 | **1.0** (0/60 disagreements) | 0.9774 | 2/60 |
+| **Pooled (240 items)** | **1.0** | **0.877** | **43/240 (17.9%)** |
+
+Annotators A and B agree on every single sampled item across all four
+pairs — a perfect primary reliability result. This was verified as
+genuine, not a normalization artifact: a spot check of raw (unnormalized)
+answers shows both annotators independently typing byte-for-byte
+identical full item-ID strings, including internal punctuation
+(`'stroke/performance parameters/B.•#11'`), for items where the
+underlying recommendation is genuinely unchanged between editions — a
+large share of the stratified sample by design (§5.1 draws 10 items from
+the T1_id_exact tier specifically, the tier where the identifier itself
+did not change).
+
+Fleiss' kappa across all four raters is lower but still "almost
+perfect" by the conventional Landis & Koch scale (>0.81), except
+Pennsylvania at 0.7868 ("substantial," just under the almost-perfect
+band). The gap between the two statistics is itself informative, not a
+contradiction to paper over: C and D sometimes diverge from the A/B
+consensus (and occasionally from each other) on the harder tiers, while
+A and B happen to be unusually well-calibrated with one another. Both
+numbers are reported, per the pre-committed plan, rather than only the
+more flattering one.
+
+**43 of 240 items (17.9%) have no majority answer across the four raters
+and are flagged for real adjudication**, not resolved automatically.
+Spot-checked two flagged cases directly to confirm the flag is catching
+genuine judgment calls, not measurement noise:
+
+- A 2-2 split where two annotators pointed to one specific new item
+  (`...#7`, labeled `unchanged`) and the other two pointed to a
+  different specific item (`...#4`, labeled `moved`) — a real
+  disagreement about *which* item the old one now corresponds to, not a
+  formatting difference.
+- Two items where A/B answered `CANNOT_DETERMINE` while C/D answered
+  `NONE` (confidently deleted) — a genuine interpretive disagreement
+  about ambiguity versus certainty, exactly the kind of case §5.3's
+  adjudication step exists for.
+
+### 50.2 What remains before final ground truth is locked
+
+Per §5.3, disagreements get resolved by discussion, not by the majority
+vote alone standing in as ground truth. The 43 flagged items (listed in
+full in `4rater_analysis_report.json`) need actual adjudication — by the
+annotators discussing them, or a designated third-party adjudicator, per
+the option previously discussed with the user — before the `§6` metrics
+(correspondence accuracy, provenance loss rate, tier precision, deletion
+recall/precision) can be computed against the method's original
+predictions. That merge-back has deliberately not been run yet: doing so
+before ground truth is final would mean computing accuracy numbers that
+would need to be redone once adjudication changes some answers, and
+reporting a preliminary number risks it becoming the "real" one by
+inertia.

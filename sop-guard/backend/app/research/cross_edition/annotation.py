@@ -323,6 +323,119 @@ def compute_kappa(csv_a: str, csv_b: str) -> dict:
     }
 
 
+def _norm_answer(v: str | None) -> str:
+    """Normalise an annotator's typed correspondence answer for comparison
+    across raters - case/whitespace differences from retyping an item_id are
+    not meaningful disagreement. Section 5.2's fixed vocabulary (NONE,
+    CANNOT_DETERMINE) is uppercased on comparison regardless of how it was
+    typed; a copied item_id is just trimmed and case-folded."""
+    if v is None:
+        return ""
+    v = str(v).strip()
+    if v.upper() in ("NONE", "CANNOT_DETERMINE", "CANNOT DETERMINE"):
+        return "CANNOT_DETERMINE" if "CANNOT" in v.upper() else "NONE"
+    return v.strip().lower()
+
+
+def load_completed_xlsx(path: str) -> dict[str, dict[str, dict]]:
+    """Load one annotator's completed workbook (built by
+    build_annotator_workbooks.py). Returns {sheet_title: {sample_id:
+    {"correspondence": ..., "relation": ...}}}, both raw (as typed) and
+    available for normalisation by the caller."""
+    from openpyxl import load_workbook
+
+    wb = load_workbook(path, data_only=True)
+    out: dict[str, dict[str, dict]] = {}
+    for sheet in wb.sheetnames:
+        if sheet == "READ ME FIRST":
+            continue
+        ws = wb[sheet]
+        pair_data = {}
+        for r in range(2, ws.max_row + 1):
+            sid = ws.cell(row=r, column=1).value
+            if not sid:
+                continue
+            pair_data[sid] = {
+                "correspondence": ws.cell(row=r, column=7).value,
+                "relation": ws.cell(row=r, column=8).value,
+                "notes": ws.cell(row=r, column=9).value,
+            }
+        out[sheet] = pair_data
+    return out
+
+
+def fleiss_kappa_correspondence(rater_answers: list[dict[str, str]]) -> dict:
+    """Fleiss' kappa on the correspondence judgement across N>=2 raters -
+    the correct multi-rater generalisation of Cohen's kappa (Cohen's is only
+    defined for exactly two raters). rater_answers: one {sample_id: answer}
+    dict per rater, already normalised by the caller (see _norm_answer).
+
+    Standard Fleiss' kappa formula (Fleiss 1971): for each item, count votes
+    per category; P_i = agreement rate for that item; P_bar = mean of P_i;
+    P_e = sum of squared category proportions across the whole pool;
+    kappa = (P_bar - P_e) / (1 - P_e).
+    """
+    if len(rater_answers) < 2:
+        return {"error": "need at least 2 raters"}
+
+    common = sorted(set.intersection(*(set(r) for r in rater_answers)))
+    if not common:
+        return {"error": "no shared sample_ids across all raters"}
+
+    n_raters = len(rater_answers)
+    cats = sorted({r[sid] for r in rater_answers for sid in common})
+    cat_index = {c: i for i, c in enumerate(cats)}
+
+    # n_ij: for item i, how many raters chose category j
+    counts = []
+    for sid in common:
+        row = [0] * len(cats)
+        for r in rater_answers:
+            row[cat_index[r[sid]]] += 1
+        counts.append(row)
+
+    N = len(common)
+    P_i = [
+        (sum(c * c for c in row) - n_raters) / (n_raters * (n_raters - 1))
+        for row in counts
+    ]
+    P_bar = sum(P_i) / N
+    p_j = [sum(row[j] for row in counts) / (N * n_raters) for j in range(len(cats))]
+    P_e = sum(p * p for p in p_j)
+
+    kappa = (P_bar - P_e) / (1 - P_e) if P_e < 1 else float("nan")
+    return {
+        "n_items": N, "n_raters": n_raters, "categories": cats,
+        "mean_observed_agreement": round(P_bar, 4),
+        "expected_agreement": round(P_e, 4),
+        "fleiss_kappa": round(kappa, 4),
+    }
+
+
+def majority_vote(rater_answers: list[dict[str, str]]) -> dict[str, dict]:
+    """Per-item majority vote across N raters (already normalised answers).
+    Returns {sample_id: {"answer": winning category or None, "votes": {...},
+    "unanimous": bool, "needs_adjudication": bool}}. An item needs
+    adjudication when no category has a strict majority (> half the raters) -
+    a 2-2 split among 4, or complete four-way disagreement - per section
+    5.3's adjudication step, not resolved automatically here."""
+    common = sorted(set.intersection(*(set(r) for r in rater_answers)))
+    n_raters = len(rater_answers)
+    result = {}
+    for sid in common:
+        votes: dict[str, int] = {}
+        for r in rater_answers:
+            votes[r[sid]] = votes.get(r[sid], 0) + 1
+        winner, top = max(votes.items(), key=lambda kv: kv[1])
+        result[sid] = {
+            "answer": winner if top > n_raters / 2 else None,
+            "votes": votes,
+            "unanimous": len(votes) == 1,
+            "needs_adjudication": top <= n_raters / 2,
+        }
+    return result
+
+
 def main(argv: list[str]) -> int:
     if len(argv) < 2:
         print(__doc__)

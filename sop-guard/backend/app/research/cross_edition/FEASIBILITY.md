@@ -3815,3 +3815,85 @@ degree) v2022.1→v2023.1, its sibling using the same document format.
   with current data; it is flagged here as a reason not to over-read
   "B2 wins" as "structure is worthless," only as "structure's benefit
   is not demonstrated on this dataset."
+
+## 54. Diagnostic decomposition: §53's effect is concentrated in bullet/list-marker items, not general
+
+Following the user's decision to characterize the §53.2 mechanism
+further rather than either draft the paper or revise B2's design,
+`annotation_packets/diagnose_t2_mechanism.py` (new, one-off diagnostic,
+does not touch the frozen pipeline or re-run the H3 test itself) splits
+all 209 usable sampled items by their **old-edition marker kind**,
+using `old_marker_path` already present in each `annotation_packet.csv`
+— no re-parsing. `item_parser.py`'s own marker patterns (lines 78-94)
+give the classification directly: bullet and sub-bullet markers
+(`�`/`•`/`▪`/`●`/`-`/`o`) carry **no ordinal** and are numbered purely
+by position within their level (the code comment there: "Bullets carry
+no ordinal, so siblings are counted by position"), which is exactly the
+property that makes them vulnerable to the §53.2 mechanism — insert one
+item, and every later sibling's position-derived marker shifts. Numeric,
+alpha, roman, parenthetical and dotted markers carry a real ordinal and
+are not repositioned by insertion.
+
+### 54.1 Result
+
+| Marker kind | n | Method acc. | B2 acc. | Diff | Share of items in T2 tier |
+|---|---|---|---|---|---|
+| **Bullet/sub-bullet** | 72 (34%) | 72.22% | **94.44%** | **−22.2 pts** | 27.8% |
+| **Ordinal** (numeric/alpha/roman/paren) | 137 (66%) | **76.64%** | 71.53% | **+5.1 pts** | 13.9% |
+
+**On ordinal-marker items — two-thirds of the usable sample — the
+method is ahead of B2 by 5.1 points, in the direction §7 originally
+hypothesized.** The pooled disconfirmation in §53 is not a general
+result; it is driven almost entirely by the bullet-marker minority.
+
+Restricted further to bullet-marker items only, broken out by the
+method's own assigned tier:
+
+| Method's tier (bullet items only) | n | Method acc. | B2 acc. |
+|---|---|---|---|
+| T1_id_exact | 35 | 97.14% | 97.14% |
+| **T2_id_text_changed** | 20 | **40.00%** | **90.00%** |
+| T3_renumbered | 3 | 100% | 100% |
+| T4_reworded | 2 | 100% | 100% |
+| **T6_unmatched_old** | 12 | **41.67%** | **91.67%** |
+
+T1 (exact identifier match) is unaffected — as expected, an unchanged
+bullet position is unaffected by insertion elsewhere. The damage is
+concentrated exactly where §53.2 predicted (T2, the tier that trusts a
+stable identifier over changed text) and, newly surfaced here, equally
+badly in **T6 — items the method reports as unmatched/deleted**. Over
+90% of these bullet-marker "deletions" are not real deletions at all;
+B2 finds them elsewhere in the document at high similarity. This means
+part of §53's effect is not just wrong-item correspondence but the
+method **manufacturing false deletions** specifically for bullet items
+whose guideline-scoped candidate pool no longer contains their true
+match after a position shift — a second, distinct failure mode riding
+on the same underlying cause as T2's.
+
+Connecticut v2023.1→v2024.1 — the pair carrying the pooled effect's
+only statistically significant component (§53.1) — decomposes cleanly:
+bullet items there score method 65.00% vs. B2 100.00% (diff −35.0
+pts, n=40); ordinal items in the *same pair* score method 89.47% vs.
+B2 89.47% — **exactly tied, zero difference** (n=19). The pair's
+significant effect is not a property of that edition pair generally;
+it is entirely attributable to its long bulleted medication-reference
+appendix.
+
+### 54.2 Interpretation
+
+This is exploratory decomposition of an already-reported result, not a
+new confirmatory test — it does not change H3's status (§53.3, still
+**NOT CONFIRMED** by the pre-registered pooled criterion, which was
+specified pooled and is not superseded by a post-hoc subgroup split).
+But it substantially sharpens what "not confirmed" means for the paper:
+the structural method's advantage over naive text matching is real and
+in the hypothesized direction on ordinally-marked items (the large
+majority of items across every pair), and is specifically, mechanistically
+reversed on bullet/list-marker items, where positional numbering with
+no true ordinal makes the T2 tier's identifier-trust assumption actively
+wrong under insertion, and additionally causes false-deletion calls via
+T6. This is a precise, falsifiable, and fixable characterization — future
+work could plausibly special-case bullet-marker items to prefer
+text-based matching over identifier-based matching within the existing
+structural framework — rather than a verdict that structure provides no
+value.

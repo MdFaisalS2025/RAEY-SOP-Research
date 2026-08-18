@@ -3705,3 +3705,113 @@ mode's true population-level rate.
   distinct, unaddressed gap from the major-pair problem, surfaced for
   the first time by actually trying to compute every §6/§7 metric
   rather than assuming the tooling was complete.
+
+## 53. H3 tested — NOT CONFIRMED. B2 (text-only) matches or beats the structural method
+
+`baseline_b2.py` was implemented per the design pre-committed in
+`PREREGISTRATION.md` §11 (before this test was run): for each old item,
+search the **entire** new-edition document for the best match, no
+guideline/section scoping and no identifier lookup, using the real
+method's own unmodified `item_align._sim` (token Jaccard) and
+`_SIM_FLOOR` (0.75). `run_h3_test.py` then scored both the method and
+B2 against the same complete adjudicated ground truth used for §52
+(`CANNOT_DETERMINE` items excluded, 209 of 240 usable), and ran a
+10,000-resample bootstrap on the paired accuracy difference
+(method − B2), raw and population-weighted, exactly as pre-committed.
+
+### 53.1 Result
+
+| Pair | n | Method acc. | B2 acc. | Diff (raw) 95% CI |
+|---|---|---|---|---|
+| Tennessee 2017→2018 | 55 | 67.27% | 65.45% | [-0.055, 0.091] |
+| Pennsylvania 2021→2023 | 58 | 77.59% | 67.24% | [0.000, 0.207] |
+| Connecticut v2022.1→v2023.1 | 37 | 86.49% | **91.89%** | [-0.189, 0.081] |
+| Connecticut v2023.1→v2024.1 | 59 | 72.88% | **96.61%** | [-0.339, **-0.136**] |
+| **Pooled** | **209** | **75.12%** | **79.43%** | **[-0.101, 0.014]** |
+
+Pooled weighted: method 75.12%-equivalent vs. B2, point estimate
+−0.0215, CI [−0.0586, 0.0139]. Full numbers in
+`annotation_packets/h3_test_report.json`.
+
+**H3 is NOT CONFIRMED, raw or weighted.** The pre-registered criterion
+(§7) required the point estimate positive AND the CI lower bound
+excluding zero. The pooled point estimate is negative in both
+versions — B2 outscores the method on this dataset — and on
+Connecticut v2023.1→v2024.1 specifically the CI is entirely negative
+(raw [-0.339, -0.136]): it is B2 that is significantly *ahead* of the
+structural method on that pair, the opposite of what §7 hypothesized.
+
+This is the disconfirmation §7 explicitly anticipated ("Disconfirmed
+if not. Then structure is decorative, the method reduces to text
+matching, and the paper must say so.") and is reported as such, not
+softened.
+
+### 53.2 Sanity check before trusting the result (§10's standing rule)
+
+§10 requires inspecting intermediate output before reporting any
+result — written for results that favour a hypothesis, but a result
+this surprising against the hypothesis warrants the same scrutiny, so
+it was applied here too, before writing this section. Spot-checked the
+items where the method and B2 disagree on Connecticut v2023.1→v2024.1
+(the pair driving the strongest, statistically significant effect).
+The disagreements are not a comparison bug — `old_item_id` matching
+between the master CSV and B2's output lines up correctly, and
+`_norm_answer` normalizes both sides consistently (already fixed, §52)
+— they show a real, coherent, explainable mechanism:
+
+```
+OLD: appendix 1 ct adult medication reference/protocol/•#22
+  method (tier T2_id_text_changed) predicted: ...same id, •#22
+  B2 predicted: ...•#38   (sim = 1.0, exact text match)
+```
+
+Several more of the same shape recur throughout the medication-reference
+appendix (•#33→•#52, •#98→•#123, •#13→•#29, …). The pattern: the
+method's T2 tier ("identifier matched, text changed") trusts that the
+same bullet number in the new edition is the same conceptual item even
+when its text differs — a reasonable assumption for most guidelines,
+but the appendix is a long bulleted medication table where items were
+evidently inserted, shifting every subsequent bullet's number. When
+that happens, T2's ID-trust assumption points at the *wrong* row, while
+B2's brute-force global text search is immune to it — it finds the
+identical text wherever it actually landed, at `sim = 1.0`.
+
+This is a real, non-buggy, mechanistically explicable finding, not an
+artifact: the structural method's advantage in the rest of the study
+(guideline-scoped, section-scoped matching) comes with a specific,
+previously undiscovered cost on documents containing long renumbered
+bullet lists, where trusting a stable identifier is actively worse than
+ignoring structure altogether. Connecticut's medication appendix is
+exactly this shape; none of the other three pairs' guidelines have a
+comparable long bulleted list, which is consistent with why the effect
+is concentrated on that one pair and (to a lesser, non-significant
+degree) v2022.1→v2023.1, its sibling using the same document format.
+
+### 53.3 Hypothesis status (updates §52.2)
+
+- **H3 — disconfirmed by the pre-registered criterion.** Text-only
+  global matching (B2) is not shown to be worse than the structural
+  method on this minor-pair dataset — if anything the point estimate
+  favours B2, significantly so on one pair. The honest reading is not
+  "structure never helps," but that its benefit was neither
+  demonstrated here nor uniform: Tennessee and Pennsylvania trend
+  (non-significantly) toward the method, both Connecticut pairs trend
+  toward B2, significantly on one. §53.2's mechanism — ID-trust
+  breaking under bullet renumbering in long list-structured
+  appendices — is a genuine, reportable limitation of the T2 tier as
+  currently defined, distinct from anything previously logged in
+  Appendix B.
+- This does not retroactively affect H4 (still confirmed, §52.2) or
+  the §52.1 metrics, which describe the method's own performance, not
+  a comparison to B2.
+- One caveat for the eventual paper: B2's global search has no
+  protection against coincidental high-similarity matches elsewhere in
+  a large document — a risk that is structurally *absent* from this
+  minor-pair dataset (documents stay small and mostly unchanged
+  between minor editions) but would very plausibly reappear on a major
+  revision, where far more items change and a global text search has a
+  much larger pool of plausible-looking wrong candidates to be fooled
+  by. H1/H2's untestability (§46) means this cannot be checked directly
+  with current data; it is flagged here as a reason not to over-read
+  "B2 wins" as "structure is worthless," only as "structure's benefit
+  is not demonstrated on this dataset."

@@ -4411,3 +4411,77 @@ genuinely inconclusive, and what signal exists points toward the method
 once a data-quality confound is accounted for."
 
 Full numbers: `annotation_packets/sensitivity_analysis_report.json`.
+
+## 59. Post-hoc baseline B5 (embeddings): significantly ahead on the full sample, not once the boundary bug is excluded
+
+Added per the audit's Phase 4: none of B1-B4 use a modern embedding
+matcher, and a 2026 reviewer's first question would be whether the
+study's comparisons hold up against one. `baseline_b5.py` uses
+`app.rag.embeddings` (the production RAG pipeline's own provider -
+`BAAI/bge-small-en-v1.5` via `sentence-transformers`, confirmed
+installed and working, not the TF-IDF fallback) with B2's identical
+global-search, greedy-consumption scope - only the similarity function
+differs. Floor fixed at 0.85 (a documented near-duplicate-detection
+convention) before any scored run, explicitly not calibrated against
+this study's ground truth. **Post-hoc, not pre-registered - no
+hypothesis or confirmation criterion is attached to B5.**
+
+### 59.1 Full-sample result
+
+| | Raw accuracy |
+|---|---|
+| Method | 75.12% |
+| B2 (Jaccard) | 79.43% |
+| **B5 (embeddings)** | **81.82%** |
+
+B5 is the highest-accuracy method tested anywhere in this study. Method
+vs. B5: point estimate −0.067, **95% CI [−0.129, −0.010] - entirely
+negative, statistically significant** (weighted: −0.043, CI
+[−0.091, −0.001], also entirely negative). This is the first
+statistically significant method-vs-baseline gap in either direction
+found in the whole study. B2 vs. B5: −0.024, CI [−0.057, 0.005], not
+quite significant.
+
+### 59.2 The same §56/§58 confound applies, and changes the picture the same way
+
+Before treating "B5 significantly beats the method" as the final word,
+the §58 sensitivity check was applied here too, since B5 shares B2's
+global, unscoped search - exactly the property that made B2 immune to
+the guideline-boundary bug's damage (§58.3). On the clean subset
+(n=168, same 41 items excluded):
+
+| | All (n=209) | Clean (n=168) |
+|---|---|---|
+| Method accuracy | 75.12% | **78.57%** |
+| B2 accuracy | 79.43% | 76.79% |
+| B5 accuracy | 81.82% | **79.76%** |
+| Method − B5 (raw) | −0.067 [−0.129, **−0.010**] | −0.012 [−0.077, 0.054] |
+
+**The significant method-vs-B5 gap does not survive exclusion either.**
+Method accuracy improves the same way it did in §58 (+3.45 points); B5's
+accuracy *drops* on the clean subset (81.82%→79.76%) - the mirror image
+of B2's pattern, and for the same reason: B5's unscoped global search
+was disproportionately picking up correct answers specifically on the
+bug-affected items, where the method's guideline-scoped search had
+nothing valid to search within. Once those items are removed, the
+CI crosses zero and the earlier significance disappears (−0.012
+[−0.077, 0.054]).
+
+### 59.3 What this means for the paper
+
+Both baselines beating the method on the full sample and neither doing
+so significantly on the clean subset is now a **consistent pattern
+across B2, B3 (§55.4, significant on the full sample), and B5** - every
+baseline that searches the whole document unscoped shows the same
+confound-driven advantage that shrinks once the boundary bug is
+excluded. This substantially strengthens §58's interpretation: the
+"naive baselines beat the structural method" headline was not really
+about naive-vs-structural at all so much as about which methods happen
+to be robust to one specific, previously-unknown parser defect. The
+paper should present this as the actual finding - a real, useful,
+generalizable insight (structural scoping is only as good as the
+structure-detection it depends on) - rather than "modern embeddings beat
+a hand-built heuristic," which the full-sample numbers alone would
+wrongly suggest.
+
+Full numbers: `annotation_packets/b5_comparison_report.json`.

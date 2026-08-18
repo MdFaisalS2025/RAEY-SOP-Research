@@ -1,0 +1,79 @@
+{
+  "n_items": 209,
+  "bootstrap_note": "10000 resamples, item-level (matching every other descriptive baseline comparison)",
+  "method_minus_b5_accuracy": {
+    "raw": {
+      "item": {
+        "point_estimate": -0.067,
+        "ci95_low": -0.1292,
+        "ci95_high": -0.0096,
+        "n_valid": 10000
+      },
+      "pair": {
+        "point_estimate": -0.067,
+        "ci95_low": -0.2112,
+        "ci95_high": 0.0611,
+        "n_valid": 10000
+      }
+    },
+    "weighted": {
+      "item": {
+        "point_estimate": -0.0428,
+        "ci95_low": -0.0908,
+        "ci95_high": -0.0012,
+        "n_valid": 10000
+      },
+      "pair": {
+        "point_estimate": -0.0428,
+        "ci95_low": -0.1056,
+        "ci95_high": 0.0029,
+        "n_valid": 10000
+      }
+    }
+  },
+  "b2_minus_b5_accuracy": {
+    "raw": {
+      "item": {
+        "point_estimate": -0.0239,
+        "ci95_low": -0.0574,
+        "ci95_high": 0.0048,
+        "n_valid": 10000
+      },
+      "pair": {
+        "point_estimate": -0.0239,
+        "ci95_low": -0.0693,
+        "ci95_high": 0.0118,
+        "n_valid": 10000
+      }
+    },
+    "weighted": {
+      "item": {
+        "point_estimate": -0.0213,
+        "ci95_low": -0.0576,
+        "ci95_high": 0.0017,
+        "n_valid": 10000
+      },
+      "pair": {
+        "point_estimate": -0.0213,
+        "ci95_low": -0.039,
+        "ci95_high": 0.0026,
+        "n_valid": 10000
+      }
+    }
+  },
+  "method_accuracy_raw": 0.7512,
+  "b5_accuracy_raw": 0.8182,
+  "b2_accuracy_raw": 0.7943,
+  "sensitivity_clean_subset": {
+    "n_clean": 168,
+    "method_accuracy_raw": 0.7857,
+    "b5_accuracy_raw": 0.7976,
+    "b2_accuracy_raw": 0.7679,
+    "method_minus_b5_diff_raw": {
+      "point_estimate": -0.0119,
+      "ci95_low": -0.0774,
+      "ci95_high": 0.0536,
+      "n_valid": 10000
+    }
+  }
+}

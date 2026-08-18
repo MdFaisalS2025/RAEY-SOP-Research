@@ -4053,3 +4053,131 @@ favourable call" reading.
   single hypothesis above captures directly.
 
 Full numbers: `annotation_packets/full_comparison_report.json`.
+
+## 56. A guideline-boundary-detection bug found in the H3' fresh pair also affects the already-published Tennessee results
+
+Following the user's decision to fold feasible future-work items into
+this paper, a fresh Tennessee pair (2022-23 -> Sept2024, see the
+PREREGISTRATION.md H3' entries) was retrieved and a targeted fix for
+§54's T2 identifier-trust mechanism was designed and pre-committed
+(`item_align_v2.py`) before drawing the H3' sample. Both H3' annotators
+completed their workbooks independently (Cohen's kappa 1.0000, 0/92
+disagreements) - but 11 of the 32 census bullet items showed both
+annotators answering `NONE` where the original method had scored
+`T1_id_exact`, its most-trusted tier. That should not be possible for a
+genuinely correct T1 match (same identifier, verified-identical text),
+so it was investigated before any scoring proceeded, per §10's standing
+rule applied here to a surprising pattern rather than a convenient one.
+
+### 56.1 The bug
+
+All 11 disputed items share one guideline: "Delirium with HyperAgitation."
+Counting items per guideline in the fresh old edition found this
+guideline alone contains **513 items** - against a corpus median of
+**12 items/guideline**. Reading the content directly confirms it is not
+one coherent protocol:
+
+```
+delirium with hyperagitation/contraindications/o
+  "If the device has been accidentally closed, push the side buttons
+   inward with one hand and pull the device open... Locate wound
+   edges..." - wound-care/hemostatic-device content
+
+delirium with hyperagitation/indications/o
+  "Presence of indwelling port" - vascular-access content
+
+delirium with hyperagitation/notes/o
+  "Consider rotating the foot to the mid-line position" - splinting
+   content
+
+delirium with hyperagitation/notes/o#4
+  "Please use the Bariatric Needle Set... Humeral Head... place the
+   patient's arm..." - IO-access content
+```
+
+`item_parser.py`'s guideline-boundary/anchor detection has a failure
+mode: once it loses the true boundary between two protocols, a large
+stretch of subsequent, topically unrelated content gets swept into the
+guideline whose heading it last successfully anchored on, rather than
+being correctly re-segmented under the next real heading. This is a
+different, distinct mechanism from anything previously logged in
+Appendix B or §54 - not the T2 id-trust issue, not T6's cascade failure,
+a boundary-detection weakness one level up from both.
+
+### 56.2 Not new to the fresh pair: the same bug is already in the published Tennessee 2017/2018 confirmatory data
+
+A systematic scan (guidelines more than 4x the edition's median size,
+floor 50 items, across all four Tennessee editions) found:
+
+| Edition | Median guideline size | Outlier guidelines (>4x median, >50 items, excluding `<preamble>`) |
+|---|---|---|
+| 2017 (published) | 12 | PEDIATRIC CARDIAC EMERGENCY Neonatal Resuscitation (244), REFERENCE Pulse Oximetry (215), Patient Refusal or Declination of Care (135) |
+| 2018 (published) | 13 | same three guidelines, 241/214/135 |
+| 2022-23 (fresh) | 12 | Delirium with HyperAgitation (513), Vascular Access (208), Pre-eclampsia and Eclampsia (129) |
+| Sept2024 (fresh) | 13 | same three guidelines, 539/228/133 |
+
+Content-checked "PEDIATRIC CARDIAC EMERGENCY Neonatal Resuscitation" and
+"REFERENCE Pulse Oximetry" directly (the same two guidelines 15 of the
+original 60 sampled Tennessee items fall inside): both contain
+equally incoherent content - obstetric material ("membranes ruptured -
+if yes, is amniotic fluid clear?", "LMP if applicable") and trauma
+material ("Note time of tourniquet application", "Maintain systolic
+pressure of 90 or greater") filed under a pediatric-cardiac or
+pulse-oximetry heading. "Patient Refusal," "Vascular Access," and
+"Pre-eclampsia and Eclampsia" show the same size anomaly but were not
+individually content-verified - flagged as likely affected, not
+confirmed.
+
+### 56.3 Quantified effect on the already-published Tennessee-pair results
+
+Of the original 60 sampled Tennessee items (§52-55's confirmatory data,
+already scored, already reported), 15 (25%) fall inside the two
+content-verified bloated guidelines. Checking each against the
+already-computed adjudicated ground truth:
+
+| sample_id | tier (method) | ground truth | method prediction | agree? |
+|---|---|---|---|---|
+| S003 | T1_id_exact | pediatric cardiac... | pediatric cardiac... | yes |
+| S006 | T1_id_exact | reference pulse ox.../6 | reference pulse ox.../6 | yes |
+| S007 | T1_id_exact | cannot_determine | reference pulse ox.../6#11 | **no** |
+| S008 | T1_id_exact | reference pulse ox.../2#15 | reference pulse ox.../2#15 | yes |
+| S009 | T1_id_exact | reference pulse ox.../2#6 | reference pulse ox.../2#12 | **no** |
+| S010 | T1_id_exact | reference pulse ox.../2#22 | reference pulse ox.../2#22 | yes |
+| S011 | T1_id_exact | reference pulse ox.../3#21 | reference pulse ox.../3#21 | yes |
+| S014 | T1_id_exact | none | pediatric cardiac... | **no** |
+| S015 | T1_id_exact | reference pulse ox.../6#9 | reference pulse ox.../6#9 | yes |
+| S021 | T2_id_text_changed | cannot_determine | pediatric cardiac... | **no** |
+| S026 | T3_renumbered | cannot_determine | pediatric cardiac... | **no** |
+| S032 | T3_renumbered | none | pediatric cardiac... | **no** |
+| S035 | T3_renumbered | cannot_determine | pediatric cardiac... | **no** |
+| S037 | T4_reworded | none | pediatric cardiac... | **no** |
+| S055 | T6_unmatched_old | none | NONE | yes |
+
+**8 of 15 (53%) disagree** - more than double the pair's overall ~33%
+error rate (§53.1: 67.27% accuracy). Four of the eight disagreements are
+`CANNOT_DETERMINE`, consistent with annotators struggling to work inside
+a 200+/500+-item unreviewable "guideline." This is a real, previously
+undiagnosed confound sitting inside numbers already reported as final in
+§52-55, and by extension inside every pooled-across-4-pairs figure that
+includes Tennessee.
+
+### 56.4 What this changes and what it does not
+
+**Nothing already published is edited, retracted, or recomputed.** Per
+the same "append, never rewrite" discipline used throughout this log,
+this is a newly-discovered limitation appended to the record, not a
+correction applied retroactively to §52-55's numbers. `item_parser.py`
+is frozen and is not modified here - fixing a guideline-boundary
+detection weakness discovered by reading test-data content would violate
+§3.4's quarantine exactly as it would for any other frozen-file change
+made in response to test observations.
+
+Going forward: the Tennessee-pair-specific and pooled §52-55 figures
+must be read with this confound disclosed. Its exact effect on those
+aggregate numbers has not been separately isolated (only the direct
+8/15 sub-analysis above) - doing so would mean rescoring an
+already-closed, already-reported result, not undertaken here. For the
+in-progress H3' test (§57), the 11 contaminated bullet-census items are
+excluded from scoring rather than allowed to dilute the T2-fix result -
+reported as this distinct, separate finding, not folded into the fix's
+own result.

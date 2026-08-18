@@ -4181,3 +4181,104 @@ in-progress H3' test (§57), the 11 contaminated bullet-census items are
 excluded from scoring rather than allowed to dilute the T2-fix result -
 reported as this distinct, separate finding, not folded into the fix's
 own result.
+
+## 57. H3' result: H3'a/H3'b UNTESTABLE (underpowered, not disconfirmed); H3'c NOT CONFIRMED (a genuine tie)
+
+Both H3' annotators completed the 92-item workbook independently.
+**Cohen's kappa 1.0000, 0/92 disagreements** - no adjudication step was
+needed; ground truth is simply the shared answer. Before trusting a
+perfect-agreement result, it was spot-checked: the two files are not
+byte-identical (different MD5 hashes), and the matching answers are
+exact item-ID strings the task explicitly asks annotators to copy
+verbatim from the visible new-guideline text - which naturally produces
+identical strings between two independently-correct annotators, unlike
+free-text judgements would. The original round's A/B pair also showed
+kappa 1.0 (section 50), so this is consistent with an established
+pattern for this task, not a new anomaly.
+
+### 57.1 Result
+
+| Test | n scored | a accuracy | b accuracy | diff (95% CI) | Status |
+|---|---|---|---|---|---|
+| H3'a: v2 vs v1, clean bullet items | 21 | 100.00% | 100.00% | 0.0 [0.0, 0.0] | **UNTESTABLE** |
+| H3'b: v2 vs B2, clean bullet items | 21 | 100.00% | 100.00% | 0.0 [0.0, 0.0] | **UNTESTABLE** |
+| H3'c: v1(=v2) vs B2, ordinal items | 60 | 71.67% | 71.67% | 0.0 [-0.10, 0.10] | NOT CONFIRMED |
+
+Full numbers: `annotation_packets/h3prime_tennessee_2022_2024/h3prime_test_report.json`.
+
+### 57.2 H3'a/H3'b: verified as a real power problem, not a bug and not a clean success
+
+A [0.0, 0.0] confidence interval on 21 items is exactly the kind of
+too-clean result section 10 requires checking before it is reported.
+Checked: of the 21 clean bullet items, **20 are T1_id_exact** - the tier
+where v1 and v2 run byte-identical code by construction (the fix only
+branches for T2 id-matches). Only **1 item is T2-eligible** (S020), and
+for that one item the rejected-similarity check the fix adds did not
+even fire (`fix_overrode_id_match: False` - its similarity already
+cleared 0.75, so v1, v2, and B2 all agree). Checking the population
+*before* the section 56 exclusion clarifies this further: of all 32
+original bullet-census items, only **2 (6.25%) were T2-tier to begin
+with** - 30 were T1. This is a property of Tennessee's bullet population
+itself, not an artefact of excluding the contaminated 11: Tennessee's
+bullet markers are overwhelmingly stable (same identifier, same text)
+between these two editions, unlike Connecticut's, where the section 55
+smoke test found 168 of 1,241 bullet items (13.5%) were T2 cases the fix
+actually rejected. Excluding the contaminated guideline removed one of
+Tennessee's only two T2 bullet cases; the remaining one did not trigger
+the fix.
+
+**H3'a and H3'b are therefore UNTESTABLE with this fresh pair - not
+disconfirmed, and not a demonstrated success either.** The population
+needed to test whether the fix helps (bullet items where an identifier
+match masks a real content change) essentially does not exist in
+sufficient quantity in Tennessee's format. This is a real, honest limit
+of what a single available fresh pair could support, stated plainly
+rather than dressed up as a clean 100%/100% validation.
+
+### 57.3 H3'c: a genuine, non-buggy tie, not a bug
+
+71.67% vs 71.67% (43/60 correct each) was checked before being trusted,
+since an exact tie invites the same "is this a scoring bug" question as
+section 53.1's H3 comparison invited when it first ran. Itemwise
+breakdown: 38 items both methods got right, 12 both got wrong, **5 items
+only the original method got right, and exactly 5 items only B2 got
+right** - a real, substantive itemwise split that happens to net to
+zero, not a trivial identical-predictions artefact (unlike H3'a/H3'b
+above, where the tie *is* trivial by construction).
+
+**H3'c is NOT CONFIRMED** by the pre-registered criterion (point
+estimate must be positive; here it is exactly 0.0). This does not
+clearly replicate the original H3 finding on ordinal items (section
+54.1: method ahead of B2 by 5.1 points, 76.64% vs 71.53%, pooled across
+four pairs) - on this single fresh pair, the two are evenly matched. A
+single new pair is a much weaker basis than the original four-pair
+pooled estimate, and one pair's result moving from "ahead" to "tied"
+is well within what sampling variation across different documents would
+produce; it is reported as a genuine, if less favourable, data point
+alongside the original finding, not a retraction of it.
+
+### 57.4 What this follow-up study accomplished and did not
+
+- The T2 identifier-trust mechanism (section 54) remains diagnosed and
+  mechanistically sound - the fix's design logic was validated by the
+  Connecticut smoke test (section 55 pre-commitment entry: 78% of
+  rejected bullet id-matches correctly rescued). What was NOT achieved
+  is a fresh-data confirmatory test of whether the fix improves
+  real-world accuracy, because Tennessee - the only fresh pair
+  available after Connecticut and Pennsylvania were confirmed exhausted
+  - does not contain enough of the failure mode to test it.
+- A genuinely new, independently valuable finding emerged instead: the
+  guideline-boundary-detection bug (section 56), discovered only because
+  this follow-up's annotator disagreements were investigated rather than
+  accepted at face value - and shown to already affect the published
+  Tennessee results, not just the fresh pair.
+- H3'c stands as a small, honest, negative-leaning data point: the
+  original ordinal-item advantage is not confirmed to replicate on this
+  one additional pair.
+- Future work, not undertaken here: testing H3'a/H3'b would require a
+  fresh pair with a bullet population resembling Connecticut's (rich in
+  genuine T2/T6 bullet cases) rather than Tennessee's (overwhelmingly
+  stable). No such fresh pair is currently available - Connecticut is
+  confirmed exhausted (PREREGISTRATION.md's H3' pre-commitment entry)
+  and no other publisher has demonstrated a comparable bullet-heavy
+  format.

@@ -3618,3 +3618,90 @@ items' final ground-truth answers; combined with the 197 items that
 already had a clear majority, that completes ground truth for all 240
 sampled items, unblocking the §6 metric computation against the method's
 original predictions (§50.2).
+
+## 52. §6 metrics computed against complete, adjudicated ground truth — a real bug caught first, H4 confirmed
+
+The completed adjudication workbook came back — all 43/43 rows filled,
+each with a real, reasoned decision (e.g. one item resolved by picking
+the exact-string match over a near-miss candidate; several genuine
+`CANNOT_DETERMINE` calls where the old text was recurring boilerplate
+with no way to pick one occurrence; one detailed `split` case tracing
+exactly which two new items absorbed the old one). Ground truth for all
+240 sampled items is now complete: 197 from a clear 4-rater majority
+(§50), 43 from this adjudication.
+
+`compute_section6_metrics()` was added to `annotation.py` (not the
+frozen pipeline) to compute §6's five metrics against the method's
+original predictions, both as a raw sample proportion and reweighted to
+the population per §5.1's requirement (the stratified design deliberately
+oversamples rare tiers, so a raw proportion over the 60-item sample is
+not itself a population estimate).
+
+**A real bug was caught before any of this was reported or committed**:
+the first run came back with `deletion_recall`/`deletion_precision` as
+`null` for every single pair and `provenance_loss_rate`/
+`cannot_determine_rate` as exactly `0.0` for every pair — despite having
+directly confirmed real `NONE` and `CANNOT_DETERMINE` answers in the
+data moments earlier (Pennsylvania S041-S043, unanimous `NONE` across
+all four annotators). Treating a suspiciously clean all-zero result as
+untrustworthy rather than reporting it traced the cause immediately:
+`_norm_answer` returned the special tokens `NONE`/`CANNOT_DETERMINE`
+uppercase while returning every ordinary item-ID answer lowercase, and
+the new metric code compared against lowercase literals throughout —
+every comparison involving a NONE or CANNOT_DETERMINE answer silently
+failed instead of erroring, the worst kind of bug because the output
+looked like a plausible result rather than a crash. Fixed by making
+`_norm_answer` consistently lowercase (logged in `PREREGISTRATION.md`
+§11). Confirmed the fix does **not** retroactively invalidate the
+already-reported Cohen's/Fleiss' kappa numbers (§50): those compare
+raters' normalized answers only to each other, never to a hardcoded
+literal, so a uniform case shift changes no equality relationship
+between them — no rerun needed there.
+
+### 52.1 Final results (pooled, 240 items, raw / population-weighted)
+
+| Metric | Raw | Weighted | n |
+|---|---|---|---|
+| Correspondence accuracy | 71.24% | **85.26%** | 233 (usable) |
+| **Provenance loss rate (PRIMARY)** | 10.75% | **1.48%** | 186 |
+| False-correspondence rate | 23.98% | 13.93% | 196 |
+| Deletion recall | 36.17% | 35.43% | 47 |
+| Deletion precision | 45.95% | 65.89% | 37 |
+| CANNOT_DETERMINE rate | 2.92% (7/240) | — | 240 |
+| **T3 (renumbered) tier precision** | **97.06%** | **94.08%** | 34 |
+
+Full per-pair breakdowns in `annotation_packets/section6_final_metrics.json`.
+
+The raw-vs-weighted gap on provenance loss rate (10.75% → 1.48%) is
+large and worth explaining rather than treating as noise: the items
+where the method incorrectly reported a real correspondence as deleted
+are concentrated in tiers that are rare in the true population but were
+deliberately oversampled by the stratified design (§5.1 draws a flat 10
+per tier regardless of population size). Reweighting by the inverse
+sampling fraction is exactly what corrects for this, per §5.1's explicit
+instruction — the raw number would substantially overstate this failure
+mode's true population-level rate.
+
+### 52.2 Hypothesis status
+
+- **H4 — confirmed.** T3 (renumbered) tier precision is 97.06% raw /
+  94.08% weighted, both comfortably clearing the pre-registered ≥80%
+  bar. Among items the method assigned to the "renumbered" tier, the
+  overwhelming majority are genuinely correct correspondences with
+  unchanged text — the study's cleanest illustration holds up.
+- **H1 and H2 — still untestable**, unchanged from §45/§46: both require
+  a major-revision pair and none exists in the confirmatory set (the
+  search was deliberately stopped per the logged stopping rule). The
+  1.48% weighted provenance loss rate above is a real number on *minor*
+  pairs specifically, useful as background for the paper's discussion
+  (consistent with dev's own repeated finding that minor revisions lose
+  much less provenance than major ones), but is not itself a test of
+  either hypothesis.
+- **H3 — untestable, for a newly-surfaced and different reason.** H3
+  requires comparing the method's correspondence accuracy against
+  baseline B2 (text-only matching, no structural parsing). Checked the
+  codebase directly: **B2 was never implemented anywhere** — it exists
+  only as a named design intention in §4, not as running code. This is a
+  distinct, unaddressed gap from the major-pair problem, surfaced for
+  the first time by actually trying to compute every §6/§7 metric
+  rather than assuming the tooling was complete.

@@ -327,13 +327,19 @@ def _norm_answer(v: str | None) -> str:
     """Normalise an annotator's typed correspondence answer for comparison
     across raters - case/whitespace differences from retyping an item_id are
     not meaningful disagreement. Section 5.2's fixed vocabulary (NONE,
-    CANNOT_DETERMINE) is uppercased on comparison regardless of how it was
-    typed; a copied item_id is just trimmed and case-folded."""
+    CANNOT_DETERMINE) and any copied item_id are ALL folded to lowercase,
+    consistently - every caller downstream compares against lowercase
+    literals ("none", "cannot_determine"), so returning the special tokens
+    uppercase here (an earlier version of this function did exactly that)
+    silently breaks every such comparison instead of raising an error,
+    which is what actually happened: see PREREGISTRATION.md section 11,
+    the entry logging this bug's discovery and fix, for the corrected
+    numbers this produced."""
     if v is None:
         return ""
     v = str(v).strip()
     if v.upper() in ("NONE", "CANNOT_DETERMINE", "CANNOT DETERMINE"):
-        return "CANNOT_DETERMINE" if "CANNOT" in v.upper() else "NONE"
+        return "cannot_determine" if "CANNOT" in v.upper() else "none"
     return v.strip().lower()
 
 
@@ -434,6 +440,100 @@ def majority_vote(rater_answers: list[dict[str, str]]) -> dict[str, dict]:
             "needs_adjudication": top <= n_raters / 2,
         }
     return result
+
+
+def compute_section6_metrics(
+    ground_truth: dict[str, str], method_rows: list[dict],
+) -> dict:
+    """Section 6's metrics, computed against final (post-adjudication)
+    ground truth. ground_truth: {sample_id: normalised final answer -
+    an item_id, "none", or "cannot_determine"}. method_rows: the rows from
+    a pair's master annotation_packet.csv (has tier, method_predicted_item_id,
+    sample_weight for each sampled item).
+
+    Two versions of every rate are reported: RAW (simple proportion over
+    the sample) and WEIGHTED (each item's contribution scaled by
+    sample_weight, the inverse sampling fraction) - section 5.1 requires
+    rates be "reweighted to the population" because the stratified design
+    deliberately oversamples rare tiers, so a raw proportion over the
+    60-item sample is not a population estimate.
+
+    Items whose ground truth is CANNOT_DETERMINE are excluded from every
+    accuracy/rate computation below (there is no truth to score against)
+    but count toward cannot_determine_rate.
+    """
+    by_sid = {r["sample_id"]: r for r in method_rows}
+    common = sorted(set(ground_truth) & set(by_sid))
+    if not common:
+        return {"error": "no shared sample_ids between ground truth and method rows"}
+
+    n_total = len(common)
+    n_cannot_determine = sum(1 for sid in common if ground_truth[sid] == "cannot_determine")
+    usable = [sid for sid in common if ground_truth[sid] != "cannot_determine"]
+
+    def norm(v: str) -> str:
+        return _norm_answer(v)
+
+    def w(sid: str) -> float:
+        return float(by_sid[sid].get("sample_weight", 1.0) or 1.0)
+
+    method_answer = {sid: norm(by_sid[sid]["method_predicted_item_id"]) for sid in usable}
+    truth = {sid: norm(ground_truth[sid]) for sid in usable}
+    tier = {sid: by_sid[sid]["tier"] for sid in usable}
+
+    def rate(numer_ids: list[str], denom_ids: list[str]) -> dict:
+        if not denom_ids:
+            return {"raw": None, "weighted": None, "n": 0}
+        raw = len(numer_ids) / len(denom_ids)
+        wsum_denom = sum(w(sid) for sid in denom_ids)
+        wsum_numer = sum(w(sid) for sid in numer_ids)
+        weighted = wsum_numer / wsum_denom if wsum_denom else None
+        return {"raw": round(raw, 4), "weighted": round(weighted, 4) if weighted is not None else None,
+                "n": len(denom_ids)}
+
+    # Correspondence accuracy: method's answer (item or NONE) == adjudicated answer.
+    correct = [sid for sid in usable if method_answer[sid] == truth[sid]]
+    correspondence_accuracy = rate(correct, usable)
+
+    # Provenance loss rate (PRIMARY): among items with a TRUE correspondence
+    # (truth != NONE), fraction the method reports as NONE (deleted).
+    true_corr = [sid for sid in usable if truth[sid] != "none"]
+    lost = [sid for sid in true_corr if method_answer[sid] == "none"]
+    provenance_loss_rate = rate(lost, true_corr)
+
+    # False-correspondence rate: of the method's non-NONE answers, fraction
+    # pointing at the wrong new item (whether truth is a different item or
+    # truth is actually NONE and the method hallucinated a match).
+    method_said_something = [sid for sid in usable if method_answer[sid] != "none"]
+    false_corr = [sid for sid in method_said_something if method_answer[sid] != truth[sid]]
+    false_correspondence_rate = rate(false_corr, method_said_something)
+
+    # Deletion recall/precision on truly-deleted items (truth == NONE).
+    truly_deleted = [sid for sid in usable if truth[sid] == "none"]
+    method_said_deleted = [sid for sid in usable if method_answer[sid] == "none"]
+    del_recall = rate([sid for sid in truly_deleted if method_answer[sid] == "none"], truly_deleted)
+    del_precision = rate([sid for sid in method_said_deleted if truth[sid] == "none"], method_said_deleted)
+
+    # Tier precision: per method-assigned tier, fraction where the method's
+    # answer is correct.
+    tier_precision = {}
+    for t in sorted(set(tier.values())):
+        in_tier = [sid for sid in usable if tier[sid] == t]
+        correct_in_tier = [sid for sid in in_tier if method_answer[sid] == truth[sid]]
+        tier_precision[t] = rate(correct_in_tier, in_tier)
+
+    return {
+        "n_total_items": n_total,
+        "n_cannot_determine": n_cannot_determine,
+        "cannot_determine_rate": round(n_cannot_determine / n_total, 4) if n_total else None,
+        "n_usable": len(usable),
+        "correspondence_accuracy": correspondence_accuracy,
+        "provenance_loss_rate_PRIMARY": provenance_loss_rate,
+        "false_correspondence_rate": false_correspondence_rate,
+        "deletion_recall": del_recall,
+        "deletion_precision": del_precision,
+        "tier_precision": tier_precision,
+    }
 
 
 def main(argv: list[str]) -> int:

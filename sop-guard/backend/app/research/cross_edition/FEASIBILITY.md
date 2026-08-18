@@ -3510,68 +3510,93 @@ method's original predictions, deliberately absent from anything the
 annotators see). The two `.xlsx` files are the actual hand-off
 deliverable.
 
-## 50. Four completed annotator workbooks returned; primary and supplementary agreement statistics computed
+## 50. Annotator workbooks returned; agreement statistics computed — CORRECTED 2026-08-18, see the box below
 
-The user obtained four independent annotators rather than two, all doing
-full redundant labeling (each labeled all 240 items, not a split
-workload). Per the analysis plan pre-committed in `PREREGISTRATION.md`
-§11 (2026-08-17, "Annotation upgraded from two annotators to four") —
-logged *before* any of the four completed workbooks were opened —
-Cohen's kappa on the originally-designated Annotator A/B pair remains
-the primary statistic, Fleiss' kappa across all four is a supplementary
-addition, and majority vote (≥3 of 4) determines adjudicated ground
-truth where a majority exists.
+> **Correction, added during the 2026-08-18 full-study audit (requested by
+> the user to check "everything from the beginning").** This section
+> originally reported four independent annotators, Cohen's κ = 1.0000
+> for the A/B pair, and Fleiss' κ = 0.877 across all four. Checking
+> file hashes and raw answers directly found: **A's answers are
+> byte-identical to B's on every item, and C's are byte-identical to
+> D's on every item** (confirmed via file content comparison, not
+> merely matching normalized answers) — two distinct answer sets, not
+> four independent ones. The 43 "4-rater disagreements" below are, on
+> re-inspection, exactly the 43 places the two real sets (A=B) and (C=D)
+> disagree, and **every one of the 43 is a (2,2) vote split with zero
+> 3-1 splits** — the pattern a 2-set duplication produces, and a pattern
+> four genuinely independent raters would be extremely unlikely to
+> produce by chance. "Cohen's κ = 1.0000" was a file agreeing with a
+> copy of itself, and "Fleiss' κ = 0.877" was computed over two distinct
+> opinions counted twice each, not four. Both are unsupportable as
+> originally stated and are corrected below.
+>
+> **What does NOT change**: the real, pre-registered §5.3 design was
+> exactly two annotators with Cohen's κ - and two genuinely distinct
+> answer sets exist here. The honest statistic is Cohen's κ between them:
+> **0.8168** (240 items, 43 disagreements) - well above §9's 0.60 abort
+> threshold, and a far more credible number than 1.0 on its face. Every
+> one of the 43 disagreements was already routed to real, discussion-based
+> adjudication (§51) regardless of how many raters were believed to
+> produce it, so **the adjudicated ground truth, and every §6/H3/H4/H5
+> metric computed from it, is unchanged** - this was verified by
+> re-running the full pipeline after this correction and confirming
+> `full_comparison_report.json` reproduces byte-for-byte. This correction
+> is about how the reliability of the *process* is described, not about
+> what the ground truth *is*. Logged as its own dated entry in
+> `PREREGISTRATION.md` §11, per that document's append-only discipline.
 
-**Completeness check first**: all four workbooks, all four tabs each,
-60/60 rows answered — 960 total judgments, zero blank cells, zero
-case/whitespace-variant formatting issues in either the `NONE` /
-`CANNOT_DETERMINE` vocabulary or the free-typed item-ID answers.
+The user obtained annotator files labeled A, B, C, and D. Per the
+analysis plan pre-committed in `PREREGISTRATION.md` §11 (2026-08-17,
+"Annotation upgraded from two annotators to four") — logged *before* any
+of the four files were opened — Cohen's kappa on the originally-designated
+Annotator A/B pair was to be the primary statistic. That plan is honored
+here in substance: A and B (and separately C and D) turned out to be the
+same two answer sets, so the primary statistic — Cohen's κ between two
+genuinely distinct sets of judgments — is exactly what was pre-registered,
+computed correctly, at 0.8168 rather than the originally-reported 1.0000.
+
+**Completeness check first**: both distinct answer sets, all four tabs
+each, 60/60 rows answered — 480 real judgments (240 items × 2 distinct
+raters, not 960), zero blank cells, zero case/whitespace-variant
+formatting issues in either the `NONE` / `CANNOT_DETERMINE` vocabulary or
+the free-typed item-ID answers.
 
 **`annotation.py` extended** (not the frozen pipeline — see §47) with
-`load_completed_xlsx()`, `fleiss_kappa_correspondence()` (the standard
-Fleiss 1971 formula — Cohen's kappa is only defined for exactly two
-raters, so this is the correct generalization for four, not an
-approximation), and `majority_vote()`, which explicitly flags items with
-no majority for real discussion-based adjudication rather than
-resolving them automatically. A one-off driver script
-(`annotation_packets/run_4rater_analysis.py`) runs these against the
-four real files and writes `4rater_analysis_report.json`.
+`load_completed_xlsx()` and `majority_vote()`, which explicitly flags
+items with no majority for real discussion-based adjudication rather
+than resolving them automatically. `fleiss_kappa_correspondence()` was
+also added but its result is **withdrawn** by this correction — Fleiss'
+κ requires genuinely independent raters, which this data does not
+provide (see the correction box above), and it is not reported as a
+statistic anywhere in this study going forward. A one-off driver script
+(`annotation_packets/run_4rater_analysis.py`) ran these against the four
+files and wrote `4rater_analysis_report.json`, which is retained for
+audit purposes but should be read with this correction in mind.
 
-### 50.1 Results
+### 50.1 Results (corrected)
 
-| Pair | Cohen's κ (A/B, primary) | Fleiss' κ (4-rater, supplementary) | Needs adjudication |
-|---|---|---|---|
-| Tennessee 2017→2018 | **1.0** (0/60 disagreements) | 0.8612 | 12/60 |
-| Pennsylvania 2021→2023 | **1.0** (0/60 disagreements) | 0.7868 | 18/60 |
-| Connecticut v2022.1→v2023.1 | **1.0** (0/60 disagreements) | 0.8672 | 11/60 |
-| Connecticut v2023.1→v2024.1 | **1.0** (0/60 disagreements) | 0.9774 | 2/60 |
-| **Pooled (240 items)** | **1.0** | **0.877** | **43/240 (17.9%)** |
+| Pair | Cohen's κ (real 2 answer sets) | Disagreements (all (2,2) splits) |
+|---|---|---|
+| Tennessee 2017→2018 | 0.7935 | 12/60 |
+| Pennsylvania 2021→2023 | 0.6934 | 18/60 |
+| Connecticut v2022.1→v2023.1 | 0.8014 | 11/60 |
+| Connecticut v2023.1→v2024.1 | 0.9661 | 2/60 |
+| **Pooled (240 items)** | **0.8168** | **43/240 (17.9%)** |
 
-Annotators A and B agree on every single sampled item across all four
-pairs — a perfect primary reliability result. This was verified as
-genuine, not a normalization artifact: a spot check of raw (unnormalized)
-answers shows both annotators independently typing byte-for-byte
-identical full item-ID strings, including internal punctuation
-(`'stroke/performance parameters/B.•#11'`), for items where the
-underlying recommendation is genuinely unchanged between editions — a
-large share of the stratified sample by design (§5.1 draws 10 items from
-the T1_id_exact tier specifically, the tier where the identifier itself
-did not change).
+The two real, distinct answer sets agree on 197 of 240 items (82.1% raw
+agreement) — a substantial, credible level of reliability, comfortably
+above §9's abort threshold, though naturally lower than the erroneous
+1.0000 originally reported. Per-pair reliability is weakest on
+Pennsylvania (0.6934, "substantial" on the Landis & Koch scale) and
+strongest on Connecticut v2023.1→v2024.1 (0.9661, "almost perfect"), a
+real and plausible spread for a task of this kind rather than the
+implausible uniform 1.0 across all four pairs the original write-up
+reported.
 
-Fleiss' kappa across all four raters is lower but still "almost
-perfect" by the conventional Landis & Koch scale (>0.81), except
-Pennsylvania at 0.7868 ("substantial," just under the almost-perfect
-band). The gap between the two statistics is itself informative, not a
-contradiction to paper over: C and D sometimes diverge from the A/B
-consensus (and occasionally from each other) on the harder tiers, while
-A and B happen to be unusually well-calibrated with one another. Both
-numbers are reported, per the pre-committed plan, rather than only the
-more flattering one.
-
-**43 of 240 items (17.9%) have no majority answer across the four raters
-and are flagged for real adjudication**, not resolved automatically.
-Spot-checked two flagged cases directly to confirm the flag is catching
-genuine judgment calls, not measurement noise:
+**43 of 240 items (17.9%) — every one a genuine (2,2) split between the
+two real answer sets — are flagged for real adjudication**, not resolved
+automatically. Spot-checked two flagged cases directly to confirm the
+flag is catching genuine judgment calls, not measurement noise:
 
 - A 2-2 split where two annotators pointed to one specific new item
   (`...#7`, labeled `unchanged`) and the other two pointed to a
@@ -3604,20 +3629,22 @@ inertia.
 the pipeline) pulls the 43 flagged sample_ids from
 `4rater_analysis_report.json`, re-attaches each one's old recommendation
 and full new-edition guideline text (from the original per-pair CSV/JSON,
-§47), and lays out all four annotators' original answers side by side —
-deliberately visible here, unlike the first round, since resolving a
-known disagreement is the point of adjudication, not a violation of the
-earlier blind-review design. Three highlighted fill-in columns
+§47), and lays out the answers from all four files side by side (in
+substance, the two real distinct answer sets — see §50's correction
+box) — deliberately visible here, unlike the first round, since
+resolving a known disagreement is the point of adjudication, not a
+violation of the earlier blind-review design. Three highlighted fill-in
+columns
 (`FINAL ANSWER: correspondence`, `FINAL ANSWER: relation` with the same
 dropdown validation as before, `Adjudication notes`) capture the
 resolved answer. Written to `Adjudication_43_items.xlsx`, sent to the
 user.
 
 Once completed, this becomes the source for the 43 previously-unresolved
-items' final ground-truth answers; combined with the 197 items that
-already had a clear majority, that completes ground truth for all 240
-sampled items, unblocking the §6 metric computation against the method's
-original predictions (§50.2).
+items' final ground-truth answers; combined with the 197 items where the
+two real distinct answer sets already agreed, that completes ground
+truth for all 240 sampled items, unblocking the §6 metric computation
+against the method's original predictions (§50.2).
 
 ## 52. §6 metrics computed against complete, adjudicated ground truth — a real bug caught first, H4 confirmed
 
@@ -3627,8 +3654,8 @@ the exact-string match over a near-miss candidate; several genuine
 `CANNOT_DETERMINE` calls where the old text was recurring boilerplate
 with no way to pick one occurrence; one detailed `split` case tracing
 exactly which two new items absorbed the old one). Ground truth for all
-240 sampled items is now complete: 197 from a clear 4-rater majority
-(§50), 43 from this adjudication.
+240 sampled items is now complete: 197 where the two real distinct
+answer sets agreed (§50, corrected), 43 from this adjudication.
 
 `compute_section6_metrics()` was added to `annotation.py` (not the
 frozen pipeline) to compute §6's five metrics against the method's
@@ -3643,7 +3670,7 @@ the first run came back with `deletion_recall`/`deletion_precision` as
 `cannot_determine_rate` as exactly `0.0` for every pair — despite having
 directly confirmed real `NONE` and `CANNOT_DETERMINE` answers in the
 data moments earlier (Pennsylvania S041-S043, unanimous `NONE` across
-all four annotators). Treating a suspiciously clean all-zero result as
+both real answer sets, all four files). Treating a suspiciously clean all-zero result as
 untrustworthy rather than reporting it traced the cause immediately:
 `_norm_answer` returned the special tokens `NONE`/`CANNOT_DETERMINE`
 uppercase while returning every ordinary item-ID answer lowercase, and
@@ -3653,7 +3680,7 @@ failed instead of erroring, the worst kind of bug because the output
 looked like a plausible result rather than a crash. Fixed by making
 `_norm_answer` consistently lowercase (logged in `PREREGISTRATION.md`
 §11). Confirmed the fix does **not** retroactively invalidate the
-already-reported Cohen's/Fleiss' kappa numbers (§50): those compare
+already-reported Cohen's kappa numbers (§50, corrected): those compare
 raters' normalized answers only to each other, never to a hardcoded
 literal, so a uniform case shift changes no equality relationship
 between them — no rerun needed there.
@@ -4282,3 +4309,105 @@ alongside the original finding, not a retraction of it.
   confirmed exhausted (PREREGISTRATION.md's H3' pre-commitment entry)
   and no other publisher has demonstrated a comparable bullet-heavy
   format.
+
+## 58. Sensitivity analysis: excluding the §56 boundary-bug guidelines flips H3's sign
+
+Prompted by a full-study audit (requested by the user before drafting
+the paper) that asked whether §56's guideline-boundary bug was ever
+quantified against the **pooled** §52-55 results (it was not - §56 only
+checked its direct 8/15 sub-analysis on Tennessee). This closes that
+gap: every §6 metric and H3/H4/H5 recomputed across **all four pairs**
+excluding items whose old-edition guideline is a size outlier, using
+§56's own mechanical rule (more than 4x the edition's median guideline
+size, floor 50 items, excluding `<preamble>`) applied consistently, not
+re-derived per pair.
+
+### 58.1 The rule is imperfect, and that is stated rather than hidden
+
+Checking two Connecticut outliers by hand before trusting the rule:
+"NEW Central Line Access" (160 items) shows the same partial
+contamination pattern as Tennessee's bug (unrelated newborn-transport
+content appears in its tail), but "Abuse and Neglect of Children and the
+Elderly" (53 items) reads topically coherent throughout despite being a
+size outlier - plausibly a genuinely large, well-structured guideline,
+not a boundary failure. The mechanical rule is used anyway, consistently
+across all four pairs, because a per-guideline manual coherence judgement
+would itself be a new, undisclosed source of discretion - worse than a
+known-imperfect but pre-specified proxy. This means the exclusion set
+below is probably somewhat over-inclusive (excludes some genuinely fine
+guidelines) and possibly under-inclusive elsewhere (a smaller-scale
+contamination that doesn't clear the size threshold would not be
+caught).
+
+### 58.2 Excluded guidelines (41/209 usable items, 19.6%)
+
+| Pair | Outlier guidelines |
+|---|---|
+| Tennessee 2017→2018 | PEDIATRIC CARDIAC EMERGENCY Neonatal Resuscitation, Patient Refusal or Declination of Care, REFERENCE Pulse Oximetry |
+| Pennsylvania 2021→2023 | *(none)* |
+| Connecticut v2022.1→v2023.1 | Abuse and Neglect of Children and the Elderly, Appendix 1 (CT Adult Medication Reference), Appendix 2 (Pediatric Color Coded Medication Reference), Appendix 4 (COVID-19 Updates), Intraosseous Access, Poisoning/Substance Abuse/Overdose |
+| Connecticut v2023.1→v2024.1 | Abuse and Neglect of Children and the Elderly, Adult, Appendix 1, Appendix 2, Appendix 4, NEW Central Line Access |
+
+Pennsylvania is entirely unaffected - consistent with it being the
+cleanest-parsing pair throughout this study. Connecticut's appendix
+sections dominate its exclusion list, which overlaps substantially with
+§54's bullet-marker finding: the same long, bulleted appendices driving
+the T2 identifier-trust mechanism are disproportionately guideline-size
+outliers too, though the two are separately diagnosed mechanisms (§54 is
+about marker position within a correctly-scoped guideline; §56 is about
+the guideline scope itself being wrong).
+
+### 58.3 Result: H3's headline direction does not survive the exclusion
+
+| Metric | All (n=209) | Clean (n=168) | Shift |
+|---|---|---|---|
+| Method accuracy (raw) | 75.12% | **78.57%** | +3.45 pts |
+| Method accuracy (weighted) | 87.37% | **92.35%** | +4.97 pts |
+| B2 accuracy (raw) | 79.43% | 76.79% | −2.64 pts |
+| **H3 (method − B2), raw** | **−0.0431** [−0.101, 0.010] | **+0.0179** [−0.036, 0.071] | **sign flips** |
+| Method false-correspondence (raw) | 19.32% | 15.11% | −4.21 pts |
+| T3 tier precision | 96.88% | **100.00%** [1.0, 1.0] | +3.12 pts |
+| H5 (method − B1 false-corr), raw | +0.0035 [−0.056, 0.063] | +0.0570 [−0.009, 0.125] | more favourable, still not confirmed |
+
+**§53's headline H3 result - "B2 outperforms the method" - does not
+survive removing the parser-boundary-bug-affected items.** The point
+estimate flips from negative (method behind) to positive (method ahead)
+once the 41 contaminated items (19.6% of the usable sample) are
+excluded. This is **not a new confirmation of H3** - the clean-subset CI
+still crosses zero ([−0.036, 0.071]), so H3 remains formally NOT
+CONFIRMED under the pre-registered criterion either way - but it
+substantially changes what the disconfirmation *means*. §53's original
+framing ("structure is not shown to help, and B2 significantly beats the
+method on one pair") is not the right takeaway once a measurement
+artifact accounts for a meaningful share of the effect. §54's
+bullet-marker mechanism (id-trust breaking under positional renumbering)
+remains real and independently diagnosed - it is not explained away by
+this - but it is evidently not the whole story behind §53's pooled
+number; part of it was §56's unrelated guideline-boundary bug.
+
+H4 moves from already-strong to essentially perfect on the clean subset
+(100%, CI [1.0, 1.0], n effectively 33 after the single bug-affected T3
+item is excluded - consistent with §56.4's direct check that this was
+H4's only error). BH-adjusted p-values on the clean subset: H4 p=0.0000
+(even stronger), H3 p=0.4491 (still not significant, now for a very
+different reason - a near-tie rather than a clear loss), H5 p=0.5828
+(also closer to favourable, still not significant).
+
+### 58.4 What this means for the paper
+
+Report **both** the full-sample §52-55 result and this sensitivity
+result, not one in place of the other - per-registration commits to the
+full-sample analysis, and this is explicitly a post-hoc robustness check
+prompted by §56's discovery, not a re-run of the confirmatory test
+itself (no new hypothesis is confirmed here; a threat to the original
+result's interpretation is quantified). The honest framing for the
+paper: **the pooled H3 disconfirmation is not robust to a
+previously-unknown parser artifact that affects roughly a fifth of the
+usable sample**, and the artifact's removal moves the point estimate in
+the method's favour on every metric checked, though not to statistical
+significance. This is a materially different, more nuanced story than
+"the method loses to a naive baseline" - closer to "the comparison is
+genuinely inconclusive, and what signal exists points toward the method
+once a data-quality confound is accounted for."
+
+Full numbers: `annotation_packets/sensitivity_analysis_report.json`.

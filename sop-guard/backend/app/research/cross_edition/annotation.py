@@ -376,6 +376,17 @@ def fleiss_kappa_correspondence(rater_answers: list[dict[str, str]]) -> dict:
     defined for exactly two raters). rater_answers: one {sample_id: answer}
     dict per rater, already normalised by the caller (see _norm_answer).
 
+    WITHDRAWN as a reported statistic (PREREGISTRATION.md section 11,
+    2026-08-18 correction entry): the four "independent" annotator files
+    this was computed against turned out to be two duplicated pairs
+    (A=B, C=D on every item), not four independent raters, discovered by
+    comparing raw file content directly rather than only normalised
+    answers. Fleiss' kappa requires genuine independence and this data
+    does not provide it. The function is kept for reproducibility of the
+    original (withdrawn) computation, not for future use - the correct
+    statistic for this study's actual two-rater data is compute_kappa()
+    (Cohen's kappa), matching section 5.3's original design.
+
     Standard Fleiss' kappa formula (Fleiss 1971): for each item, count votes
     per category; P_i = agreement rate for that item; P_bar = mean of P_i;
     P_e = sum of squared category proportions across the whole pool;

@@ -1,0 +1,195 @@
+{
+  "affected_guidelines_by_pair": {
+    "Tennessee 2017→2018": [
+      "PEDIATRIC CARDIAC EMERGENCY Neonatal Resuscitation",
+      "Patient Refusal or Declination of Care / Patient Non-Transport Situations",
+      "REFERENCE Pulse Oximetry"
+    ],
+    "Pennsylvania 2021→2023": [],
+    "Connecticut 2022.1→2023.1": [
+      "Abuse and Neglect of Children and the Elderly",
+      "Appendix 1:   CT Adult Medication Reference",
+      "Appendix 2:   CT Pediatric Color Coded Medication Reference",
+      "Appendix 4:   COVID-19 Updates",
+      "Intraosseous Access",
+      "Poisoning/Substance Abuse/Overdose – Adult"
+    ],
+    "Connecticut 2023.1→2024.1": [
+      "Abuse and Neglect of Children and the Elderly",
+      "Adult",
+      "Appendix 1:   CT Adult Medication Reference",
+      "Appendix 2:   CT Pediatric Color Coded Medication Reference",
+      "Appendix 4:   COVID-19 Updates",
+      "NEW Central Line Access"
+    ]
+  },
+  "n_all": 209,
+  "n_clean": 168,
+  "n_excluded": 41,
+  "metrics": {
+    "method": {
+      "accuracy_raw": {
+        "all": 0.7511961722488039,
+        "clean": 0.7857142857142857
+      },
+      "provenance_loss_raw": {
+        "all": 0.10285714285714286,
+        "clean": 0.10869565217391304
+      },
+      "false_correspondence_raw": {
+        "all": 0.19318181818181818,
+        "clean": 0.1510791366906475
+      },
+      "accuracy_weighted": {
+        "all": 0.8737221143440256,
+        "clean": 0.9234667840367018
+      },
+      "provenance_loss_weighted": {
+        "all": 0.012909450019296647,
+        "clean": 0.016139357416170095
+      },
+      "false_correspondence_weighted": {
+        "all": 0.11861871310103782,
+        "clean": 0.06435789705253617
+      },
+      "deletion_recall": {
+        "all": 0.4411764705882353,
+        "clean": 0.4666666666666667
+      },
+      "deletion_precision": {
+        "all": 0.45454545454545453,
+        "clean": 0.4827586206896552
+      },
+      "t3_precision": {
+        "all": 0.96875,
+        "clean": 1.0
+      }
+    },
+    "B1": {
+      "accuracy_raw": {
+        "all": 0.6076555023923444,
+        "clean": 0.6369047619047619
+      },
+      "provenance_loss_raw": {
+        "all": 0.34285714285714286,
+        "clean": 0.38405797101449274
+      },
+      "false_correspondence_raw": {
+        "all": 0.1896551724137931,
+        "clean": 0.09411764705882353
+      },
+      "accuracy_weighted": {
+        "all": 0.8746215851403827,
+        "clean": 0.9283007510800957
+      },
+      "provenance_loss_weighted": {
+        "all": 0.025163497191459775,
+        "clean": 0.02928512434385703
+      },
+      "false_correspondence_weighted": {
+        "all": 0.10873725574036995,
+        "clean": 0.04779102980047845
+      },
+      "deletion_recall": {
+        "all": 0.9705882352941176,
+        "clean": 1.0
+      },
+      "deletion_precision": {
+        "all": 0.3548387096774194,
+        "clean": 0.3614457831325301
+      }
+    },
+    "B2": {
+      "accuracy_raw": {
+        "all": 0.7942583732057417,
+        "clean": 0.7678571428571429
+      },
+      "provenance_loss_raw": {
+        "all": 0.06857142857142857,
+        "clean": 0.08695652173913043
+      },
+      "false_correspondence_raw": {
+        "all": 0.1631578947368421,
+        "clean": 0.18
+      },
+      "accuracy_weighted": {
+        "all": 0.8951901586201758,
+        "clean": 0.9024538252562347
+      },
+      "provenance_loss_weighted": {
+        "all": 0.025864023531583825,
+        "clean": 0.033899731066243007
+      },
+      "false_correspondence_weighted": {
+        "all": 0.08336257228139952,
+        "clean": 0.0685583583425059
+      },
+      "deletion_recall": {
+        "all": 0.20588235294117646,
+        "clean": 0.2
+      },
+      "deletion_precision": {
+        "all": 0.3684210526315789,
+        "clean": 0.3333333333333333
+      }
+    }
+  },
+  "hypothesis_bootstrap": {
+    "H3_method_minus_B2": {
+      "all": {
+        "point_estimate": -0.0431,
+        "ci95_low": -0.1005,
+        "ci95_high": 0.0096,
+        "n_valid": 10000
+      },
+      "clean": {
+        "point_estimate": 0.0179,
+        "ci95_low": -0.0357,
+        "ci95_high": 0.0714,
+        "n_valid": 10000
+      }
+    },
+    "H5_method_minus_B1_false_corr": {
+      "all": {
+        "point_estimate": 0.0035,
+        "ci95_low": -0.0564,
+        "ci95_high": 0.0625,
+        "n_valid": 10000
+      },
+      "clean": {
+        "point_estimate": 0.057,
+        "ci95_low": -0.0089,
+        "ci95_high": 0.1247,
+        "n_valid": 10000
+      }
+    },
+    "H4_T3_precision": {
+      "all": {
+        "point_estimate": 0.9688,
+        "ci95_low": 0.8929,
+        "ci95_high": 1.0,
+        "n_valid": 10000
+      },
+      "clean": {
+        "point_estimate": 1.0,
+        "ci95_low": 1.0,
+        "ci95_high": 1.0,
+        "n_valid": 10000
+      }
+    }
+  },
+  "bh_clean": {
+    "H3": {
+      "p_raw": 0.2994,
+      "p_adjusted": 0.4491
+    },
+    "H4": {
+      "p_raw": 0.0,
+      "p_adjusted": 0.0
+    },
+    "H5": {
+      "p_raw": 0.5828,
+      "p_adjusted": 0.5828
+    }
+  }
+}

@@ -3597,3 +3597,24 @@ before ground truth is final would mean computing accuracy numbers that
 would need to be redone once adjudication changes some answers, and
 reporting a preliminary number risks it becoming the "real" one by
 inertia.
+
+## 51. Adjudication workbook built for the 43 disputed items
+
+`annotation_packets/build_adjudication_sheet.py` (one-off, not part of
+the pipeline) pulls the 43 flagged sample_ids from
+`4rater_analysis_report.json`, re-attaches each one's old recommendation
+and full new-edition guideline text (from the original per-pair CSV/JSON,
+§47), and lays out all four annotators' original answers side by side —
+deliberately visible here, unlike the first round, since resolving a
+known disagreement is the point of adjudication, not a violation of the
+earlier blind-review design. Three highlighted fill-in columns
+(`FINAL ANSWER: correspondence`, `FINAL ANSWER: relation` with the same
+dropdown validation as before, `Adjudication notes`) capture the
+resolved answer. Written to `Adjudication_43_items.xlsx`, sent to the
+user.
+
+Once completed, this becomes the source for the 43 previously-unresolved
+items' final ground-truth answers; combined with the 197 items that
+already had a clear majority, that completes ground truth for all 240
+sampled items, unblocking the §6 metric computation against the method's
+original predictions (§50.2).

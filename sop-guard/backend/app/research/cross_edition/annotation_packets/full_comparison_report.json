@@ -1,0 +1,173 @@
+{
+  "n_items": 209,
+  "H5_false_correspondence_method_minus_B1": {
+    "raw": {
+      "item": {
+        "point_estimate": 0.0035,
+        "ci95_low": -0.0564,
+        "ci95_high": 0.0625,
+        "n_valid": 10000
+      },
+      "pair": {
+        "point_estimate": 0.0035,
+        "ci95_low": -0.0681,
+        "ci95_high": 0.1113,
+        "n_valid": 10000
+      }
+    },
+    "weighted": {
+      "item": {
+        "point_estimate": 0.0099,
+        "ci95_low": 0.0023,
+        "ci95_high": 0.0187,
+        "n_valid": 10000
+      },
+      "pair": {
+        "point_estimate": 0.0099,
+        "ci95_low": -0.0016,
+        "ci95_high": 0.0275,
+        "n_valid": 10000
+      }
+    }
+  },
+  "H5_confirmed": {
+    "item_raw": false,
+    "pair_raw": false
+  },
+  "H3_rerun_method_minus_B2_accuracy": {
+    "raw": {
+      "item": {
+        "point_estimate": -0.0431,
+        "ci95_low": -0.1005,
+        "ci95_high": 0.0096,
+        "n_valid": 10000
+      },
+      "pair": {
+        "point_estimate": -0.0431,
+        "ci95_low": -0.1767,
+        "ci95_high": 0.0758,
+        "n_valid": 10000
+      }
+    },
+    "weighted": {
+      "item": {
+        "point_estimate": -0.0215,
+        "ci95_low": -0.0587,
+        "ci95_high": 0.0143,
+        "n_valid": 10000
+      },
+      "pair": {
+        "point_estimate": -0.0215,
+        "ci95_low": -0.1017,
+        "ci95_high": 0.0377,
+        "n_valid": 10000
+      }
+    }
+  },
+  "descriptive": {
+    "method_minus_b3_accuracy": {
+      "raw": {
+        "item": {
+          "point_estimate": -0.0622,
+          "ci95_low": -0.1196,
+          "ci95_high": -0.0048,
+          "n_valid": 10000
+        },
+        "pair": {
+          "point_estimate": -0.0622,
+          "ci95_low": -0.194,
+          "ci95_high": 0.0421,
+          "n_valid": 10000
+        }
+      },
+      "weighted": {
+        "item": {
+          "point_estimate": -0.0432,
+          "ci95_low": -0.0788,
+          "ci95_high": -0.0115,
+          "n_valid": 10000
+        },
+        "pair": {
+          "point_estimate": -0.0432,
+          "ci95_low": -0.1144,
+          "ci95_high": 0.011,
+          "n_valid": 10000
+        }
+      }
+    },
+    "method_minus_b4_accuracy": {
+      "raw": {
+        "item": {
+          "point_estimate": -0.0144,
+          "ci95_low": -0.067,
+          "ci95_high": 0.0383,
+          "n_valid": 10000
+        },
+        "pair": {
+          "point_estimate": -0.0144,
+          "ci95_low": -0.0711,
+          "ci95_high": 0.0521,
+          "n_valid": 10000
+        }
+      },
+      "weighted": {
+        "item": {
+          "point_estimate": -0.0118,
+          "ci95_low": -0.0206,
+          "ci95_high": -0.0045,
+          "n_valid": 10000
+        },
+        "pair": {
+          "point_estimate": -0.0118,
+          "ci95_low": -0.0285,
+          "ci95_high": 0.0022,
+          "n_valid": 10000
+        }
+      }
+    },
+    "B1_provenance_loss_rate_minor_pairs": {
+      "raw": {
+        "item": {
+          "point_estimate": 0.3429,
+          "ci95_low": 0.2738,
+          "ci95_high": 0.414,
+          "n_valid": 10000
+        },
+        "pair": {
+          "point_estimate": 0.3429,
+          "ci95_low": 0.2805,
+          "ci95_high": 0.4203,
+          "n_valid": 10000
+        }
+      },
+      "weighted": {
+        "item": {
+          "point_estimate": 0.0252,
+          "ci95_low": 0.0167,
+          "ci95_high": 0.0364,
+          "n_valid": 10000
+        },
+        "pair": {
+          "point_estimate": 0.0252,
+          "ci95_low": 0.0137,
+          "ci95_high": 0.0427,
+          "n_valid": 10000
+        }
+      }
+    }
+  },
+  "benjamini_hochberg": {
+    "H3": {
+      "p_raw": 0.9459,
+      "p_adjusted": 0.9459
+    },
+    "H4": {
+      "p_raw": 0.0002,
+      "p_adjusted": 0.0006
+    },
+    "H5": {
+      "p_raw": 0.0599,
+      "p_adjusted": 0.0898
+    }
+  }
+}

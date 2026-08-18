@@ -3897,3 +3897,159 @@ work could plausibly special-case bullet-marker items to prefer
 text-based matching over identifier-based matching within the existing
 structural framework — rather than a verdict that structure provides no
 value.
+
+## 55. Remaining registered analyses closed: B1/B3/B4 implemented, H5 tested, pair-level bootstrap added, BH applied
+
+Auditing `PREREGISTRATION.md` against what had actually been run (prompted
+by a request to plan next steps, not by any new result) surfaced two
+material gaps beyond §4.2's incomplete baseline table: **H5 had never
+been tested** (it needs B1, which — like B2 before it — existed only as
+a design intention), and **the H3 bootstrap resampled items, not edition
+pairs**, contrary to §8.2's registered analysis plan ("resampled at the
+edition-pair level, since items within a pair are not independent").
+Both are closed here, plus §4.2's remaining baselines (B3, B4) and
+§8.4's multiplicity correction, all pre-committed to `PREREGISTRATION.md`
+§11 before any scored run (the design entry logs three smoke-test match
+rates against Tennessee — B1 92.5%, B4 96.3%, B3 96.9% — as a sanity
+check performed before, not after, the real comparison).
+
+### 55.1 Verification, before trusting any of the numbers below
+
+- **Frozen pipeline untouched**: `git diff --name-only d3068ee..HEAD` for
+  `corpus_probe.py`, `item_parser.py`, `edition_align.py`, `item_align.py`
+  returns empty.
+- **B1 cross-checked against the method's own T1 tier**: on Connecticut
+  v2023.1→v2024.1's 30 T1_id_exact sampled items, B1's exact-identifier
+  lookup agrees with the method's prediction **30/30** — exactly what a
+  correct implementation should produce, since T1 is defined as "same
+  identifier, unchanged text," the case B1's rule is built to catch by
+  construction.
+- **Ground-truth invariance**: the H3 re-run's point estimate reproduces
+  §53.1 exactly (−0.0431 raw). CI bounds differ marginally from §53.1
+  (e.g. item-level raw upper bound 0.0096 here vs. 0.014 there) because
+  this driver uses a different bootstrap seed than `run_h3_test.py`, not
+  a different ground truth or logic — the two seeds draw different
+  resamples from the same 209-item population, both valid, both leaving
+  H3's conclusion unchanged.
+- 209/240 usable items confirmed (unchanged from §52–§54).
+
+### 55.2 H5 — method vs. B1 false-correspondence rate
+
+| | raw, item-level | raw, pair-level | weighted, item-level | weighted, pair-level |
+|---|---|---|---|---|
+| point est. | +0.0035 | +0.0035 | +0.0099 | +0.0099 |
+| 95% CI | [−0.056, 0.063] | [−0.068, 0.111] | [0.002, 0.019] | [−0.002, 0.028] |
+
+**H5 is NOT CONFIRMED** by the pre-registered criterion (CI upper bound
+strictly below +0.05) in any of the four cells — but this is a much
+closer call than H3. The point estimate is nearly zero: the method's
+false-correspondence rate is essentially indistinguishable from B1's.
+Raw item-level upper bound is 0.0625, just over the +0.05 bar; the
+weighted item-level CI [0.002, 0.019] is entirely positive but entirely
+*below* +0.05, i.e. a small, statistically real difference that is well
+inside the pre-registered tolerance on its own terms — it is the raw
+(unweighted) version that fails the bound, not the weighted one. Read
+plainly: **the method does not appear to be buying its correspondences
+found beyond B1 with materially more confident wrong answers.** This is
+a mild positive result for the method even though it does not clear the
+pre-registered bar outright.
+
+### 55.3 H3 re-run — item-level and pair-level side by side
+
+| | raw, item-level | raw, pair-level | weighted, item-level | weighted, pair-level |
+|---|---|---|---|---|
+| point est. | −0.0431 | −0.0431 | −0.0215 | −0.0215 |
+| 95% CI | [−0.101, 0.010] | [−0.177, 0.076] | [−0.059, 0.014] | [−0.102, 0.038] |
+
+Pair-level resampling — the unit §8.2 actually registered — draws 4
+pairs with replacement and is, as §8.1 already anticipated for this
+sample size, much less informative than the item-level analysis §53
+originally reported: the pair-level CI roughly doubles in width and
+comfortably includes zero in both directions. **This does not soften
+H3's disconfirmation** — a wider CI cannot retroactively confirm a
+hypothesis that failed on a positive point estimate to begin with — but
+it is the more honest statement of uncertainty given only 4 independent
+units, and it is reported alongside, not instead of, §53's original
+numbers, per the user's explicit "report both co-equally" decision.
+
+### 55.4 Descriptive comparisons (no hypothesis attached)
+
+**Method vs. B3 (difflib document diff).** Point estimate −0.0622 raw /
+−0.0432 weighted — B3 is *ahead* of the method, and at item-level the
+raw CI is entirely negative ([−0.120, −0.005]), i.e. statistically
+significant in B3's favour at that resampling unit (pair-level, as with
+H3, widens to include zero: [−0.194, 0.042]). This is a second baseline,
+independent of B2, outperforming the structural method on this dataset.
+Consistent with §54's mechanism: difflib's sequence alignment, like B2's
+global search, does not depend on trusting a positional bullet
+identifier, so it is not exposed to the same failure mode. B3 carries
+its own known risk (Appendix B item 4's offset tail) — 0% offset
+resolution failures were observed across the smoke-tested and scored
+pairs here, better than the 3–4% previously flagged as a concern, though
+that number was never pair-specific and this is not a claim it is fixed
+in general, only that it was not observed as material on this dataset.
+
+**Method vs. B4 (identifier + exact-text-in-guideline fallback).** Point
+estimate −0.0144 raw / −0.0118 weighted — close to tied, CI includes
+zero at item-level raw ([−0.067, 0.038]) though the weighted item-level
+CI is entirely negative and narrow ([−0.021, −0.005]). B4 gives a
+baseline every structural advantage (guideline scoping) except the
+method's fuzzy tiers (T3–T6 proper), and it does not trail the method by
+much — a finding directly relevant to §54: since B4 uses exact-text
+matching within the mapped guideline rather than trusting a positional
+identifier, it should be less exposed to the bullet-marker mechanism
+than the method's own T2 tier is, and its near-parity with the method is
+consistent with that.
+
+**B1's own provenance loss rate on the (minor-only) test pairs.**
+34.29% raw / 2.52% weighted, CI [0.274, 0.414] raw / [0.017, 0.036]
+weighted — explicitly descriptive, not an H1 test (no major pair exists,
+§46). Both raw and weighted, this is substantially higher than the
+method's own provenance loss rate reported in §52.1 (10.75% raw / 1.48%
+weighted): identifier lookup with no fallback at all loses meaningfully
+more provenance than the structural method **even on minor revisions**,
+where the gap between methods is at its smallest by construction. This
+is a real, useful number for the paper's framing even though it cannot
+support H1 directly.
+
+### 55.5 Benjamini–Hochberg across {H3, H4, H5}
+
+Bootstrap p-values against each hypothesis's own registered null (H3:
+P(diff ≤ 0); H4: P(T3 precision < 0.80); H5: P(diff ≥ +0.05)), computed
+from the same resamples used for the CIs above (item-level, raw). H1 and
+H2 contribute no p-values and are excluded from the family rather than
+treated as null results, since no major pair exists to test them (§46).
+
+| Hypothesis | p (raw) | p (BH-adjusted) |
+|---|---|---|
+| H3 | 0.9459 | 0.9459 |
+| H4 | 0.0002 | **0.0006** |
+| H5 | 0.0599 | 0.0898 |
+
+H4 survives the correction comfortably. H3's high p-value is consistent
+with its disconfirmation (§53) — no evidence the method beats B2. H5's
+adjusted p-value (0.0898) does not clear a conventional 0.05 threshold
+either, consistent with §55.2's "not confirmed, but a close and mildly
+favourable call" reading.
+
+### 55.6 Hypothesis status (final, updates §53.3/§54.2)
+
+- **H1, H2 — untestable**, unchanged (§46, no major pair exists).
+- **H3 — disconfirmed**, unchanged in conclusion from §53/§54; now
+  additionally reported with the registered pair-level bootstrap unit
+  (§55.3) and survives BH correction as non-significant (§55.5).
+- **H4 — confirmed**, unchanged from §52.2, now additionally passing a
+  BH-adjusted significance check (§55.5).
+- **H5 — not confirmed**, newly tested here. Closer than H3: the point
+  estimate is close to zero and the weighted-CI reading is favourable to
+  the method, but the pre-registered raw item-level bound (+0.05) is
+  narrowly missed. Reported plainly as not confirmed, not rounded up.
+- Two new descriptive findings for the paper's discussion, neither a
+  hypothesis test: **B3 (difflib) also outperforms the method**,
+  independently corroborating §54's structural explanation over a
+  dataset-specific B2 artifact; and **B1's provenance loss rate
+  (34.29%/2.52%) substantially exceeds the method's own (10.75%/1.48%)
+  even on minor pairs**, a real point in the method's favour that no
+  single hypothesis above captures directly.
+
+Full numbers: `annotation_packets/full_comparison_report.json`.

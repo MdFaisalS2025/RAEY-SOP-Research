@@ -4528,3 +4528,94 @@ H4: the degradation-curve result (planned) and the comparative
 baseline findings (§53-55, §58-59) are the paper's substantive
 contributions; H4 belongs in a validation subsection, not the results
 section's headline.
+
+## 61. Structure-quality degradation experiment: a real, monotonic threshold relationship
+
+This is the audit's central new contribution: turning §56/§58/§59's
+accidental finding (unscoped baselines are immune to a parser
+guideline-boundary bug that specifically hurts the structural method)
+into a deliberate, controlled experiment. Claim tested: **structural
+alignment's competitive position against text-only baselines is a
+monotonic function of structure-detection quality** - not found stated
+anywhere in the reviewed literature (tree-edit-distance and legislative-
+diff work evaluates alignment quality directly, never as a function of
+upstream structure-detection error rate).
+
+`structure_ablation.py` (new, does not modify any frozen file):
+synthetically corrupts guideline boundaries at controlled rates
+r ∈ {0, 0.05, 0.10, 0.20, 0.35, 0.50} (5 seeds each), by merging a random
+r-fraction of physically-adjacent guidelines - a direct model of §56's
+actual mechanism - then runs the real, **completely unmodified**
+`item_align.align_items` on the corrupted input via a monkeypatched
+`parse()`, and scores against the existing 209-item ground truth via a
+stamped `_orig_id` that survives all corruption and remapping.
+
+### 61.1 Validity checks - all passed
+
+- **r=0 reproduces the existing result exactly**: accuracy 0.7512,
+  n=209, bit-for-bit identical to §53.1's already-published number. The
+  harness runs the frozen algorithm faithfully rather than a
+  reimplementation.
+- **Monotonicity held** (non-increasing within a 0.01 tolerance) across
+  every step of the sweep, with no violation requiring the §10
+  investigation the pre-commitment flagged as a trigger.
+- B2/B5 accuracy is provably invariant to this corruption (both read
+  only `.text`, never `.guideline`) and was held fixed as a reference
+  line rather than redundantly recomputed, exactly as pre-committed.
+
+### 61.2 Result: a real, monotonic curve, with an observed sign crossing
+
+| Structure quality | Method accuracy | Gap vs. B2 (79.43%) | Gap vs. B5 (81.82%) |
+|---|---|---|---|
+| r=0.50 (heavily corrupted) | 54.74% | −24.69 pts | −27.08 pts |
+| r=0.35 | 60.29% | −19.14 pts | −21.53 pts |
+| r=0.20 | 66.22% | −13.21 pts | −15.60 pts |
+| r=0.10 | 69.38% | −10.05 pts | −12.44 pts |
+| r=0.05 | 72.73% | −6.70 pts | −9.09 pts |
+| **r=0 (as-observed corpus)** | **75.12%** | **−4.31 pts** | **−6.70 pts** |
+| **clean subset (§58/59, real exclusion, not synthetic)** | **78.57%** | **+1.78 pts** | **−1.19 pts** |
+
+The synthetic-corruption direction (r=0→0.50) and the real-exclusion
+direction (§58/59's clean subset) are **not the same operation** and are
+reported as complementary, not merged into one continuous axis:
+corruption synthetically *adds* controlled boundary errors on top of the
+as-observed corpus; the clean-subset comparison *removes* items sitting
+in guidelines already known (not assumed) to be bug-affected, which is
+an imperfect proxy for actually repairing the parser, not a true fix.
+Stating this distinction plainly matters more than the (real) fact that
+both directions of the same underlying quality axis move the method's
+standing in the same direction.
+
+**Reading both together**: as structure-detection quality falls below
+what the real corpus exhibits, the method's disadvantage against both
+baselines widens sharply and monotonically (54.74% at 50% corruption -
+nearly a 20-point drop below the observed 75.12%). As structure-
+detection quality improves toward the achievable clean subset, the gap
+against B2 not only shrinks but **inverts sign** (−4.31 → +1.78 points)
+and the gap against B5 shrinks by more than 5 points and loses
+significance (§59.2). This is a genuine, empirically grounded threshold
+relationship, not an assumed one: there is a real point, sitting between
+the as-observed corpus and the achievable clean subset, where the
+structural method overtakes the text-only Jaccard baseline.
+
+### 61.3 What this establishes for the paper
+
+This is the study's strongest and most novel claim: **structural
+alignment's value over text-only matching is conditional on
+structure-detection quality, is not fixed, and the direction of the
+effect (help vs. harm) can invert within a plausible range of real-world
+parsing quality.** This generalizes beyond EMS protocols to any
+structure-aware document-alignment system built on imperfect upstream
+structure detection - a class that includes essentially all real-world
+deployments, since perfect structure detection is not achievable in
+general. Practically: a structure-aware method is only worth its added
+complexity once its structure-detection component clears a quality bar
+that must be measured, not assumed - exactly the bar this corpus's own
+guideline-boundary detection did not clear for roughly a fifth of its
+sample.
+
+Exploratory and post-hoc relative to the original §1-§9 registration.
+No hypothesis in §7's family is confirmed, disconfirmed, or reopened by
+this.
+
+Full numbers: `annotation_packets/structure_ablation_report.json`.

@@ -4485,3 +4485,46 @@ a hand-built heuristic," which the full-sample numbers alone would
 wrongly suggest.
 
 Full numbers: `annotation_packets/b5_comparison_report.json`.
+
+## 60. H4 reframed: close to tautological in this corpus, quantified honestly
+
+Prompted by the same full-study audit (before drafting the paper): T3 is
+*defined* as identical text within a correctly-mapped guideline, so "are
+T3-assigned items true correspondences with unchanged text" is close to
+asking whether identical text in a matched guideline is the same item -
+a question the tier's own construction already answers most of the way.
+H4's 97-100% precision (§52.2, §58.3) risks reading as a demonstration
+rather than a near-certainty.
+
+Checked whether the test had real teeth by quantifying the two concrete
+ways a T3 assignment could still be wrong, across the full T3
+population in all four pairs (68 items, not just the 34 sampled for
+annotation):
+
+1. **Boilerplate collision** - the old item's text matches ≥2 candidates
+   in the new edition's same-guideline pool, so the tier's `next(...)`
+   pick could be the wrong one even with correct guideline mapping.
+   **0/68 (0.0%)** - never occurred anywhere in the corpus.
+2. **Guideline mis-mapping** - the guideline the old item was actually
+   assigned to has a title that changed between editions (so
+   `match_guidelines`'s token-overlap step, not just the text-identity
+   check, had to get something non-trivial right). **2/68 (2.9%)** -
+   Pennsylvania only.
+
+**Neither failure mode had meaningful exposure in this corpus.** The
+honest conclusion is not that H4 is wrong, but that it mostly tests
+whether the pipeline's own bookkeeping is self-consistent, not whether
+cross-edition item correspondence is hard to get right in general. This
+is a real finding about H4's evidentiary weight, not a defect to hide:
+demoted from "robust evidence" to **a sanity check confirming the
+pipeline behaves as designed** - useful for ruling out a specific class
+of implementation bug, not for supporting a claim that the method solves
+a hard problem on this tier.
+
+This does not change H4's registered status (still confirmed under the
+pre-registered mechanical criterion, §7) or retract §52.2/§58.3's
+numbers. It changes how much weight the eventual paper should place on
+H4: the degradation-curve result (planned) and the comparative
+baseline findings (§53-55, §58-59) are the paper's substantive
+contributions; H4 belongs in a validation subsection, not the results
+section's headline.

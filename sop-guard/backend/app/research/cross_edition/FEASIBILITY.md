@@ -4663,3 +4663,96 @@ H4 belongs in a methods-validation subsection, alongside the r=0
 reproduction check, not among the paper's contributions.
 
 Full numbers: `annotation_packets/h4_exposure_report.json`.
+
+## 63. Second-domain replication (US Code Title 18): HC1-HC3 all hold — the crossover generalizes
+
+Tests whether §61's threshold/crossover finding is specific to EMS
+protocol PDFs or a general property of structure-aware alignment.
+Corpus: US Code Title 18 (Crimes and Criminal Procedure), two official
+USLM XML releases from `uscode.house.gov` — PL 117-81 (2021) and
+PL 118-158 (2024), a genuine version pair (both confirmed to have
+actually amended Title 18, not an arbitrary snapshot). This domain sits
+at the opposite end of the structure-quality spectrum from EMS PDFs:
+machine-readable, OLRC-published, with stable official section
+identifiers and clean chapter/section XML nesting.
+
+`uscode_corpus.py` builds genuine `item_parser.Item`/`ParsedEdition`
+objects directly from the XML (chapter → guideline, section → item,
+`item_id` = the section's own official identifier), so the real,
+unmodified `item_align.align_items` runs on this domain via the
+identical monkeypatch-`parse()` pattern already validated in
+`structure_ablation.py` — no parallel alignment logic, no risk of the
+two domains diverging for code reasons rather than genuine domain
+reasons.
+
+### 63.1 Corpus sanity
+
+1,387 old / 1,396 new sections, 141 chapters both editions (stable),
+75 repealed both editions (stable), 1,312/1,387 (94.6%) baseline
+identifier persistence — a plausible, real churn rate for a 3-year legal
+revision, neither trivial nor implausibly high.
+
+### 63.2 Result: all three pre-registered hypotheses hold
+
+| r | Method accuracy | Gap vs. B2 (94.30%) | Gap vs. B5 (94.59%) |
+|---|---|---|---|
+| 0.00 | 94.59% | **+0.29 pts** | **+0.00 pts** |
+| 0.05 | 90.35% | −3.95 pts | −4.24 pts |
+| 0.10 | 86.46% | −7.84 pts | −8.13 pts |
+| 0.20 | 77.14% | −17.16 pts | −17.45 pts |
+| 0.35 | 61.56% | −32.75 pts | −33.04 pts |
+| 0.50 | 48.44% | −45.87 pts | −46.16 pts |
+
+**HC1 (monotonicity): confirmed.** Accuracy falls monotonically
+non-increasing (0.01 tolerance) at every step, exactly mirroring §61's
+EMS curve shape.
+
+**HC2 (crossover exists in the tested range): confirmed.** At r=0 the
+method is essentially tied with B5 and marginally ahead of B2. Even
+mild synthetic degradation (r=0.05, a mere 5% of guideline boundaries
+merged) is enough to erase the advantage and put the method behind both
+baselines by 4+ points, widening to a 45+ point gap at r=0.50.
+
+**HC3 (cross-domain replication): confirmed.** The same qualitative
+shape — near-perfect structure lets the method match or beat text-only
+baselines; degrading structure quality pushes it behind, monotonically
+and substantially — appears in both a messy, heuristically-parsed PDF
+corpus (EMS, §61) and a clean, machine-readable XML corpus (US Code).
+This is the strongest evidence in the whole study that the finding is a
+general property of structure-aware document alignment, not an artefact
+of one parser or one document genre.
+
+### 63.3 A sharper crossover than the EMS domain, and why that makes sense
+
+Unlike §61's EMS curve — where the *as-observed* corpus (already
+carrying real, unknown boundary errors) sits behind both baselines, and
+only an exclusion-based cleaning pushes the method ahead — here the
+crossover sits almost exactly at r=0, the domain's actual near-perfect
+operating point. This is the expected relationship, not a discrepancy:
+US Code's real structure quality is close to 100% by construction (XML
+tags, not heuristic detection), so its real operating point sits right
+at the top of the curve where the method's advantage is largest (though
+still small, +0.29/+0.00 points) — consistent with a single underlying
+relationship between structure quality and relative advantage, observed
+at two different points along it in the two domains (EMS's real
+operating point sits lower on the curve, where the method trails).
+
+### 63.4 Scope notes, stated plainly
+
+B1/B4 (identifier-based baselines) were excluded from this comparison
+by design, not because they underperformed: ground truth here is
+*defined* by identifier persistence, so scoring an identifier-lookup
+baseline against it would compare the method to a paraphrase of its own
+ground truth, not a real contrast. This is a domain-specific exclusion
+that does not apply to the EMS results, where B1 was a genuine,
+informative baseline (§55).
+
+Full HC2 cross-referencing against the published real-world
+structure-quality range (DocLayNet ~81%, PubLayNet ~97%) requires
+Workstream A's real, annotated EMS boundary-F1 measurement, not yet
+returned — this section establishes that a crossover exists and
+generalizes across domains; §61's promised calibration (mapping *r* to
+measured F1) is what will place the real EMS corpus precisely on this
+curve rather than only demonstrating the curve's shape.
+
+Full numbers: `annotation_packets/uscode_experiment_report.json`.

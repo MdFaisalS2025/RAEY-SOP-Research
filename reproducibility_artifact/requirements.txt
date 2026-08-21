@@ -1,0 +1,10 @@
+# Reproducibility artifact dependencies.
+# Tested with Python 3.14 on Windows; no other version-specific behavior
+# is known, but none was specifically verified either.
+
+pymupdf          # imported as `fitz` - PDF text extraction (corpus_probe.py)
+openpyxl         # .xlsx read/write for annotation workbooks
+sentence-transformers   # B5 baseline embeddings (BAAI/bge-small-en-v1.5)
+                 # Falls back to a built-in TF-IDF provider (app/rag/embeddings.py)
+                 # if unavailable, but the B5 results in this artifact were
+                 # produced with sentence-transformers - see CORPUS_MANIFEST.md.

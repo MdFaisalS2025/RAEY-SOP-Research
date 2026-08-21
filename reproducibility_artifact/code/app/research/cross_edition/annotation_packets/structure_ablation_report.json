@@ -1,0 +1,782 @@
+{
+  "rates": [
+    0.0,
+    0.05,
+    0.1,
+    0.2,
+    0.35,
+    0.5
+  ],
+  "n_seeds": 5,
+  "r0_validity_check": {
+    "accuracy": 0.7512,
+    "n": 209,
+    "pass": true
+  },
+  "summary_by_rate": {
+    "0.0": {
+      "mean": 0.7512,
+      "min": 0.7512,
+      "max": 0.7512,
+      "n_seeds": 5
+    },
+    "0.05": {
+      "mean": 0.7273,
+      "min": 0.7081,
+      "max": 0.7512,
+      "n_seeds": 5
+    },
+    "0.1": {
+      "mean": 0.6938,
+      "min": 0.6603,
+      "max": 0.7273,
+      "n_seeds": 5
+    },
+    "0.2": {
+      "mean": 0.6622,
+      "min": 0.622,
+      "max": 0.7081,
+      "n_seeds": 5
+    },
+    "0.35": {
+      "mean": 0.6029,
+      "min": 0.5359,
+      "max": 0.6603,
+      "n_seeds": 5
+    },
+    "0.5": {
+      "mean": 0.5474,
+      "min": 0.512,
+      "max": 0.5646,
+      "n_seeds": 5
+    }
+  },
+  "trials": [
+    {
+      "rate": 0.0,
+      "seed": 1,
+      "n": 209,
+      "accuracy": 0.7512,
+      "per_pair": {
+        "Tennessee 2017→2018": [
+          37,
+          55
+        ],
+        "Pennsylvania 2021→2023": [
+          45,
+          58
+        ],
+        "Connecticut 2022.1→2023.1": [
+          32,
+          37
+        ],
+        "Connecticut 2023.1→2024.1": [
+          43,
+          59
+        ]
+      }
+    },
+    {
+      "rate": 0.0,
+      "seed": 2,
+      "n": 209,
+      "accuracy": 0.7512,
+      "per_pair": {
+        "Tennessee 2017→2018": [
+          37,
+          55
+        ],
+        "Pennsylvania 2021→2023": [
+          45,
+          58
+        ],
+        "Connecticut 2022.1→2023.1": [
+          32,
+          37
+        ],
+        "Connecticut 2023.1→2024.1": [
+          43,
+          59
+        ]
+      }
+    },
+    {
+      "rate": 0.0,
+      "seed": 3,
+      "n": 209,
+      "accuracy": 0.7512,
+      "per_pair": {
+        "Tennessee 2017→2018": [
+          37,
+          55
+        ],
+        "Pennsylvania 2021→2023": [
+          45,
+          58
+        ],
+        "Connecticut 2022.1→2023.1": [
+          32,
+          37
+        ],
+        "Connecticut 2023.1→2024.1": [
+          43,
+          59
+        ]
+      }
+    },
+    {
+      "rate": 0.0,
+      "seed": 4,
+      "n": 209,
+      "accuracy": 0.7512,
+      "per_pair": {
+        "Tennessee 2017→2018": [
+          37,
+          55
+        ],
+        "Pennsylvania 2021→2023": [
+          45,
+          58
+        ],
+        "Connecticut 2022.1→2023.1": [
+          32,
+          37
+        ],
+        "Connecticut 2023.1→2024.1": [
+          43,
+          59
+        ]
+      }
+    },
+    {
+      "rate": 0.0,
+      "seed": 5,
+      "n": 209,
+      "accuracy": 0.7512,
+      "per_pair": {
+        "Tennessee 2017→2018": [
+          37,
+          55
+        ],
+        "Pennsylvania 2021→2023": [
+          45,
+          58
+        ],
+        "Connecticut 2022.1→2023.1": [
+          32,
+          37
+        ],
+        "Connecticut 2023.1→2024.1": [
+          43,
+          59
+        ]
+      }
+    },
+    {
+      "rate": 0.05,
+      "seed": 1,
+      "n": 209,
+      "accuracy": 0.7416,
+      "per_pair": {
+        "Tennessee 2017→2018": [
+          36,
+          55
+        ],
+        "Pennsylvania 2021→2023": [
+          42,
+          58
+        ],
+        "Connecticut 2022.1→2023.1": [
+          32,
+          37
+        ],
+        "Connecticut 2023.1→2024.1": [
+          45,
+          59
+        ]
+      }
+    },
+    {
+      "rate": 0.05,
+      "seed": 2,
+      "n": 209,
+      "accuracy": 0.7273,
+      "per_pair": {
+        "Tennessee 2017→2018": [
+          34,
+          55
+        ],
+        "Pennsylvania 2021→2023": [
+          44,
+          58
+        ],
+        "Connecticut 2022.1→2023.1": [
+          30,
+          37
+        ],
+        "Connecticut 2023.1→2024.1": [
+          44,
+          59
+        ]
+      }
+    },
+    {
+      "rate": 0.05,
+      "seed": 3,
+      "n": 209,
+      "accuracy": 0.7512,
+      "per_pair": {
+        "Tennessee 2017→2018": [
+          37,
+          55
+        ],
+        "Pennsylvania 2021→2023": [
+          43,
+          58
+        ],
+        "Connecticut 2022.1→2023.1": [
+          32,
+          37
+        ],
+        "Connecticut 2023.1→2024.1": [
+          45,
+          59
+        ]
+      }
+    },
+    {
+      "rate": 0.05,
+      "seed": 4,
+      "n": 209,
+      "accuracy": 0.7081,
+      "per_pair": {
+        "Tennessee 2017→2018": [
+          37,
+          55
+        ],
+        "Pennsylvania 2021→2023": [
+          42,
+          58
+        ],
+        "Connecticut 2022.1→2023.1": [
+          27,
+          37
+        ],
+        "Connecticut 2023.1→2024.1": [
+          42,
+          59
+        ]
+      }
+    },
+    {
+      "rate": 0.05,
+      "seed": 5,
+      "n": 209,
+      "accuracy": 0.7081,
+      "per_pair": {
+        "Tennessee 2017→2018": [
+          37,
+          55
+        ],
+        "Pennsylvania 2021→2023": [
+          44,
+          58
+        ],
+        "Connecticut 2022.1→2023.1": [
+          27,
+          37
+        ],
+        "Connecticut 2023.1→2024.1": [
+          40,
+          59
+        ]
+      }
+    },
+    {
+      "rate": 0.1,
+      "seed": 1,
+      "n": 209,
+      "accuracy": 0.7273,
+      "per_pair": {
+        "Tennessee 2017→2018": [
+          35,
+          55
+        ],
+        "Pennsylvania 2021→2023": [
+          41,
+          58
+        ],
+        "Connecticut 2022.1→2023.1": [
+          31,
+          37
+        ],
+        "Connecticut 2023.1→2024.1": [
+          45,
+          59
+        ]
+      }
+    },
+    {
+      "rate": 0.1,
+      "seed": 2,
+      "n": 209,
+      "accuracy": 0.6603,
+      "per_pair": {
+        "Tennessee 2017→2018": [
+          33,
+          55
+        ],
+        "Pennsylvania 2021→2023": [
+          41,
+          58
+        ],
+        "Connecticut 2022.1→2023.1": [
+          25,
+          37
+        ],
+        "Connecticut 2023.1→2024.1": [
+          39,
+          59
+        ]
+      }
+    },
+    {
+      "rate": 0.1,
+      "seed": 3,
+      "n": 209,
+      "accuracy": 0.7177,
+      "per_pair": {
+        "Tennessee 2017→2018": [
+          36,
+          55
+        ],
+        "Pennsylvania 2021→2023": [
+          38,
+          58
+        ],
+        "Connecticut 2022.1→2023.1": [
+          30,
+          37
+        ],
+        "Connecticut 2023.1→2024.1": [
+          46,
+          59
+        ]
+      }
+    },
+    {
+      "rate": 0.1,
+      "seed": 4,
+      "n": 209,
+      "accuracy": 0.6699,
+      "per_pair": {
+        "Tennessee 2017→2018": [
+          37,
+          55
+        ],
+        "Pennsylvania 2021→2023": [
+          42,
+          58
+        ],
+        "Connecticut 2022.1→2023.1": [
+          26,
+          37
+        ],
+        "Connecticut 2023.1→2024.1": [
+          35,
+          59
+        ]
+      }
+    },
+    {
+      "rate": 0.1,
+      "seed": 5,
+      "n": 209,
+      "accuracy": 0.6938,
+      "per_pair": {
+        "Tennessee 2017→2018": [
+          33,
+          55
+        ],
+        "Pennsylvania 2021→2023": [
+          42,
+          58
+        ],
+        "Connecticut 2022.1→2023.1": [
+          26,
+          37
+        ],
+        "Connecticut 2023.1→2024.1": [
+          44,
+          59
+        ]
+      }
+    },
+    {
+      "rate": 0.2,
+      "seed": 1,
+      "n": 209,
+      "accuracy": 0.7081,
+      "per_pair": {
+        "Tennessee 2017→2018": [
+          31,
+          55
+        ],
+        "Pennsylvania 2021→2023": [
+          35,
+          58
+        ],
+        "Connecticut 2022.1→2023.1": [
+          31,
+          37
+        ],
+        "Connecticut 2023.1→2024.1": [
+          51,
+          59
+        ]
+      }
+    },
+    {
+      "rate": 0.2,
+      "seed": 2,
+      "n": 209,
+      "accuracy": 0.6268,
+      "per_pair": {
+        "Tennessee 2017→2018": [
+          30,
+          55
+        ],
+        "Pennsylvania 2021→2023": [
+          39,
+          58
+        ],
+        "Connecticut 2022.1→2023.1": [
+          24,
+          37
+        ],
+        "Connecticut 2023.1→2024.1": [
+          38,
+          59
+        ]
+      }
+    },
+    {
+      "rate": 0.2,
+      "seed": 3,
+      "n": 209,
+      "accuracy": 0.6986,
+      "per_pair": {
+        "Tennessee 2017→2018": [
+          31,
+          55
+        ],
+        "Pennsylvania 2021→2023": [
+          40,
+          58
+        ],
+        "Connecticut 2022.1→2023.1": [
+          30,
+          37
+        ],
+        "Connecticut 2023.1→2024.1": [
+          45,
+          59
+        ]
+      }
+    },
+    {
+      "rate": 0.2,
+      "seed": 4,
+      "n": 209,
+      "accuracy": 0.622,
+      "per_pair": {
+        "Tennessee 2017→2018": [
+          32,
+          55
+        ],
+        "Pennsylvania 2021→2023": [
+          41,
+          58
+        ],
+        "Connecticut 2022.1→2023.1": [
+          25,
+          37
+        ],
+        "Connecticut 2023.1→2024.1": [
+          32,
+          59
+        ]
+      }
+    },
+    {
+      "rate": 0.2,
+      "seed": 5,
+      "n": 209,
+      "accuracy": 0.6555,
+      "per_pair": {
+        "Tennessee 2017→2018": [
+          31,
+          55
+        ],
+        "Pennsylvania 2021→2023": [
+          36,
+          58
+        ],
+        "Connecticut 2022.1→2023.1": [
+          27,
+          37
+        ],
+        "Connecticut 2023.1→2024.1": [
+          43,
+          59
+        ]
+      }
+    },
+    {
+      "rate": 0.35,
+      "seed": 1,
+      "n": 209,
+      "accuracy": 0.5359,
+      "per_pair": {
+        "Tennessee 2017→2018": [
+          30,
+          55
+        ],
+        "Pennsylvania 2021→2023": [
+          31,
+          58
+        ],
+        "Connecticut 2022.1→2023.1": [
+          22,
+          37
+        ],
+        "Connecticut 2023.1→2024.1": [
+          29,
+          59
+        ]
+      }
+    },
+    {
+      "rate": 0.35,
+      "seed": 2,
+      "n": 209,
+      "accuracy": 0.5981,
+      "per_pair": {
+        "Tennessee 2017→2018": [
+          29,
+          55
+        ],
+        "Pennsylvania 2021→2023": [
+          33,
+          58
+        ],
+        "Connecticut 2022.1→2023.1": [
+          22,
+          37
+        ],
+        "Connecticut 2023.1→2024.1": [
+          41,
+          59
+        ]
+      }
+    },
+    {
+      "rate": 0.35,
+      "seed": 3,
+      "n": 209,
+      "accuracy": 0.6603,
+      "per_pair": {
+        "Tennessee 2017→2018": [
+          27,
+          55
+        ],
+        "Pennsylvania 2021→2023": [
+          34,
+          58
+        ],
+        "Connecticut 2022.1→2023.1": [
+          31,
+          37
+        ],
+        "Connecticut 2023.1→2024.1": [
+          46,
+          59
+        ]
+      }
+    },
+    {
+      "rate": 0.35,
+      "seed": 4,
+      "n": 209,
+      "accuracy": 0.6172,
+      "per_pair": {
+        "Tennessee 2017→2018": [
+          31,
+          55
+        ],
+        "Pennsylvania 2021→2023": [
+          34,
+          58
+        ],
+        "Connecticut 2022.1→2023.1": [
+          25,
+          37
+        ],
+        "Connecticut 2023.1→2024.1": [
+          39,
+          59
+        ]
+      }
+    },
+    {
+      "rate": 0.35,
+      "seed": 5,
+      "n": 209,
+      "accuracy": 0.6029,
+      "per_pair": {
+        "Tennessee 2017→2018": [
+          29,
+          55
+        ],
+        "Pennsylvania 2021→2023": [
+          31,
+          58
+        ],
+        "Connecticut 2022.1→2023.1": [
+          26,
+          37
+        ],
+        "Connecticut 2023.1→2024.1": [
+          40,
+          59
+        ]
+      }
+    },
+    {
+      "rate": 0.5,
+      "seed": 1,
+      "n": 209,
+      "accuracy": 0.512,
+      "per_pair": {
+        "Tennessee 2017→2018": [
+          29,
+          55
+        ],
+        "Pennsylvania 2021→2023": [
+          30,
+          58
+        ],
+        "Connecticut 2022.1→2023.1": [
+          24,
+          37
+        ],
+        "Connecticut 2023.1→2024.1": [
+          24,
+          59
+        ]
+      }
+    },
+    {
+      "rate": 0.5,
+      "seed": 2,
+      "n": 209,
+      "accuracy": 0.5455,
+      "per_pair": {
+        "Tennessee 2017→2018": [
+          24,
+          55
+        ],
+        "Pennsylvania 2021→2023": [
+          30,
+          58
+        ],
+        "Connecticut 2022.1→2023.1": [
+          22,
+          37
+        ],
+        "Connecticut 2023.1→2024.1": [
+          38,
+          59
+        ]
+      }
+    },
+    {
+      "rate": 0.5,
+      "seed": 3,
+      "n": 209,
+      "accuracy": 0.5646,
+      "per_pair": {
+        "Tennessee 2017→2018": [
+          22,
+          55
+        ],
+        "Pennsylvania 2021→2023": [
+          32,
+          58
+        ],
+        "Connecticut 2022.1→2023.1": [
+          25,
+          37
+        ],
+        "Connecticut 2023.1→2024.1": [
+          39,
+          59
+        ]
+      }
+    },
+    {
+      "rate": 0.5,
+      "seed": 4,
+      "n": 209,
+      "accuracy": 0.5502,
+      "per_pair": {
+        "Tennessee 2017→2018": [
+          25,
+          55
+        ],
+        "Pennsylvania 2021→2023": [
+          34,
+          58
+        ],
+        "Connecticut 2022.1→2023.1": [
+          28,
+          37
+        ],
+        "Connecticut 2023.1→2024.1": [
+          28,
+          59
+        ]
+      }
+    },
+    {
+      "rate": 0.5,
+      "seed": 5,
+      "n": 209,
+      "accuracy": 0.5646,
+      "per_pair": {
+        "Tennessee 2017→2018": [
+          27,
+          55
+        ],
+        "Pennsylvania 2021→2023": [
+          32,
+          58
+        ],
+        "Connecticut 2022.1→2023.1": [
+          25,
+          37
+        ],
+        "Connecticut 2023.1→2024.1": [
+          34,
+          59
+        ]
+      }
+    }
+  ],
+  "monotonic": true,
+  "reference_lines": {
+    "B2_accuracy_raw": 0.7943,
+    "B5_accuracy_raw": 0.8182,
+    "method_accuracy_at_r0_full_pipeline": 0.7512
+  }
+}

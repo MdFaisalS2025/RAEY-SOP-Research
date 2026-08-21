@@ -1,0 +1,1289 @@
+"""
+Item parser: protocol PDF -> addressable items with stable IDs and offsets.
+
+WHAT THIS PRODUCES, AND WHY THIS SHAPE
+--------------------------------------
+`corpus_probe.py` counts markers. `edition_align.py` works at section
+granularity. The study needs the level below that: individual recommendations,
+each independently addressable, so that "where did this recommendation go in the
+next edition?" is a question with a well-formed answer.
+
+Every item carries:
+
+  item_id      guideline / section / marker-path, e.g.
+               "bradycardia/patient management/1.a"
+               Stable across editions IF the guideline title, section name and
+               marker path all survive - which is exactly what the study
+               measures, so the ID is a hypothesis, not a guarantee.
+  marker_path  "1.a.iii" - the numbering as it appears in THIS edition
+  depth        nesting depth, 1-based
+  text         the item's own text, excluding descendants
+  full_text    the item including its descendants
+  char_start / char_end
+               offsets into `canonical_text`, NOT into raw PyMuPDF output
+
+OFFSETS: WHAT THEY INDEX
+------------------------
+Running headers ("Updated January 5, 2019") and bare page numbers appear on
+every page and are not content. They are stripped. That means offsets cannot
+index the raw extraction, so the parser defines a CANONICAL TEXT - the cleaned
+line stream - and every offset indexes that. `canonical_text` is returned and
+serialised alongside the items so offsets are always resolvable.
+
+This mirrors the convention already used by
+`real_corpus/corpus.py::_load_raw`, which excludes the provenance header from
+the body so ground-truth offsets are computed against content only. The output
+dict shape is deliberately compatible with `RealDocument` (`doc_id`,
+`raw_text`, `items` with `item_id`/`text`/`char_start`/`char_end`) so the
+existing anchoring harness can consume these documents without a shim.
+
+THE HARD PART: INFERRING DEPTH
+------------------------------
+PDF extraction does not preserve reliable indentation, so nesting must be
+inferred from the marker TYPE sequence. NASEMSO documents nest as
+1. -> a. -> i. -> (1), with some variation.
+
+Two genuine ambiguities are handled explicitly rather than ignored:
+
+  "i."  is both roman-one and the ninth letter. Resolved by continuity: if an
+        alpha level is open and its last marker was "h.", this is alpha; if a
+        new level is opening, it is roman.
+  "v."  and "x." have the same problem at the 22nd/24th letter. Same rule.
+
+Where continuity cannot resolve it, the parser prefers the interpretation that
+continues an open level, and records the decision in `ambiguous_markers` so the
+rate is visible rather than silent.
+
+STATUS: exploratory corpus tooling. No pre-registration covers the
+cross-edition study yet. Research prototype. Not for clinical use.
+
+Run:
+    cd sop-guard/backend
+    python -m app.research.cross_edition.item_parser doc.pdf [--json out.json]
+"""
+
+from __future__ import annotations
+
+import json
+import re
+import sys
+from dataclasses import dataclass, field, asdict
+
+from app.research.cross_edition.corpus_probe import extract_text
+from app.research.cross_edition.edition_align import (
+    _SECTION_NAMES, _RUNNING_HEADER, _DATE_LINE, _norm_title,
+)
+
+# Marker forms, most specific first. Each yields (kind, value_text).
+_MARKER_PATTERNS: list[tuple[str, re.Pattern]] = [
+    ("paren_num", re.compile(r"^\s*\((\d+)\)\s+(?=\S)")),
+    ("paren_alpha", re.compile(r"^\s*\(([a-z])\)\s+(?=\S)")),
+    ("dotted", re.compile(r"^\s*((?:\d+\.){2,})\s+(?=\S)")),      # 1.2. / 7.a.1.
+    ("num", re.compile(r"^\s*(\d{1,2})\.\s+(?=\S)")),
+    ("alpha", re.compile(r"^\s*([a-z])\.\s+(?=\S)")),             # may be roman
+    ("roman", re.compile(r"^\s*((?:x{0,2})(?:ix|iv|v?i{0,3}))\.\s+(?=\S)")),
+    ("upper", re.compile(r"^\s*([A-Z])\.\s+(?=\S)")),
+    # Bullets. NASEMSO uses glyphs that do not map to Unicode and arrive as
+    # U+FFFD, plus literal bullets and "o" sub-bullets. Omitting these left
+    # 207 sections with zero items on the first run - roughly a quarter of
+    # the corpus, and not a small tail: whole sections are bulleted rather
+    # than numbered. Bullets carry no ordinal, so siblings are counted by
+    # position within their level.
+    ("bullet", re.compile(r"^\s*([�•▪●\-])\s+(?=\S)")),
+    ("subbullet", re.compile(r"^\s*(o)\s+(?=\S)")),
+]
+
+# Letters that are also roman numerals - the only ones needing disambiguation.
+_ROMAN_LETTERS = {"i", "v", "x"}
+_ROMAN_ORDER = ["i", "ii", "iii", "iv", "v", "vi", "vii", "viii", "ix", "x"]
+
+
+@dataclass
+class Item:
+    item_id: str
+    guideline: str
+    section: str
+    marker: str
+    marker_path: str
+    depth: int
+    text: str = ""
+    full_text: str = ""
+    char_start: int = 0
+    char_end: int = 0
+
+
+@dataclass
+class ParsedEdition:
+    doc_id: str
+    source_path: str
+    canonical_text: str
+    n_pages: int
+    guidelines: list[str] = field(default_factory=list)
+    items: list[Item] = field(default_factory=list)
+    ambiguous_markers: int = 0
+    unparsed_sections: int = 0
+    anchor: str = ""
+
+
+# Anchors observed to work, tried in this order. Kept next to
+# detect_section_names because both need it: this list is used both to seed
+# guideline-boundary detection (detect_guideline_anchor) and, below, to
+# calibrate the spacing filter that keeps detect_section_names from admitting
+# noise. See _known_anchor_min_gap.
+_KNOWN_ANCHORS = ("aliases", "criteria")
+
+
+def _positions(lines: list[tuple[str, int]] | list[str], name: str) -> list[int]:
+    if lines and isinstance(lines[0], tuple):
+        return [i for i, (ln, _) in enumerate(lines)
+                if ln.strip().lower().rstrip(":") == name]
+    return [i for i, ln in enumerate(lines)
+            if ln.strip().lower().rstrip(":") == name]
+
+
+def _known_anchor_stats(lines: list[tuple[str, int]]) -> tuple[int, int] | None:
+    """(occurrence count, minimum gap) for whichever known anchor this
+    document uses, or None if neither is present in useful quantity.
+
+    Computed directly against raw lines - independent of
+    `detect_section_names` - so it can calibrate that function rather than
+    depend on it. See `detect_section_names` for why this exists."""
+    for name in _KNOWN_ANCHORS:
+        pos = _positions(lines, name)
+        if len(pos) < 15:
+            continue
+        gaps = [pos[i + 1] - pos[i] for i in range(len(pos) - 1)]
+        if gaps:
+            return len(pos), min(gaps)
+    return None
+
+
+def detect_section_names(
+    lines: list[tuple[str, int]], min_reuse: int = 5,
+) -> set[str]:
+    """Discover a document's section template EMPIRICALLY.
+
+    `_SECTION_NAMES` is NASEMSO's template — Aliases, Patient Care Goals,
+    Assessment, and so on. Hardcoding it made the parser publisher-specific in
+    a way that only surfaced on retrieving a second publisher: the New York
+    statewide protocols matched **2** of those names in a 184-page document,
+    so guideline segmentation found 0 guidelines and every one of its 862
+    extracted items landed under `<preamble>`.
+
+    A section header is identified by behaviour: a short line, carrying no
+    item marker, that recurs across the document. Content lines do not
+    repeat sixty times; template slots do.
+
+    FREQUENCY ALONE IS NOT ENOUGH, and admitting it was a real bug, not a
+    theoretical one. On NASEMSO v3.0 a frequency floor alone accepted dozens
+    of guideline TITLES pulled from what is apparently a table of contents or
+    differential-diagnosis list — "general medical" (67x), "trauma" (47x),
+    "bradycardia" (count high enough) — indistinguishable by count from real
+    slots like "quality improvement" (70x). One of these, "guideline" (7x,
+    the tail end of wrapped "Universal Care Guideline" titles), then became a
+    phantom SECTION, and every item on that "guideline" pseudo-section
+    matched against every other, corrupting the T4/T5 tiers of the alignment
+    study: "requires more than an identifier" moved from 10.2% to 19.2%
+    between two runs with the SAME edition pair, which is what surfaced this.
+
+    The discriminator that actually separates them is spacing, not frequency.
+    A real template slot appears once per guideline, so its occurrences are
+    spaced at least as far apart as the document's known anchor. A TOC entry
+    or category label repeats much more densely. Measured on NASEMSO v3.0:
+    real slots have a minimum gap of 70-87 lines between occurrences; the
+    noise candidates above have minimum gaps of 2-39 lines, well under half
+    the anchor's. This ratio (not an absolute line count) is what generalises
+    across publishers, since NASEMSO's guidelines run far longer than New
+    York's (anchor min-gap ~85 vs ~16) and an absolute floor tuned to one
+    would wrongly reject the other's genuine sections.
+
+    Spacing alone is not sufficient either: "guideline" (7 occurrences, the
+    tail of wrapped "Universal Care Guideline" titles) happened to have all
+    seven occurrences thousands of lines apart, by chance, and cleared the
+    spacing filter on the first version of this fix while remaining exactly
+    the noise it was meant to catch. A second, independent condition is
+    needed - occurrence COUNT close to the anchor's own count, since a real
+    template slot fires once per guideline and the anchor's count IS the
+    guideline count. "guideline" (n=7) against an anchor count of 69 fails
+    this cleanly; every real slot (59-72) passes it.
+
+    Requires `_known_anchor_stats` (computed on the SAME lines) to apply
+    either filter. Without it - an unrecognised publisher - neither filter
+    can run and this function is honestly less reliable; that document's
+    discovered sections should be spot-checked before use, exactly as
+    `FEASIBILITY.md` §13.1 already requires for the anchor itself.
+
+    The hardcoded set is unioned in rather than replaced, so NASEMSO parsing
+    cannot regress.
+    """
+    from collections import Counter
+    counts: Counter[str] = Counter()
+    for ln, _ in lines:
+        t = ln.strip().rstrip(":")
+        if not (4 < len(t) <= 50):
+            continue
+        if any(p.match(ln) for _, p in _MARKER_PATTERNS):
+            continue
+        if not (t.isupper() or t == t.title() or t.istitle()):
+            continue
+        if _DATE_LINE.match(t):
+            # A revision date VALUE, not a header. It passes both the count
+            # and spacing filters cleanly - it really does occur once per
+            # guideline, right after "Revision Date" - so those filters
+            # cannot catch it; it needs its own check.
+            continue
+        counts[t.lower()] += 1
+
+    candidates = {t for t, n in counts.items() if n >= min_reuse}
+
+    stats = _known_anchor_stats(lines)
+    if stats is not None:
+        anchor_count, anchor_min_gap = stats
+        kept = set()
+        for name in candidates:
+            pos = _positions(lines, name)
+            if len(pos) < 2:
+                continue
+            if len(pos) < 0.5 * anchor_count:
+                continue  # too rare to be a per-guideline template slot
+            gaps = [pos[i + 1] - pos[i] for i in range(len(pos) - 1)]
+            if min(gaps) >= 0.4 * anchor_min_gap:
+                kept.add(name)
+        candidates = kept
+
+    return candidates | _SECTION_NAMES
+
+
+def detect_boilerplate(lines: list[str], min_reuse: int = 20) -> set[str]:
+    """Short lines that recur often but are not page furniture.
+
+    Distinct from `_detect_running_lines`, which needs recurrence on ~half of
+    all pages. New York prints "Applies to adult and pediatric patients"
+    directly above each protocol's anchor, 36 times in 184 pages — far too
+    infrequent for the furniture filter, but still boilerplate, and it sits
+    exactly where the title walk looks. Without this, every New York protocol
+    title would be that sentence.
+    """
+    from collections import Counter
+    counts = Counter(ln.strip() for ln in lines if 4 < len(ln.strip()) <= 70)
+    return {t for t, n in counts.items() if n >= min_reuse}
+
+
+def _looks_like_title(t: str) -> bool:
+    """Is this line plausibly a guideline title?
+
+    The anchor scorer originally accepted any short non-section line above a
+    candidate. That was too weak: NASEMSO prints NEMSIS reporting codes
+    ("9914165 - Other (no specific NEMSIS protocol matching this guideline)")
+    under `Key Documentation Elements`, and those are short and non-section,
+    so that section scored higher than the true anchor `Aliases`. The
+    guideline COUNT still looked plausible (68), which is why the failure was
+    invisible until the titles themselves were inspected.
+
+    A title starts with a letter, is not predominantly digits, and is not a
+    fragment of running prose.
+    """
+    t = t.strip()
+    if not (4 < len(t) <= 140):
+        return False
+    if not t[:1].isalpha():
+        return False
+    digits = sum(c.isdigit() for c in t)
+    if digits > len(t) * 0.25:
+        return False
+    if t.endswith((".", ";", ",", ":")):
+        return False
+    letters = [c for c in t if c.isalpha()]
+    if letters and sum(c.isupper() for c in letters) / len(letters) < 0.04:
+        return False   # all-lowercase => prose continuation
+    return True
+
+
+def detect_guideline_anchor(
+    lines: list[tuple[str, int]], section_names: set[str], boilerplate: set[str],
+) -> str:
+    """Discover which section name marks the START of a guideline.
+
+    NASEMSO opens every guideline with `Aliases`; New York opens every
+    protocol with `CRITERIA`. Hardcoding `aliases` meant New York segmented
+    into **zero** guidelines and all 2,156 of its items landed under
+    `<preamble>` — the single largest generality failure found so far.
+
+    The anchor is identified by behaviour: of all discovered section names, it
+    is the one most consistently preceded by something that looks like a
+    title. A section that appears mid-guideline (Assessment, Treatment) is
+    preceded by prose; the opening section is preceded by the guideline's
+    name.
+
+    Scoring is the fraction of a candidate's occurrences that have a
+    plausible title above, requiring a minimum number of occurrences so that
+    a rare section with one lucky title cannot win.
+    """
+    from collections import Counter
+    counts = Counter(
+        ln.strip().lower().rstrip(":") for ln, _ in lines
+        if ln.strip().lower().rstrip(":") in section_names
+    )
+
+    # The anchor fires roughly once per guideline, so it is among the most
+    # frequent section names. Without a floor relative to the document, a rare
+    # candidate whose handful of occurrences happen to sit under title-like
+    # lines scores a perfect 1.0 and wins: on the 2022 NASEMSO edition that
+    # elected "60-100" (6 occurrences) over "aliases" (69), collapsing 69
+    # guidelines to 6.
+    max_n = max(counts.values()) if counts else 0
+    floor = max(15, int(0.35 * max_n))
+
+    # KNOWN ANCHORS FIRST. Pure auto-detection proved unreliable and this is
+    # recorded rather than hidden: the scorer below rewards "a title-like line
+    # sits above this section", which cannot distinguish a title from short
+    # content. It chose `key documentation elements` on NASEMSO (whose
+    # preceding lines are NEMSIS reporting codes) and `patient care goals` on
+    # the 2022 edition (whose preceding lines are the alias list). In both
+    # cases the guideline COUNT looked right - 68, 71 - and only inspecting
+    # the extracted titles revealed the boundaries were wrong.
+    #
+    # So: a short curated prior of anchors observed to work, checked in order,
+    # with auto-detection as the fallback for unseen publishers. This is an
+    # honest partial solution, not a general one. A new publisher whose anchor
+    # is not listed gets auto-detection and MUST have its titles inspected
+    # before its documents enter the corpus (see FEASIBILITY).
+    for known in ("aliases", "criteria"):
+        if counts.get(known, 0) >= floor:
+            return known
+
+    best_name, best_score = "aliases", -1.0
+    for name, n in counts.items():
+        if n < floor or n > 400:
+            continue
+        positions = [
+            i for i, (ln, _) in enumerate(lines)
+            if ln.strip().lower().rstrip(":") == name
+        ]
+        with_title = 0
+        for pos in positions:
+            j, steps = pos - 1, 0
+            while j >= 0 and steps < 5:
+                t = lines[j][0].strip()
+                if not t or _DATE_LINE.match(t) or t in boilerplate:
+                    j -= 1
+                    steps += 1
+                    continue
+                if t.lower().rstrip(":") in section_names:
+                    break
+                if _looks_like_title(t) and not any(
+                        p.match(lines[j][0]) for _, p in _MARKER_PATTERNS):
+                    with_title += 1
+                break
+        score = with_title / n
+        # Prefer higher title-consistency; break ties toward more occurrences,
+        # since the anchor fires once per guideline.
+        if score > best_score or (score == best_score and n > counts.get(best_name, 0)):
+            best_name, best_score = name, score
+    return best_name
+
+
+def _detect_running_lines(lines: list[str], n_pages: int) -> set[str]:
+    """Find repeated header/footer lines EMPIRICALLY rather than by pattern.
+
+    The hardcoded `_RUNNING_HEADER` regex was written against the 2017/2019
+    editions ("Updated January 5, 2019" plus bare page numbers). The 2022
+    edition uses entirely different furniture - "NASEMSO", "National Model
+    EMS Clinical Guidelines", "Go To TOC" - which the regex does not match,
+    so all of it survived into the canonical text and into guideline titles.
+
+    That was not a cosmetic problem. It corrupted title extraction
+    ("version 3 0 universal care guideline"), which broke cross-edition
+    title matching, which pushed identical items into the "moved" and
+    "unmatched" tiers and flipped the study's decision experiment from
+    "no method contribution" to "real method contribution" on what was
+    purely a parsing artefact.
+
+    Detecting furniture by repetition instead of by pattern generalises to
+    any publisher, which is what a corpus spanning multiple agencies needs.
+    A line is furniture if it is short and recurs on a large fraction of
+    pages - real content does not repeat 400 times.
+    """
+    from collections import Counter
+    counts = Counter(ln.strip() for ln in lines if ln.strip())
+    floor = max(10, int(n_pages * 0.5))
+    return {
+        text for text, n in counts.items()
+        if n >= floor and len(text) <= 70
+    }
+
+
+def _clean_to_canonical(text: str, n_pages: int = 0) -> tuple[str, list[tuple[str, int]]]:
+    """Drop running headers and page numbers; return the canonical text and
+    a list of (line, char_offset_into_canonical) for every kept line."""
+    all_lines = text.split("\n")
+    furniture = _detect_running_lines(all_lines, n_pages) if n_pages else set()
+
+    kept: list[tuple[str, int]] = []
+    out: list[str] = []
+    cursor = 0
+    for ln in all_lines:
+        s = ln.rstrip()
+        if _RUNNING_HEADER.match(s) or s.strip() in furniture:
+            continue
+        kept.append((s, cursor))
+        out.append(s)
+        cursor += len(s) + 1  # +1 for the newline joining them
+    return "\n".join(out), kept
+
+
+def _classify(line: str, open_levels: list[tuple[str, str]]) -> tuple[str, str] | None:
+    """Return (kind, marker) or None. `open_levels` is the current stack of
+    (kind, last_marker), used to resolve roman/alpha ambiguity."""
+    for kind, pat in _MARKER_PATTERNS:
+        m = pat.match(line)
+        if not m:
+            continue
+        marker = m.group(1)
+        if kind == "alpha" and marker in _ROMAN_LETTERS:
+            # Ambiguous. Prefer whichever continues an open level.
+            for lvl_kind, last in reversed(open_levels):
+                if lvl_kind == "alpha" and last and _next_alpha(last) == marker:
+                    return "alpha", marker
+                if lvl_kind == "roman" and last and _next_roman(last) == marker:
+                    return "roman", marker
+            # Opening a new level: a bare "i." is far more often roman-one.
+            return ("roman" if marker == "i" else "alpha"), marker
+        return kind, marker
+    return None
+
+
+def _next_alpha(c: str) -> str:
+    return chr(ord(c) + 1) if len(c) == 1 and c < "z" else ""
+
+
+def _next_roman(r: str) -> str:
+    try:
+        return _ROMAN_ORDER[_ROMAN_ORDER.index(r) + 1]
+    except (ValueError, IndexError):
+        return ""
+
+
+def _strip_marker(line: str) -> str:
+    for _, pat in _MARKER_PATTERNS:
+        m = pat.match(line)
+        if m:
+            return line[m.end():].strip()
+    return line.strip()
+
+
+# Maine: "<Protocol Name> #<page-within-protocol>". Confirmed on the 2025
+# edition - 45 "#1" occurrences, zero duplicate names, minimum spacing 38
+# lines - before relying on it. See detect_footer_anchors.
+_FOOTER_LINE = re.compile(r"^(.{3,55}?)\s+#(\d+)\s*$")
+
+# Maine's other per-page furniture: a colour-coded chapter tag plus a
+# document-wide page number ("Blue 6", "Red 3"). Unlike NASEMSO's running
+# headers, the NUMBER changes on every page, so `_detect_running_lines`
+# (which needs the exact same string to recur) cannot catch it - it needs
+# its own pattern.
+_COLOR_TAG_LINE = re.compile(
+    r"(?i)^(blue|red|green|gold|purple|gray|grey|orange|yellow|white|black)\s+\d+\s*$"
+)
+
+
+def detect_footer_anchors(
+    lines: list[tuple[str, int]], min_count: int = 10,
+) -> list[tuple[int, str]] | None:
+    """Guideline boundaries from a running per-protocol page footer, as an
+    ALTERNATIVE to the `Aliases`/`CRITERIA`-style "look above a fixed
+    section label" model used by NASEMSO and New York.
+
+    Neither of those publishers' anchors exist in Maine's documents: instead
+    of a constant label preceding a title, Maine repeats the protocol's own
+    NAME as a footer on every page of that protocol, with a page-within-
+    protocol counter - "Respiratory Distress with Bronchospasm #1", then
+    "#2", "#3" on the following pages, before the name changes to the next
+    protocol. The auto-detected fallback anchor scoring (`detect_
+    guideline_anchor`) has no way to find this, because there is no
+    recurring FIXED label at all - every "anchor line" has different text.
+    Applying that scoring to Maine chose `normal`, a vital-signs table
+    column heading, and produced an implausible 19 guidelines for a 200+
+    page manual; inspecting the extracted "titles" showed they were table
+    values, not protocol names, and the underlying error was diagnosed
+    before this function was written (see FEASIBILITY.md §16.1).
+
+    `#1` uniquely marks a protocol's FIRST page, so it is both the boundary
+    and the title, on the same line - no backward title search is needed
+    here, unlike `_title_before`.
+
+    Returns None (not an empty list) when too few `#1`-style lines are
+    found, so a caller can distinguish "this publisher doesn't use this
+    convention" from "this publisher has zero protocols" and fall through to
+    another strategy rather than silently producing an empty corpus.
+    """
+    hits: list[tuple[int, str]] = []
+    seen_names: set[str] = set()
+    for i, (ln, _) in enumerate(lines):
+        m = _FOOTER_LINE.match(ln.strip())
+        if not m or m.group(2) != "1":
+            continue
+        name = m.group(1).strip()
+        if not _looks_like_title(name) or name in seen_names:
+            continue  # duplicate #1 would mean a real anchor collision
+        seen_names.add(name)
+        hits.append((i, name))
+    return hits if len(hits) >= min_count else None
+
+
+def _parse_footer_protocol(
+    lines: list[tuple[str, int]], start: int, end: int,
+    guideline: str, seen_ids: dict[str, int],
+) -> tuple[list[Item], int]:
+    """Item extraction within one footer-delimited protocol span.
+
+    Reuses the same marker classification as `_parse_section_items`
+    (`_classify`/`_strip_marker`/roman-alpha disambiguation), with two
+    differences forced by Maine's structure rather than chosen for
+    convenience:
+
+    (a) Continuation footers (`<name> #2`, `#3`, ...) and colour-tag lines
+        (`Blue 7`) are page furniture, not content, and are skipped
+        entirely - not treated as markers, and NOT appended as a
+        continuation of the previous item, which is what would otherwise
+        happen to any unrecognised line. Leaving them in would contaminate
+        item text with junk like "Blue 7" and the protocol's own name.
+    (b) Section is a single constant, `"protocol"`. Maine's certification-
+        level headers (EMT/ADVANCED EMT, PARAMEDIC, ...) look, from a first
+        pass, like they could be discovered the same way New York's
+        provider-level sections were - but that reuses `detect_section_
+        names`' count/spacing filter, which explicitly documents itself as
+        unreliable without a `_known_anchor_stats` result to calibrate
+        against, and Maine has none. Rather than risk a fourth
+        plausible-looking-but-wrong result this session, sub-sectioning by
+        certification level is left as a named, deferred refinement (see
+        FEASIBILITY.md), and every item in a protocol is extracted at one
+        flat level for now.
+    """
+    items: list[Item] = []
+    stack: list[tuple[str, str]] = []
+    path: list[str] = []
+    ambiguous = 0
+    last: Item | None = None
+
+    for i in range(start, min(end, len(lines))):
+        line, offset = lines[i]
+        if not line.strip():
+            continue
+        if _FOOTER_LINE.match(line.strip()) or _COLOR_TAG_LINE.match(line.strip()):
+            continue
+
+        cls = _classify(line, stack)
+        if cls is None:
+            if last is not None:
+                last.text = (last.text + " " + line.strip()).strip()
+                last.char_end = offset + len(line)
+            continue
+
+        kind, marker = cls
+        if kind == "alpha" and marker in _ROMAN_LETTERS:
+            ambiguous += 1
+
+        existing = next((k for k, (kk, _) in enumerate(stack) if kk == kind), None)
+        if existing is None:
+            stack.append((kind, marker))
+            path.append(marker)
+        else:
+            del stack[existing + 1:]
+            del path[existing + 1:]
+            stack[existing] = (kind, marker)
+            path[existing] = marker
+
+        marker_path = ".".join(path)
+        base_id = f"{_norm_title(guideline)}/protocol/{marker_path}"
+        seen_ids[base_id] = seen_ids.get(base_id, 0) + 1
+        uniq = base_id if seen_ids[base_id] == 1 else f"{base_id}#{seen_ids[base_id]}"
+        item = Item(
+            item_id=uniq, guideline=guideline, section="protocol",
+            marker=marker, marker_path=marker_path, depth=len(path),
+            text=_strip_marker(line),
+            char_start=offset, char_end=offset + len(line),
+        )
+        items.append(item)
+        last = item
+
+    for k, it in enumerate(items):
+        stop = next((items[j].char_start for j in range(k + 1, len(items))
+                     if items[j].depth <= it.depth), None)
+        it.char_end = max(it.char_end, (stop - 1) if stop else it.char_end)
+    return items, ambiguous
+
+
+# Connecticut's front matter contains a legal disclaimer that wraps across
+# 2-3 lines with INCONSISTENT splits ("accordance with professional
+# standards..." vs "with professional standards...", 215 and 28 occurrences
+# respectively of what is semantically the same sentence). Matched by
+# distinctive substring rather than exact string, unlike NASEMSO/Maine's
+# furniture, because no single exact string covers all wrappings.
+_CT_BOILERPLATE = re.compile(
+    r"(?i)connecticut\s+oems|professional standards|protocol continu(ed|es)"
+)
+_CT_BARE_PAGENUM = re.compile(r"^\d{1,3}$")
+_CT_VERSION_TAG = re.compile(r"^v20\d\d\.\d\s*$")
+
+
+def _ct_toc_entries(pdf_path: str, toc_pages: range = range(1, 8)) -> list[tuple[str, int]]:
+    """(protocol name, target PRINTED page number) pairs from Connecticut's
+    embedded Table of Contents, read by Y-COORDINATE ROW ALIGNMENT rather
+    than positional order.
+
+    Connecticut has no repeating per-page anchor at all - neither a fixed
+    section label (NASEMSO/New York) nor a per-protocol footer counter
+    (Maine): its content is dosing and triage TABLES, which linear text
+    extraction fragments into short per-cell lines with no recoverable row
+    structure (see FEASIBILITY.md §16.2). But the document's own Table of
+    Contents lists every protocol with a target page number, and that IS
+    extractable - just not by naive line order.
+
+    PyMuPDF's plain text extraction groups a ToC table's cells by COLUMN,
+    not by row: all protocol codes first, then all dotted-leader names, then
+    all page numbers, each internally top-to-bottom - a layout artefact of
+    how the source table was authored. This was verified before being ruled
+    out as a shortcut: per-page counts of codes/names/page-numbers do NOT
+    match (25/28/27 on one page), so a positional zip() would silently
+    misalign some rows. Row membership is instead recovered from each text
+    span's actual Y-coordinate via `get_text('dict')`, grouping lines whose
+    vertical centres fall within a few points of each other - the same
+    physical row in the rendered table regardless of the order the text
+    extractor emitted them in.
+    """
+    import fitz
+    doc = fitz.open(pdf_path)
+    # Dotted leader before a page number. Must match the UNICODE ellipsis
+    # (…, U+2026) as well as ASCII periods - the leader is a run of these
+    # mixed, not pure ASCII dots. Matching only `\.{4,}` anchored the tail
+    # match at the first run of 4+ literal periods rather than the true end
+    # of the leader, leaving straggler "…………" characters INSIDE the
+    # captured name on every entry (e.g. "Dedication and
+    # Acknowledgement……………………………...….....") until this was caught by
+    # inspecting extracted titles rather than trusting the guideline count.
+    name_re = re.compile(r"^(.+?)[.…\s]{4,}$")
+    entries: list[tuple[str, int]] = []
+    for pno in toc_pages:
+        if pno >= doc.page_count:
+            break
+        rows: list[tuple[float, str, str]] = []
+        for block in doc[pno].get_text("dict")["blocks"]:
+            for line in block.get("lines", []):
+                text = "".join(s["text"] for s in line["spans"]).strip()
+                if not text:
+                    continue
+                y = (line["bbox"][1] + line["bbox"][3]) / 2
+                if (m := name_re.match(text)):
+                    rows.append((y, "name", m.group(1).strip()))
+                elif _CT_BARE_PAGENUM.fullmatch(text) or text.lower() == "n/a":
+                    rows.append((y, "page", text))
+        rows.sort(key=lambda r: r[0])
+        groups: list[list[tuple[float, str, str]]] = []
+        for r in rows:
+            if groups and abs(groups[-1][0][0] - r[0]) <= 4:
+                groups[-1].append(r)
+            else:
+                groups.append([r])
+        for g in groups:
+            names = [t for _, k, t in g if k == "name"]
+            pages = [t for _, k, t in g if k == "page"]
+            if names and pages and pages[0].lower() != "n/a":
+                try:
+                    entries.append((names[0], int(pages[0])))
+                except ValueError:
+                    continue
+    return entries
+
+
+def _ct_clean_with_pages(
+    pdf_path: str,
+) -> tuple[str, list[tuple[str, int]], list[int]]:
+    """Like `_clean_to_canonical`, but ALSO returns `page_start_line`: the
+    index into the cleaned line list where each physical PDF page begins.
+
+    `_clean_to_canonical` discards page boundaries entirely - every
+    publisher parsed so far needed only a flat line stream. Connecticut's
+    guideline boundaries come from the Table of Contents' target PAGE
+    numbers (`_ct_toc_entries`), so a page-to-canonical-line mapping is a
+    prerequisite that did not exist before this document required it.
+
+    Verified calibration for printed-page -> physical-page-index: a body
+    page's own footer prints its page number, and physical (0-indexed) page
+    55 ends with the footer line "56" - printed_page = physical_index + 1,
+    confirmed directly rather than assumed.
+    """
+    import fitz
+    doc = fitz.open(pdf_path)
+    kept: list[tuple[str, int]] = []
+    page_start_line: list[int] = []
+    cursor = 0
+    for pno in range(doc.page_count):
+        page_start_line.append(len(kept))
+        for ln in doc[pno].get_text().split("\n"):
+            s = ln.rstrip()
+            t = s.strip()
+            if not t:
+                continue
+            if _CT_BOILERPLATE.search(s) or _CT_BARE_PAGENUM.fullmatch(t) or _CT_VERSION_TAG.match(t):
+                continue
+            kept.append((s, cursor))
+            cursor += len(s) + 1
+    return "\n".join(l for l, _ in kept), kept, page_start_line
+
+
+# A marker with NOTHING else on its line - "•" alone, then the content
+# on the NEXT line. Derived from _MARKER_PATTERNS' token shapes but anchored
+# to end-of-line instead of requiring trailing content.
+#
+# The same phenomenon was checked for Maine and found negligible (148 of
+# 9,293 lines, 1.6% - not worth acting on). It is NOT negligible for
+# Connecticut: measured at 1,689 of 14,159 lines (11.9%) on the correct
+# (CT-specific) line set - a first check against the wrong canonicaliser's
+# output looked clean at 85/12,674 and was nearly reported as such, before
+# noticing the two functions strip different furniture and therefore index
+# lines differently. Left unmerged, both the bare marker and the content
+# line following it are silently dropped: a marker-only line matches no
+# _MARKER_PATTERNS entry (all require content immediately after), so it
+# falls to the "continuation of the previous item" branch; the content line
+# after IT then does the same, and if there is no real item yet open in
+# this protocol's span - the common case, since this pattern dominates
+# early in many protocols - both lines vanish with no error. This was the
+# direct cause of 81 of 120 Connecticut "guidelines" showing zero items on
+# the first working version of this function.
+_BARE_MARKER = re.compile(
+    r"^(\(\d+\)|\([a-z]\)|(?:\d+\.){2,}|\d{1,2}\.|[a-z]\.|[ivxlc]+\.|"
+    r"[A-Z]\.|[�•▪●‣⁃-]|o)\s*$"
+)
+
+
+def _merge_bare_markers(
+    lines: list[tuple[str, int]], start: int, end: int,
+) -> list[tuple[str, int]]:
+    """Within one span, fold a bare-marker line into the following non-empty
+    line, so `_classify` sees "1. Consider midazolam..." instead of "1." and
+    "Consider midazolam..." as two separate, individually unclassifiable
+    lines. The bare line's OFFSET is kept (not the content line's), so
+    downstream character offsets still point at the marker where the item
+    visually begins."""
+    merged: list[tuple[str, int]] = []
+    i = start
+    limit = min(end, len(lines))
+    while i < limit:
+        text, offset = lines[i]
+        if _BARE_MARKER.match(text.strip()):
+            j = i + 1
+            while j < limit and not lines[j][0].strip():
+                j += 1
+            if j < limit:
+                merged.append((text.strip() + " " + lines[j][0].strip(), offset))
+                i = j + 1
+                continue
+        merged.append((text, offset))
+        i += 1
+    return merged
+
+
+def _parse_ct_protocol(
+    lines: list[tuple[str, int]], start: int, end: int,
+    guideline: str, seen_ids: dict[str, int],
+) -> tuple[list[Item], int]:
+    """Item extraction within one ToC-delimited Connecticut protocol span.
+
+    Structurally close to `_parse_footer_protocol` (same marker
+    classification, same flat single-section simplification, same
+    per-edition id-uniqueness discipline) but against `_ct_clean_with_pages`
+    output - whose furniture (boilerplate, bare page numbers, version tag)
+    has already been stripped by that function - and with bare markers
+    pre-merged onto their content line by `_merge_bare_markers` (see there
+    for why this step exists and is CT-specific).
+
+    Table-heavy content is expected to yield fewer markers per page than
+    NASEMSO or Maine's prose - much of the actual clinical content is table
+    cells with no numbering at all - which is why the honest per-publisher
+    item-density comparison belongs in FEASIBILITY.md rather than being
+    smoothed over here.
+    """
+    items: list[Item] = []
+    stack: list[tuple[str, str]] = []
+    path: list[str] = []
+    ambiguous = 0
+    last: Item | None = None
+
+    for line, offset in _merge_bare_markers(lines, start, end):
+        if not line.strip():
+            continue
+
+        cls = _classify(line, stack)
+        if cls is None:
+            if last is not None:
+                last.text = (last.text + " " + line.strip()).strip()
+                last.char_end = offset + len(line)
+            continue
+
+        kind, marker = cls
+        if kind == "alpha" and marker in _ROMAN_LETTERS:
+            ambiguous += 1
+
+        existing = next((k for k, (kk, _) in enumerate(stack) if kk == kind), None)
+        if existing is None:
+            stack.append((kind, marker))
+            path.append(marker)
+        else:
+            del stack[existing + 1:]
+            del path[existing + 1:]
+            stack[existing] = (kind, marker)
+            path[existing] = marker
+
+        marker_path = ".".join(path)
+        base_id = f"{_norm_title(guideline)}/protocol/{marker_path}"
+        seen_ids[base_id] = seen_ids.get(base_id, 0) + 1
+        uniq = base_id if seen_ids[base_id] == 1 else f"{base_id}#{seen_ids[base_id]}"
+        item = Item(
+            item_id=uniq, guideline=guideline, section="protocol",
+            marker=marker, marker_path=marker_path, depth=len(path),
+            text=_strip_marker(line),
+            char_start=offset, char_end=offset + len(line),
+        )
+        items.append(item)
+        last = item
+
+    for k, it in enumerate(items):
+        stop = next((items[j].char_start for j in range(k + 1, len(items))
+                     if items[j].depth <= it.depth), None)
+        it.char_end = max(it.char_end, (stop - 1) if stop else it.char_end)
+    return items, ambiguous
+
+
+def detect_ct_toc_anchors(
+    pdf_path: str, min_count: int = 15,
+) -> tuple[list[tuple[str, int]], list[tuple[str, int]], list[int]] | None:
+    """Full pipeline: ToC entries -> deduplicated, page-sorted guideline
+    boundaries. Returns (anchors, lines, page_start_line) where `anchors` is
+    [(canonical_line_index, title), ...] ready for the same span-walking
+    pattern `parse()` already uses for the footer path, or None if too few
+    resolvable ToC entries were found (so a caller can distinguish
+    "this publisher doesn't have an extractable ToC" from "zero protocols").
+    """
+    toc = _ct_toc_entries(pdf_path)
+    if len(toc) < min_count:
+        return None
+    canonical, lines, page_start_line = _ct_clean_with_pages(pdf_path)
+
+    # Multiple ToC rows can point at the same physical page (Adult/Pediatric
+    # variants sometimes share a start page) - keep first-seen only, and
+    # require strictly increasing pages so a mis-read row cannot create a
+    # zero- or negative-length span.
+    seen_pages: set[int] = set()
+    ordered = sorted(toc, key=lambda e: e[1])
+    anchors: list[tuple[int, str]] = []
+    last_page = -1
+    for name, printed_page in ordered:
+        physical = printed_page - 1  # calibrated offset, see _ct_clean_with_pages
+        if physical <= last_page or physical in seen_pages or physical >= len(page_start_line):
+            continue
+        seen_pages.add(physical)
+        last_page = physical
+        anchors.append((page_start_line[physical], name))
+
+    return (anchors, lines, page_start_line) if len(anchors) >= min_count else None
+
+
+def parse(pdf_path: str, doc_id: str | None = None) -> ParsedEdition:
+    raw, pages = extract_text(pdf_path)
+    canonical, lines = _clean_to_canonical(raw, pages)
+
+    ed = ParsedEdition(
+        doc_id=doc_id or pdf_path.rsplit("/", 1)[-1].rsplit(".", 1)[0],
+        source_path=pdf_path, canonical_text=canonical, n_pages=pages,
+    )
+
+    # FOOTER-BASED PATH, tried only when no known section-style anchor
+    # exists in this document (`_known_anchor_stats` is None). NASEMSO
+    # (`aliases`) and New York (`criteria`) always have one and are
+    # therefore completely unaffected by this branch - it exists for
+    # publishers like Maine that mark protocol boundaries with a repeating
+    # per-page footer instead of a fixed section label. See
+    # detect_footer_anchors for why the two conventions need different
+    # detectors rather than one generalised one.
+    if _known_anchor_stats(lines) is None:
+        footer_anchors = detect_footer_anchors(lines)
+        if footer_anchors is not None:
+            ed.anchor = "footer:#1"
+            ed.guidelines = [title for _, title in footer_anchors]
+            seen_ids: dict[str, int] = {}
+            for idx, (line_no, title) in enumerate(footer_anchors):
+                end = footer_anchors[idx + 1][0] if idx + 1 < len(footer_anchors) else len(lines)
+                items, ambiguous = _parse_footer_protocol(
+                    lines, line_no, end, title, seen_ids,
+                )
+                ed.items.extend(items)
+                ed.ambiguous_markers += ambiguous
+            return ed
+
+        # CONNECTICUT PATH. Neither a fixed section anchor nor a per-page
+        # footer counter exists here - the document has no repeating
+        # per-page structural marker of any kind (see FEASIBILITY.md §16.2:
+        # content is tables, which fragment under linear extraction). The
+        # only reliable source of guideline boundaries is the document's own
+        # Table of Contents, read via Y-coordinate row alignment
+        # (`detect_ct_toc_anchors`) rather than the line-stream model every
+        # other branch uses. This replaces `lines`/`canonical` entirely with
+        # `_ct_clean_with_pages`'s output, because CT's furniture (a legal
+        # disclaimer wrapping inconsistently across lines, bare page
+        # numbers, a version tag) is not caught by `_clean_to_canonical`.
+        ct = detect_ct_toc_anchors(pdf_path)
+        if ct is not None:
+            ct_anchors, ct_lines, _ = ct
+            ed.anchor = "ct_toc"
+            ed.canonical_text = "\n".join(l for l, _ in ct_lines)
+            ed.guidelines = [title for _, title in ct_anchors]
+            seen_ids = {}
+            for idx, (line_no, title) in enumerate(ct_anchors):
+                end = ct_anchors[idx + 1][0] if idx + 1 < len(ct_anchors) else len(ct_lines)
+                items, ambiguous = _parse_ct_protocol(
+                    ct_lines, line_no, end, title, seen_ids,
+                )
+                ed.items.extend(items)
+                ed.ambiguous_markers += ambiguous
+            return ed
+
+    # Section template discovered from THIS document, unioned with the
+    # NASEMSO names so that corpus regressions are impossible. See
+    # detect_section_names() for why hardcoding was wrong.
+    section_names = detect_section_names(lines)
+    boilerplate = detect_boilerplate([ln for ln, _ in lines])
+    anchor = detect_guideline_anchor(lines, section_names, boilerplate)
+    ed.anchor = anchor
+    marks = [
+        (i, ln.strip().lower().rstrip(":"))
+        for i, (ln, _) in enumerate(lines)
+        if ln.strip().lower().rstrip(":") in section_names
+    ]
+
+    alias_anchors = [i for i, nm in marks if nm == anchor]
+    categories = _collect_categories(lines, alias_anchors)
+
+    cur_guideline = "<preamble>"
+    # Edition-scoped, not section-scoped. A guideline can carry the same
+    # section name twice (two "Notes" blocks), and a per-section counter
+    # restarted on each, leaving 282 colliding ids on the previous run.
+    seen_ids: dict[str, int] = {}
+    for idx, (line_no, name) in enumerate(marks):
+        end = marks[idx + 1][0] if idx + 1 < len(marks) else len(lines)
+
+        if name == anchor:
+            cur_guideline = _title_before(lines, line_no, categories, boilerplate)
+            ed.guidelines.append(cur_guideline)
+        if name in ("revision date", "references"):
+            continue  # metadata, not recommendations
+
+        items, ambiguous = _parse_section_items(
+            lines, line_no + 1, end, cur_guideline, name, seen_ids,
+        )
+        if not items and (end - line_no) > 3:
+            ed.unparsed_sections += 1
+        ed.items.extend(items)
+        ed.ambiguous_markers += ambiguous
+
+    return ed
+
+
+def _collect_categories(lines: list[tuple[str, int]],
+                        anchors: list[int], min_reuse: int = 3) -> set[str]:
+    """Identify category headings by REUSE across guidelines.
+
+    Every guideline in these documents is preceded by a category heading
+    ("Cardiovascular", "General Medical", "OB/GYN", "Universal Care") and
+    then its own title. The category is shared by many guidelines; the title
+    is not. Counting how often each candidate line appears directly above an
+    "Aliases" anchor separates them without hardcoding a list, which matters
+    because the category vocabulary differs between publishers and between
+    editions of the same publisher.
+    """
+    from collections import Counter
+    counts: Counter[str] = Counter()
+    for anchor in anchors:
+        j, seen = anchor - 1, 0
+        while j >= 0 and seen < 4:
+            t = lines[j][0].strip()
+            if not t:
+                j -= 1
+                continue
+            if t.lower().rstrip(":") in _SECTION_NAMES:
+                break
+            if _DATE_LINE.match(t) or len(t) > 70:
+                j -= 1
+                continue
+            counts[t.lower()] += 1
+            seen += 1
+            j -= 1
+    return {t for t, n in counts.items() if n >= min_reuse}
+
+
+_SCOPE_LINE = re.compile(r"(?i)^applies\s+to\s+.{0,60}patients?\b")
+
+
+def _title_before(lines: list[tuple[str, int]], line_no: int,
+                  categories: set[str] | None = None,
+                  boilerplate: set[str] | None = None) -> str:
+    parts: list[str] = []
+    j = line_no - 1
+    # How many non-title lines have been skipped WITHOUT yet finding any
+    # title text. Bounded (see below) so this cannot turn into an unbounded
+    # walk into unrelated body text.
+    skipped_before_any_title = 0
+    while j >= 0 and len(parts) < 3:
+        s = lines[j][0].strip()
+        if not s:
+            if parts:
+                break
+            j -= 1
+            continue
+        if s.lower().rstrip(":") in _SECTION_NAMES:
+            break
+        if _DATE_LINE.match(s):
+            j -= 1
+            continue
+        # Skip recurring boilerplate sitting between the title and the anchor
+        # (New York: "Applies to adult and pediatric patients").
+        if boilerplate and s in boilerplate:
+            j -= 1
+            continue
+        # SAME PATTERN, LOW FREQUENCY. Boilerplate detection is exact-string
+        # and needs >= 20 occurrences (detect_boilerplate). New York's scope
+        # line has a dozen wordings by audience - "Applies to adolescent
+        # patients only", "Applies to pediatric patients under 2 years of
+        # age" - none frequent enough on its own to pass that floor, so most
+        # of them survived as ordinary lines and broke the title walk before
+        # it reached the real (often two-line-wrapped) title above them.
+        # This accounted for 4 of New York Collaborative's 7 untitled
+        # guidelines. Matched by PATTERN instead of frequency, so a variant
+        # seen only once is still recognised.
+        if _SCOPE_LINE.match(s):
+            j -= 1
+            continue
+        # Stop at obvious body text - titles are short. But the length guard
+        # must be POSITION-AWARE: the line immediately above "Aliases" is the
+        # title with very high reliability (verified across 69 guidelines in
+        # three editions), whereas lines further back are only wrapped
+        # continuations, where a long line really is body text.
+        #
+        # A flat 70-character limit silently discarded the two longest titles
+        # in the 2019 edition - "Do Not Resuscitate Status/Advance
+        # Directives/Healthcare Power of Attorney" and "Acetylcholinesterase
+        # Inhibitors (Carbamates, Nerve Agents, Organophosphates)" - emitting
+        # <untitled@N> for both. Those two guidelines then failed to match
+        # across editions, and their items were 156 of the 742 unmatched
+        # items: 21% of the entire unmatched tail, as cause U1.
+        limit = 140 if j == line_no - 1 else 70
+        if len(s) > limit or s.endswith((".", ";", ",")):
+            if parts or skipped_before_any_title >= 3:
+                break
+            skipped_before_any_title += 1
+            j -= 1
+            continue
+        # Reject prose fragments and reporting codes outright - see
+        # _looks_like_title. Without this, wrapped body text was glued onto
+        # real titles ("and agency policy General Approach to Safety
+        # Restraining Devices").
+        #
+        # BOUNDED LOOKBACK PAST NON-TITLE JUNK. New York sometimes inserts a
+        # cross-reference between the real title and the anchor - a "see
+        # also" note in curly quotes ('"Dif Breathing - Pediatric: Stridor"')
+        # - which is neither boilerplate, a date, nor a title, and which
+        # immediately failed `_looks_like_title` (a leading curly quote is
+        # not alphabetic). The original code treated the FIRST non-title line
+        # as the end of the title, so hitting junk before any real title text
+        # had been collected produced an empty result. Now: up to 3 leading
+        # junk lines are skipped while nothing has been collected yet: once
+        # any real title text IS collected, behaviour reverts to the original
+        # strict stop-at-first-non-title rule, so this cannot absorb
+        # unrelated prose paragraphs the way an unconditional skip would.
+        if not _looks_like_title(s):
+            if parts or skipped_before_any_title >= 3:
+                break
+            skipped_before_any_title += 1
+            j -= 1
+            continue
+        parts.insert(0, s)
+        j -= 1
+    # Wrapped titles can repeat a fragment across lines ("Universal Care" /
+    # "Universal Care Guideline"), which the naive join turned into
+    # "universal care universal care guideline". Drop any part contained in
+    # another.
+    # Exact duplicates first, keeping one. v3.0 prints the guideline title
+    # twice before "Aliases" (category / title / title), and a pure
+    # containment filter dropped BOTH copies - each contains the other -
+    # which then fell back to joining the category in as well.
+    seen: set[str] = set()
+    uniq: list[str] = []
+    for a in parts:
+        if a.lower() in seen:
+            continue
+        seen.add(a.lower())
+        uniq.append(a)
+    kept = [a for k, a in enumerate(uniq)
+            if not any(k != m and a.lower() in b.lower() for m, b in enumerate(uniq))]
+    kept = kept or uniq
+    # Drop category headings ("Cardiovascular", "General Medical", "OB/GYN"),
+    # which sit above the title and are not part of a guideline's identity.
+    #
+    # An earlier version did this by keeping only the line nearest "Aliases".
+    # That removed categories but truncated every WRAPPED title, producing
+    # "(STEMI)" for "ST-Elevation Myocardial Infarction (STEMI)" and
+    # "Model Process)" for the guideline-model-process title - which then
+    # failed to match across editions and inflated the unmatched tier.
+    #
+    # Categories are instead identified empirically: a category heading is
+    # reused above many different guidelines, whereas a title line is
+    # essentially unique. `categories` is computed in a first pass over the
+    # whole document (see _collect_categories) and passed in.
+    if categories:
+        filtered = [a for a in kept if a.strip().lower() not in categories]
+        kept = filtered or kept
+    title = " ".join(kept or parts).strip()
+    # v3.0 prefixes guideline titles with "Version 3.0", which made the same
+    # guideline unmatchable across editions.
+    title = re.sub(r"(?i)^version\s*[\d.]+\s*", "", title).strip()
+    return title or f"<untitled@{line_no}>"
+
+
+def _parse_section_items(
+    lines: list[tuple[str, int]], start: int, end: int,
+    guideline: str, section: str, seen_ids: dict[str, int],
+) -> tuple[list[Item], int]:
+    """Walk a section's lines, building a marker hierarchy.
+
+    Depth comes from the marker-kind stack: a repeated kind is a sibling, a
+    new kind opens a child. Continuation lines (no marker) attach to the
+    most recent item.
+    """
+    items: list[Item] = []
+    stack: list[tuple[str, str]] = []   # (kind, last_marker)
+    path: list[str] = []
+    ambiguous = 0
+    last: Item | None = None
+
+    for i in range(start, min(end, len(lines))):
+        line, offset = lines[i]
+        if not line.strip():
+            continue
+
+        cls = _classify(line, stack)
+        if cls is None:
+            if last is not None:  # continuation of the previous item
+                last.text = (last.text + " " + line.strip()).strip()
+                last.char_end = offset + len(line)
+            continue
+
+        kind, marker = cls
+        if kind == "alpha" and marker in _ROMAN_LETTERS:
+            ambiguous += 1
+
+        # Where does this kind sit in the open stack?
+        existing = next((k for k, (kk, _) in enumerate(stack) if kk == kind), None)
+        if existing is None:
+            stack.append((kind, marker))
+            path.append(marker)
+        else:
+            del stack[existing + 1:]
+            del path[existing + 1:]
+            stack[existing] = (kind, marker)
+            path[existing] = marker
+
+        marker_path = ".".join(path)
+        base_id = f"{_norm_title(guideline)}/{section}/{marker_path}"
+        # A section may contain several independent numbered lists (an adult
+        # list then a paediatric one), so a marker path alone is not unique
+        # within a section - 831 collisions on the first run. Disambiguate by
+        # occurrence, which is stable within an edition. Cross-edition
+        # stability of the SUFFIXED id is exactly what the study measures and
+        # must not be assumed.
+        seen_ids[base_id] = seen_ids.get(base_id, 0) + 1
+        uniq = base_id if seen_ids[base_id] == 1 else f"{base_id}#{seen_ids[base_id]}"
+        item = Item(
+            item_id=uniq,
+            guideline=guideline, section=section,
+            marker=marker, marker_path=marker_path, depth=len(path),
+            text=_strip_marker(line),
+            char_start=offset, char_end=offset + len(line),
+        )
+        items.append(item)
+        last = item
+
+    # full_text spans an item through its descendants.
+    for k, it in enumerate(items):
+        stop = next((items[j].char_start for j in range(k + 1, len(items))
+                     if items[j].depth <= it.depth), None)
+        it.char_end = max(it.char_end, (stop - 1) if stop else it.char_end)
+        it.full_text = ""  # filled by caller if needed; offsets are canonical
+    return items, ambiguous
+
+
+def to_dict(ed: ParsedEdition) -> dict:
+    """RealDocument-compatible shape - see module docstring."""
+    return {
+        "doc_id": ed.doc_id,
+        "source_path": ed.source_path,
+        "n_pages": ed.n_pages,
+        "raw_text": ed.canonical_text,
+        "n_guidelines": len(ed.guidelines),
+        "ambiguous_markers": ed.ambiguous_markers,
+        "unparsed_sections": ed.unparsed_sections,
+        "items": [asdict(i) for i in ed.items],
+    }
+
+
+def main(argv: list[str]) -> int:
+    if len(argv) < 2:
+        print(__doc__)
+        return 2
+    ed = parse(argv[1])
+    depths = {}
+    for it in ed.items:
+        depths[it.depth] = depths.get(it.depth, 0) + 1
+    dup = len(ed.items) - len({i.item_id for i in ed.items})
+
+    print("=" * 74)
+    print(f"ITEM PARSER  -  {ed.doc_id}")
+    print("=" * 74)
+    print(f"  pages                : {ed.n_pages}")
+    print(f"  canonical text       : {len(ed.canonical_text):,} chars")
+    print(f"  guidelines           : {len(ed.guidelines)}")
+    print(f"  ITEMS EXTRACTED      : {len(ed.items):,}")
+    print(f"  depth distribution   : " +
+          ", ".join(f"d{d}={n}" for d, n in sorted(depths.items())))
+    print(f"  duplicate item_ids   : {dup}"
+          f"{'  <- IDs are not unique; see notes' if dup else ''}")
+    print(f"  ambiguous i/v/x      : {ed.ambiguous_markers}")
+    print(f"  sections w/ no items : {ed.unparsed_sections}")
+
+    # Offsets must resolve against canonical_text, or everything downstream
+    # is wrong. Verify rather than assume.
+    # Compare like with like: strip the marker from the canonical slice
+    # before matching, since Item.text is stored marker-stripped. The first
+    # run compared a stripped item against an unstripped slice and reported
+    # 2000/2000 mismatches on offsets that were in fact correct.
+    bad = 0
+    for it in ed.items[:2000]:
+        slice_ = ed.canonical_text[it.char_start:it.char_start + 120].splitlines()[0]
+        if _strip_marker(slice_)[:25].strip() != it.text[:25].strip():
+            bad += 1
+    print(f"  offset spot-check    : {bad} mismatches in first 2000 items")
+
+    print("\n  --- sample items ---")
+    for it in ed.items[:6]:
+        print(f"   [{it.marker_path:<8}] d{it.depth}  {it.item_id[:52]}")
+        print(f"       {it.text[:88]}")
+
+    if "--json" in argv:
+        out = argv[argv.index("--json") + 1]
+        with open(out, "w", encoding="utf-8") as f:
+            json.dump(to_dict(ed), f, indent=2)
+        print(f"\n  wrote {out}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))

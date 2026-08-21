@@ -1,0 +1,105 @@
+{
+  "pairs": {
+    "Tennessee 2017→2018": {
+      "n": 55,
+      "n_cannot_determine_excluded": 4,
+      "method_accuracy": 0.6727,
+      "b2_accuracy": 0.6545,
+      "bootstrap": {
+        "n": 55,
+        "n_bootstrap": 10000,
+        "raw": {
+          "point_estimate": 0.0182,
+          "ci95_low": -0.0545,
+          "ci95_high": 0.0909
+        },
+        "weighted": {
+          "point_estimate": 0.0255,
+          "ci95_low": -0.0076,
+          "ci95_high": 0.078
+        }
+      }
+    },
+    "Pennsylvania 2021→2023": {
+      "n": 58,
+      "n_cannot_determine_excluded": 0,
+      "method_accuracy": 0.7759,
+      "b2_accuracy": 0.6724,
+      "bootstrap": {
+        "n": 58,
+        "n_bootstrap": 10000,
+        "raw": {
+          "point_estimate": 0.1034,
+          "ci95_low": 0.0,
+          "ci95_high": 0.2069
+        },
+        "weighted": {
+          "point_estimate": 0.0476,
+          "ci95_low": -0.0081,
+          "ci95_high": 0.1179
+        }
+      }
+    },
+    "Connecticut 2022.1→2023.1": {
+      "n": 37,
+      "n_cannot_determine_excluded": 2,
+      "method_accuracy": 0.8649,
+      "b2_accuracy": 0.9189,
+      "bootstrap": {
+        "n": 37,
+        "n_bootstrap": 10000,
+        "raw": {
+          "point_estimate": -0.0541,
+          "ci95_low": -0.1892,
+          "ci95_high": 0.0811
+        },
+        "weighted": {
+          "point_estimate": -0.0387,
+          "ci95_low": -0.1616,
+          "ci95_high": 0.0651
+        }
+      }
+    },
+    "Connecticut 2023.1→2024.1": {
+      "n": 59,
+      "n_cannot_determine_excluded": 1,
+      "method_accuracy": 0.7288,
+      "b2_accuracy": 0.9661,
+      "bootstrap": {
+        "n": 59,
+        "n_bootstrap": 10000,
+        "raw": {
+          "point_estimate": -0.2373,
+          "ci95_low": -0.339,
+          "ci95_high": -0.1356
+        },
+        "weighted": {
+          "point_estimate": -0.1332,
+          "ci95_low": -0.2259,
+          "ci95_high": -0.0583
+        }
+      }
+    }
+  },
+  "pooled": {
+    "n": 209,
+    "method_accuracy": 0.7512,
+    "b2_accuracy": 0.7943,
+    "bootstrap": {
+      "n": 209,
+      "n_bootstrap": 10000,
+      "raw": {
+        "point_estimate": -0.0431,
+        "ci95_low": -0.1005,
+        "ci95_high": 0.0144
+      },
+      "weighted": {
+        "point_estimate": -0.0215,
+        "ci95_low": -0.0586,
+        "ci95_high": 0.0139
+      }
+    },
+    "h3_confirmed_raw": false,
+    "h3_confirmed_weighted": false
+  }
+}

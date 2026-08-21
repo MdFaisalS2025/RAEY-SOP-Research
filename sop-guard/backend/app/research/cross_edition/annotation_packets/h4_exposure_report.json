@@ -1,0 +1,66 @@
+{
+  "per_pair": {
+    "Tennessee 2017→2018": {
+      "n_t3_sampled": 10,
+      "n_collision_possible": 0,
+      "n_guideline_mismap_possible": 0,
+      "n_either_failure_mode_possible": 0,
+      "n_scored": 8,
+      "n_correct": 7
+    },
+    "Pennsylvania 2021→2023": {
+      "n_t3_sampled": 10,
+      "n_collision_possible": 0,
+      "n_guideline_mismap_possible": 2,
+      "n_either_failure_mode_possible": 2,
+      "n_scored": 10,
+      "n_correct": 10
+    },
+    "Connecticut 2022.1→2023.1": {
+      "n_t3_sampled": 10,
+      "n_collision_possible": 0,
+      "n_guideline_mismap_possible": 0,
+      "n_either_failure_mode_possible": 0,
+      "n_scored": 10,
+      "n_correct": 10
+    },
+    "Connecticut 2023.1→2024.1": {
+      "n_t3_sampled": 6,
+      "n_collision_possible": 0,
+      "n_guideline_mismap_possible": 0,
+      "n_either_failure_mode_possible": 0,
+      "n_scored": 6,
+      "n_correct": 6
+    }
+  },
+  "pooled": {
+    "n_t3_sampled": 36,
+    "n_collision_possible": 0,
+    "n_guideline_mismap_possible": 2,
+    "n_either_failure_mode_possible": 2,
+    "pct_either_possible": 5.6,
+    "n_scored": 34,
+    "n_correct": 33,
+    "t3_precision": 0.9706
+  },
+  "examples": [
+    {
+      "pair": "Pennsylvania 2021→2023",
+      "sample_id": "S028",
+      "old_guideline": "SUSPECTED ACUTE CORONARY SYNDROME",
+      "mapped_guideline": "CHEST PAIN / SUSPECTED ACUTE CORONARY SYNDROME",
+      "n_identical_candidates": 1,
+      "collision_possible": false,
+      "mismap_possible": true
+    },
+    {
+      "pair": "Pennsylvania 2021→2023",
+      "sample_id": "S035",
+      "old_guideline": "SUSPECTED ACUTE CORONARY SYNDROME",
+      "mapped_guideline": "CHEST PAIN / SUSPECTED ACUTE CORONARY SYNDROME",
+      "n_identical_candidates": 1,
+      "collision_possible": false,
+      "mismap_possible": true
+    }
+  ]
+}

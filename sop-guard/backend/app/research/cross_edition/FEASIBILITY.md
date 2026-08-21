@@ -4619,3 +4619,47 @@ No hypothesis in §7's family is confirmed, disconfirmed, or reopened by
 this.
 
 Full numbers: `annotation_packets/structure_ablation_report.json`.
+
+## 62. H4 tautology check: the objection is confirmed, not refuted — H4 is demoted
+
+Part of the novelty-audit plan: a reviewer's likely objection is that T3
+is *defined* as "same guideline+section, byte-identical text, different
+marker path", so "are T3 items true correspondences" is close to asking
+whether identical text in an already-matched guideline is the same
+item — near-guaranteed, making 97-100% precision uninformative. The
+plan's instruction was to defend H4 by measuring whether its two real
+failure modes (boilerplate collision — more than one identical-text
+candidate in the pool; guideline mismapping — the old guideline's title
+changed and had to be matched, not trivially identical) were ever
+actually possible for the sampled T3 items.
+
+`run_h4_exposure.py` measured this directly against `item_align.py`'s
+own candidate pools (not a reimplementation), correctly recovering each
+item's PRE-mapping guideline title from an independent `parse()` call
+before `align_items` mutates it in place (a real bug caught while
+writing this script: comparing two already-mutated values against each
+other trivially always agrees, which would have hidden mismapping
+entirely — fixed before running, not after seeing a suspiciously clean
+number).
+
+**Result: boilerplate collision never occurred (0/36). Guideline
+remapping was possible in only 2/36 items (5.6%), both in
+Pennsylvania.** In 94.4% of sampled T3 items, the old guideline's title
+had not changed at all (a trivial identity lookup, not a real matching
+decision) and the identical-text candidate was unique. **This confirms
+the tautology objection rather than refuting it** — the data does not
+support defending H4 as a non-trivial test, despite that being the
+originally chosen approach; the honest conclusion is the one the data
+gives, not the one initially preferred.
+
+**H4 is demoted from a headline finding to a validation/sanity check.**
+It still shows the pipeline behaves as designed (a dictionary-style
+lookup within a correctly-scoped, correctly-mapped guideline correctly
+finds renumbered items essentially all of the time) but does not
+support a claim that the method's matching *logic* was meaningfully
+tested by it. The paper's results section should lead with §61's
+degradation/threshold finding and the §53-59 comparative evaluation;
+H4 belongs in a methods-validation subsection, alongside the r=0
+reproduction check, not among the paper's contributions.
+
+Full numbers: `annotation_packets/h4_exposure_report.json`.

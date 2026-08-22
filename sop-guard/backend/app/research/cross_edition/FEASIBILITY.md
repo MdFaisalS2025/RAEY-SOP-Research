@@ -5191,3 +5191,98 @@ beat the structural method on the full, as-observed sample" finding
 matching threshold, not contingent on one specific configuration.
 
 Full numbers: `annotation_packets/b5_model_floor_sweep_report.json`.
+
+## 68. Audit round 3, Phase 1: four statistical gaps closed
+
+A third full-project sweep, this time paired with literature research
+(§69). This section covers the four purely statistical gaps carried
+over from the first two audit rounds - none change any point estimate,
+all are additive. Verified directly, not assumed: every fix was re-run
+and every existing point estimate reproduced exactly (0.7124 method
+accuracy, r=0 validity, etc.) before any new number was trusted.
+
+### 68.1 CIs on the structure-quality ablation curve (§61)
+
+The paper's centerpiece figure previously reported point estimates with
+no error bars. `structure_ablation.py` now reports, at every rate, two
+DELIBERATELY SEPARATE sources of variation rather than one conflated
+number:
+
+| r | Mean accuracy | Across-seed range | Item-level 95% CI (per-seed range) |
+|---|---|---|---|
+| 0.00 | 71.24% | [71.24%, 71.24%] | [65.24%, 76.82%] |
+| 0.05 | 69.27% | [67.81%, 71.67%] | lo∈[61.80%,65.67%], hi∈[73.82%,77.25%] |
+| 0.10 | 66.35% | [62.23%, 69.96%] | lo∈[56.22%,63.95%], hi∈[68.24%,75.54%] |
+| 0.20 | 63.09% | [59.23%, 67.38%] | lo∈[52.79%,61.37%], hi∈[65.24%,73.39%] |
+| 0.35 | 57.85% | [51.50%, 63.52%] | lo∈[45.06%,57.51%], hi∈[57.94%,69.53%] |
+| 0.50 | 53.05% | [50.21%, 54.94%] | lo∈[43.78%,48.50%], hi∈[56.65%,61.37%] |
+
+The across-seed range measures sensitivity to *which* random corruption
+instance was drawn; the item-level CI measures sampling uncertainty
+*within* one fixed corruption instance. **They are not the same thing
+and are not added together** - conflating them would either overstate
+or understate the curve's real precision depending on which one
+dominates at a given rate. At r=0 the item-level CI alone is ~11.6
+points wide (65.24%-76.82%) - a real, previously invisible amount of
+uncertainty around the single point estimate the curve's most important
+anchor rests on.
+
+Monotonicity still holds (confirmed non-increasing at every step,
+tolerance 0.01) and r=0 still reproduces 71.24%/n=233 exactly - the fix
+is additive, as designed.
+
+### 68.2 CI on the calibration F1 anchor (§64)
+
+§64's headline "real corpus structure F1 ≈ 0.794" was a bare point
+estimate. The 8 underlying points (4 editions x 2 annotators) span
+**0.7313 to 0.8687** - a 13.7-point range - with a bootstrap 95% CI of
+[0.7597, 0.8472] computed from those 8 points. **n=8 is small enough
+that the raw range and the already-known per-annotator means (annotator
+1: 0.864, annotator 2: 0.743, §64.2) are the more honest picture of
+uncertainty than the bootstrap CI alone** - stated plainly rather than
+presenting a falsely precise interval. The calibration claim in §64.4
+("at real-world structure-detection quality, the crossover has not
+occurred") is robust to this range - even at the low end (0.731) the
+corpus is well inside the regime §61's curve shows the method losing in,
+and even at the high end (0.869) it is still below the point where §61's
+observed crossover (against B2 specifically) occurs.
+
+### 68.3 Null-centered bootstrap p-values (§55)
+
+The BH-adjusted p-values reported since §55 were percentile bootstrap
+p-values (read the tail probability directly off the bootstrap
+distribution, which is naturally centered at the observed estimate, not
+the null value) - a common, defensible shortcut, but distinct from the
+more standard pivot construction (shift the bootstrap distribution to
+center at the null, then ask how extreme the observed estimate is
+relative to that). Both are now computed and reported side by side:
+
+| | Percentile p_adj | Null-centered p_adj | Divergence |
+|---|---|---|---|
+| H3 | 0.9705 | 0.9691 | 0.0014 |
+| H4 | 0.0003 | 0.0000 | 0.0003 |
+| H5 | 0.7544 | 0.7512 | 0.0032 |
+
+**Divergence is negligible everywhere** (max 0.0032) - the percentile
+shortcut used throughout this study was not meaningfully misleading for
+any of the three hypotheses. No conclusion changes; this closes the gap
+with evidence rather than leaving it as an unaddressed caveat.
+
+### 68.4 H3′ Benjamini-Hochberg applied
+
+`PREREGISTRATION.md`'s H3′ pre-commitment entry committed to BH across
+{H3′a, H3′b, H3′c} "as its own family" - never actually run. Applied now:
+p_raw = {1.0, 1.0, 0.5641}, p_adjusted = {1.0, 1.0, 1.0}. H3′a/H3′b's
+p=1.0 is the mechanical consequence of the already-established
+UNTESTABLE finding (§57.2: 20/21 clean bullet items are T1-tier, where
+the fix is a no-op by construction, giving a degenerate zero-variance
+bootstrap distribution) - not new evidence against either, and not in
+tension with anything already reported. This closes the last open
+pre-registration commitment from the H3′ follow-up.
+
+Full numbers: `annotation_packets/full_comparison_report.json`,
+`structure_ablation_report.json`,
+`boundary_annotation/calibration_report.json`,
+`h3prime_tennessee_2022_2024/h3prime_test_report.json` (all regenerated
+with these additions; every pre-existing point estimate in each file is
+unchanged).

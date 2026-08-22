@@ -34,6 +34,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[4]))  # backend/ on sys.path
 
 from app.research.cross_edition.annotation import load_completed_xlsx, _norm_answer  # noqa: E402
+from app.research.cross_edition.annotation_packets.run_full_comparison import (  # noqa: E402
+    benjamini_hochberg,
+)
 
 BASE = Path(__file__).parent / "h3prime_tennessee_2022_2024"
 ANNOTATOR_E = r"C:\Users\Faisal\Desktop\research paper\E.xlsx"
@@ -72,9 +75,17 @@ def bootstrap_ci(pairs: list[tuple[int, int]], n_boot: int = 10000, seed: int = 
         diffs.append(sum(a - b for a, b in sample) / n)
     diffs.sort()
     lo_i, hi_i = int(0.025 * n_boot), int(0.975 * n_boot) - 1
+    # p-value for BH (2026-08-18 audit round 3, Phase 1: this was
+    # pre-registered - PREREGISTRATION.md's H3' pre-commitment entry commits
+    # "Benjamini-Hochberg applied across {H3'a, H3'b, H3'c} as its own
+    # family" - but never applied. Null: diff<=0 (H3'a/b/c's shared
+    # confirmation criterion requires diff>0). Percentile p, matching the
+    # convention already used for H3/H4/H5 in run_full_comparison.py.
+    p_value = sum(1 for d in diffs if d <= 0) / n_boot
     return {
         "n": n, "point_estimate": round(point, 4),
         "ci95_low": round(diffs[lo_i], 4), "ci95_high": round(diffs[hi_i], 4),
+        "p_value": round(p_value, 4),
     }
 
 
@@ -140,6 +151,17 @@ def main():
         print(f"  accuracy: a={a_acc:.4f}  b={b_acc:.4f}")
         print(f"  paired diff (a-b): {boot}")
         print(f"  CONFIRMED: {confirmed}")
+
+    # BH across {H3'a, H3'b, H3'c} - pre-registered (PREREGISTRATION.md's
+    # H3' pre-commitment entry) but never applied until this audit round.
+    pvals = {name: report[name]["bootstrap"]["p_value"] for name in report}
+    bh = benjamini_hochberg(pvals)
+    report["benjamini_hochberg"] = bh
+    print(f"\nBH-adjusted p-values (H3'a/b/c): {bh}")
+    print("Note: H3'a/H3'b's p=1.0 reflects the already-established UNTESTABLE "
+          "finding (degenerate population, 20/21 items T1-tier where the fix "
+          "is a no-op by construction) - not literal strong evidence against, "
+          "consistent with FEASIBILITY.md's H3'a/H3'b write-up.")
 
     out_path = BASE / "h3prime_test_report.json"
     with open(out_path, "w", encoding="utf-8") as fh:

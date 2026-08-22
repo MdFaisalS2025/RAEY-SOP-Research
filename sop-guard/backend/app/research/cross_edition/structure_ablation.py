@@ -36,8 +36,22 @@ METHOD
    algorithm runs exactly as-is on corrupted input - no reimplementation,
    no risk of divergence from the real method.
 5. Score against the EXISTING ground truth (already-adjudicated, already
-   used for every other result in this study) via `_orig_id`, restricted
-   to the same 209 items used throughout.
+   used for every other result in this study) via PARSE-ORDER INDEX, not
+   `_orig_id` string matching. 2026-08-18 audit finding: `_orig_id` is
+   the RAW, pre-remap item_id (stamped before align_items ever mutates
+   it), but `annotation_packet.csv`'s own `old_item_id` column is the
+   POST-remap id align_items writes - two different id spaces whenever a
+   guideline was renamed between editions. The original version of this
+   script built its sample index from the CSV's post-remap id and looked
+   it up against `_orig_id`-keyed records, silently dropping the same
+   ~10% of items (the hardest ones) that run_full_comparison.py dropped
+   for the analogous reason - and this script's own r=0 validity check
+   was checking against that already-wrong 209/75.12% figure, so the
+   error passed its own guard undetected. Fixed via
+   `sample_join.build_index_join`: old_item_id -> parse-order index,
+   which is stable across corruption (corrupt_edition deepcopies without
+   reordering), then look up `result["_all_results"][index]` directly -
+   the same fix, and the same shared helper, used everywhere else.
 
 B2 and B5 are NOT re-run per trial: both operate purely on `.text`,
 never `.guideline`, and this corruption only ever rewrites
@@ -77,10 +91,17 @@ from app.research.cross_edition.annotation_packets.run_h3_test import (  # noqa:
 )
 from app.research.cross_edition.baseline_b2 import align_items_b2  # noqa: E402
 from app.research.cross_edition.baseline_b5 import align_items_b5  # noqa: E402
+from app.research.cross_edition.annotation_packets.sample_join import (  # noqa: E402
+    build_index_join, verify_sample_identity,
+)
 
 BASE = Path(__file__).parent / "annotation_packets"
 RATES = [0.0, 0.05, 0.10, 0.20, 0.35, 0.50]
 N_SEEDS = 5
+# Set from run_full_comparison.py's corrected (post-join-fix) method accuracy,
+# cross-checked against section 52.1's independently-computed 71.24% - see the
+# 2026-08-18 audit's PREREGISTRATION.md entry for the confirmed value.
+EXPECTED_R0_ACCURACY = 0.7124
 
 
 # ---------------------------------------------------------------------------
@@ -174,14 +195,12 @@ def run_trial(pair_paths: dict[str, tuple[str, str]], cache: dict, rate: float,
         finally:
             item_align.parse = orig_parse
 
-        by_orig = {rec["old_item"]._orig_id: rec for rec in result["_all_results"]}
+        all_results = result["_all_results"]
 
         correct = 0
         total = 0
-        for old_id, truth in sample_index.get(pair, []):
-            rec = by_orig.get(old_id)
-            if rec is None:
-                continue  # should not happen if _orig_id survived corruption
+        for idx, truth in sample_index.get(pair, []):
+            rec = all_results[idx]  # stable across corruption - see module docstring
             total += 1
             new_item = rec["new_item"]
             pred = _norm_answer(new_item._orig_id) if new_item is not None else "none"
@@ -199,15 +218,20 @@ def run_trial(pair_paths: dict[str, tuple[str, str]], cache: dict, rate: float,
     }
 
 
-def build_sample_index() -> dict[str, list[tuple[str, str]]]:
-    """{pair: [(old_item_id, truth), ...]} for the 209 already-usable items
+def build_sample_index() -> dict[str, list[tuple[int, str]]]:
+    """{pair: [(parse_order_index, truth), ...]} for the 233 usable items
     (CANNOT_DETERMINE excluded), identical population to every other result
-    in this study."""
+    in this study. Index, not old_item_id string - see module docstring's
+    step 5 for why a string join silently dropped ~10% of items here."""
     ground_truth = build_ground_truth()
-    index: dict[str, list[tuple[str, str]]] = {}
-    for pair, (slug, _, _) in PAIRS.items():
-        with open(BASE / slug / "annotation_packet.csv", encoding="utf-8") as f:
+    index: dict[str, list[tuple[int, str]]] = {}
+    for pair, (slug, old_pdf, new_pdf) in PAIRS.items():
+        packet_csv = BASE / slug / "annotation_packet.csv"
+        with open(packet_csv, encoding="utf-8") as f:
             rows = list(csv.DictReader(f))
+        id_to_index, _ = build_index_join(old_pdf, new_pdf)
+        verify_sample_identity(packet_csv, id_to_index)
+
         gt = ground_truth[pair]
         pairs_list = []
         for row in rows:
@@ -215,7 +239,7 @@ def build_sample_index() -> dict[str, list[tuple[str, str]]]:
             truth = gt.get(sid)
             if truth is None or truth == "cannot_determine":
                 continue
-            pairs_list.append((row["old_item_id"], truth))
+            pairs_list.append((id_to_index[row["old_item_id"]], truth))
         index[pair] = pairs_list
     return index
 
@@ -238,15 +262,16 @@ def main():
     cache = load_and_stamp()
     pair_paths = {pair: (old_pdf, new_pdf) for pair, (slug, old_pdf, new_pdf) in PAIRS.items()}
 
-    print("Building sample index (209 usable items)...")
+    print("Building sample index (233 usable items after the 2026-08-18 join-bug fix)...")
     sample_index = build_sample_index()
     n_total = sum(len(v) for v in sample_index.values())
-    print(f"  n = {n_total} (expect 209)")
+    print(f"  n = {n_total} (expect 233)")
 
-    print("\n=== Validity check: r=0 must reproduce 75.12% / n=209 exactly ===")
+    print("\n=== Validity check: r=0 must reproduce the corrected full-pipeline "
+          f"accuracy ({EXPECTED_R0_ACCURACY}) / n=233 exactly ===")
     r0 = run_trial(pair_paths, cache, 0.0, seed=1, sample_index=sample_index)
     print(f"  r=0: accuracy={r0['accuracy']}  n={r0['n']}")
-    r0_ok = r0["n"] == 209 and abs(r0["accuracy"] - 0.7512) < 0.0001
+    r0_ok = r0["n"] == 233 and abs(r0["accuracy"] - EXPECTED_R0_ACCURACY) < 0.0001
     print(f"  PASS: {r0_ok}")
     if not r0_ok:
         print("  !!! HARNESS INVALID - stopping before running the full sweep !!!")
@@ -282,8 +307,10 @@ def main():
         "summary_by_rate": summary,
         "trials": results,
         "monotonic": monotonic,
-        "reference_lines": {"B2_accuracy_raw": 0.7943, "B5_accuracy_raw": 0.8182,
-                              "method_accuracy_at_r0_full_pipeline": 0.7512},
+        # Corrected 2026-08-18 (join-bug fix, see sample_join.py): were
+        # 0.7943 / 0.8182 / 0.7512 before the fix.
+        "reference_lines": {"B2_accuracy_raw": 0.7597, "B5_accuracy_raw": 0.7811,
+                              "method_accuracy_at_r0_full_pipeline": 0.7124},
     }
     out_path = BASE / "structure_ablation_report.json"
     with open(out_path, "w", encoding="utf-8") as f:

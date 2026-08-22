@@ -29,6 +29,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[4]))  # backend/ on sys.path
 
+import app.research.cross_edition.annotation_packets.run_h3_test as _rt  # noqa: E402
+# The completed annotator files were moved after run_h3_test.py's module
+# defaults were written; every other driver in this study overrides these
+# before use, and this one was missed until the 2026-08-18 audit.
+_rt.ANNOTATOR_FILES = {k: rf"C:\Users\Faisal\Desktop\research paper\Annotator_{k}.xlsx" for k in "ABCD"}
+_rt.ADJUDICATION_FILE = r"C:\Users\Faisal\Desktop\research paper\Adjudication_43_items_completed.xlsx"
+
 from app.research.cross_edition.annotation import _norm_answer  # noqa: E402
 from app.research.cross_edition.baseline_b2 import align_items_b2  # noqa: E402
 from app.research.cross_edition.baseline_b1_b3_b4 import (  # noqa: E402
@@ -36,6 +43,9 @@ from app.research.cross_edition.baseline_b1_b3_b4 import (  # noqa: E402
 )
 from app.research.cross_edition.annotation_packets.run_h3_test import (  # noqa: E402
     PAIRS, build_ground_truth,
+)
+from app.research.cross_edition.annotation_packets.sample_join import (  # noqa: E402
+    build_index_join, verify_sample_identity, join_baseline,
 )
 
 BASE = Path(__file__).parent
@@ -48,21 +58,32 @@ SEED = 20261018
 # with the method's and every baseline's prediction plus ground truth.
 # ---------------------------------------------------------------------------
 def build_records() -> list[dict]:
+    """Joins by PARSE-ORDER INDEX, not by old_item_id string - see
+    sample_join.py's module docstring for why the id-based join used here
+    until the 2026-08-18 audit was a real bug: item_align.align_items
+    mutates item_id into the new edition's guideline vocabulary, but
+    annotation_packet.csv stores that post-remap id while the baselines key
+    their own results by the raw parse() id. 24 of 233 usable items (the
+    hardest ones - guideline renamed between editions) silently failed the
+    old id-based lookup and were dropped, non-randomly inflating the
+    method's reported accuracy. Index join is exact because align_items and
+    every baseline iterate the identical parse()d old_items list in the
+    identical order (verified in the audit, not assumed)."""
     ground_truth = build_ground_truth()
     records: list[dict] = []
 
     for pair_idx, (pair, (slug, old_pdf, new_pdf)) in enumerate(PAIRS.items()):
-        with open(BASE / slug / "annotation_packet.csv", encoding="utf-8") as f:
+        packet_csv = BASE / slug / "annotation_packet.csv"
+        with open(packet_csv, encoding="utf-8") as f:
             method_rows = {r["sample_id"]: r for r in csv.DictReader(f)}
 
-        b1 = {r["old_item_id"]: r["b1_predicted_item_id"]
-              for r in align_items_b1(old_pdf, new_pdf)["_all_results"]}
-        b2 = {r["old_item_id"]: r["b2_predicted_item_id"]
-              for r in align_items_b2(old_pdf, new_pdf)["_all_results"]}
-        b3 = {r["old_item_id"]: r["b3_predicted_item_id"]
-              for r in align_items_b3(old_pdf, new_pdf)["_all_results"]}
-        b4 = {r["old_item_id"]: r["b4_predicted_item_id"]
-              for r in align_items_b4(old_pdf, new_pdf)["_all_results"]}
+        id_to_index, _ = build_index_join(old_pdf, new_pdf)
+        verify_sample_identity(packet_csv, id_to_index)  # fail loudly, not silently
+
+        b1 = align_items_b1(old_pdf, new_pdf)
+        b2 = align_items_b2(old_pdf, new_pdf)
+        b3 = align_items_b3(old_pdf, new_pdf)
+        b4 = align_items_b4(old_pdf, new_pdf)
 
         gt = ground_truth[pair]
         for sid, row in method_rows.items():
@@ -71,17 +92,15 @@ def build_records() -> list[dict]:
             truth = gt[sid]
             if truth == "cannot_determine":
                 continue
-            old_id = row["old_item_id"]
-            if old_id not in b1 or old_id not in b2 or old_id not in b3 or old_id not in b4:
-                continue  # should not happen - same parse() on the same file
+            idx = id_to_index[row["old_item_id"]]  # KeyError, not silent skip, if this ever fails
 
             method_pred = _norm_answer(row["method_predicted_item_id"])
             preds = {
                 "method": method_pred,
-                "b1": _norm_answer(b1[old_id]),
-                "b2": _norm_answer(b2[old_id]),
-                "b3": _norm_answer(b3[old_id]),
-                "b4": _norm_answer(b4[old_id]),
+                "b1": _norm_answer(join_baseline(b1, idx, "b1_predicted_item_id")),
+                "b2": _norm_answer(join_baseline(b2, idx, "b2_predicted_item_id")),
+                "b3": _norm_answer(join_baseline(b3, idx, "b3_predicted_item_id")),
+                "b4": _norm_answer(join_baseline(b4, idx, "b4_predicted_item_id")),
             }
             weight = float(row.get("sample_weight", 1.0) or 1.0)
 
@@ -275,7 +294,8 @@ def benjamini_hochberg(pvals: dict[str, float]) -> dict[str, dict]:
 
 def main():
     records = build_records()
-    print(f"usable items: {len(records)} (expect 209)")
+    print(f"usable items: {len(records)} (expect 233 - see sample_join.py for "
+          f"why this was 209 before the 2026-08-18 join-bug fix)")
 
     result: dict = {"n_items": len(records)}
 

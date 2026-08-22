@@ -129,13 +129,23 @@ def main():
     print(f"wrote {csv_path}")
     print(f"wrote {ctx_path}")
 
-    # Master scoring file (NOT for annotators): v1 / v2 / B2 predictions
-    # for every sampled old_item_id, keyed the same way annotation_packet.csv
-    # is, so H3'a/b/c can be scored later against blind ground truth.
+    # Master scoring file (NOT for annotators): v1 / v2 / B2 predictions for
+    # every sampled item, joined by PARSE-ORDER INDEX, not old_item_id string.
+    # 2026-08-18 audit finding: v2 (item_align_v2) applies the identical
+    # guideline-id-remap align_items does, so v1/v2 ids happened to agree,
+    # but B2 never remaps .guideline at all - align_items_b2's old_item_id is
+    # the RAW parse id, while this packet's old_item_id (from v1's
+    # write_annotation_packet) is POST-remap. String-keyed lookup silently
+    # mismatched B2's predictions whenever a guideline was renamed - the same
+    # bug class already fixed in run_full_comparison.py; see sample_join.py.
+    from app.research.cross_edition.annotation_packets.sample_join import (
+        build_index_join, verify_sample_identity, join_baseline,
+    )
+    id_to_index, _ = build_index_join(OLD_PDF, NEW_PDF)
+    verify_sample_identity(csv_path, id_to_index)
+
     v2 = align_items_v2(OLD_PDF, NEW_PDF)
-    v2_by_id = {r["old_item_id"]: r for r in v2["_all_results"]}
     b2 = align_items_b2(OLD_PDF, NEW_PDF)
-    b2_by_id = {r["old_item_id"]: r for r in b2["_all_results"]}
 
     with open(csv_path, encoding="utf-8") as f:
         packet_rows = list(csv.DictReader(f))
@@ -150,8 +160,9 @@ def main():
         w.writeheader()
         for row in packet_rows:
             oid = row["old_item_id"]
-            v2r = v2_by_id.get(oid, {})
-            b2r = b2_by_id.get(oid, {})
+            idx = id_to_index[oid]
+            v2r = v2["_all_results"][idx]
+            b2r = {"b2_predicted_item_id": join_baseline(b2, idx, "b2_predicted_item_id")}
             w.writerow({
                 "sample_id": row["sample_id"],
                 "old_item_id": oid,

@@ -5066,3 +5066,73 @@ Full numbers: `annotation_packets/full_comparison_report.json`,
 `structure_ablation_report.json` (all regenerated with the fix; each
 file's own contents are now the corrected numbers, not the ones tabulated
 in §55/§58/§59/§61 - this section is the authoritative cross-reference).
+
+## 66. Guideline tie-break stability: a real, previously-uncounted ±2.5-point source of uncertainty
+
+Audit Phase 2. `match_guidelines`' containment-biased score produces
+multiple perfect (1.0) candidates for a large share of Connecticut's
+guidelines (31/92, 34% for v2022.1→v2023.1; 33/93, 35% for
+v2023.1→v2024.1 - Tennessee 0/69, Pennsylvania 2/51), broken by
+alphabetical descending string order - deterministic, but arbitrary
+with respect to anything the method measures. This check tests whether
+the reported accuracy is an artefact of that particular, arbitrary
+choice.
+
+### 66.1 Method
+
+`tiebreak_sensitivity.py` (new, does not modify `item_align.py`): an
+exact copy of `match_guidelines`' scoring logic, differing only in that
+tied candidates are broken by a random per-trial draw instead of
+alphabetical order. 20 trials, each re-running the real unmodified
+`align_items` on all four pairs and rescoring the same 233
+already-sampled items against the same already-collected ground truth -
+the sample and ground truth are held fixed; only how the method's own
+prediction is computed varies.
+
+### 66.2 Result: a real, material spread
+
+| | Value |
+|---|---|
+| Reported (alphabetical tie-break) | **71.24%** |
+| 20-trial mean | 72.47% |
+| 20-trial range | **70.39% - 75.54%** |
+| 20-trial spread | **5.15 points** |
+
+This is not a negligible concern retired by the check - it is a real,
+previously-uncounted source of measurement uncertainty roughly
+comparable in size to the bootstrap sampling CIs already reported
+throughout this study (e.g. §65.4's corrected H3 CI width is ~10
+points). The specific alphabetical tie-break this study happened to use
+sits toward the low end of the range (71.24% vs. a 72.47% mean),
+though not an outlier - 6 of 20 trials scored at or below 71.24%.
+
+### 66.3 Does this change any conclusion? Checked directly, not assumed
+
+The single most important question: does any trial's method accuracy
+reach or exceed B2's 75.97%, which would mean the H3 "method behind
+B2" finding is itself an artefact of the arbitrary tie-break? **No** -
+the maximum observed trial (75.54%) still falls short of B2's 75.97%
+by 0.43 points. **H3's qualitative conclusion (method behind B2 on the
+full sample) holds under every one of the 20 tested tie-break
+alternatives**, though the margin by which it holds is much smaller
+than the point estimate alone would suggest, and in a minority of
+plausible worlds the two would be within noise of each other.
+
+### 66.4 What this means for the paper
+
+This is disclosed as a genuine methodological limitation, not resolved
+by picking a "better" tie-break rule after seeing this result (which
+would be exactly the kind of post-hoc tuning this study's discipline
+exists to prevent) and not silently absorbed into the existing bootstrap
+CIs (which measure a different source of uncertainty - sampling
+variability given a fixed method, not algorithmic variability from an
+arbitrary implementation choice within the method itself). The paper
+should state plainly that ~34-35% of Connecticut's guideline mappings
+are effectively arbitrary among several equally-scoring candidates, that
+this contributes a measured ±2.5-point-scale uncertainty to reported
+accuracy independent of sampling noise, and that the study's qualitative
+conclusions (H3/H4/H5 status, the §58/§59/§61 sign-flip and threshold
+findings) are robust to it while the exact point estimates are not fully
+precise numbers in the way a single decimal figure implies.
+
+Full numbers: `annotation_packets/tiebreak_sensitivity_report.json`.

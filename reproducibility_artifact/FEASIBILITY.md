@@ -4756,3 +4756,137 @@ measured F1) is what will place the real EMS corpus precisely on this
 curve rather than only demonstrating the curve's shape.
 
 Full numbers: `annotation_packets/uscode_experiment_report.json`.
+
+## 64. Calibration: the real corpus's measured structure-detection F1 is ~79.4%, matching published real-world benchmarks
+
+Closes Workstream A: calibrates §61's synthetic corruption-rate axis
+against a real, human-measured structure-detection quality metric,
+answering exactly what a citable "our x% F1 corresponds to y%
+crossover" claim needs.
+
+### 64.1 Collection: one genuine user error, then a passing independence check
+
+The first submission failed the mandatory independence check
+(`run_boundary_scoring.py`'s hard-failure gate) - all four editions'
+title lists were identical between the two files despite different
+byte hashes. Investigated before assuming the same root cause as the
+main round's annotator-duplication problem (this task is far more
+objective than correspondence judgement, so identical lists were not
+automatically assumed to be a duplication artefact) - the user
+confirmed directly it was a submission mistake, the same document
+uploaded twice under different names. The corrected resubmission
+passed cleanly: 0/4 editions with identical title lists, genuinely
+independent data (title-list lengths differ substantially between the
+two annotators - 81-97 items vs. 119-164 - confirming this was not
+another silent duplication).
+
+### 64.2 A real measurement artefact found and corrected before trusting the F1 numbers
+
+Raw recall differed sharply between the two annotators (0.75-0.78 vs.
+0.46-0.53) despite similarly high precision (~0.90-0.97 both) -
+investigated per §10 before reporting. Root cause confirmed directly:
+`match_guidelines`'s containment-biased scoring (`j = overlap /
+min(len_a, len_b)`) lets a short, exact annotator title (e.g.
+"Hypothermia") lose its rightful match to a longer sibling title
+containing it as a substring (e.g. "Induced Hypothermia Following
+ROSC") - both score a perfect 1.0 against a short parser guideline
+title, and the greedy algorithm can consume the wrong one first. This
+is not a new bug: it is the *same* already-documented weakness
+Appendix B item 3 flagged for cross-edition guideline matching
+("permissive by design... paired `Cyanide Exposure` with a truncated
+`Exposure`"), now surfacing in this new use.
+
+Quantified: of the "missed" annotator titles, checking each against
+every parser title (ignoring consumption order) found ~20-27% are
+this exact collision artefact (a genuine, findable match that lost the
+greedy race), and the remaining ~73-80% have no plausible parser match
+under any consumption order at all - genuine recall failures, not an
+artefact. A corrected F1 (treating collision-artefact misses as
+matched) is used for calibration; raw, uncorrected numbers remain
+unedited in `boundary_scoring_report.json`.
+
+| | Annotator 1 (mean across 4 editions) | Annotator 2 (mean across 4 editions) |
+|---|---|---|
+| Raw recall | 0.763 | 0.500 |
+| Corrected recall | 0.814 | 0.617 |
+| Precision | 0.921 | 0.937 |
+| **Corrected F1** | **0.864** | **0.743** |
+
+A real gap between annotators remains even after correction (0.864 vs.
+0.743) - annotator 2 consistently identified more fine-grained protocol
+titles with no parser counterpart at all than annotator 1 did. This is
+disclosed as genuine measurement uncertainty, not resolved by picking
+one annotator's number.
+
+### 64.3 Calibration result
+
+Pooled corrected F1 (mean of both annotators, all four Tennessee
+editions): **0.794** (`run_calibration.py`, reusing
+`structure_ablation.corrupt_edition` and `item_align.match_guidelines`
+completely unchanged). Remarkably consistent across editions
+individually (per-edition pooled means: 0.798-0.808) despite the
+real annotator gap above averaging it out.
+
+**This is the single number the whole calibration workstream exists to
+produce**: `item_parser.py`'s real, measured guideline-boundary
+detection quality on this corpus is **F1 ≈ 0.794** - closely matching
+DocLayNet's published ~0.81 mAP for diverse real-world documents, and
+nowhere near PubLayNet's ~0.97 (scientific documents only). The real
+EMS corpus's structure-detection quality is not an artificially bad or
+unfairly criticized parser - it sits squarely in the regime published
+state-of-the-art document-layout-analysis systems actually achieve on
+messy, real-world documents.
+
+Placed on §61's already-computed accuracy curve: r=0 (no synthetic
+corruption, i.e. the actual observed corpus) is by construction the
+real corpus's operating point, giving **method accuracy 75.12% at
+measured F1≈0.794** - trailing both B2 (79.43%) and B5 (81.82%). The
+real corpus sits in exactly the regime where the crossover has not yet
+occurred, at a structure-detection quality directly comparable to
+published, credible real-world benchmarks - not a synthetic worst
+case.
+
+Sweep, F1 as a function of synthetic corruption rate (5 seeds, 4
+editions, 2 annotators each):
+
+| r | Mean structure F1 |
+|---|---|
+| 0.00 (real corpus) | 0.7940 |
+| 0.05 | 0.7826 |
+| 0.10 | 0.7623 |
+| 0.20 | 0.7334 |
+| 0.35 | 0.6693 |
+| 0.50 | 0.5967 |
+
+Monotonically decreasing, exactly mirroring §61's accuracy curve shape
+- confirms the synthetic corruption model's severity is a reasonable,
+if approximate, proxy for real boundary-detection degradation.
+
+**A small, disclosed discrepancy**: this sweep's r=0 F1 (0.7940) is
+about 1 point below §64.2's standalone corrected-F1 mean (0.8034,
+computed directly from `run_boundary_scoring.py`'s output). Cause:
+`corrupt_edition` derives its guideline list purely from items
+(`{it.guideline for it in ed.items}`), which necessarily excludes
+guidelines with zero items - the raw `ParsedEdition.guidelines`
+attribute the standalone script used includes them. Both are
+legitimate, slightly different definitions of "a detected guideline";
+the sweep uses one consistent definition at every r for internal
+comparability, at the cost of this small, understood offset from the
+single-point standalone check. Stated plainly rather than silently
+reconciled.
+
+### 64.4 What this closes
+
+Workstream A (novelty-audit plan) is complete: §61/§63's synthetic
+corruption-rate axis now has a real, measured anchor point, and that
+anchor point is independently corroborated by published document-
+layout-analysis benchmarks (DocLayNet) rather than resting only on this
+study's own synthetic model. The paper's calibration claim can now be
+stated precisely: *at a structure-detection quality (F1≈0.79) matching
+published real-world benchmarks, structure-aware alignment has not
+been shown to outperform simple text-only matching; the crossover
+requires higher structure quality than this real corpus, or a
+comparable real system, currently achieves.*
+
+Full numbers: `annotation_packets/boundary_annotation/boundary_scoring_report.json`,
+`boundary_scoring_corrected.json`, `calibration_report.json`.

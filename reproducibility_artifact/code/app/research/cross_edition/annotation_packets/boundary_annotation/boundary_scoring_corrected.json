@@ -1,0 +1,54 @@
+{
+  "1": {
+    "tn_2017": {
+      "raw_recall": 0.7778,
+      "corrected_recall": 0.8395,
+      "precision": 0.9,
+      "corrected_f1": 0.8687
+    },
+    "tn_2018": {
+      "raw_recall": 0.7778,
+      "corrected_recall": 0.8395,
+      "precision": 0.9,
+      "corrected_f1": 0.8687
+    },
+    "tn_2022_23": {
+      "raw_recall": 0.7423,
+      "corrected_recall": 0.7835,
+      "precision": 0.9351,
+      "corrected_f1": 0.8526
+    },
+    "tn_sept2024": {
+      "raw_recall": 0.7526,
+      "corrected_recall": 0.7938,
+      "precision": 0.9481,
+      "corrected_f1": 0.8641
+    }
+  },
+  "2": {
+    "tn_2017": {
+      "raw_recall": 0.5294,
+      "corrected_recall": 0.6387,
+      "precision": 0.9,
+      "corrected_f1": 0.7471
+    },
+    "tn_2018": {
+      "raw_recall": 0.5246,
+      "corrected_recall": 0.6311,
+      "precision": 0.9143,
+      "corrected_f1": 0.7468
+    },
+    "tn_2022_23": {
+      "raw_recall": 0.4868,
+      "corrected_recall": 0.6118,
+      "precision": 0.961,
+      "corrected_f1": 0.7477
+    },
+    "tn_sept2024": {
+      "raw_recall": 0.4573,
+      "corrected_recall": 0.5854,
+      "precision": 0.974,
+      "corrected_f1": 0.7313
+    }
+  }
+}

@@ -41,26 +41,28 @@ from app.rag.embeddings import get_embedding_provider
 _SIM_FLOOR = 0.85
 
 
-def align_items_b5(old_pdf: str, new_pdf: str, backend: str = "auto") -> dict:
-    old_ed, new_ed = parse(old_pdf), parse(new_pdf)
-    old_items, new_items = old_ed.items, new_ed.items
-
-    provider = get_embedding_provider(backend=backend)
-    old_vecs = provider.embed_texts([it.text for it in old_items])
-    new_vecs = provider.embed_texts([it.text for it in new_items])
-
+def greedy_match_from_embeddings(
+    old_items, new_items, old_vecs, new_vecs, provider, sim_floor: float,
+) -> list[dict]:
+    """The greedy one-to-one matching loop, factored out so a floor sweep
+    (audit Phase 3) can reuse already-computed embeddings instead of
+    re-encoding per floor value. NOT decoupled from re-running the loop
+    itself: which new item a LATER old item can match depends on which
+    EARLIER old items were accepted (floor-gated) and consumed a
+    candidate, so the floor genuinely changes the matching outcome, not
+    just which matches are reported - only the (expensive) embedding
+    step is floor-independent and cacheable."""
     consumed: set[str] = set()
     all_results: list[dict] = []
-
     for a, a_vec in zip(old_items, old_vecs):
-        best, best_s, best_idx = None, 0.0, -1
-        for idx, (x, x_vec) in enumerate(zip(new_items, new_vecs)):
+        best, best_s = None, 0.0
+        for x, x_vec in zip(new_items, new_vecs):
             if x.item_id in consumed:
                 continue
             s = provider.similarity(a_vec, x_vec)
             if s > best_s:
-                best, best_s, best_idx = x, s, idx
-        matched = best is not None and best_s >= _SIM_FLOOR
+                best, best_s = x, s
+        matched = best is not None and best_s >= sim_floor
         if matched:
             consumed.add(best.item_id)
         all_results.append({
@@ -68,6 +70,23 @@ def align_items_b5(old_pdf: str, new_pdf: str, backend: str = "auto") -> dict:
             "b5_predicted_item_id": best.item_id if matched else "NONE",
             "b5_similarity": round(best_s, 4),
         })
+    return all_results
+
+
+def align_items_b5(old_pdf: str, new_pdf: str, backend: str = "auto",
+                     model_name: str | None = None, sim_floor: float = _SIM_FLOOR) -> dict:
+    old_ed, new_ed = parse(old_pdf), parse(new_pdf)
+    old_items, new_items = old_ed.items, new_ed.items
+
+    kwargs = {"backend": backend}
+    if model_name is not None:
+        kwargs["model_name"] = model_name
+    provider = get_embedding_provider(**kwargs)
+    old_vecs = provider.embed_texts([it.text for it in old_items])
+    new_vecs = provider.embed_texts([it.text for it in new_items])
+
+    all_results = greedy_match_from_embeddings(
+        old_items, new_items, old_vecs, new_vecs, provider, sim_floor)
 
     return {
         "old_items": len(old_items), "new_items": len(new_items),

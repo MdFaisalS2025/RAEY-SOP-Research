@@ -5066,3 +5066,128 @@ Full numbers: `annotation_packets/full_comparison_report.json`,
 `structure_ablation_report.json` (all regenerated with the fix; each
 file's own contents are now the corrected numbers, not the ones tabulated
 in §55/§58/§59/§61 - this section is the authoritative cross-reference).
+
+## 66. Guideline tie-break stability: a real, previously-uncounted ±2.5-point source of uncertainty
+
+Audit Phase 2. `match_guidelines`' containment-biased score produces
+multiple perfect (1.0) candidates for a large share of Connecticut's
+guidelines (31/92, 34% for v2022.1→v2023.1; 33/93, 35% for
+v2023.1→v2024.1 - Tennessee 0/69, Pennsylvania 2/51), broken by
+alphabetical descending string order - deterministic, but arbitrary
+with respect to anything the method measures. This check tests whether
+the reported accuracy is an artefact of that particular, arbitrary
+choice.
+
+### 66.1 Method
+
+`tiebreak_sensitivity.py` (new, does not modify `item_align.py`): an
+exact copy of `match_guidelines`' scoring logic, differing only in that
+tied candidates are broken by a random per-trial draw instead of
+alphabetical order. 20 trials, each re-running the real unmodified
+`align_items` on all four pairs and rescoring the same 233
+already-sampled items against the same already-collected ground truth -
+the sample and ground truth are held fixed; only how the method's own
+prediction is computed varies.
+
+### 66.2 Result: a real, material spread
+
+| | Value |
+|---|---|
+| Reported (alphabetical tie-break) | **71.24%** |
+| 20-trial mean | 72.47% |
+| 20-trial range | **70.39% - 75.54%** |
+| 20-trial spread | **5.15 points** |
+
+This is not a negligible concern retired by the check - it is a real,
+previously-uncounted source of measurement uncertainty roughly
+comparable in size to the bootstrap sampling CIs already reported
+throughout this study (e.g. §65.4's corrected H3 CI width is ~10
+points). The specific alphabetical tie-break this study happened to use
+sits toward the low end of the range (71.24% vs. a 72.47% mean),
+though not an outlier - 6 of 20 trials scored at or below 71.24%.
+
+### 66.3 Does this change any conclusion? Checked directly, not assumed
+
+The single most important question: does any trial's method accuracy
+reach or exceed B2's 75.97%, which would mean the H3 "method behind
+B2" finding is itself an artefact of the arbitrary tie-break? **No** -
+the maximum observed trial (75.54%) still falls short of B2's 75.97%
+by 0.43 points. **H3's qualitative conclusion (method behind B2 on the
+full sample) holds under every one of the 20 tested tie-break
+alternatives**, though the margin by which it holds is much smaller
+than the point estimate alone would suggest, and in a minority of
+plausible worlds the two would be within noise of each other.
+
+### 66.4 What this means for the paper
+
+This is disclosed as a genuine methodological limitation, not resolved
+by picking a "better" tie-break rule after seeing this result (which
+would be exactly the kind of post-hoc tuning this study's discipline
+exists to prevent) and not silently absorbed into the existing bootstrap
+CIs (which measure a different source of uncertainty - sampling
+variability given a fixed method, not algorithmic variability from an
+arbitrary implementation choice within the method itself). The paper
+should state plainly that ~34-35% of Connecticut's guideline mappings
+are effectively arbitrary among several equally-scoring candidates, that
+this contributes a measured ±2.5-point-scale uncertainty to reported
+accuracy independent of sampling noise, and that the study's qualitative
+conclusions (H3/H4/H5 status, the §58/§59/§61 sign-flip and threshold
+findings) are robust to it while the exact point estimates are not fully
+precise numbers in the way a single decimal figure implies.
+
+Full numbers: `annotation_packets/tiebreak_sensitivity_report.json`.
+
+## 67. B5 model + floor sensitivity grid: robust across every tested configuration
+
+Audit Phase 3. `baseline_b5.py`'s model (`bge-small-en-v1.5`) and
+similarity floor (0.85) were both uncalibrated choices. Full 3-model x
+5-floor grid (15 cells), committed and reported in its entirety before
+any cell was computed.
+
+### 67.1 Result
+
+| Model | 0.75 | 0.80 | 0.85 | 0.90 | 0.95 |
+|---|---|---|---|---|---|
+| bge-small-en-v1.5 | 74.68% | 77.68% | **78.11%** | 77.68% | 76.39% |
+| bge-base-en-v1.5 | 75.97% | 78.11% | 77.25% | 77.68% | 75.97% |
+| bge-large-en-v1.5 | 76.39% | **78.97%** | 78.11% | 77.25% | 75.11% |
+
+(Originally-reported cell in **bold** where it appears in its own row;
+grid maximum separately bolded.)
+
+Grid mean 77.02%, range 74.68%-78.97% (4.29 points). Reference points:
+method 71.24%, B2 75.97% (§65).
+
+### 67.2 The original finding is robust, not an artefact of one arbitrary choice
+
+**Every one of the 15 tested configurations exceeds the method's
+accuracy** - the weakest cell (bge-small at floor 0.75, 74.68%) still
+clears the method by 3.44 points. B5 beating the method on the full
+sample (§59, §65) does not depend on the specific model size or
+similarity floor chosen; it holds across the entire grid.
+
+Against B2 (75.97%): 11 of 15 cells exceed it, 2 tie exactly
+(bge-base at 0.75 and 0.95), 2 fall slightly below (bge-small at 0.75,
+bge-large at 0.95) - a real but much smaller and less universal margin
+than against the method.
+
+The originally-reported cell (bge-small, floor 0.85 = 78.11%) sits near
+the grid's upper-middle - 0.86 points below the observed maximum
+(bge-large, floor 0.80 = 78.97%), not an outlier that happened to
+maximize the reported result. The uncalibrated choice this study
+actually used was not, in retrospect, a favourable one relative to what
+a full search would have found; if anything a properly-tuned floor
+search would have reported a very slightly *stronger* B5 result than
+what was published.
+
+### 67.3 What this means for the paper
+
+This closes the audit's one remaining "was this number cherry-picked"
+question with a clean negative: it was not. The paper can report B5's
+result with a genuine sensitivity grid behind it rather than a single
+uncalibrated number, and can state plainly that the "unscoped baselines
+beat the structural method on the full, as-observed sample" finding
+(§53-59, §65) is robust to reasonable choices of embedding model and
+matching threshold, not contingent on one specific configuration.
+
+Full numbers: `annotation_packets/b5_model_floor_sweep_report.json`.

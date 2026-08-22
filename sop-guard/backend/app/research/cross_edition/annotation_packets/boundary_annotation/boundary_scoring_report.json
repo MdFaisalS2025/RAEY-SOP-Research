@@ -1,0 +1,315 @@
+{
+  "per_edition": {
+    "tn_2017": {
+      "mean_f1": 0.7506
+    },
+    "tn_2018": {
+      "mean_f1": 0.7506
+    },
+    "tn_2022_23": {
+      "mean_f1": 0.7369
+    },
+    "tn_sept2024": {
+      "mean_f1": 0.7308
+    }
+  },
+  "per_annotator": {
+    "1": {
+      "tn_2017": {
+        "n_annotator_titles": 81,
+        "n_parser_guidelines": 70,
+        "n_matched": 63,
+        "recall": 0.7778,
+        "precision": 0.9,
+        "f1": 0.8344,
+        "missed_boundaries": [
+          "Radiation / Hazmat",
+          "Abdominal Pain Complaints (Non Traumatic)",
+          "Air Ambulance Transport",
+          "Abdominal / Pelvic Trauma",
+          "Major Thermal Burn",
+          "Traumatic Tension Pneumothorax",
+          "Obstetric / Gynecological Complaints (Non Delivery)",
+          "Discontinuation / Withholding of Life Support",
+          "Mandatory EKG",
+          "Physical Restraint",
+          "Physician on the Scene",
+          "By-Stander on the Scene",
+          "Procedure for Deviation from Protocols",
+          "Spinal Immobilization",
+          "Stretcher Transport",
+          "Terminally Ill Patients",
+          "“Excited Delirium” / Taser Use",
+          "[Annotator 1 approach]"
+        ],
+        "spurious_guidelines": [
+          "Radiation/Hazmat",
+          "Abdominal Pain (non-traumatic)/Complaint/Nausea and Vomiting",
+          "<untitled@2436>",
+          "otherwise, contact Medical Control",
+          "Obstetrical / Gynecological Complaints (Non-Delivery or Gynecological Only)",
+          "MISCELLANEOUS",
+          "REFERENCE Pulse Oximetry"
+        ]
+      },
+      "tn_2018": {
+        "n_annotator_titles": 81,
+        "n_parser_guidelines": 70,
+        "n_matched": 63,
+        "recall": 0.7778,
+        "precision": 0.9,
+        "f1": 0.8344,
+        "missed_boundaries": [
+          "Radiation / Hazmat",
+          "Abdominal Pain Complaints (Non Traumatic)",
+          "Air Ambulance Transport",
+          "Abdominal / Pelvic Trauma",
+          "Major Thermal Burn",
+          "Traumatic Tension Pneumothorax",
+          "Obstetric / Gynecological Complaints (Non Delivery)",
+          "Discontinuation / Withholding of Life Support",
+          "Mandatory EKG",
+          "Physical Restraint",
+          "Physician on the Scene",
+          "By-Stander on the Scene",
+          "Procedure for Deviation from Protocols",
+          "Spinal Immobilization",
+          "Stretcher Transport",
+          "Terminally Ill Patients",
+          "“Excited Delirium” / Taser Use",
+          "[Annotator 1 approach]"
+        ],
+        "spurious_guidelines": [
+          "Radiation/Hazmat",
+          "Abdominal Pain (non-traumatic)/Complaint/Nausea and Vomiting",
+          "<untitled@2818>",
+          "otherwise, contact Medical Control",
+          "Obstetrical / Gynecological Complaints (Non-Delivery or Gynecological Only)",
+          "MISCELLANEOUS",
+          "REFERENCE Pulse Oximetry"
+        ]
+      },
+      "tn_2022_23": {
+        "n_annotator_titles": 97,
+        "n_parser_guidelines": 77,
+        "n_matched": 72,
+        "recall": 0.7423,
+        "precision": 0.9351,
+        "f1": 0.8276,
+        "missed_boundaries": [
+          "Ventricular Fibrillation / Pulseless V-Tach",
+          "Air Ambulance Transport",
+          "Discontinuation / Withholding of Life Support",
+          "Field Determination of Death",
+          "Mandatory EKG",
+          "Patient Refusal of Care / No Patient Transport Situation",
+          "Physician on Scene",
+          "Bystanders on Scene",
+          "Procedure for Deviation from Standing Orders",
+          "Spinal Protection",
+          "Stretcher Transport",
+          "Terminally Ill Patients",
+          "“Excited Delirium” / Taser Use",
+          "Physical Restraint",
+          "Ammonia",
+          "Chlorine",
+          "Cyanide",
+          "Heavy Metals",
+          "Hydrogen Fluoride",
+          "Hydrogen Sulfide"
+        ],
+        "spurious_guidelines": [
+          "Thrombosis-lungs SOP # 110 Ventricular Fibrillation/Pulseless Ventricular Tachycardia",
+          "Delirium with HyperAgitation",
+          "Vascular Access",
+          "Pain Management Protocol",
+          "Post-Intubation Sedation"
+        ]
+      },
+      "tn_sept2024": {
+        "n_annotator_titles": 97,
+        "n_parser_guidelines": 77,
+        "n_matched": 73,
+        "recall": 0.7526,
+        "precision": 0.9481,
+        "f1": 0.8391,
+        "missed_boundaries": [
+          "Ventricular Fibrillation / Pulseless V-Tach",
+          "Air Ambulance Transport",
+          "Discontinuation / Withholding of Life Support",
+          "Field Determination of Death",
+          "Mandatory EKG",
+          "Patient Refusal of Care / No Patient Transport Situation",
+          "Physician on Scene",
+          "Bystanders on Scene",
+          "Procedure for Deviation from Standing Orders",
+          "Spinal Protection",
+          "Stretcher Transport",
+          "Terminally Ill Patients",
+          "Physical Restraint",
+          "Ammonia",
+          "Chlorine",
+          "Cyanide",
+          "Heavy Metals",
+          "Hydrogen Fluoride",
+          "Hydrogen Sulfide",
+          "Methyl Bromide"
+        ],
+        "spurious_guidelines": [
+          "SOP # 110 Ventricular Fibrillation/Pulseless Ventricular Tachycardia",
+          "Vascular Access",
+          "Pain Management Protocol",
+          "Post-Intubation Sedation"
+        ]
+      }
+    },
+    "2": {
+      "tn_2017": {
+        "n_annotator_titles": 119,
+        "n_parser_guidelines": 70,
+        "n_matched": 63,
+        "recall": 0.5294,
+        "precision": 0.9,
+        "f1": 0.6667,
+        "missed_boundaries": [
+          "Hypothermia",
+          "Radiation / Hazmat",
+          "Abdominal Pain Complaints (Non Traumatic)",
+          "C-STAT Stroke Assessment Tool",
+          "Pre-Hospital Screen for Thrombolytic Therapy",
+          "Air Ambulance Transport",
+          "Abdominal / Pelvic Trauma",
+          "Major Thermal Burn",
+          "Multi-System Trauma",
+          "Traumatic Tension Pneumothorax",
+          "APGAR Scoring",
+          "Obstetric / Gynecological Complaints (Non Delivery)",
+          "Discontinuation / Withholding of Life Support",
+          "Mandatory EKG",
+          "Mini Mental Status Exam",
+          "Physical Restraint",
+          "Physician on the Scene",
+          "By-Stander on the Scene",
+          "Procedure for Deviation from Protocols",
+          "Spinal Immobilization"
+        ],
+        "spurious_guidelines": [
+          "Radiation/Hazmat",
+          "ENVRIONMENTAL EMERGENCY Carbon Monoxide Exposure",
+          "Abdominal Pain (non-traumatic)/Complaint/Nausea and Vomiting",
+          "<untitled@2436>",
+          "otherwise, contact Medical Control",
+          "Obstetrical / Gynecological Complaints (Non-Delivery or Gynecological Only)",
+          "MISCELLANEOUS"
+        ]
+      },
+      "tn_2018": {
+        "n_annotator_titles": 122,
+        "n_parser_guidelines": 70,
+        "n_matched": 64,
+        "recall": 0.5246,
+        "precision": 0.9143,
+        "f1": 0.6667,
+        "missed_boundaries": [
+          "Hypothermia",
+          "Radiation / Hazmat",
+          "Abdominal Pain Complaints (Non Traumatic)",
+          "C-STAT Stroke Assessment Tool",
+          "Pre-Hospital Screen for Thrombolytic Therapy",
+          "Air Ambulance Transport",
+          "Abdominal / Pelvic Trauma",
+          "Major Thermal Burn",
+          "Multi-System Trauma",
+          "Traumatic Tension Pneumothorax",
+          "APGAR Scoring",
+          "Obstetric / Gynecological Complaints (Non Delivery)",
+          "Discontinuation / Withholding of Life Support",
+          "Mandatory EKG",
+          "Mini Mental Status Exam",
+          "Physical Restraint",
+          "Physician on the Scene",
+          "By-Stander on the Scene",
+          "Procedure for Deviation from Protocols",
+          "Spinal Immobilization"
+        ],
+        "spurious_guidelines": [
+          "Radiation/Hazmat",
+          "Abdominal Pain (non-traumatic)/Complaint/Nausea and Vomiting",
+          "<untitled@2818>",
+          "otherwise, contact Medical Control",
+          "Obstetrical / Gynecological Complaints (Non-Delivery or Gynecological Only)",
+          "MISCELLANEOUS"
+        ]
+      },
+      "tn_2022_23": {
+        "n_annotator_titles": 152,
+        "n_parser_guidelines": 77,
+        "n_matched": 74,
+        "recall": 0.4868,
+        "precision": 0.961,
+        "f1": 0.6463,
+        "missed_boundaries": [
+          "Ventricular Fibrillation / Pulseless V-Tach",
+          "Hypothermia",
+          "C-STAT Stroke Assessment Tool",
+          "Pre-Hospital Screen for Thrombolytic Therapy",
+          "Air Ambulance Transport",
+          "APGAR Scoring",
+          "Discontinuation / Withholding of Life Support",
+          "Field Determination of Death",
+          "Mandatory EKG",
+          "Patient Refusal of Care / No Patient Transport Situation",
+          "Mini Mental Status Exam",
+          "Physician on Scene",
+          "Bystanders on Scene",
+          "Procedure for Deviation from Standing Orders",
+          "Spinal Protection",
+          "Stretcher Transport",
+          "Terminally Ill Patients",
+          "“Excited Delirium” / Taser Use",
+          "Physical Restraint",
+          "Ammonia"
+        ],
+        "spurious_guidelines": [
+          "Thrombosis-lungs SOP # 110 Ventricular Fibrillation/Pulseless Ventricular Tachycardia",
+          "Delirium with HyperAgitation",
+          "Post-Intubation Sedation"
+        ]
+      },
+      "tn_sept2024": {
+        "n_annotator_titles": 164,
+        "n_parser_guidelines": 77,
+        "n_matched": 75,
+        "recall": 0.4573,
+        "precision": 0.974,
+        "f1": 0.6224,
+        "missed_boundaries": [
+          "Ventricular Fibrillation / Pulseless V-Tach",
+          "Hypothermia",
+          "C-STAT Stroke Assessment Tool",
+          "Pre-Hospital Screen for Thrombolytic Therapy",
+          "Air Ambulance Transport",
+          "APGAR Scoring",
+          "Discontinuation / Withholding of Life Support",
+          "Field Determination of Death",
+          "Mandatory EKG",
+          "Patient Refusal of Care / No Patient Transport Situation",
+          "Mini Mental Status Exam",
+          "Physician on Scene",
+          "Bystanders on Scene",
+          "Procedure for Deviation from Standing Orders",
+          "Spinal Protection",
+          "Stretcher Transport",
+          "Terminally Ill Patients",
+          "Physical Restraint",
+          "Ammonia",
+          "Chlorine"
+        ],
+        "spurious_guidelines": [
+          "SOP # 110 Ventricular Fibrillation/Pulseless Ventricular Tachycardia",
+          "Post-Intubation Sedation"
+        ]
+      }
+    }
+  }
+}

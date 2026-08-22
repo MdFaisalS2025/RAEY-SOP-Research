@@ -86,14 +86,26 @@ def build_prompt(old_text: str, candidates: list[tuple[float, object]]) -> str:
     return "\n".join(lines)
 
 
-def call_llm(client, prompt: str) -> str:
+def call_llm(client, prompt: str, model_id: str) -> str:
     from google.genai import types
     resp = client.models.generate_content(
-        model=MODEL_ID,
+        model=model_id,
         contents=prompt,
         config=types.GenerateContentConfig(temperature=0.0),
     )
     return (resp.text or "").strip()
+
+
+def _extract_retry_delay(exc: Exception) -> float | None:
+    """Parses the API's own suggested retry delay (e.g. "Please retry in
+    39.002060453s.") out of a 429 error, so backoff respects what the
+    server actually asked for instead of a fixed/guessed schedule."""
+    import re
+    m = re.search(r"retryDelay['\"]?\s*:\s*['\"]?(\d+(?:\.\d+)?)s", str(exc))
+    if m:
+        return float(m.group(1))
+    m = re.search(r"retry in (\d+(?:\.\d+)?)s", str(exc))
+    return float(m.group(1)) if m else None
 
 
 def parse_llm_reply(reply: str, candidates: list[tuple[float, object]]) -> str:
@@ -112,17 +124,22 @@ def parse_llm_reply(reply: str, candidates: list[tuple[float, object]]) -> str:
 
 def align_items_b6_for_sample(
     old_pdf: str, new_pdf: str, sample_old_item_ids: list[str],
-    cache_path: str | None = None,
+    cache_path: str | None = None, model_id: str | None = None,
 ) -> dict:
     """Scores B6 ONLY for the given old_item_ids (parse-order-stable ids
     expected - callers should pass raw parse() ids, joined by the caller
-    via sample_join.py, not the post-remap ids align_items produces)."""
+    via sample_join.py, not the post-remap ids align_items produces).
+
+    model_id overrides the module default MODEL_ID - used to test
+    alternate models (e.g. gemini-2.5-flash-lite) against a SEPARATE
+    cache path, never mixed with another model's cached responses."""
     from google import genai
 
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
         raise RuntimeError("GEMINI_API_KEY not set in environment")
     client = genai.Client(api_key=api_key)
+    active_model = model_id or MODEL_ID
 
     old_ed, new_ed = parse(old_pdf), parse(new_pdf)
     old_items, new_items = old_ed.items, new_ed.items
@@ -145,22 +162,30 @@ def align_items_b6_for_sample(
         prompt = build_prompt(a.text, candidates)
 
         cache_key = a.item_id
-        if cache_key in cache:
+        if cache_key in cache and cache[cache_key].get("call_succeeded"):
             reply = cache[cache_key]["raw_reply"]
         else:
-            for attempt in range(3):
+            succeeded = False
+            reply = "NONE"
+            for attempt in range(5):
                 try:
-                    reply = call_llm(client, prompt)
+                    reply = call_llm(client, prompt, active_model)
+                    succeeded = True
                     break
                 except Exception as e:
-                    if attempt == 2:
-                        reply = "NONE"
-                        print(f"  WARNING: LLM call failed for {a.item_id!r} after 3 attempts: {e}")
+                    delay = _extract_retry_delay(e) or (2 ** attempt)
+                    if attempt == 4:
+                        print(f"  WARNING: LLM call failed for {a.item_id!r} "
+                              f"after 5 attempts, marking NONE (NOT a genuine "
+                              f"LLM judgement - excluded from any trusted "
+                              f"result): {e}")
                     else:
-                        time.sleep(2 ** attempt)
+                        time.sleep(delay + 1)
             cache[cache_key] = {
                 "prompt": prompt, "raw_reply": reply,
                 "candidate_ids": [c[1].item_id for c in candidates],
+                "call_succeeded": succeeded,  # False = forced NONE fallback,
+                                                # not a real LLM answer
             }
             if cache_path:
                 with open(cache_path, "w", encoding="utf-8") as f:
@@ -171,9 +196,10 @@ def align_items_b6_for_sample(
             "old_item_id": a.item_id,
             "b6_predicted_item_id": predicted_id,
             "raw_reply": reply,
+            "call_succeeded": cache[cache_key].get("call_succeeded", False),
         }
 
-    return {"model": MODEL_ID, "retrieval_model": RETRIEVAL_MODEL, "top_k": TOP_K,
+    return {"model": active_model, "retrieval_model": RETRIEVAL_MODEL, "top_k": TOP_K,
              "_results_by_old_id": results}
 
 

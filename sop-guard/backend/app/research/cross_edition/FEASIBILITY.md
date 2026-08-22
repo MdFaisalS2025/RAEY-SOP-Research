@@ -5286,3 +5286,106 @@ Full numbers: `annotation_packets/full_comparison_report.json`,
 `h3prime_tennessee_2022_2024/h3prime_test_report.json` (all regenerated
 with these additions; every pre-existing point estimate in each file is
 unchanged).
+
+## 69. Related work: ontology matching, and B6 (LLM retrieve-then-rerank)
+
+Audit round 3, Phase 2. Fresh literature research (requested by the user
+alongside this sweep) surfaced directly-adjacent prior art this study had
+never positioned itself against.
+
+### 69.1 Ontology matching is the closest established field to this problem
+
+The Ontology Alignment Evaluation Initiative (OAEI) is an ongoing
+benchmark for matching correspondences across versions/variants of
+structured knowledge bases - the same problem shape as this study, one
+level of abstraction up. Its methodological history mirrors this study's
+B1-B6 progression closely: LogMap (2011, lexical + structural + logical
+reasoning) and AML (2013, lexical/structural) are the OM analogues of
+B1-B4; BERTMap (2022, fine-tuned contextual embeddings, refined by
+ontology structure) is the analogue of B5; Agent-OM, LogMapLLM, and
+LLMs4OM (2024-2025, LLM agents) are the analogue of B6, added here.
+**This validates the B1-B6 ladder as tracking an established field's own
+trajectory, not an arbitrary set of baselines** - independently arrived
+at, not built with OM's history in mind.
+
+One specific, actionable detail: Agent-OM was reported to outperform 11
+other systems specifically on non-trivial correspondences where simple
+name-matching is insufficient - the OM analogue of this study's T3-T6
+tiers, exactly the population the structural method exists to handle.
+§69.2 checks whether B6 shows the same pattern here.
+
+Cost is the standard objection to LLM-based matching in this
+literature, and it is real: one documented study spent $290 on
+unconstrained pairwise LLM calls, and a moderately-sized (10k-class)
+ontology implies ~10^8 pairwise comparisons. This does not bind for B6
+because only the 233 already-sampled items are ever scored, following
+the field's own standard mitigation (MapperGPT-style retrieve-then-
+rerank rather than unconstrained generation).
+
+### 69.2 B6 result: statistically indistinguishable from a naive top-1-retrieval shortcut
+
+`baseline_b6_llm.py` (`gemini-3.5-flash-lite`, temperature 0, top-10
+candidates from B5's unchanged retrieval configuration). Full 233-item
+run, **zero failed calls** after retrying the wrong/deprecated model ids
+found along the way (§69.3).
+
+| | Accuracy |
+|---|---|
+| Method | 71.24% |
+| **B6** | **72.96%** |
+
+Method vs. B6: point estimate −0.0172, 95% CI [−0.0815, 0.0472] - **not
+significant**, and B6 is the weakest of every baseline that nominally
+beats the method (B2 75.97%, B3 78.54%, B4 77.68%, B5 78.11%, all
+already reported).
+
+**Checked before trusting this, per §10's standing rule** (a surprising
+result, even when it looks merely unimpressive rather than shockingly
+good or bad, gets the same scrutiny): the response distribution across
+all 240 sampled calls (233 scored + 7 `CANNOT_DETERMINE`-truth items,
+still called for completeness) is **229 "1" (94.6%)**, 6 "NONE", and 5
+other numbers total - an extreme skew toward the retrieval's own
+top-ranked candidate. Directly compared against a naive "always pick
+candidate #1, no LLM call at all" baseline using the exact same cached
+retrieval: **identical accuracy, 72.96% vs. 72.96%**, with the LLM
+agreeing with the top-1 retrieval rank on 96.1% of items. **In this
+specific setup, `gemini-3.5-flash-lite` adds no measurable value beyond
+its own retriever's ranking** - a real, verified property of this model
+and prompt combination, not a data-integrity artefact (ruled out
+directly, not assumed).
+
+### 69.3 What happened getting here, logged rather than smoothed over
+
+The first full run (`gemini-2.5-flash`) hit the free tier's real daily
+cap - 20 requests/day for this project, far below the 250-1,500/day
+found in general research and nowhere near enough for 233 calls - and
+**222 of 233 items (95.3%) silently fell back to a forced "NONE" after
+repeated `429 RESOURCE_EXHAUSTED` errors**, producing a contaminated
+27.04% "accuracy" that was never reported or committed. `gemini-2.5-
+flash-lite` (tried next, expecting a higher documented quota) turned out
+deprecated for new users entirely (`404`, redirecting to
+`gemini-3.5-flash-lite`), which is what was ultimately used. The
+scoring code was fixed to record `call_succeeded` explicitly per item
+and **exclude, never silently count, any item whose LLM call never
+genuinely succeeded** - the same discipline as every other integrity
+check in this study, just applied to a live external API for the first
+time.
+
+### 69.4 What this means for the paper
+
+B6 does **not** replicate Agent-OM's reported strength on non-trivial
+correspondences (§69.1) - if anything it shows the opposite pattern
+here, adding negligible value over simple retrieval. This should be
+reported as a genuine, mechanistically-explained finding, not hedged
+away: a "lite"-tier model, chosen specifically for free-tier quota
+reasons, may not represent what a full-capability LLM reranker could do
+- this B6 result is a lower bound on LLM-based matching in this domain,
+not a claim about LLM matching in general. Testing a stronger model
+(the original committed design intent, before the quota constraints
+that are now disclosed above) remains open future work, not undertaken
+here because the free-tier constraint that motivated model selection is
+itself part of what this section reports honestly.
+
+Full numbers: `annotation_packets/b6_comparison_report.json`; raw
+LLM responses cached per pair in
+`annotation_packets/*/b6_response_cache_gemini-35-flash-lite.json`.

@@ -38,10 +38,19 @@ from app.research.cross_edition.annotation_packets.sample_join import (  # noqa:
 BASE = Path(__file__).parent
 
 
-def build_records_with_b6() -> list[dict]:
+def build_records_with_b6(model_id: str | None = None, only_first_n: int | None = None) -> list[dict]:
+    """model_id: override baseline_b6_llm.MODEL_ID, using a model-specific
+    cache path (never mixed with another model's cached responses).
+    only_first_n: cap items per pair - for cheap quota-headroom testing
+    before committing to the full 233-item run."""
     import csv
+    from app.research.cross_edition.baseline_b6_llm import MODEL_ID as DEFAULT_MODEL
+    active_model = model_id or DEFAULT_MODEL
+    model_tag = active_model.replace("/", "_").replace(".", "")
+
     ground_truth = build_ground_truth()
     records: list[dict] = []
+    n_failed_calls = 0
 
     for pair_idx, (pair, (slug, old_pdf, new_pdf)) in enumerate(PAIRS.items()):
         packet_csv = BASE / slug / "annotation_packet.csv"
@@ -64,10 +73,14 @@ def build_records_with_b6() -> list[dict]:
             sampled_raw_ids.append(raw_id)
             sid_by_raw_id[raw_id] = sid
 
-        cache_path = str(BASE / slug / "b6_response_cache.json")
-        print(f"  {pair}: scoring B6 for {len(sampled_raw_ids)} sampled items "
-              f"(cache: {cache_path})")
-        b6 = align_items_b6_for_sample(old_pdf, new_pdf, sampled_raw_ids, cache_path)
+        if only_first_n is not None:
+            sampled_raw_ids = sampled_raw_ids[:only_first_n]
+
+        cache_path = str(BASE / slug / f"b6_response_cache_{model_tag}.json")
+        print(f"  {pair}: scoring B6 ({active_model}) for {len(sampled_raw_ids)} "
+              f"sampled items (cache: {cache_path})")
+        b6 = align_items_b6_for_sample(old_pdf, new_pdf, sampled_raw_ids, cache_path,
+                                          model_id=active_model)
         b6_by_raw_id = b6["_results_by_old_id"]
 
         gt = ground_truth[pair]
@@ -81,6 +94,14 @@ def build_records_with_b6() -> list[dict]:
             raw_id = index_to_raw_id[idx]
             b6_rec = b6_by_raw_id.get(raw_id)
             if b6_rec is None:
+                continue
+            if not b6_rec.get("call_succeeded", False):
+                # Forced NONE fallback after repeated rate-limit failures -
+                # NOT a genuine LLM judgement. Excluded from scoring entirely
+                # rather than silently counted as a real "predicted NONE"
+                # answer, which would corrupt accuracy the same way the
+                # 2026-08-18 rate-limit incident did on the first attempt.
+                n_failed_calls += 1
                 continue
 
             method_pred = _norm_answer(row["method_predicted_item_id"])
@@ -97,14 +118,30 @@ def build_records_with_b6() -> list[dict]:
                 },
             })
 
+    if n_failed_calls:
+        print(f"\n  {n_failed_calls} items excluded: LLM call never succeeded "
+              f"(rate-limited or errored after 5 retries)")
     return records
 
 
 def main():
-    print("Scoring B6 (LLM retrieve-then-rerank) - this makes real API calls, "
-          "cached per pair for reproducibility...")
-    records = build_records_with_b6()
-    print(f"\nusable items: {len(records)} (expect 233)")
+    import sys as _sys
+    model_id = None
+    only_first_n = None
+    if "--model" in _sys.argv:
+        model_id = _sys.argv[_sys.argv.index("--model") + 1]
+    if "--test-n" in _sys.argv:
+        only_first_n = int(_sys.argv[_sys.argv.index("--test-n") + 1])
+
+    print(f"Scoring B6 (LLM retrieve-then-rerank, model={model_id or '(default)'}, "
+          f"{'FULL RUN' if only_first_n is None else f'TEST: first {only_first_n}/pair'}) "
+          f"- this makes real API calls, cached per pair for reproducibility...")
+    records = build_records_with_b6(model_id=model_id, only_first_n=only_first_n)
+    print(f"\nusable items (excludes any failed calls): {len(records)}")
+
+    if not records:
+        print("No usable records - every call failed. Not writing a report.")
+        return
 
     method_acc = sum(r["correct"]["method"] for r in records) / len(records)
     b6_acc = sum(r["correct"]["b6"] for r in records) / len(records)
@@ -114,8 +151,13 @@ def main():
     d = bootstrap_stat(records, make_accuracy_diff_fn("method", "b6", False))
     print(f"method vs B6 (raw): {d['item']}")
 
+    if only_first_n is not None:
+        print("\n(TEST RUN - not writing b6_comparison_report.json)")
+        return
+
     result = {
         "n_items": len(records),
+        "model": model_id,
         "method_accuracy_raw": round(method_acc, 4),
         "b6_accuracy_raw": round(b6_acc, 4),
         "method_minus_b6_raw": d["item"],

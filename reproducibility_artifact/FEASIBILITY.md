@@ -4890,3 +4890,179 @@ comparable real system, currently achieves.*
 
 Full numbers: `annotation_packets/boundary_annotation/boundary_scoring_report.json`,
 `boundary_scoring_corrected.json`, `calibration_report.json`.
+
+## 65. CRITICAL CORRECTION: a silent join bug dropped 24 of 233 usable items (10.3%), non-randomly, inflating the method's reported accuracy across sections 53-61
+
+Found during a full-project ground-up audit requested by the user
+before drafting the paper. **This is not a new analysis - it is a
+correction to the join logic every analysis since section 53 has used**,
+and every affected number is superseded here. Nothing in sections
+52-64 is edited in place, per this document's own "append, never
+rewrite" discipline; this section states plainly which numbers each
+already-published section's are superseded by.
+
+### 65.1 The bug
+
+`item_align.align_items` (frozen) **mutates** `item_id`: it rewrites
+every old item into the *new* edition's guideline vocabulary
+(`item_align.py`'s `it.item_id = f"{_norm_title(mapped)}/..."` line),
+so identifier comparison across editions is meaningful.
+`annotation.write_annotation_packet` saves that **post-remap** id into
+`annotation_packet.csv`. Every baseline (`baseline_b2.py`,
+`baseline_b1_b3_b4.py`, `baseline_b5.py`) instead calls `parse()`
+directly and keys its own results by the **raw**, pre-remap id. So for
+any sampled item whose guideline title changed between editions, the
+packet CSV's id and a baseline's id disagree, the string-keyed lookup
+returns nothing, and every driver since `run_h3_test.py` silently
+`continue`d past it - the `# should not happen - same parse() on the
+same file` comment guarding that branch was simply wrong; it was the
+*same* parse, but two different post-processing states of it.
+
+Verified before trusting the fix (not assumed): re-deriving each pair's
+sample via `annotation.stratified_sample(..., seed=20261017)` reproduces
+every existing `annotation_packet.csv`'s 60 `old_item_id`s **exactly, in
+order** - the fix changes how results are *joined*, not which items were
+sampled or what any annotator judged. Fixed by joining on **parse-order
+index** instead: `align_items` and every baseline iterate the identical
+`parse()`d `old_items` list in the identical order (confirmed directly,
+not assumed - `item_align.py:198`, `baseline_b2.py:47`,
+`baseline_b1_b3_b4.py:39/72/213`, `baseline_b5.py:46` all iterate
+`old_ed.items` unfiltered), so `_all_results[i]` refers to the same
+underlying item across every one of them regardless of what `.item_id`
+that item currently holds. New shared helper `sample_join.py`
+(`build_index_join`, `join_baseline`, `verify_sample_identity` - the
+last of these now a **mandatory, fail-loud** check in every driver,
+replacing the silent `continue`).
+
+**Impact, measured**: 24 of 233 usable items (10.3%) were dropped -
+Tennessee 1, Pennsylvania 2, Connecticut #1 **21 of 58 usable items
+(36%!)**, Connecticut #2 zero. The dropped items scored ~37.5% method
+accuracy versus 75.1% for the retained ones - **the hardest cases**
+(guideline renamed between editions), dropped non-randomly, inflating
+the method's reported accuracy by several points in every affected
+analysis.
+
+### 65.2 Independent cross-check: two separately-computed code paths now agree exactly
+
+`compute_section6_metrics` (§52, never used this buggy join - it scores
+directly from `annotation_packet.csv`'s own `method_predicted_item_id`
+column, with no baseline cross-reference at all) had **already reported
+the correct number**: correspondence accuracy 71.24% raw, n=233. Every
+analysis built on `run_full_comparison.build_records()` (§53 onward)
+instead reported 75.12%, n=209. After the fix, `build_records()`
+reproduces **71.24% exactly** - two independently-implemented code paths
+now agree to four decimal places, the strongest available evidence the
+fix is correct, not merely different.
+
+### 65.3 A second, related bug found and fixed at the same time
+
+`structure_ablation.py` (§61) did not use the CSV-joined pattern above,
+but had the **same class of bug** via a different mechanism: its own
+`build_sample_index()` read the CSV's post-remap `old_item_id`, then
+looked it up against `_orig_id` - a *third* id space (the RAW,
+pre-corruption id, stamped before `align_items` ever mutates it, used
+so scoring survives synthetic corruption). Post-remap CSV id and raw
+`_orig_id` disagree whenever a guideline was renamed - the identical
+silent-drop pattern, and §61's own r=0 validity check was checking
+against the *already-wrong* 209/75.12% figure, so the bug passed its own
+guard undetected. Fixed the same way: index join, not string join.
+`build_h3prime_sample.py`'s B2 column had the analogous exposure (v2's
+column did not - `item_align_v2` applies the identical remap `align_items`
+does, so v1/v2 ids happened to already agree); fixed for consistency, and
+**verified to produce byte-identical H3′ results** - Tennessee's fresh
+pair genuinely has no guideline-rename collisions in this mechanism, a
+real negative result, not an unchecked assumption.
+
+**Confirmed unaffected, by direct code reading, not assumed**:
+`run_uscode_experiment.py` (§63) and `run_calibration.py` (§64) never
+route through `annotation_packet.csv`'s id column at all - US Code's
+ground truth and `_orig_id` are both derived directly and immediately
+from the same raw XML identifiers with no CSV round-trip in between, and
+boundary scoring's ground truth is annotator title lists, an entirely
+separate mechanism. §63's own numbers stand as reported. §64's core
+measurement (real corpus structure F1≈0.794) also stands unaffected -
+but §64.3's *cross-reference* of that F1 against accuracy figures
+("method achieves 75.12%... trailing B2 (79.43%) and B5 (81.82%)")
+borrowed §61's stale `reference_lines`, which §65.4 below supersedes.
+The conclusion is unchanged (the method still trails both baselines at
+the real corpus's measured structure quality) but the correct figures
+are **71.24% vs. 75.97%/78.11%**, not 75.12%/79.43%/81.82%.
+
+### 65.4 Corrected numbers
+
+All at n=233 (was n=209), raw unless noted:
+
+| Metric | Before fix | **After fix** |
+|---|---|---|
+| Method accuracy | 75.12% | **71.24%** |
+| B1 accuracy | 60.77% | **60.09%** |
+| B2 accuracy | 79.43% | **75.97%** |
+| B3 accuracy | (n/a, not tabulated) | **78.54%** |
+| B4 accuracy | (n/a, not tabulated) | **77.68%** |
+| B5 accuracy | 81.82% | **78.11%** |
+| H3 (method−B2), raw | −0.0431 [−0.101, 0.010] | **−0.0472 [−0.099, 0.004]** |
+| H5 (method−B1 false-corr), raw | +0.0035 [−0.056, 0.063] | **+0.0501 [−0.016, 0.115]** |
+| method vs B3, raw | −0.0622 [−0.120, **−0.005**] | **−0.0730 [−0.129, −0.017]** |
+| method vs B4, raw | −0.0144 [−0.067, 0.038] (n.s.) | **−0.0644 [−0.120, −0.009] (now significant)** |
+| method vs B5, raw | −0.0670 [−0.129, −0.010] | **−0.0687 [−0.125, −0.013]** |
+| B1 provenance loss rate | 34.29% | **38.17%** |
+| BH: H3 / H4 / H5 | 0.9459 / 0.0006 / 0.0898 | **0.9705 / 0.0003 / 0.7544** |
+
+**method vs. B4 is newly significant** in B4's favour - the clearest
+qualitative change: the fix does not just shrink or grow existing
+effects, it surfaces one that the dropped items had been hiding.
+**method vs. B3 and vs. B5 remain significant**, essentially unchanged
+in magnitude. **H3 and H5 remain not confirmed**, consistent in
+direction with before.
+
+Sensitivity analysis (§58) on the corrected data - full sample vs.
+clean subset (n=192, was n=168, same 41-guideline exclusion rule):
+
+| | All (n=233) | Clean (n=192) |
+|---|---|---|
+| Method accuracy | 71.24% | **73.44%** |
+| B2 accuracy | 75.97% | **72.92%** |
+| H3 (method−B2), raw | −0.0472 [−0.099, 0.004] | **+0.0052 [−0.047, 0.057]** |
+| H5 (method−B1), raw | +0.0501 [−0.016, 0.115] | **+0.1197 [0.046, 0.193] (now significant, unfavourably)** |
+| T3 precision (H4) | 97.06% | **100.00%** |
+
+**The §58 sign-flip finding survives the fix, but shrinks substantially**
+(method's lead over B2 on the clean subset: +1.78 points before → **+0.52
+points after**, no longer close to the earlier magnitude, though still
+positive). **H4 remains a perfect 100% on the clean subset.** A newly
+significant result appears in the *unfavourable* direction: on the
+clean subset, the method's false-correspondence rate now exceeds B1's
+by a confirmed-significant margin (+0.1197, CI entirely positive) - a
+real finding this correction surfaces, not one it explains away.
+
+B5 (§59) on the corrected data: method vs. B5 remains significant on
+the full sample (−0.0687 [−0.125, −0.013]) and, on the clean subset,
+remains **not** significant (−0.0208 [−0.078, 0.037]) - both the
+direction and the significance pattern from §59 are preserved by the
+fix, only the magnitudes move.
+
+### 65.5 What changes and what does not
+
+**Every headline qualitative claim already reported survives**: H3 not
+confirmed, H4 confirmed (and now stronger - 100% on the clean subset,
+BH p even smaller), H5 not confirmed, the §58/§59 sign-flip pattern
+against B2 and B5 present and in the same direction, §63/§64 fully
+unaffected. **What changes**: the exact magnitudes move by roughly
+1-5 points across the board, generally against the method (the dropped
+items were disproportionately its failures); method vs. B4 becomes a
+newly significant unfavourable result; the clean-subset "recovery"
+against B2 is real but roughly a third the size previously reported;
+and a new, unfavourable, significant H5-on-clean-subset finding
+surfaces that was invisible under the buggy join.
+
+This is reported in full, including the parts that make the method look
+worse, per this study's standing discipline (§10) - a bug that happened
+to flatter a result is exactly the case that discipline exists for, and
+this one was caught by a ground-up audit requested specifically to find
+it, not by a result looking suspiciously good on its own.
+
+Full numbers: `annotation_packets/full_comparison_report.json`,
+`b5_comparison_report.json`, `sensitivity_analysis_report.json`,
+`structure_ablation_report.json` (all regenerated with the fix; each
+file's own contents are now the corrected numbers, not the ones tabulated
+in §55/§58/§59/§61 - this section is the authoritative cross-reference).

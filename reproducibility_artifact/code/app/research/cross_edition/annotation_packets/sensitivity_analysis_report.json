@@ -23,150 +23,150 @@
       "NEW Central Line Access"
     ]
   },
-  "n_all": 209,
-  "n_clean": 168,
+  "n_all": 233,
+  "n_clean": 192,
   "n_excluded": 41,
   "metrics": {
     "method": {
       "accuracy_raw": {
-        "all": 0.7511961722488039,
-        "clean": 0.7857142857142857
+        "all": 0.7124463519313304,
+        "clean": 0.734375
       },
       "provenance_loss_raw": {
-        "all": 0.10285714285714286,
-        "clean": 0.10869565217391304
+        "all": 0.10752688172043011,
+        "clean": 0.11409395973154363
       },
       "false_correspondence_raw": {
-        "all": 0.19318181818181818,
-        "clean": 0.1510791366906475
+        "all": 0.23979591836734693,
+        "clean": 0.2138364779874214
       },
       "accuracy_weighted": {
-        "all": 0.8737221143440256,
-        "clean": 0.9234667840367018
+        "all": 0.8525579037802483,
+        "clean": 0.8916878693318679
       },
       "provenance_loss_weighted": {
-        "all": 0.012909450019296647,
-        "clean": 0.016139357416170095
+        "all": 0.01483015408454814,
+        "clean": 0.0183982011510769
       },
       "false_correspondence_weighted": {
-        "all": 0.11861871310103782,
-        "clean": 0.06435789705253617
+        "all": 0.1393251926411568,
+        "clean": 0.0961467117654894
       },
       "deletion_recall": {
-        "all": 0.4411764705882353,
-        "clean": 0.4666666666666667
+        "all": 0.3617021276595745,
+        "clean": 0.37209302325581395
       },
       "deletion_precision": {
-        "all": 0.45454545454545453,
-        "clean": 0.4827586206896552
+        "all": 0.4594594594594595,
+        "clean": 0.48484848484848486
       },
       "t3_precision": {
-        "all": 0.96875,
+        "all": 0.9705882352941176,
         "clean": 1.0
       }
     },
     "B1": {
       "accuracy_raw": {
-        "all": 0.6076555023923444,
-        "clean": 0.6369047619047619
+        "all": 0.6008583690987125,
+        "clean": 0.625
       },
       "provenance_loss_raw": {
-        "all": 0.34285714285714286,
-        "clean": 0.38405797101449274
+        "all": 0.3817204301075269,
+        "clean": 0.42953020134228187
       },
       "false_correspondence_raw": {
         "all": 0.1896551724137931,
         "clean": 0.09411764705882353
       },
       "accuracy_weighted": {
-        "all": 0.8746215851403827,
-        "clean": 0.9283007510800957
+        "all": 0.8350173653009492,
+        "clean": 0.8724249375441526
       },
       "provenance_loss_weighted": {
-        "all": 0.025163497191459775,
-        "clean": 0.02928512434385703
+        "all": 0.07624490862743086,
+        "clean": 0.09488597969692969
       },
       "false_correspondence_weighted": {
         "all": 0.10873725574036995,
         "clean": 0.04779102980047845
       },
       "deletion_recall": {
-        "all": 0.9705882352941176,
+        "all": 0.9787234042553191,
         "clean": 1.0
       },
       "deletion_precision": {
-        "all": 0.3548387096774194,
-        "clean": 0.3614457831325301
+        "all": 0.39316239316239315,
+        "clean": 0.40186915887850466
       }
     },
     "B2": {
       "accuracy_raw": {
-        "all": 0.7942583732057417,
-        "clean": 0.7678571428571429
+        "all": 0.759656652360515,
+        "clean": 0.7291666666666666
       },
       "provenance_loss_raw": {
-        "all": 0.06857142857142857,
-        "clean": 0.08695652173913043
+        "all": 0.06989247311827956,
+        "clean": 0.087248322147651
       },
       "false_correspondence_raw": {
-        "all": 0.1631578947368421,
-        "clean": 0.18
+        "all": 0.2037914691943128,
+        "clean": 0.22807017543859648
       },
       "accuracy_weighted": {
-        "all": 0.8951901586201758,
-        "clean": 0.9024538252562347
+        "all": 0.8829866889822886,
+        "clean": 0.8860819734173855
       },
       "provenance_loss_weighted": {
-        "all": 0.025864023531583825,
-        "clean": 0.033899731066243007
+        "all": 0.025807328745972715,
+        "clean": 0.03328355948395716
       },
       "false_correspondence_weighted": {
-        "all": 0.08336257228139952,
-        "clean": 0.0685583583425059
+        "all": 0.09694080720141497,
+        "clean": 0.08752185879576431
       },
       "deletion_recall": {
-        "all": 0.20588235294117646,
-        "clean": 0.2
+        "all": 0.19148936170212766,
+        "clean": 0.18604651162790697
       },
       "deletion_precision": {
-        "all": 0.3684210526315789,
-        "clean": 0.3333333333333333
+        "all": 0.4090909090909091,
+        "clean": 0.38095238095238093
       }
     }
   },
   "hypothesis_bootstrap": {
     "H3_method_minus_B2": {
       "all": {
-        "point_estimate": -0.0431,
-        "ci95_low": -0.1005,
-        "ci95_high": 0.0096,
+        "point_estimate": -0.0472,
+        "ci95_low": -0.0987,
+        "ci95_high": 0.0043,
         "n_valid": 10000
       },
       "clean": {
-        "point_estimate": 0.0179,
-        "ci95_low": -0.0357,
-        "ci95_high": 0.0714,
+        "point_estimate": 0.0052,
+        "ci95_low": -0.0469,
+        "ci95_high": 0.0573,
         "n_valid": 10000
       }
     },
     "H5_method_minus_B1_false_corr": {
       "all": {
-        "point_estimate": 0.0035,
-        "ci95_low": -0.0564,
-        "ci95_high": 0.0625,
+        "point_estimate": 0.0501,
+        "ci95_low": -0.0159,
+        "ci95_high": 0.1149,
         "n_valid": 10000
       },
       "clean": {
-        "point_estimate": 0.057,
-        "ci95_low": -0.0089,
-        "ci95_high": 0.1247,
+        "point_estimate": 0.1197,
+        "ci95_low": 0.0457,
+        "ci95_high": 0.1932,
         "n_valid": 10000
       }
     },
     "H4_T3_precision": {
       "all": {
-        "point_estimate": 0.9688,
-        "ci95_low": 0.8929,
+        "point_estimate": 0.9706,
+        "ci95_low": 0.9032,
         "ci95_high": 1.0,
         "n_valid": 10000
       },
@@ -180,16 +180,16 @@
   },
   "bh_clean": {
     "H3": {
-      "p_raw": 0.2994,
-      "p_adjusted": 0.4491
+      "p_raw": 0.4606,
+      "p_adjusted": 0.6909
     },
     "H4": {
       "p_raw": 0.0,
       "p_adjusted": 0.0
     },
     "H5": {
-      "p_raw": 0.5828,
-      "p_adjusted": 0.5828
+      "p_raw": 0.9695,
+      "p_adjusted": 0.9695
     }
   }
 }

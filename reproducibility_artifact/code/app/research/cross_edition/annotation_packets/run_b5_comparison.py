@@ -38,23 +38,31 @@ from app.research.cross_edition.annotation_packets.run_full_comparison import ( 
 from app.research.cross_edition.annotation_packets.run_sensitivity_analysis import (  # noqa: E402
     affected_guidelines_by_pair,
 )
+from app.research.cross_edition.annotation_packets.sample_join import (  # noqa: E402
+    build_index_join, verify_sample_identity, join_baseline,
+)
 
 N_BOOT_LABEL = "10000 resamples, item-level (matching every other descriptive baseline comparison)"
 
 
 def build_records_with_b5() -> list[dict]:
+    """Joins by parse-order index, not old_item_id string - see sample_join.py
+    and the 2026-08-18 audit entry in PREREGISTRATION.md for why the id-based
+    join this function originally used silently dropped ~10% of items."""
     ground_truth = build_ground_truth()
     records: list[dict] = []
 
     for pair_idx, (pair, (slug, old_pdf, new_pdf)) in enumerate(PAIRS.items()):
-        with open(BASE / slug / "annotation_packet.csv", encoding="utf-8") as f:
+        packet_csv = BASE / slug / "annotation_packet.csv"
+        with open(packet_csv, encoding="utf-8") as f:
             method_rows = {r["sample_id"]: r for r in csv.DictReader(f)}
 
-        b5 = {r["old_item_id"]: r["b5_predicted_item_id"]
-              for r in align_items_b5(old_pdf, new_pdf)["_all_results"]}
-        b2 = {r["old_item_id"]: r["b2_predicted_item_id"]
-              for r in align_items_b2(old_pdf, new_pdf)["_all_results"]}
-        print(f"  {pair}: B5 encoded, {len(b5)} old items")
+        id_to_index, _ = build_index_join(old_pdf, new_pdf)
+        verify_sample_identity(packet_csv, id_to_index)
+
+        b5 = align_items_b5(old_pdf, new_pdf)
+        b2 = align_items_b2(old_pdf, new_pdf)
+        print(f"  {pair}: B5 encoded, {len(b5['_all_results'])} old items")
 
         gt = ground_truth[pair]
         for sid, row in method_rows.items():
@@ -63,13 +71,11 @@ def build_records_with_b5() -> list[dict]:
             truth = gt[sid]
             if truth == "cannot_determine":
                 continue
-            old_id = row["old_item_id"]
-            if old_id not in b5 or old_id not in b2:
-                continue
+            idx = id_to_index[row["old_item_id"]]
 
             method_pred = _norm_answer(row["method_predicted_item_id"])
-            b5_pred = _norm_answer(b5[old_id])
-            b2_pred = _norm_answer(b2[old_id])
+            b5_pred = _norm_answer(join_baseline(b5, idx, "b5_predicted_item_id"))
+            b2_pred = _norm_answer(join_baseline(b2, idx, "b2_predicted_item_id"))
             weight = float(row.get("sample_weight", 1.0) or 1.0)
 
             records.append({
@@ -89,7 +95,7 @@ def build_records_with_b5() -> list[dict]:
 def main():
     print("Encoding all four pairs with B5 (this takes a while)...")
     records = build_records_with_b5()
-    print(f"\nusable items: {len(records)} (expect 209)")
+    print(f"\nusable items: {len(records)} (expect 233 - see sample_join.py)")
 
     result: dict = {"n_items": len(records), "bootstrap_note": N_BOOT_LABEL}
 

@@ -5136,3 +5136,58 @@ findings) are robust to it while the exact point estimates are not fully
 precise numbers in the way a single decimal figure implies.
 
 Full numbers: `annotation_packets/tiebreak_sensitivity_report.json`.
+
+## 67. B5 model + floor sensitivity grid: robust across every tested configuration
+
+Audit Phase 3. `baseline_b5.py`'s model (`bge-small-en-v1.5`) and
+similarity floor (0.85) were both uncalibrated choices. Full 3-model x
+5-floor grid (15 cells), committed and reported in its entirety before
+any cell was computed.
+
+### 67.1 Result
+
+| Model | 0.75 | 0.80 | 0.85 | 0.90 | 0.95 |
+|---|---|---|---|---|---|
+| bge-small-en-v1.5 | 74.68% | 77.68% | **78.11%** | 77.68% | 76.39% |
+| bge-base-en-v1.5 | 75.97% | 78.11% | 77.25% | 77.68% | 75.97% |
+| bge-large-en-v1.5 | 76.39% | **78.97%** | 78.11% | 77.25% | 75.11% |
+
+(Originally-reported cell in **bold** where it appears in its own row;
+grid maximum separately bolded.)
+
+Grid mean 77.02%, range 74.68%-78.97% (4.29 points). Reference points:
+method 71.24%, B2 75.97% (§65).
+
+### 67.2 The original finding is robust, not an artefact of one arbitrary choice
+
+**Every one of the 15 tested configurations exceeds the method's
+accuracy** - the weakest cell (bge-small at floor 0.75, 74.68%) still
+clears the method by 3.44 points. B5 beating the method on the full
+sample (§59, §65) does not depend on the specific model size or
+similarity floor chosen; it holds across the entire grid.
+
+Against B2 (75.97%): 11 of 15 cells exceed it, 2 tie exactly
+(bge-base at 0.75 and 0.95), 2 fall slightly below (bge-small at 0.75,
+bge-large at 0.95) - a real but much smaller and less universal margin
+than against the method.
+
+The originally-reported cell (bge-small, floor 0.85 = 78.11%) sits near
+the grid's upper-middle - 0.86 points below the observed maximum
+(bge-large, floor 0.80 = 78.97%), not an outlier that happened to
+maximize the reported result. The uncalibrated choice this study
+actually used was not, in retrospect, a favourable one relative to what
+a full search would have found; if anything a properly-tuned floor
+search would have reported a very slightly *stronger* B5 result than
+what was published.
+
+### 67.3 What this means for the paper
+
+This closes the audit's one remaining "was this number cherry-picked"
+question with a clean negative: it was not. The paper can report B5's
+result with a genuine sensitivity grid behind it rather than a single
+uncalibrated number, and can state plainly that the "unscoped baselines
+beat the structural method on the full, as-observed sample" finding
+(§53-59, §65) is robust to reasonable choices of embedding model and
+matching threshold, not contingent on one specific configuration.
+
+Full numbers: `annotation_packets/b5_model_floor_sweep_report.json`.

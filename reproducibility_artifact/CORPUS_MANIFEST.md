@@ -75,6 +75,7 @@ for provenance/reproducibility only.
 
 | `ne_2024_new.pdf` | Nebraska EMS Model Protocols, "completely revised" 2024 edition (Last Revised 5/2026) — genuine major-revision language, does NOT parse cleanly, §80.1 | ✅ `https://dhhs.ne.gov/OEHS%20Program%20Documents/EMS%20Model%20Protocols.pdf` | `8d36ea3d4a1088202504198a82ac1eac09acccf32a4f00483054b9181f5ac839` | 7,831,906 B |
 | `ne_2020_prior.pdf` | Nebraska EMS Protocols, 2020 edition (pre-revision, for comparison) | ✅ `http://govdocs.nebraska.gov/epubs/H8355/H004-2020.pdf` | `0b3b38673369d6aa40fd39349e43e7985ff287caa33c2163aa4c9021f8a703a3` | 6,033,775 B |
+| `ut_2025_new.pdf` | Utah EMS Protocol Guidelines, 2025 edition (Utah's first-ever second edition) — parsing still collapses (3 items), §80.2 | ✅ `https://ems.utah.gov/wp-content/uploads/sites/34/2025/12/2025-Utah-EMS-Protocol-Guidelines-3.pdf` | `f4f8d742db663cc5de77ded0eb4c65ed68464348add5ae8578fea9a52ad9a1e0` | 5,359,192 B |
 
 ## Dev corpus (§2, exploratory only — never used in any confirmatory claim)
 

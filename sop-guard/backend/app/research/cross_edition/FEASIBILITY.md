@@ -6420,13 +6420,23 @@ protocols, which this study's whole parsing approach does not yet
 address, independent of whether Nebraska specifically becomes an
 eligible confirmatory publisher.
 
-### 80.2 Utah: a genuine second edition exists for the first time
+### 80.2 Utah: a genuine second edition exists for the first time, but still doesn't parse
 
-Previously confirmed to have only ever had one edition (§37, §79.2 note
-`- Utah`). A "2025 Utah EMS Protocol Guidelines" (Dec 2025) now exists -
-`ems.utah.gov`, the state's first-ever second edition. Not yet tested
-with the pipeline in this entry; a genuine first Utah pair is now
-possible where none was before, pending a parsing check.
+Previously confirmed to have only ever had one edition (§37), whose own
+single-edition parse already collapsed to "3 items from 106 pp." A
+"2025 Utah EMS Protocol Guidelines" (Dec 2025) now exists -
+`ems.utah.gov` - the state's first-ever second edition, a genuinely new
+opportunity where none existed before.
+
+**Tested immediately.** `item_parser` result: 42 guidelines but **only 3
+items extracted**, 163 sections with no items - an almost total
+collapse, and the item count matches the earlier single-edition
+failure's own "3 items from 106 pp" almost exactly. **The new edition
+does not fix Utah's underlying structural problem** - whatever anchor-
+detection or marker-recognition gap caused the original failure is
+still present in this document's newer edition, unchanged. Utah remains
+unusable, now confirmed across two independent editions rather than
+one.
 
 ### 80.3 Every other lead found, by category
 
@@ -6513,10 +6523,13 @@ finding is the most significant single result: it proves major-
 revision language exists and is findable in this document genre after
 all (contrary to this study's prior working hypothesis that it might
 not be a convention the genre uses) - just not, so far, at a publisher
-this study's pipeline can currently parse. Utah's new second edition and
-the long list of newer minor editions are real, tractable next steps if
-the user wants to keep expanding the corpus, gated on the same checks
-§79 already established. Massachusetts, DC, and Wisconsin have
-genuinely open threads worth a follow-up with different tooling
-(browser-based retrieval, and a Wayback-capable fetch tool
-respectively) rather than being closed out as dead ends.
+this study's pipeline can currently parse. Utah's new second edition
+was also tested and confirmed to carry forward the same structural
+failure its single earlier edition already had (3 items extracted, both
+times, from a 100+ page document) - a real, useful negative result, not
+an open lead. The long list of other newer minor editions remains real,
+tractable next steps if the user wants to keep expanding the corpus,
+gated on the same checks §79 already established. Massachusetts, DC,
+and Wisconsin have genuinely open threads worth a follow-up with
+different tooling (browser-based retrieval, and a Wayback-capable fetch
+tool respectively) rather than being closed out as dead ends.

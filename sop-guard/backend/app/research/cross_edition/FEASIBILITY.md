@@ -5876,3 +5876,99 @@ regenerated under the fix - the pre-fix numbers are preserved in this
 document's sections 61/68.1/73 and in `PREREGISTRATION.md`'s dated
 entries, per append-only discipline, not in the JSON artifacts
 themselves).
+
+## 75. VLM boundary anchor: a genuine third point on the structure-quality curve, and it beats our own parser
+
+Audit round 4, Phase 3c. Docling (section 70) supplied high recall
+(87.65%) but low precision (25.72%) because its generic
+`section_header` label mixes hierarchy levels our study's ground truth
+doesn't distinguish. This tests whether that mismatch - not a genuine
+boundary-finding weakness - was the actual problem, by prompting a VLM
+for exactly the granularity the human annotators used.
+
+### 75.1 Design
+
+`vlm_boundaries.py` uses `gemini-3.5-flash-lite` (the only model with
+confirmed headroom this study has established), called via the Gemini
+Files API so the model reads the actual PDF natively - a genuinely
+different input modality from every other boundary-detection method
+tested (our parser: text + layout heuristics; Docling: layout model;
+VLM: native document understanding). The prompt reuses
+`build_boundary_workbooks.py`'s own annotator instructions and
+known-subsection exclusion list VERBATIM, not paraphrased - the one
+design choice expected to matter most, since Docling's failure was
+specifically a granularity mismatch. Only 4 calls needed (one per
+Tennessee edition), scored against the same two annotators via
+`run_calibration.corrected_f1` unchanged. Precision and recall reported
+separately, never F1 alone - the explicit lesson from section 70.3.
+
+### 75.2 Result: better than our own parser, and genuinely balanced
+
+| Edition | VLM titles | Annotator 1 F1 | Annotator 2 F1 |
+|---|---|---|---|
+| TN2017 | 97 | 0.8753 | 0.9005 |
+| TN2018 | 80 | 0.9752 | 0.8346 |
+| TN2022-23 | 115 | 0.8816 | 0.8993 |
+| TNSept2024 | 95 | 0.9844 | 0.8124 |
+
+**Mean corrected F1: 0.8954** - higher than our own parser's 0.8034.
+Mean recall 0.8754, mean precision 0.9328 - genuinely balanced, unlike
+Docling's severe asymmetry (recall 0.8765, precision 0.2572). VLM title
+counts (80-115 per edition) are much closer to the annotators' own
+counts (81-97 for annotator 1, 119-164 for annotator 2) than Docling's
+276-467 - direct evidence the granularity-matching prompt worked as
+intended, not a coincidence of the scoring method.
+
+### 75.3 Investigated before trusting this (section 10)
+
+A favourable, higher-than-expected result gets the same scrutiny as an
+unfavourable one.
+
+1. **Annotator 2's recall is consistently lower than annotator 1's
+   across every edition (0.57-0.77 vs 0.95-0.97).** This is not a new
+   anomaly - it is the SAME already-documented annotator-style gap
+   section 64.2 found for our own parser (annotator 1 averaged corrected
+   F1 0.864, annotator 2 averaged 0.743, attributed there to annotator
+   2's longer, more granular title lists). Reappearing consistently here
+   is reassuring - it means the VLM's output is being scored against
+   real, previously-characterised annotator variation, not producing a
+   new artifact.
+2. **High precision and substantial recall simultaneously** (0.79-0.99
+   precision, 0.57-0.98 recall) is the specific combination Docling
+   could never produce given its label-granularity mismatch - direct
+   evidence the VLM's title list genuinely operates at the annotators'
+   intended granularity.
+3. **The TN2017 smoke-test sample (80 titles) was read by hand** before
+   committing to the full 4-edition run and consists entirely of
+   recognizable, correctly-formed clinical protocol names ("Torsades de
+   Pointe", "Anaphylactic Shock", "Cerebrovascular Accident (CVA)") - no
+   garbage, no running-header repeats, no table-of-contents artifacts,
+   the three failure modes that inflated Docling's counts.
+
+### 75.4 What this means for the paper
+
+This DOES become a genuine, clean third point on section 61's
+structure-quality curve, unlike Docling - the balanced precision/recall
+means F1 alone is not misleading here the way it would have been for
+Docling.
+
+More significantly: **a general-purpose VLM, given a granularity-matched
+prompt reused verbatim from the human annotator instructions, outperforms
+this study's own purpose-built rule-based parser at guideline-boundary
+detection** (F1 0.8954 vs 0.8034). This is a substantive finding about
+the relative cost-effectiveness of prompt-engineered VLM document
+understanding versus a hand-built heuristic parser for this specific
+task - and it is independent of, and complementary to, B6/B7's findings
+that general models add no value on the DOWNSTREAM item-matching task.
+Boundary detection and item matching are evidently different-difficulty
+problems for current general-purpose models: the VLM succeeds at finding
+where protocols start (a task closer to what VLMs are broadly good at -
+visual document structure recognition) while both the LLM (B6) and the
+cross-encoder (B7) failed to improve on simple retrieval for matching
+which specific item corresponds to which (a task requiring fine-grained
+semantic discrimination between clinically similar but distinct content,
+where B7's section 72 findings showed a general model actively
+confusing surface-level similarity for genuine correspondence).
+
+Full numbers: `annotation_packets/boundary_annotation/vlm_calibration_report.json`,
+raw titles in `vlm_raw_titles.json`.

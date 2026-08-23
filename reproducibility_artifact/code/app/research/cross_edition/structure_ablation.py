@@ -176,6 +176,11 @@ def run_trial(pair_paths: dict[str, tuple[str, str]], cache: dict, rate: float,
               seed: int, sample_index: dict) -> dict:
     per_pair_correct: dict[str, int] = {}
     per_pair_total: dict[str, int] = {}
+    item_correct: list[int] = []  # pooled, one 0/1 per sampled item - for the
+                                    # item-level bootstrap CI (2026-08-18 audit
+                                    # round 3, Phase 1). Order is stable within
+                                    # a trial (pair iteration order is fixed)
+                                    # but not compared across trials by index.
 
     for pair, (old_pdf, new_pdf) in pair_paths.items():
         rng_old = random.Random(seed * 2)
@@ -204,8 +209,9 @@ def run_trial(pair_paths: dict[str, tuple[str, str]], cache: dict, rate: float,
             total += 1
             new_item = rec["new_item"]
             pred = _norm_answer(new_item._orig_id) if new_item is not None else "none"
-            if pred == truth:
-                correct += 1
+            is_correct = 1 if pred == truth else 0
+            correct += is_correct
+            item_correct.append(is_correct)
         per_pair_correct[pair] = correct
         per_pair_total[pair] = total
 
@@ -215,7 +221,29 @@ def run_trial(pair_paths: dict[str, tuple[str, str]], cache: dict, rate: float,
         "rate": rate, "seed": seed, "n": total_n,
         "accuracy": round(total_correct / total_n, 4) if total_n else None,
         "per_pair": {p: (per_pair_correct[p], per_pair_total[p]) for p in pair_paths},
+        "item_correct": item_correct,
     }
+
+
+def bootstrap_item_ci(item_correct: list[int], n_boot: int = 10000, seed: int = 20260822) -> dict:
+    """Item-level bootstrap CI for ONE trial's accuracy - resamples the 233
+    items with replacement, using that trial's own per-item correctness.
+    This measures sampling uncertainty (would a different draw of items give
+    a different accuracy) and is DISTINCT from the across-seed spread already
+    reported in the sweep summary (which measures sensitivity to the random
+    corruption instance) - both are reported, never conflated (2026-08-18
+    audit round 3, Phase 1)."""
+    n = len(item_correct)
+    if n == 0:
+        return {"ci95_low": None, "ci95_high": None}
+    rng = random.Random(seed)
+    accs = []
+    for _ in range(n_boot):
+        s = sum(item_correct[rng.randrange(n)] for _ in range(n))
+        accs.append(s / n)
+    accs.sort()
+    lo_i, hi_i = int(0.025 * n_boot), int(0.975 * n_boot) - 1
+    return {"ci95_low": round(accs[lo_i], 4), "ci95_high": round(accs[hi_i], 4)}
 
 
 def build_sample_index() -> dict[str, list[tuple[int, str]]]:
@@ -285,17 +313,32 @@ def main():
             results.append(trial)
             print(f"  r={rate:.2f} seed={seed}: accuracy={trial['accuracy']}")
 
-    # Summary per rate: mean +/- across seeds
+    # Summary per rate: TWO DISTINCT sources of variation, never conflated
+    # (2026-08-18 audit round 3, Phase 1):
+    #   1. across-seed spread (already computed) - sensitivity to WHICH random
+    #      corruption instance was drawn at this rate.
+    #   2. item-level bootstrap CI, computed per-seed on that seed's own
+    #      item_correct - sampling uncertainty within a fixed corruption
+    #      instance (would a different draw of the 233 items change the
+    #      picture). Reported per-seed, not averaged into one number, since
+    #      each seed's CI is conditional on that seed's specific corruption.
     summary = {}
     for rate in RATES:
-        accs = [t["accuracy"] for t in results if t["rate"] == rate and t["accuracy"] is not None]
+        rate_trials = [t for t in results if t["rate"] == rate and t["accuracy"] is not None]
+        accs = [t["accuracy"] for t in rate_trials]
+        item_cis = [bootstrap_item_ci(t["item_correct"]) for t in rate_trials]
         summary[rate] = {
             "mean": round(sum(accs) / len(accs), 4),
             "min": round(min(accs), 4), "max": round(max(accs), 4),
             "n_seeds": len(accs),
+            "item_level_ci_per_seed": item_cis,
         }
+        ci_lo_range = (min(c["ci95_low"] for c in item_cis), max(c["ci95_low"] for c in item_cis))
+        ci_hi_range = (min(c["ci95_high"] for c in item_cis), max(c["ci95_high"] for c in item_cis))
         print(f"r={rate:.2f}: mean={summary[rate]['mean']}  "
-              f"range=[{summary[rate]['min']}, {summary[rate]['max']}]")
+              f"across-seed range=[{summary[rate]['min']}, {summary[rate]['max']}]  "
+              f"item-level 95% CI (per-seed range): lo=[{ci_lo_range[0]:.4f},{ci_lo_range[1]:.4f}] "
+              f"hi=[{ci_hi_range[0]:.4f},{ci_hi_range[1]:.4f}]")
 
     monotonic = all(summary[RATES[i]]["mean"] >= summary[RATES[i+1]]["mean"] - 0.01
                      for i in range(len(RATES) - 1))

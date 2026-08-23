@@ -1,0 +1,12 @@
+{
+  "n_items": 233,
+  "model": "gemini-3.5-flash-lite",
+  "method_accuracy_raw": 0.7124,
+  "b6_accuracy_raw": 0.7296,
+  "method_minus_b6_raw": {
+    "point_estimate": -0.0172,
+    "ci95_low": -0.0815,
+    "ci95_high": 0.0472,
+    "n_valid": 10000
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "per_edition": {
+    "tn_2017": {
+      "n_docling_headers": 276,
+      "annotator_1_f1": 0.399,
+      "annotator_2_f1": 0.4948
+    },
+    "tn_2018": {
+      "n_docling_headers": 406,
+      "annotator_1_f1": 0.3005,
+      "annotator_2_f1": 0.3778
+    },
+    "tn_2022_23": {
+      "n_docling_headers": 412,
+      "annotator_1_f1": 0.3622,
+      "annotator_2_f1": 0.5151
+    },
+    "tn_sept2024": {
+      "n_docling_headers": 467,
+      "annotator_1_f1": 0.3191,
+      "annotator_2_f1": 0.4866
+    }
+  },
+  "mean_f1": 0.4069,
+  "our_parser_mean_f1_reference": 0.8034
+}

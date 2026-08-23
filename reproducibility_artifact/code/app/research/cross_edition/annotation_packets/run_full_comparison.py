@@ -278,6 +278,51 @@ def bootstrap_p_h5(records: list[dict], rng_seed: int = SEED) -> float:
     return sum(1 for d in diffs if d >= 0.05) / len(diffs)
 
 
+# --- NULL-CENTERED bootstrap p-values (2026-08-18 audit round 3, Phase 1) --
+# The three functions above are PERCENTILE bootstrap p-values: they read the
+# tail probability directly off the bootstrap distribution of the statistic,
+# which is naturally centered at the OBSERVED estimate theta_hat, not at the
+# null value theta0. This is a common, defensible shortcut but is informal -
+# it implicitly assumes the sampling distribution's shape near theta0 matches
+# its shape near theta_hat. The functions below instead use the standard
+# pivot construction: shift the bootstrap distribution so it is centered at
+# theta0 (T*_null = T* - theta_hat + theta0), then ask how extreme the
+# OBSERVED theta_hat is relative to that null-centered distribution. Reported
+# ALONGSIDE the percentile versions, not as a replacement - any divergence
+# between the two is itself informative and is disclosed, not resolved by
+# picking whichever is more favourable.
+def bootstrap_p_h3_centered(records: list[dict], rng_seed: int = SEED) -> float:
+    """H3 null: theta<=0. One-sided pivot p = P(T* >= 2*theta_hat - 0)."""
+    fn = make_accuracy_diff_fn("method", "b2", weighted=False)
+    theta_hat = fn(records)
+    rng = random.Random(rng_seed)
+    diffs = [fn(_resample_items(records, rng)) for _ in range(N_BOOT)]
+    diffs = [d for d in diffs if d is not None]
+    threshold = 2 * theta_hat - 0.0
+    return sum(1 for d in diffs if d >= threshold) / len(diffs)
+
+
+def bootstrap_p_h4_centered(records: list[dict], rng_seed: int = SEED) -> float:
+    """H4 null: theta<0.80. One-sided pivot p = P(T* >= 2*theta_hat - 0.80)."""
+    theta_hat = t3_precision_fn(records)
+    rng = random.Random(rng_seed)
+    vals = [t3_precision_fn(_resample_items(records, rng)) for _ in range(N_BOOT)]
+    vals = [v for v in vals if v is not None]
+    threshold = 2 * theta_hat - 0.80
+    return sum(1 for v in vals if v >= threshold) / len(vals)
+
+
+def bootstrap_p_h5_centered(records: list[dict], rng_seed: int = SEED) -> float:
+    """H5 null: theta>=+0.05. One-sided pivot p = P(T* <= 2*theta_hat - 0.05)."""
+    fn = make_false_corr_diff_fn("method", "b1", weighted=False)
+    theta_hat = fn(records)
+    rng = random.Random(rng_seed)
+    diffs = [fn(_resample_items(records, rng)) for _ in range(N_BOOT)]
+    diffs = [d for d in diffs if d is not None]
+    threshold = 2 * theta_hat - 0.05
+    return sum(1 for d in diffs if d <= threshold) / len(diffs)
+
+
 def benjamini_hochberg(pvals: dict[str, float]) -> dict[str, dict]:
     items = sorted(pvals.items(), key=lambda kv: kv[1])
     m = len(items)
@@ -338,7 +383,7 @@ def main():
     result["descriptive"]["B1_provenance_loss_rate_minor_pairs"] = b1_ploss
     print(f"B1 provenance loss rate (minor pairs, descriptive): item-raw={b1_ploss['raw']['item']}")
 
-    # --- BH across {H3, H4, H5} ------------------------------------------
+    # --- BH across {H3, H4, H5} - PERCENTILE p-values (as originally run) --
     pvals = {
         "H3": bootstrap_p_h3(records),
         "H4": bootstrap_p_h4(records),
@@ -346,7 +391,23 @@ def main():
     }
     bh = benjamini_hochberg(pvals)
     result["benjamini_hochberg"] = bh
-    print(f"BH-adjusted p-values: {bh}")
+    print(f"BH-adjusted p-values (percentile): {bh}")
+
+    # --- Same, NULL-CENTERED (2026-08-18 audit round 3, Phase 1) ---------
+    # Reported alongside, not in place of, the percentile version above.
+    pvals_centered = {
+        "H3": bootstrap_p_h3_centered(records),
+        "H4": bootstrap_p_h4_centered(records),
+        "H5": bootstrap_p_h5_centered(records),
+    }
+    bh_centered = benjamini_hochberg(pvals_centered)
+    result["benjamini_hochberg_null_centered"] = bh_centered
+    print(f"BH-adjusted p-values (null-centered): {bh_centered}")
+    for h in ("H3", "H4", "H5"):
+        divergence = abs(bh[h]["p_adjusted"] - bh_centered[h]["p_adjusted"])
+        print(f"  {h}: percentile p_adj={bh[h]['p_adjusted']}  "
+              f"null-centered p_adj={bh_centered[h]['p_adjusted']}  "
+              f"divergence={divergence:.4f}")
 
     out_path = BASE / "full_comparison_report.json"
     with open(out_path, "w", encoding="utf-8") as f:

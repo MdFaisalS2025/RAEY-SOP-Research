@@ -1,0 +1,1022 @@
+{
+  "new onset atrial fibrillation and flutter/assessment/2": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nSupportive care\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Supportive care\n2. Supportive care\n3. Supportive Care\n4. Supportive Care\n5. Supportive care\n6. Supportive care\n7. Supportive Care\n8. Supportive care\n9. Supportive care\n10. Supportive care\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "new onset atrial fibrillation and flutter/assessment/2",
+      "bradycardia/assessment/2",
+      "acute coronary syndrome/stemi/assessment/2",
+      "chest pain / non-cardiac/assessment/2",
+      "premature ventricular contractions pvc/assessment/2",
+      "supraventricular tachycardia svt/assessment/2",
+      "torsades de pointe/assessment/2",
+      "ventricular tachycardia with a pulse/assessment/2",
+      "post resuscitation/assessment/2",
+      "chemical exposure/assessment/2"
+    ],
+    "call_succeeded": true
+  },
+  "hyperthermia/notes/o#6": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nAnticholinergic drugs such as: Atropine, Congentin, Scopolamine\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Anticholinergic drugs such as: Atropine, Congentin, Scopolamine\n2. Name of medication(s)\n3. Name of the medication(s)\n4. Medications:\n5. Additional Medications\n6. Antipsychotic medications and major tranquilizers: Phenothiazine (Thorazine®), Butyrophenones (Haldol®)\n7. Monoamine oxidase inhibitors such as: Nardil®, Marplan®\n8. If the patient has Albuterol Inhalation Treatment prescribed, assist them with one treatment. May assist with patient’s sublingual nitroglycerine.\n9. Amphetamines\n10. May continue Nitroglycerine spray/tablet and apply 1” of Nitropaste to chest wall.  Discontinue therapy if systolic BP < 100 mmHg.\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "hyperthermia/notes/o#6",
+      "medications at schools/assessment/3.c.v",
+      "non-formulary medications/assessment/3.c.v",
+      "post resuscitation/aemt stop/9",
+      "pediatric cardiac emergency neonatal resuscitation/precautions/8#2",
+      "hyperthermia/notes/o",
+      "hyperthermia/notes/o#5",
+      "acute pulmonary edema / chf/emr stop/3",
+      "hyperthermia/notes/o#4",
+      "acute pulmonary edema / chf/aemt stop/9"
+    ],
+    "call_succeeded": true
+  },
+  "hypertensive crisis/emt stop/4": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nGlucose check\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Glucose check\n2. Glucose Check\n3. Glucose Check\n4. Glucose check\n5. Glucose check\n6. Glucose check\n7. Glucose check\n8. Glucose check\n9. Glucose check\n10. Glucose check\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "new onset atrial fibrillation and flutter/emt stop/4",
+      "bradycardia/emt stop/4",
+      "acute coronary syndrome/stemi/emt stop/6",
+      "chest pain / non-cardiac/emt stop/6",
+      "supraventricular tachycardia svt/emt stop/4",
+      "torsades de pointe/emt stop/4",
+      "ventricular asystole/assessment/4",
+      "ventricular tachycardia with a pulse/emt stop/4",
+      "drug ingestion/emt stop/7",
+      "hyperthermia/emt stop/5"
+    ],
+    "call_succeeded": true
+  },
+  "soft tissue / crush injuries/hypotension/3": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nControl any life-threatening hemorrhaging\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Control any life-threatening hemorrhaging\n2. Control any life-threatening hemorrhaging\n3. Control any life-threatening hemorrhaging\n4. Stop any life-threatening hemorrhaging\n5. Hemorrhage control\n6. Control hemorrhage as appropriate\n7. Control hemorrhaging\n8. Control any life-threatening hemorrhaging, consider a tourniquet or hemorrhage control clamp\n9. Control any gross hemorrhage and dress wounds\n10. Control any hemorrhage and simultaneously provide: Oxygen and airway maintenance appropriate to the patient’s condition.\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "soft tissue / crush injuries/hypotension/3",
+      "otherwise contact medical control/hypotension/3",
+      "traumatic amputation s/hypotension/3",
+      "abdominal/pelvic trauma/hypotension/3",
+      "neurogenic shock/assessment/3",
+      "obstetrical / gynecological complaints non-delivery or gynecological only/emr stop/3",
+      "spinal cord injuries/assessment/3",
+      "musculoskeletal trauma/hypotension/3",
+      "electrocution / lightning injuries/emr stop/5",
+      "musculoskeletal trauma/shock / trauma/2"
+    ],
+    "call_succeeded": true
+  },
+  "pediatric cardiac emergency neonatal resuscitation/contraindications/1#2": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nAssemble supplies\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Assemble supplies\n2. Assemble Supplies:\n3. Leave all sheets placed in plastic/paper bag with patient at facility\n4. Place clothing in plastic sheet or separate plastic/paper bags with ID labels and found location\n5. CVC dressing kit\n6. Prepare the IO driver and needle set\n7. Attach cardiac and oxygen saturation monitors\n8. Use a pressure bag or pump for fluid challenge\n9. Open the package of 2x2s if extra padding is needed\n10. Notify all staff of clothing samples\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "pediatric cardiac emergency neonatal resuscitation/contraindications/1#2",
+      "pediatric cardiac emergency neonatal resuscitation/contraindications/1",
+      "sexual assault/assessment/8.b",
+      "sexual assault/assessment/8.a",
+      "pediatric cardiac emergency neonatal resuscitation/contraindications/1.a#2",
+      "pediatric cardiac emergency neonatal resuscitation/procedure/5#6",
+      "pediatric cardiac emergency neonatal resuscitation/precautions/6",
+      "pediatric cardiac emergency neonatal resuscitation/contraindications/1.b#3",
+      "pediatric cardiac emergency neonatal resuscitation/contraindications/2#2",
+      "sexual assault/assessment/8.c"
+    ],
+    "call_succeeded": true
+  },
+  "reference pulse oximetry/reference/6": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nLMP if applicable\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. LMP if applicable\n2. If thermal or chemical\n3. If >90 mmHg –stable/asymptomatic:\n4. If Hypothermic – go to hypothermia protocol\n5. If Systolic BP <100 mmHg\n6. Utilize AED if available\n7. If Systolic BP >100 mmHg\n8. If <90 mmHg – unstable/symptomatic:\n9. If systolic BP >90 mmHg – stable/asymptomatic\n10. Approximate ambient air temperature\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "reference pulse oximetry/reference/6",
+      "eye trauma/assessment/3",
+      "torsades de pointe/aemt stop/2.b",
+      "near drowning/assessment/4",
+      "acute pulmonary edema / chf/emt stop/7",
+      "pulseless electrical activity p e a/assessment/1",
+      "acute pulmonary edema / chf/emt stop/6",
+      "torsades de pointe/aemt stop/8.a",
+      "ventricular tachycardia with a pulse/aemt stop/11",
+      "reference pulse oximetry/reference/1#16"
+    ],
+    "call_succeeded": true
+  },
+  "reference pulse oximetry/reference/6#11": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nTreatments/reassessments\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Treatments/reassessments\n2. Treatments/reassessments\n3. Treatments/Reassessments\n4. Treatments/reassessments\n5. Treatments/reassessments\n6. Treatments/reassessments\n7. Treatments/reassessments\n8. Treatments/reassessments\n9. Treatments/Reassessments\n10. Treatments/Reassessments\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "reference pulse oximetry/reference/7#7",
+      "reference pulse oximetry/reference/6#11",
+      "reference pulse oximetry/reference/5#15",
+      "reference pulse oximetry/reference/8#7",
+      "reference pulse oximetry/reference/6#15",
+      "reference pulse oximetry/reference/9#5",
+      "reference pulse oximetry/reference/6#17",
+      "reference pulse oximetry/reference/6#19",
+      "reference pulse oximetry/reference/7#15",
+      "reference pulse oximetry/reference/5#23"
+    ],
+    "call_succeeded": true
+  },
+  "reference pulse oximetry/reference/2#15": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nNausea/vomiting\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Nausea/vomiting\n2. Nausea/Vomiting/Diarrhea\n3. Nausea, vomiting\n4. Nausea, vomiting\n5. Nausea/vomiting/recent illness\n6. Nausea, vomiting, diarrhea, constipation\n7. Vomiting since ingestion as appropriate\n8. Abdominal Pain\n9. Injuries, chest pain, dyspnea, nausea\n10. Rash/Itching\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "reference pulse oximetry/reference/2#15",
+      "reference pulse oximetry/reference/4",
+      "reference pulse oximetry/reference/4#11",
+      "reference pulse oximetry/reference/3#12",
+      "reference pulse oximetry/reference/2#14",
+      "reference pulse oximetry/reference/1#8",
+      "reference pulse oximetry/reference/5#18",
+      "reference pulse oximetry/reference/1#19",
+      "reference pulse oximetry/reference/2#25",
+      "reference pulse oximetry/reference/5#6"
+    ],
+    "call_succeeded": true
+  },
+  "preamble/introduction/1.f#2": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nTKO (To Keep Open) indicates a flow rate of approximately 50 mL/hr (peds 5-10 mL/hr)\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. IVs should not be attempted in an injured extremity f. TKO (To Keep Open) indicates a flow rate of approximately 50 mL/hr (peds 5-10 mL/hr)\n2. IV NS TKO, if hypotensive 20 mL/kg (peds 20 mL/kg)\n3. IV NS TKO, if hypotensive 20 mL/kg (peds 20 mL/kg)\n4. IV NS TKO, if hypotensive 20 mL/kg (peds 20 mL/kg)\n5. IV NS TKO, if hypotensive 20 mL/kg (peds 20 mL/kg)\n6. IV NS TKO, if hypotensive 20 mL/kg (peds 20 mL/kg)\n7. IV NS TKO, if hypotensive 20 mL/kg (peds 20 mL/kg)\n8. IV NS TKO, if hypotensive 20 mL/kg (peds 20 mL/kg)\n9. IV NS TKO (30 mL/hr) or INT\n10. IV NS or LR, large bore @ TKO – If hypotensive 20 mL/kg bolus (peds 20 mL/kg bolus)\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "preamble/introduction/1.e#2",
+      "abruptio placenta/emt stop/4",
+      "amniotic sac presentation/emt stop/6",
+      "breech or limb presentation/emt stop/9",
+      "meconium stain/emt stop/6",
+      "placenta previa/emt stop/4",
+      "prolapsed umbilical cord/emt stop/8",
+      "pre-eclampsia and eclampsia/emt stop/5",
+      "cerebrovascular accident cva/emt stop/10",
+      "anaphylactic shock/emt stop/5"
+    ],
+    "call_succeeded": true
+  },
+  "preamble/introduction/3.g": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nAltered level of consciousness Stable (asymptomatic) – Indicates that the patient has no or very mild signs and symptoms associated with the current history of illness or trauma. Emergency Medical Responder – Personnel licensed by the Tennessee Department of Health, Office of EMS and authorized by the service Medical Director to perform lifesaving interventions while awaiting additional EMS response.  May also assist higher level personnel at scene and during transport under medical direction and within their scope of practice. EMT – Personnel licensed by the Tennessee Department of Health, Office of EMS and authorized by the Medical Director to provide basic emergency care according to the Standard of Care and these Guidelines. AEMT – Personnel licensed by the Tennessee Department of Health, Office of EMS and authorized by the Medical Director to provide limited advanced emergency care according to the Standard of Care and Standing Orders and Protocols. Paramedic – Personnel licensed by the Tennessee Department of Health, Office of EMS and authorized by the Medical Director to provide basic and advanced emergency patient care according to the standard of care and these guidelines Orders and Protocols Transfer of Care – Properly maintaining the continuity of care through appropriate verbal and/or written communication of patient care aspects to an equal or higher appropriate medical authority. Higher Medical Authority – Any medical personnel that possesses a current medical license or certificate recognized by the State of Tennessee with a higher level of medical training than the one possessed by EMS Personnel. (MD) Definitions Medical Control (transport) – The instructions and advice provided by a physician, and the orders by a physician that define the treatment of the patient. To access Medical Control, contact the Emergency Department physician on duty of the patient’s first choice of destinations.  If the patient does not have a preference, the patient’s condition and/or chief complaint may influence the choice of medical treatment facilities. All EMRs, EMTs, AEMTs, and Paramedics are expected to perform their duties in accordance with local, state and federal guidelines. Medical Directors Statement I have taken great care to make certain that doses of medications and schedules of treatment are compatible with generally accepted standards at time of publication.  Much effort has gone into the development, production, and proof reading of Protocol Guidelines.  Unfortunately, this process may allow errors to go unnoticed or treatments may change between the creation of these protocols and their ultimate use.  Please do not hesitate to contact your medical director if you discover any errors, typos, dosage, or medication errors. I look forward to any questions, concerns, or comments regarding these protocols.  I expect all EMS personnel to follow these guidelines, but also to utilize and exercise good judgment to provide the best care for all patients. EMS Medical Director 101 Automatic External Defibrillator (AED)\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Altered level of consciousness Stable (asymptomatic) – Indicates that the patient has no or very mild signs and symptoms associated with the current history of illness or trauma. Emergency Medical Responder – Personnel licensed by the Tennessee Department of Health, Office of EMS and authorized by the service Medical Director to perform lifesaving interventions while awaiting additional EMS response.  May also assist higher level personnel at scene and during transport under medical direction and within their scope of practice. EMT – Personnel licensed by the Tennessee Department of Health, Office of EMS and authorized by the Medical Director to provide basic emergency care according to the Standard of Care and these Guidelines. AEMT – Personnel licensed by the Tennessee Department of Health, Office of EMS and authorized by the Medical Director to provide limited advanced emergency care according to the Standard of Care and Standing Orders and Protocols. Paramedic – Personnel licensed by the Tennessee Department of Health, Office of EMS and authorized by the Medical Director to provide basic and advanced emergency patient care according to the standard of care and these guidelines Orders and Protocols Transfer of Care – Properly maintaining the continuity of care through appropriate verbal and/or written communication of patient care aspects to an equal or higher appropriate medical authority. Higher Medical Authority – Any medical personnel that possesses a current medical license or certificate recognized by the State of Tennessee with a higher level of medical training than the one possessed by EMS Personnel. TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (10) Definitions Medical Control (transport) – The instructions and advice provided by a physician, and the orders by a physician that define the treatment of the patient. To access Medical Control, contact the Emergency Department physician on duty of the patient’s first choice of destination.  If the patient does not have a preference, the patient’s condition and/or chief complaint may influence the choice of medical treatment facilities. All EMRs, EMTs, AEMTs, and Paramedics are expected to perform their duties in accordance with local, state, and federal guidelines. TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (11) Medical Directors Statement I have taken great care to make certain that doses of medications and schedules of treatment are compatible with generally accepted standards at time of publication.  Much effort has gone into the development, production, and proof reading of the Protocol Guidelines.  Unfortunately, this process may allow errors to go unnoticed or treatments may change between the creation of these protocols and their ultimate use.  Please do not hesitate to contact your medical director if you discover any errors, typos, dosage, or medication errors. I look forward to any questions, concerns, or comments regarding these protocols.  I expect all EMS personnel to follow these guidelines, but also to utilize and exercise good judgment to provide the best care for all patients. EMS Medical Director TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (12) 101 Automatic External Defibrillator (AED)\n2. Paramedics, when properly equipped and trained, may utilize indwelling access ports such as Port-A-Cath in an EMERGENCY ONLY.  This procedure should be done with a Huber needle utilizing sterile technique. TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (9) Definitions Definitions Medical Director – the physician that has the ultimate responsibility for the patient care aspects of the EMS System Unstable (symptomatic) – indicates that one or more of the following are present:\n3. EMTs and AEMTS are expected to perform their duties in accordance with local, state and federal guidelines in accordance with the State of Tennessee statutes and rules of Tennessee Emergency Services.  The Paramedic will work within their scope of practice dependent on available equipment.\n4. Contact Medical Control for further orders TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (72) 316 Unconscious/Unresponsive/ Altered Mental Status\n5. Additional doses must be authorized by Medical Control Documentation: Review for documentation of frequent reassessment of vital signs, cardiopulmonary status, and neurovascular status or restrained extremities, reason for restraint and method used. TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (111) 606 Physician On Scene\n6. Whenever medication is administered under these circumstances, transport is mandatory NOTE: If you have any additional questions or concerns please contact Medical Control. TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (66) 312 Respiratory Distress (Asthma/COPD)\n7. Treat the patient not the monitor TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (8)\n8. The Paramedic will be in charge and will be responsible for all of the actions and or activities as it relates to patient care.  On the scene of an emergency, the Paramedic will be responsible for patient care.  The EMT or AEMT will act within their scope of practice to any request for patient care or maintenance of the unit as directed by the Paramedic.  Patient care is limited to acts within their scope of practice as defined by these SOPs.  All EMS Personnel are responsible for reviewing all documentation and signing in the required manner\n9. Assess neuro status; if abnormal refer to appropriate protocol TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (74) 401 Air Ambulance Transport\n10. 12 Lead EKG, transmit if appropriate TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (95) 501 Normal Delivery\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "preamble/introduction/3.g",
+      "preamble/introduction/3#5",
+      "preamble/introduction/b.12",
+      "unconscious / unresponsive / altered mental status/aemt stop/10",
+      "patient refusal or declination of care / patient non-transport situations/aemt stop/4.c",
+      "non-formulary medications/assessment/7",
+      "preamble/introduction/2#4",
+      "preamble/introduction/4",
+      "syncope/aemt stop/8",
+      "obstetrical / gynecological complaints non-delivery or gynecological only/aemt stop/7"
+    ],
+    "call_succeeded": true
+  },
+  "acute coronary syndrome/stemi/aemt stop/1": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nPatients with positive AMI should be transported to an appropriate cardiac facility as soon as possible.  Treat arrhythmia appropriately. Transmit EKG to PCI capable hospital within 10 minutes of patient contact. Perform serial EKGs in order to document progression of EKG changes.  Treat arrhythmia appropriately.\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Patients with positive AMI should be transported to an appropriate cardiac facility as soon as possible.  Treat arrhythmia appropriately. Transmit EKG to PCI capable hospital within 10 minutes of patient contact. Perform serial EKGs in order to document progression of EKG changes.  Treat arrhythmia appropriately.\n2. Cardiac monitor – assist with 12 lead EKG and transmit.  Obtain and transmit EKG to PCI capable hospital within first 10 minutes of patient contact.\n3. Cardiac monitor – assist with 12 Lead EKG and transmit.  Obtain and transmit EKG to PCI capable hospital within the first 10 minutes of patient contact.\n4. If pulse confirmed prepare for immediate transport.  The Mechanical CPR device may be turned off but must be left on the patient during the transport to the hospital\n5. If rate >160/min – contact Medical Control, consider Amiodarone 150- 300 mg IV/IO (peds 5 mg/kg, may repeat up to total of 15 mg/kg), maintain systolic BP >90 mm/Hg, transport Doses are approximate 5-9 kg 10 kg 12 kg 15 kg 20 kg 30 kg 40 kg 50-74 kg 75 kg\n6. If rhythm converts, monitor for changes, transport.  If rhythm does not convert, administer Amiodarone 150 mg over 10 minutes (peds 5 mg/kg, may repeat up to total of 15 mg/kg).  Reattempt cardioversion at 100 j.\n7. Treat cardiac rhythm appropriately\n8. Monitor patient and treat per SOP specific for the arrhythmia\n9. If rate >160/min – contact Medical Control, consider Amiodarone 150 – 300 mg IV/IO (peds 5 mg/kg, may repeat up to total of 15 mg/kg), transport.\n10. Evaluate cardiac rhythm for dysrhythmia and treat appropriately with medical direction (contact Medical Control prior to initiation of anti-arrhythmic therapy)\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "acute coronary syndrome/stemi/aemt stop/11",
+      "chest pain / non-cardiac/emr stop/5",
+      "acute coronary syndrome/stemi/emr stop/5",
+      "pediatric cardiac emergency neonatal resuscitation/exclusion criteria/9",
+      "torsades de pointe/aemt stop/2#2",
+      "ventricular tachycardia with a pulse/aemt stop/10.c",
+      "cardiogenic shock/aemt stop/6",
+      "automatic external defibrillator aed/aemt stop/6",
+      "torsades de pointe/aemt stop/2",
+      "hypertensive crisis/aemt stop/8"
+    ],
+    "call_succeeded": true
+  },
+  "acute coronary syndrome/stemi/aemt stop/12": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nNitroglycerine – If patient is not Hypotensive (BP <100 mmHg) administer 0.4mg Nitroglycerine SL and apply 1” of Nitroglycerine to chest wall.  Repeat Nitroglycerine spray once 5 minutes after initial spray and application of paste.  Continue nitrate therapy until pain relieved or systolic BP<100 mmHg.\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Nitroglycerine – If patient is not Hypotensive (BP <100 mmHg), administer 0.4 mg Nitroglycerine SL and apply 1” of Nitroglycerine to chest wall.  Repeat Nitroglycerine spray once 5 minutes after initial spray and application of paste.  Continue nitrate therapy until pain relieved or systolic BP<100 mmHg.\n2. One Nitroglycerine spray or tablet sublingually.  Repeat Nitroglycerine spray q 5 minutes after initial dose.  Discontinue therapy if systolic BP <100 mmHG;\n3. If systolic BP is > 220 mmHg and/or diastolic BP is greater than 140 mmHg, Nitroglycerine 0.4 mg SL q 3-5 min until noted decrease in BP by 15%.  May use nitro paste 1 inch to chest wall, remove if BP drops 15% from the original reading.  Use with caution in patients taking erectile dysfunction medications.  Profound hypotension may occur. TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (63) # 309 Hypoglycemia\n4. If patient is not Hypotensive (BP <100 mmHg) administer one Nitroglycerine SL/spray\n5. If systolic BP is >110 and the patient is symptomatic, administer 0.4 mg nitroglycerine sublingually and reassess every 5 minutes.  (Refer to the medication assist procedure.) Maximum of three doses.\n6. If systolic BP is >110 and the patient is symptomatic, administer 1 nitroglycerine 0.4 mg sublingually and reassess every 5 minutes.  Maximum of 3 doses.\n7. May continue Nitroglycerine spray/tablet and apply 1” of Nitropaste to chest wall.  Discontinue therapy if systolic BP < 100 mmHg.\n8. If Systolic BP is >100 and the patient is symptomatic, assist patient with 1 nitroglycerine dose sublingually and reassess every 5 minutes.  (Refer to the medication assist procedure) Maximum of three doses. Use caution in patients taking erectile dysfunction medications.  Profound hypotension may occur.\n9. Contact Medical Control to request orders for additional Nitroglycerine in excess of three doses NOTE: The maximum dosage of Nitroglycerine is three sublingual administrations, whether before or after your arrival.  Use with caution in patients taking erectile dysfunction medications.  Profound hypotension may occur.\n10. Contact Medical Control to request orders for additional Nitroglycerine in excess of three doses. NOTE: The maximum dosage of Nitroglycerine is three.  The total dosage is the total doses the patient has taken on their own combined with your subsequent dosages. Use with caution in patients taking erectile dysfunction medications as this may cause profound\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "acute coronary syndrome/stemi/aemt stop/13",
+      "acute pulmonary edema / chf/emt stop/6.a.i",
+      "hypertensive crisis/aemt stop/9.b",
+      "chest pain / non-cardiac/aemt stop/12",
+      "chest pain / non-cardiac/glucose/9",
+      "acute coronary syndrome/stemi/glucose/9",
+      "acute pulmonary edema / chf/aemt stop/9",
+      "acute pulmonary edema / chf/emt stop/5",
+      "chest pain / non-cardiac/glucose/10",
+      "acute coronary syndrome/stemi/glucose/10"
+    ],
+    "call_succeeded": true
+  },
+  "acute coronary syndrome/stemi/aemt stop/13": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nSystolic BP is <100 mmHg, give 250 ml NS bolus (assess for signs of pulmonary congestion) If PVCs >15/min – Lidocaine 1 – 1.5 mg/kg over 2 min, repeat to total of 3 mg/kg\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Systolic BP is <100 mmHg, give 250 mL NS bolus (assess for signs of pulmonary congestion) If PVCs >15/min – Lidocaine 1 – 1.5 mg/kg over 2 min, repeat to total of 3 mg/kg\n2. Assess BP – If systolic <90 mmHg, administer 250 mL NS bolus (peds systolic BP 70 + 2x age, 20 mL/kg NS bolus) repeat until BP >90 mmHg or appropriate for pediatric age.\n3. Either Lidocaine 1.5 mg/kg over 1 min (peds 1 mg/kg, max dose 2 mg/kg), repeat up to 3 mg/kg\n4. If systolic BP <90 mmHg, IV NS/LR 20 mL/kg (peds 20 mL/kg)\n5. If systolic BP <90 mmHg, IV NS LR 20 mL/kg (peds 20 mL/kg)\n6. IV NS TKO or INT.  Consider 250-500 mL NS bolus, only in patients with signs of dehydration, vomiting or DKA\n7. If the patient is conscious, administer Lidocaine 2% 20-50 mg slowly PRIOR to the initial bolus\n8. If Systolic BP >100 mmHg\n9. If Systolic BP <100 mmHg\n10. IV fluid NS LR, if hypotensive bolus 20 mL/kg (repeat bolus once if needed)\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "acute coronary syndrome/stemi/aemt stop/14",
+      "post resuscitation/emt stop/4",
+      "premature ventricular contractions pvc/aemt stop/8.a",
+      "musculoskeletal trauma/aemt stop/8.b",
+      "soft tissue / crush injuries/aemt stop/8.b",
+      "hyperglycemia associated with diabetes/emt stop/6",
+      "pediatric cardiac emergency neonatal resuscitation/procedure/13#2",
+      "acute pulmonary edema / chf/emt stop/6",
+      "acute pulmonary edema / chf/emt stop/7",
+      "spinal cord injuries/emt stop/5"
+    ],
+    "call_succeeded": true
+  },
+  "acute coronary syndrome/stemi/aemt stop/14": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nIf chest pain/discomfort continues Continue Nitrate therapy Complete thrombolytic screening If chest pain greater than 7 on scale of 1-10, treat pain per chart below until pain is tolerated by patient Contact Medical Control Transport Note:  If EMS suspects a true Acute Coronary Syndrome/STEMI in a patient less than 18 years old, immediately contact online medical control. 105 Chest Pain / NON Cardiac\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. If chest pain/discomfort continues Continue Nitrate therapy Complete thrombolytic screening If chest pain greater than 7 on scale of 1-10, treat pain per chart below until pain is tolerated by patient Contact Medical Control Transport Note:  If EMS suspects a true Acute Coronary Syndrome/STEMI in a patient less than 18 years old, immediately contact online medical control. Doses are approximate 5-9 kg 10 kg 12 kg 15 kg 20 kg 30 kg 40 kg 50-74 kg 75 kg\n2. If no effect, consider: If chest pain greater the 7 on scale of 1-10, treat per chart below until pain is tolerated by patient\n3. Transport CAUTION: Patients with true cardiac disease may have subtle, atypical symptoms.  Always err on the side of patient safety. Note: For pediatric patients complaining of chest pain, please contact online medical control before administering aspirin, nitroglycerine, or morphine Doses are approximate 5-9 kg 10 kg 12 kg 15 kg 20 kg 30 kg 40 kg 50-74 kg 75 kg\n4. Chest pain any age or cause\n5. Chest pain\n6. Chest pain\n7. Chest pain\n8. Possible cardiac chest pain\n9. Chest pain/dyspnea\n10. Chest pain/dyspnea\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "acute coronary syndrome/stemi/aemt stop/15",
+      "chest pain / non-cardiac/aemt stop/13",
+      "chest pain / non-cardiac/aemt stop/15",
+      "preamble/introduction/d",
+      "preamble/introduction/3.a",
+      "reference pulse oximetry/reference/4#6",
+      "reference pulse oximetry/reference/1#12",
+      "patient refusal or declination of care / patient non-transport situations/miscellaneous/2#4",
+      "reference pulse oximetry/reference/6#9",
+      "reference pulse oximetry/reference/1#15"
+    ],
+    "call_succeeded": true
+  },
+  "pulseless electrical activity p e a/aemt stop/11": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nPEA continues: Continue CPR, transport to appropriate facility. 107 Premature Ventricular Contractions (PVC)\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. PEA continues: Continue CPR, transport to appropriate facility. TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (23) 107 Premature Ventricular Contractions (PVC)\n2. If PVCs are present with heart rate >60/min:\n3. If pulse rate is >60 keep warm, ventilate with BVM if necessary, transport\n4. Continue chest compressions\n5. Continue CPR with minimal interruptions\n6. CPR as indicated EMR and EMT STOP\n7. Continue CPR and rewarming attempts\n8. Report given and signature of RN CARDIAC ARREST\n9. If pulse rate is less than 60 perform CPR at rate of 120 compressions/min, transport\n10. Consider viability of patient prior to transport TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (91) 415 Tension Pneumothorax\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "pulseless electrical activity p e a/aemt stop/11",
+      "premature ventricular contractions pvc/aemt stop/8",
+      "pediatric cardiac emergency neonatal resuscitation/emt stop/8",
+      "pediatric cardiac emergency neonatal resuscitation/assessment/5.a.i",
+      "pediatric cardiac emergency neonatal resuscitation/procedure/2.c",
+      "pulseless electrical activity p e a/assessment/3",
+      "hypothermia/aemt stop/13.c",
+      "reference pulse oximetry/reference/9#3",
+      "pediatric cardiac emergency neonatal resuscitation/assessment/5.a",
+      "traumatic cardiac arrest/aemt stop/9"
+    ],
+    "call_succeeded": true
+  },
+  "premature ventricular contractions pvc/aemt stop/8.i": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nIf PVCs abolished, initiate Lidocaine drip @ 2 – 4 mg/min NOTE: Use ½ of initial dose for subsequent doses for patients <70 y/o or with history of hepatic disease.\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. If PVCs abolished, initiate Lidocaine drip @ 2-4 mg/min NOTE: Use ½ of initial dose for subsequent doses for patients <70 y/o or with history of hepatic disease.\n2. If Lidocaine administered, start infusion drip at 2-4 mg/min (peds – 20-50 mcg/kg/min)\n3. If the patient is conscious, administer Lidocaine 2% 20-50 mg slowly PRIOR to the initial bolus\n4. Optional: Instead of Amiodarone, Lidocaine 2% (peds 1 mg/kg, max dose 3 mg/kg. Repeat if infusion initiated more than 15 after the initial dose).\n5. Either Lidocaine 1.5 mg/kg over 1 min (peds 1 mg/kg, max dose 2 mg/kg), repeat up to 3 mg/kg\n6. Prior to IO bolus or flush on a conscious adult patient, SLOWLY administer 20-50 mg of 2% lidocaine.\n7. Systolic BP is <100 mmHg, give 250 mL NS bolus (assess for signs of pulmonary congestion) If PVCs >15/min – Lidocaine 1 – 1.5 mg/kg over 2 min, repeat to total of 3 mg/kg\n8. Ketamine – Administer: Adult and pediatric patient: 2 mc/kg IVP, may repeat 1 mg/kg IVP every 10-15 minutes for a total of three doses as necessary. May be preferred in patients with bronchospasms, reactive airway disease, or septic shock.\n9. Adenosine 12 mg rapid IV (peds 0.1 mg/kg 6 mg max initial dose.  May repeat at 0.2 mg/kg with 12 mg max dose if needed.). If no conversion, repeat 12 mg dose. Flush with 10 mL NS after each dose\n10. If blood sugar is < 80 mg/dL and symptomatic, infuse 250 cc bag D10 until patient responds. (peds – see glucose dosing chart)\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "premature ventricular contractions pvc/aemt stop/8.a.i",
+      "post resuscitation/aemt stop/9.a.ii",
+      "pediatric cardiac emergency neonatal resuscitation/procedure/13#2",
+      "ventricular fibrillation / pulseless ventricular tachycardia/aemt stop/7.c",
+      "premature ventricular contractions pvc/aemt stop/8.a",
+      "pediatric cardiac emergency neonatal resuscitation/contraindications/2.a",
+      "acute coronary syndrome/stemi/aemt stop/14",
+      "pediatric cardiac emergency neonatal resuscitation/precautions/8.a",
+      "supraventricular tachycardia svt/aemt stop/9",
+      "bradycardia/emt stop/6"
+    ],
+    "call_succeeded": true
+  },
+  "supraventricular tachycardia svt/notes/3": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nCarotid Sinus Pressure should be applied on the right if possible.  In no effect, then try the left side. NEVER massage both sides at once.\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Carotid Sinus Pressure should be applied on the right if possible.  If no effect, then try the left side. NEVER massage both sides at once.\n2. GENTLY massage extremities to prevent cold induced vasoconstriction\n3. Ask the patient to do the following after you have completed the request “stick out your tongue and touch your right hand to your left ear” 3 pts max\n4. Use gentle pressure to control delivery.  When head delivers, suction airway and check for cord around neck\n5. **Apply an adjunct for airway placement\n6. Any midline neck or spinal tenderness with palpation\n7. Position of comfort\n8. If severe respiratory distress and no contraindications. Begin CPAP\n9. Confirm tracheal placement, inflate the cuff with 3-10 mL of air, auscultate for equal breath sounds and reposition accordingly\n10. Place one 2x2 under the needle to provide padding on the skin if Huber is not flush with chest\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "supraventricular tachycardia svt/notes/3",
+      "hyperthermia/emt stop/7",
+      "patient refusal or declination of care / patient non-transport situations/reference/6",
+      "normal delivery/emr stop/4",
+      "pediatric cardiac emergency neonatal resuscitation/precautions/4#3",
+      "patient refusal or declination of care / patient non-transport situations/treatment and interventions/1.b",
+      "placenta previa/assessment/2",
+      "acute pulmonary edema / chf/aemt stop/8",
+      "pediatric cardiac emergency neonatal resuscitation/procedure/12",
+      "pediatric cardiac emergency neonatal resuscitation/contraindications/3#2"
+    ],
+    "call_succeeded": true
+  },
+  "torsades de pointe/aemt stop/8.a.i": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nPrepare for cardioversion at 100J, escalate as needed. (Peds: Begin with 0.5-1 J/kg: if not effective, then increase to 2 J/kg)\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Prepare for cardioversion at 100 j, escalate as needed. (Peds: begin with 0.5-1 j/kg: if not effective, then increase to 2 j/kg)\n2. Defibrillate @ 100 j, if no change, begin CPR defib at 2 min intervals, increase joules at each interval until 200 j max (120 j, 150 j, 200 j) (peds 2 j/kg then 4 j/kg)\n3. If rhythm does not convert to <150/min (Peds: <220/min infant and <180/min child), or if patient is unstable or significantly symptomatic prepare for synchronized cardioversion (Peds: Begin with 0.5-1 j/kg; if not effective, then increase to 2 j/kg) Sedate as necessary: Diazepam (Valium) 2-5 mg IV (peds 0.1 mg/kg) or Midazolam (Versed) 2-5 mg IV (peds 0.1 mg/kg IV) and/Pain Medication per the chart below. TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (25) 108 Supraventricular Tachycardia (SVT)\n4. Synchronize cardiovert beginning at 50 j initial energy level, until heart rate <150/min (peds begin at 0.5 j/kg). TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (33) 113 Ventricular Tachycardia with a Pulse\n5. Defibrillate @ 150, then 200 J, immediately perform two minutes of CPR and evaluate rhythm. If no change in rhythm, repeat defibrillation, perform two minutes of CPR and evaluate rhythm. If no change in rhythm, continue 5 cycles of CPR then defibrillation cycle. (peds begin at 2 j/kg).\n6. If BS >250 mg/dL, start 10-20 cc/kg infusions of NS (peds 4 mL/kg/hr max 150 mL/hr. DO NOT bolus), then reassess blood sugar\n7. If rhythm converts, monitor for changes, transport.  If rhythm does not convert, administer Amiodarone 150 mg over 10 minutes (peds 5 mg/kg, may repeat up to total of 15 mg/kg).  Reattempt cardioversion at 100 j.\n8. If systolic BP <90 mmHg, prepare for synchronized cardioversion\n9. IV NS 20 mL/kg, if signs of shock (peds 20 mL/kg NS bolus)\n10. Either Lidocaine 1.5 mg/kg over 1 min (peds 1 mg/kg, max dose 2 mg/kg), repeat up to 3 mg/kg\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "torsades de pointe/aemt stop/8.a.i",
+      "hypothermia/aemt stop/13.a",
+      "supraventricular tachycardia svt/aemt stop/9.a",
+      "ventricular tachycardia with a pulse/aemt stop/10.b",
+      "ventricular fibrillation / pulseless ventricular tachycardia/aemt stop/6",
+      "hyperglycemia associated with diabetes/emt stop/7",
+      "ventricular tachycardia with a pulse/aemt stop/10.c",
+      "ventricular tachycardia with a pulse/aemt stop/10",
+      "abdominal pain non-traumatic /complaint/nausea and vomiting/emt stop/5",
+      "premature ventricular contractions pvc/aemt stop/8.a"
+    ],
+    "call_succeeded": true
+  },
+  "ventricular asystole/aemt stop/9.f": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nConsider Narcan 110 Ventricular Asystole Reversible Causes: Hypovolemia Hypoxia Hydrogen ion (acidosis) Hyperkalemia/Hypokalemia Hypothermia Tablets (drug overdose) Tamponade (cardiac) Tension pneumothorax Thrombosis – Heart Thrombosis – Lungs 111 Ventricular Fibrillation/Pulseless Ventricular Tachy\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Consider discontinuing efforts if criteria are met under Discontinuation/Withholding of Life Support standing order. TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (29) 110 Ventricular Asystole f. Consider Naloxone (Narcan) Reversible Causes: Hypovolemia Hypoxia Hydrogen ion (acidosis) Hyperkalemia/Hypokalemia Hypothermia Tablets (drug overdose) Tamponade (cardiac) Tension pneumothorax Thrombosis – Heart Thrombosis – Lungs TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (30) 111 Ventricular Fibrillation/Pulseless Ventricular Tachy\n2. Defibrillation for possible fine ventricular fibrillation masquerading as asystole\n3. Hemodynamically unstable (Systolic BP <90)\n4. Hypotension (systolic B/P less than 90 mmHg in a 70 kg patient or greater)\n5. If systolic BP >90 mmHg – stable/asymptomatic\n6. Asystole is present on the EKG monitor in two leads and\n7. If continued hypotension and/or bradycardia despite volume replacement:\n8. If Systolic BP >90 mmHg place patient supine with legs elevated and flexed at knees and hips. If no C-Spine concerns, contact Medical Control\n9. 85° - decreased LOC, slow respirations, atrial fibrillation, decreased BP, decreased heart rate, ventricular irritability TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (43) 206 Near Drowning\n10. KNOWN hyperkalemia or tricyclic antidepressant overdose – Sodium Bicarbonate 8.4% 1 mEq/kg, may repeat @ 0.5 mEq/kg q 10 min (peds <1 month use Sodium Bicarbonate 4.2% - 1 mEq/kg), (peds >1 month use Sodium Bicarbonate 8.4% - 1 mEq/kg may repeat at 0.5 mEq/kg q 10 min) and CaCl 500 mg IVP (peds 20 mg/kg) f. Known Acidosis in prolonged arrest: consider Sodium Bicarbonate 8.4% 1-2 mEq/kg IV\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "ventricular asystole/aemt stop/9.e",
+      "ventricular asystole/aemt stop/9.b",
+      "pediatric cardiac emergency neonatal resuscitation/indications/2.c",
+      "preamble/introduction/3.c",
+      "ventricular tachycardia with a pulse/aemt stop/11",
+      "pre-eclampsia and eclampsia/miscellaneous/e.1",
+      "post resuscitation/aemt stop/9.b",
+      "abdominal/pelvic trauma/emr stop/4.a",
+      "hypothermia/notes/o#5",
+      "pulseless electrical activity p e a/aemt stop/9.e"
+    ],
+    "call_succeeded": true
+  },
+  "ventricular tachycardia with a pulse/aemt stop/10.a": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nAdminister sedative as necessary – Valium 2-5mg IV (peds 0.1mg/kg) OR Versed 2-5 mg IV (peds 0.1 mg/kg) and/or Pain Medications per chart below.\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Administer sedative as necessary – Diazepam (Valium) 2-5 mg IV (peds 0.1 mg/kg) OR Midazolam (Versed) 2-5 mg IV (peds 0.1 mg/kg) and/or Pain Medications per chart below.\n2. Sedation as necessary: Diazepam (Valium) 2-5 mg IV (peds 0.1 mg/kg) OR Midazolam (Versed) 2-5 mg IV (peds 0.1 mg/kg) and/or Pain Medications per the Chart below\n3. 10 mg Diazepam (Valium) (peds 0.1 mg/kg) or 2-5 mg Midazolam (Versed) IV/IN/IO/IM for seizures (peds 0.1 mg/kg)\n4. Diazepam (Valium) 0.1 mg/kg or Midazolam (Versed) 0.1 mg/kg IV/IO\n5. If rhythm does not convert to <150/min (Peds: <220/min infant and <180/min child), or if patient is unstable or significantly symptomatic prepare for synchronized cardioversion (Peds: Begin with 0.5-1 j/kg; if not effective, then increase to 2 j/kg) Sedate as necessary: Diazepam (Valium) 2-5 mg IV (peds 0.1 mg/kg) or Midazolam (Versed) 2-5 mg IV (peds 0.1 mg/kg IV) and/Pain Medication per the chart below. TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (25) 108 Supraventricular Tachycardia (SVT)\n6. Diazepam (Valium) 2-10 mg (peds 0.1 mg/kg) slow IVP/IO PRN or Midazolam (Versed) 2-5 mg (peds 0.1 mg/kg) IVP/IM/IO/IN if generalized seizure activity\n7. Initiate Induced Hypothermia protocol if appropriate Treatment - Protocol If patient does not tolerate ET tube, contact Medical Control for: Diazepam (Valium) 2-10 mg (peds 0.1 mg/kg) or Midazolam (Versed) 2-5 mg IV (peds 0.1 mg/kg) for patient sedation. Note: Use soft restraints if necessary for patient safety (to prevent extubation) TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (35) 201 Chemical Exposure\n8. Pre-medicate with Diazepam (Valium) 2-5 mg IV (peds 0.1 mg/kg) or Midazolam (Versed) 2-5 mg IVP (peds 0.1 mg/kg) and/or Morphine per the chart below TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (14) 102 New Onset Atrial Fibrillation and Flutter Immediate Synchronized Cardioversion (50, 75, 100, 120 150, 200 joules) (peds 0.5 j/kg then 1 j/kg) is recommended when there is an unstable rhythm with serious signs and symptoms: Chest Pain Shortness of breath Decreased level of consciousness Low blood pressure Contacting medical control for children weighing less than 10 kg or children where obesity may affect dosing. Doses are approximate 5-9 kg 10 kg 12 kg 15 kg 20 kg 30 kg 40 kg 50-74 kg 75 kg\n9. Consider Diazepam (Valium) 2-5 mg IV (peds 0.1 mg/kg) or Midazolam (Versed) 2-5 mg (peds 0.1 mg/kg)  IVP/IM/IO/IN if patient is having seizures. TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (37) 202 Drug Ingestion NOTES: Poison Control may be contacted for INFORMATION ONLY (1-800-222-1222).  Treatment modalities are given within these protocols.  Further treatments will be received through Medical Control. TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (38) 203 Electrocution/ Lightning Injury ENVIRONMENTAL EMERGENCIES # 203 Electrocution / Lightning Injuries\n10. Diazepam (Valium) 5 mg slow IV or Midazolam (Versed) 2-5 mg IVP/IN/IO/IM per seizure protocol if generalized seizure activity\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "ventricular tachycardia with a pulse/aemt stop/10.a",
+      "torsades de pointe/aemt stop/8.a.ii",
+      "nerve agent exposure/aemt stop/8",
+      "seizures/aemt stop/13.a",
+      "supraventricular tachycardia svt/aemt stop/9.a",
+      "miscellaneous/aemt stop/8",
+      "post resuscitation/aemt stop/11",
+      "new onset atrial fibrillation and flutter/aemt stop/9.c",
+      "drug ingestion/aemt stop/12",
+      "pre-eclampsia and eclampsia/aemt stop/7"
+    ],
+    "call_succeeded": true
+  },
+  "hypothermia/aemt stop/13": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nIf body temperature <85° F and patient in V-Fib:\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. If body temperature <85° F and patient in V-Fib: TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (42) 205 Hypothermia\n2. If body temperature >85° F – follow normal arrest protocols\n3. Withhold meds until and further shocks until patient warmed to >85° F\n4. If Systolic BP <100 mmHg\n5. Handle patient gently (aggressive movement may trigger V-Fib)\n6. If Systolic BP >100 mmHg\n7. Does patient meet criteria for Induced Hypothermia?\n8. If systolic BP <90 mmHG and heart rate <60/min\n9. 85° - decreased LOC, slow respirations, atrial fibrillation, decreased BP, decreased heart rate, ventricular irritability TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (43) 206 Near Drowning\n10. If pulse rate is >60 keep warm, ventilate with BVM if necessary, transport\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "hypothermia/aemt stop/13",
+      "hypothermia/aemt stop/12",
+      "hypothermia/aemt stop/13.b",
+      "acute pulmonary edema / chf/emt stop/7",
+      "hypothermia/assessment/4",
+      "acute pulmonary edema / chf/emt stop/6",
+      "pediatric cardiac emergency neonatal resuscitation/procedure/1#7",
+      "bradycardia/aemt stop/10.a",
+      "hypothermia/notes/o#5",
+      "pediatric cardiac emergency neonatal resuscitation/emt stop/8"
+    ],
+    "call_succeeded": true
+  },
+  "medical emergencies medical complaint not specified under other protocols/aemt stop/6": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\n12 Lead EKG, transmit 301 Abdominal Pain (non-traumatic)/ Complaint/Nausea and Vomiting\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. 12 Lead EKG, transmit TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (50) 301 Abdominal Pain (Non-Traumatic)/ Complaint/Nausea and Vomiting\n2. 12 Lead EKG, Transmit\n3. 12 Lead EKG, transmit\n4. 12 Lead EKG, transmit\n5. 12 Lead EKG, transmit\n6. 12 Lead EKG, transmit\n7. 12 Lead EKG, transmit\n8. 12 Lead EKG, transmit\n9. 12 Lead EKG, transmit\n10. 12 Lead EKG, transmit\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "medical emergencies medical complaint not specified under other protocols/aemt stop/7",
+      "new onset atrial fibrillation and flutter/aemt stop/7",
+      "bradycardia/aemt stop/7",
+      "pulseless electrical activity p e a/aemt stop/7",
+      "torsades de pointe/aemt stop/7",
+      "post resuscitation/aemt stop/7",
+      "electrocution / lightning injuries/aemt stop/8",
+      "hyperthermia/aemt stop/9",
+      "nerve agent exposure/aemt stop/7",
+      "poisonous snake bite/aemt stop/8"
+    ],
+    "call_succeeded": true
+  },
+  "family violence/assessment/4#2": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nIf sexual assault, follow sexual assault protocol\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. If sexual assault, follow sexual assault protocol\n2. If seizure present, follow seizure protocol\n3. Method of assault\n4. If shock signs present, follow shock protocol\n5. Follow the trauma treatment priority reference as needed\n6. Contact should be made with Medical/Trauma Control if this happens.\n7. If no proceed to Post-Resuscitation protocol\n8. Consider institution of the multiple trauma protocol, if indicated.  Remember this order may be indicated for the medical patient as well.\n9. If Hypothermic – go to hypothermia protocol\n10. Contact dispatch to notify Police of possible Sexual Assault TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (70) 315 Sickle Cell Crisis\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "family violence/assessment/4#2",
+      "cerebrovascular accident cva/emr stop/5",
+      "reference pulse oximetry/reference/2#4",
+      "cerebrovascular accident cva/emr stop/6",
+      "otherwise contact medical control/emr stop/5",
+      "patient refusal or declination of care / patient non-transport situations/miscellaneous/5.e",
+      "pediatric cardiac emergency neonatal resuscitation/procedure/1.a",
+      "otherwise contact medical control/emr stop/4",
+      "near drowning/assessment/4",
+      "sexual assault/assessment/10"
+    ],
+    "call_succeeded": true
+  },
+  "sop 309 hypoglycemia/glucose/8": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nIf unable to establish IV access, Glucagon 1-2 mg IM (peds – Glucagon 0.5 mg/dose IM/IV if <20 kg, or 1 mg/dose IM/IV if 20 kg or greater.)\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. If unable to establish IV access, consider Glucagon 1-2 mg IM (peds – Glucagon 0.5 mg/dose IM/IV if <20 kg, or 1 mg/dose IM/IV if 20 kg or greater.)\n2. If no IV access Glucagon 1-2 mg IM, (peds if no IV access, Glucagon 0.5 mg/dose IM/IV if <20 kg, or 1 mg/dose IM/IV if 20 kg or greater.)\n3. If no IV available and blood glucose levels are <80 mg/dl, Glucagon 1-2 mg IM (peds – Glucagon 0.5 mg/dose IM/IV if <20 kg, or 1 mg/dose IM/IV if 20 kg or greater.)\n4. Consider Glucagon 1-2 mg IM/IV/IN (peds – Glucagon 0.5 mg/dose IM/IV if <20 kg, or 1 mg/dose IM/IV if 20 kg or greater.) if unresponsive to EPINEPHrine, especially if taking Beta Blockers TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (55) 304 Cerebrovascular Accident\n5. If hypoglycemic, titrate D10 slowly until patient responds.  Try to avoid large swings in serum glucose levels.  If no IV/IO, then Glucagon 1-2 mg IM (peds – Glucagon 0.5 mg/dose IM/IV if <20 kg, or 1 mg/dose IM/IV if 20 kg or greater.)\n6. If beta blocker ingestion is suspected, consider Glucagon 0.1-1 mg IM/IV if unresponsive to Atropine. (peds – Glucagon 0.5 mg/dose IM/IV if <20 kg, or 1 mg/dose IM/IV if 20 kg or greater.) TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (17) 104 Acute Coronary Syndrome\n7. EPINEPHrine 1:1,000 (now 1 mg/mL) IM or 1:10,000 (now 0.1 mg/mL) IV 0.3-0.5 mg,  (peds 1:1,000 (now 1 mg/mL) - 0.01 mg/kg IM or 1:10,000 (now 0.1 mg/mL) IV, max dose is 0.3 mg) for patients in severe distress. Be mindful of cardiac side effects.\n8. EPINEPHrine 1:1,000 (now 1 mg/mL) - 0.3 mg IM or IV/IO EPINEPHrine 1: 10,000 (now 0.1 mg/mL), (peds EPINEPHrine 1: 1,000 (now 1 mg/mL) - 0.01 mg/kg IM, max dose is 0.3 mg). IV/IO route should be reserved for unstable patients, especially Pediatric.\n9. If blood sugar is < 80 mg/dL and symptomatic, infuse 250 cc bag D10 until patient responds. (peds – see glucose dosing chart)\n10. EPINEPHrine 1:1,000 (now 1 mg/mL) - 0.3 mg IM, (peds EPINEPHrine 1:1,000 (now 1 mg/mL) - 0.01 mg/kg IM, max dose is 0.3 mg)\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "hypoglycemia/glucose/8",
+      "unconscious / unresponsive / altered mental status/aemt stop/9",
+      "seizures/glucose/9",
+      "anaphylactic shock/aemt stop/12",
+      "drug ingestion/emt stop/9",
+      "bradycardia/aemt stop/11",
+      "respiratory distress asthma/copd/emt stop/7",
+      "anaphylactic shock/aemt stop/9",
+      "bradycardia/emt stop/6",
+      "anaphylactic shock/emt stop/6"
+    ],
+    "call_succeeded": true
+  },
+  "seizures/aemt stop/6": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nPeds:\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Peds:\n2. EPINEPHrine 2–20 mcg/min (peds 0.1-1 mcg/kg/min)\n3. EPINEPHrine 2–20 mcg/min (peds 0.1-1 mcg/kg/min.)\n4. Systolic BP or peds normal for age:\n5. AED\n6. AED\n7. Hypovolemia – fluid administration/fluid challenge adult 20 mL/kg, (peds 20 mL/kg bolus)\n8. Atrial fib @ 50 joules (peds 0.5 j/kg then 1 j/kg)\n9. IV NS 20 mL/kg, if signs of shock (peds 20 mL/kg NS bolus)\n10. IV NS LR, If hypotensive 20 mL/kg (peds 20 mL/kg)\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "seizures/aemt stop/13",
+      "post resuscitation/aemt stop/9.b.i",
+      "anaphylactic shock/aemt stop/9.a.i",
+      "abdominal/pelvic trauma/emr stop/4",
+      "ventricular asystole/assessment/1",
+      "ventricular fibrillation / pulseless ventricular tachycardia/assessment/1",
+      "pulseless electrical activity p e a/aemt stop/9.b",
+      "new onset atrial fibrillation and flutter/aemt stop/9.b",
+      "abdominal pain non-traumatic /complaint/nausea and vomiting/emt stop/5",
+      "otherwise contact medical control/emt stop/8"
+    ],
+    "call_succeeded": true
+  },
+  "untitled 2436/hypotension/5": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nCover burned area with dry sterile dressing or burn sheet.  Attempt to keep blisters intact\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Cover burned area with dry sterile dressing or burn sheet.  Attempt to keep blisters intact\n2. Stop the burn process with tepid water or normal saline solution and remove any smoldering clothing\n3. Burn surface area and thickness\n4. Treat per burn protocol\n5. Wrap and keep warm\n6. Wrap a plastic sheet around the victim if possible\n7. Treat burn per burn protocol\n8. Remove wet clothing and cover with warm, dry blankets\n9. Oral mucosa burns if appropriate\n10. Remove clothing, apply wet linen or wet abdominal pads to groin and axillary areas\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "untitled 2818/hypotension/5",
+      "untitled 2818/hypotension/1",
+      "reference pulse oximetry/reference/4#9",
+      "radiation/hazmat/assessment/4",
+      "pediatric cardiac emergency neonatal resuscitation/assessment/4.a.iii",
+      "sexual assault/assessment/5",
+      "electrocution / lightning injuries/assessment/4",
+      "hypothermia/assessment/2",
+      "reference pulse oximetry/reference/8#8",
+      "hyperthermia/assessment/2"
+    ],
+    "call_succeeded": true
+  },
+  "untitled 2436/hypotension/7": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nMonitor to prevent hypothermia\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Monitor to prevent hypothermia\n2. If febrile, cool as per hyperthermia protocol and monitor\n3. Attach cardiac and oxygen saturation monitors\n4. EKG Monitor\n5. EKG monitor\n6. Keep patient warm\n7. Report given and signature of RN HYPER/HYPOTHERMIA\n8. If Hypothermic – go to hypothermia protocol\n9. Obtain and record oral or axillary temperature if possible\n10. Heated environment\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "untitled 2818/hypotension/7",
+      "seizures/emr stop/5",
+      "pediatric cardiac emergency neonatal resuscitation/precautions/6",
+      "unconscious / unresponsive / altered mental status/aemt stop/8",
+      "pre-eclampsia and eclampsia/aemt stop/6",
+      "nerve agent exposure/assessment/3",
+      "reference pulse oximetry/reference/6#13",
+      "near drowning/assessment/4",
+      "septic shock/assessment/2",
+      "reference pulse oximetry/reference/4#17"
+    ],
+    "call_succeeded": true
+  },
+  "untitled 2436/emt stop/10": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nINT or IV NS, if hypotensive 20 mL/kg (peds 20 mL/kg)\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. INT or IV NS, if hypotensive 20 mL/kg (peds 20 mL/kg)\n2. INT or IV NS, if hypotensive 20 mL/kg (peds 20 mL/kg)\n3. INT or IV NS, if hypotensive 20 mL/kg (peds 20 mL/kg)\n4. INT or IV NS/LR, if hypotensive 20 mL/kg (peds 20 mL/kg)\n5. INT or IV NS/LR, if hypotensive 20 mL/kg (peds 20 mL/kg)\n6. INT or IV, NS LR, if hypotensive 20 mL/kg (peds 20 mL/kg)\n7. INT or IV, NS LR, if hypotensive 20 mL/kg (peds 20 mL/kg)\n8. INT or IV NS, if hypotensive bolus 20 mL/kg\n9. INT or IV NS TKO, if hypotensive 20 mL/kg (peds 20 mL/kg NS bolus)\n10. IV NS LR, If hypotensive 20 mL/kg (peds 20 mL/kg)\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "untitled 2818/emt stop/10",
+      "neurogenic shock/emt stop/6",
+      "septic shock/emt stop/6",
+      "radiation/hazmat/emt stop/7",
+      "patient refusal or declination of care / patient non-transport situations/miscellaneous/3#2",
+      "soft tissue / crush injuries/emt stop/6",
+      "traumatic amputation s/emt stop/8",
+      "pediatric cardiac emergency neonatal resuscitation/emt stop/7",
+      "poisonous snake bite/emt stop/7",
+      "otherwise contact medical control/emt stop/8"
+    ],
+    "call_succeeded": true
+  },
+  "untitled 2436/aemt stop/11": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\n12 Lead EKG, transmit\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. 12 Lead EKG, Transmit\n2. 12 Lead EKG, transmit\n3. 12 Lead EKG, transmit\n4. 12 Lead EKG, transmit\n5. 12 Lead EKG, transmit\n6. 12 Lead EKG, transmit\n7. 12 Lead EKG, transmit\n8. 12 Lead EKG, transmit\n9. 12 Lead EKG, transmit\n10. 12 Lead EKG, transmit\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "new onset atrial fibrillation and flutter/aemt stop/7",
+      "bradycardia/aemt stop/7",
+      "pulseless electrical activity p e a/aemt stop/7",
+      "torsades de pointe/aemt stop/7",
+      "post resuscitation/aemt stop/7",
+      "electrocution / lightning injuries/aemt stop/8",
+      "hyperthermia/aemt stop/9",
+      "nerve agent exposure/aemt stop/7",
+      "poisonous snake bite/aemt stop/8",
+      "abdominal pain non-traumatic /complaint/nausea and vomiting/aemt stop/7"
+    ],
+    "call_succeeded": true
+  },
+  "untitled 2436/aemt stop/12": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nFor major burns, Administer Pain Medications per chart below (contact medical control in multi- system trauma/pregnancy), transport (all additional doses must be approved by Medical Control)\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. For major burns, Administer Pain Medications per chart below (contact medical control in multi- system trauma/pregnancy), transport (all additional doses must be approved by Medical Control)\n2. Treat per burn protocol\n3. If pain persists – Administer medications per chart below\n4. Consider pain medications per chart below\n5. Consider pain medications per chart below\n6. Treat burn per burn protocol\n7. Consider pain medications per chart below Doses are approximate 5-9 kg 10 kg 12 kg 15 kg 20 kg 30 kg 40 kg 50-74 kg 75 kg\n8. Whenever medication is administered under these circumstances transport is mandatory NOTE: If you have any additional questions or concerns please contact Medical Control. TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (65) 311 Non-Formulary Medications\n9. Withhold meds until and further shocks until patient warmed to >85° F\n10. Additional Medications\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "untitled 2818/aemt stop/12",
+      "radiation/hazmat/assessment/4",
+      "sickle cell crisis/aemt stop/6",
+      "musculoskeletal trauma/aemt stop/8.a.i",
+      "soft tissue / crush injuries/aemt stop/8.a.i",
+      "electrocution / lightning injuries/assessment/4",
+      "electrocution / lightning injuries/aemt stop/10",
+      "medications at schools/assessment/7",
+      "hypothermia/aemt stop/13.b",
+      "pediatric cardiac emergency neonatal resuscitation/precautions/8#2"
+    ],
+    "call_succeeded": true
+  },
+  "untitled 2436/aemt stop/13": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nIf extremity injured, cover open fractures/lacerations/injuries with sterile dressing, splint fractures prn, avoid unnecessary movement, transport\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. If extremity injured, cover open fractures/lacerations/injuries with sterile dressing, splint fractures prn, avoid unnecessary movement, transport\n2. Cover open fractures/lacerations, check distal motor/sensory/pulse pre/post splinting, avoid unnecessary movement\n3. Cover open fractures/lacerations, check distal motor/sensory/pulse pre/post splinting, avoid unnecessary movement\n4. Cover open fractures/lacerations, check distal motor/sensory/pulse pre/post splinting, avoid unnecessary movement Doses are approximate 5-9 kg 10 kg 12 kg 15 kg 20 kg 30 kg 40 kg 50-74 kg 75 kg\n5. Other splints PRN\n6. Splint PRN, stabilize penetrating objects\n7. Other splints PRN, stabilize penetrating objects\n8. Entrance/exit wounds if appropriate\n9. Treat associated injuries (LSB, limb immobilization, wound treatment)\n10. Treat other associated injuries\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "untitled 2818/aemt stop/13",
+      "musculoskeletal trauma/aemt stop/8.a.ii",
+      "soft tissue / crush injuries/aemt stop/8.a.ii",
+      "traumatic amputation s/aemt stop/10.b",
+      "traumatic amputation s/emr stop/5",
+      "musculoskeletal trauma/emr stop/4",
+      "soft tissue / crush injuries/emr stop/4",
+      "reference pulse oximetry/reference/3#9",
+      "radiation/hazmat/assessment/2",
+      "avulsed teeth standing order/assessment/3"
+    ],
+    "call_succeeded": true
+  },
+  "untitled 2436/aemt stop/14": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nConsider contacting Medical Control for sedating agents especially in pediatric patients\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Consider contacting Medical Control for sedating agents especially in pediatric patients\n2. When in doubt contact Medical Control\n3. Contact Medical Control\n4. Contact Medical Control\n5. Contact Medical Control\n6. Contact Medical Control\n7. Contact Medical Control as soon as possible if time and patient condition allows\n8. Contact Medical Control If External Exposure:\n9. Contact Medical Control ASAP\n10. If patient has a prescribed EPINEPHrine for Anaphylaxis, assist patient with administration\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "untitled 2818/aemt stop/14",
+      "reference pulse oximetry/reference/6#24",
+      "bradycardia/aemt stop/2",
+      "chest pain / non-cardiac/aemt stop/14",
+      "ventricular tachycardia with a pulse/aemt stop/10.d",
+      "pediatric cardiac emergency neonatal resuscitation/procedure/8#2",
+      "prolapsed umbilical cord/emr stop/7",
+      "chemical exposure/assessment/2#2",
+      "amniotic sac presentation/emr stop/4",
+      "anaphylactic shock/emr stop/4"
+    ],
+    "call_succeeded": true
+  },
+  "musculoskeletal trauma/shock / trauma/5": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nPulse oximetry\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Pulse Oximetry\n2. Pulse Oximetry\n3. Pulse oximetry\n4. Pulse oximetry\n5. Pulse oximetry\n6. Pulse oximetry\n7. Pulse oximetry\n8. Pulse oximetry\n9. Pulse oximetry\n10. Pulse oximetry\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "new onset atrial fibrillation and flutter/emr stop/3",
+      "bradycardia/emr stop/3",
+      "chest pain / non-cardiac/emr stop/3",
+      "premature ventricular contractions pvc/emr stop/3",
+      "supraventricular tachycardia svt/emr stop/3",
+      "torsades de pointe/emr stop/3",
+      "ventricular tachycardia with a pulse/emr stop/3",
+      "drug ingestion/emr stop/5",
+      "electrocution / lightning injuries/emr stop/6",
+      "hyperthermia/emr stop/4"
+    ],
+    "call_succeeded": true
+  },
+  "musculoskeletal trauma/aemt stop/8#2": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nConsider use of tourniquet or hemorrhage control clamp NOTE: Cervical spine protection is not necessary in patients suffering penetrating trauma (stab or gunshot wound) if no evidence of neurological injury.  Do not delay transport of patients meeting these criteria for immobilization. 410 Neurogenic Shock\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Consider use of tourniquet or hemorrhage control clamp NOTE: Cervical spine protection is not necessary in patients suffering penetrating trauma (stab or gunshot wound) if no evidence of neurological injury.  Do not delay transport of patients meeting these criteria for immobilization. TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (85) 410 Neurogenic Shock\n2. Patients with penetrating injury to the neck should not receive spinal immobilization, regardless of whether they are exhibiting neurologic symptoms or not. Doing so can lead to delayed identification of injury or airway compromise, and has been associated with increased mortality\n3. Assess the scene to determine the risk of injury. Mechanism alone should not determine if a patient requires cervical spine immobilization. However, mechanisms that have been associated with higher risk of injury are the following:\n4. Immobilize patient with cervical collar if there is any of the following:\n5. C-Spine protection if needed\n6. Consider spinal protection\n7. Patients should not routinely be transported on long boards, unless the clinical situation warrants long board use. An example of this may be facilitation of immobilization of multiple extremity injuries or an unstable patient where removal of a board will delay transport and/or other treatment priorities. In these rare situations, long boards should be padded or have a vacuum mattress applied to minimize secondary injury to the patient.   Spine injuries in the adult population may be present at more than one level simultaneously. SMR, when indicated, should apply to the entire spine. An appropriately-sized cervical collar is a critical component of SMR and should be used to limit movement of the cervical spine whenever SMR is employed. The remainder of the spine can be stabilized using an ambulance cot, a vacuum mattress, a long back board or a similar device. If patient experiences negative effects of SMR methods used, alternative methods should be utilized.\n8. Spine injuries in the adult population may be present at more than one level simultaneously. SMR, when indicated, should apply to the entire spine. An appropriately-sized cervical collar is a critical component of SMR and should be used to limit movement of the cervical spine whenever SMR is employed. The remainder of the spine can be stabilized using an ambulance cot, a vacuum mattress, a long back board or a similar device.\n9. Standing take downs of ambulatory patients is unnecessary. Ambulatory patients who meet the above criteria for cervical immobilization should have c-collar applied and be allowed to sit onto the stretcher.\n10. Trauma: Isolated extremity trauma only – consider tourniquet or hemorrhage control clamp. Clamp is approved for scalp use.\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "musculoskeletal trauma/aemt stop/7#2",
+      "patient refusal or declination of care / patient non-transport situations/treatment and interventions/2",
+      "patient refusal or declination of care / patient non-transport situations/procedure/1",
+      "patient refusal or declination of care / patient non-transport situations/treatment and interventions/1",
+      "eye trauma/assessment/2",
+      "hypovolemic shock/assessment/2",
+      "patient refusal or declination of care / patient non-transport situations/treatment and interventions/4",
+      "musculoskeletal trauma/shock / trauma/3",
+      "patient refusal or declination of care / patient non-transport situations/treatment and interventions/6",
+      "musculoskeletal trauma/aemt stop/8"
+    ],
+    "call_succeeded": true
+  },
+  "normal delivery/emr stop/9.a": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nMassage uterine fundus (lower abdomen)\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Massage uterine fundus (lower abdomen)\n2. GENTLY massage extremities to prevent cold induced vasoconstriction\n3. Place one 2x2 under the needle to provide padding on the skin if Huber is not flush with chest\n4. Position the mother in a supine position with the head lowered and pelvis elevated\n5. Remove clothing, apply wet linen or wet abdominal pads to groin and axillary areas\n6. Abdominal pain, location and quality\n7. Place patient in a position of comfort\n8. Patient position: supine, lateral, semi fowlers, fowlers\n9. Abdominal Pain\n10. Any midline neck or spinal tenderness with palpation\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "normal delivery/emr stop/8.a",
+      "hyperthermia/emt stop/7",
+      "pediatric cardiac emergency neonatal resuscitation/contraindications/3#2",
+      "breech or limb presentation/emr stop/8",
+      "hyperthermia/assessment/2",
+      "reference pulse oximetry/reference/4#8",
+      "amniotic sac presentation/assessment/2",
+      "patient refusal or declination of care / patient non-transport situations/treatment and interventions/2.a",
+      "reference pulse oximetry/reference/1#19",
+      "patient refusal or declination of care / patient non-transport situations/treatment and interventions/1.b"
+    ],
+    "call_succeeded": true
+  },
+  "normal delivery/emr stop/10": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nRe-Evaluate vaginal bleeding Infant:\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Re-Evaluate vaginal bleeding Infant:\n2. Vaginal bleeding/discharge – if yes, describe\n3. Vaginal bleeding/discharge if applicable\n4. Re-Evaluate cord for bleeding, if bleeding add additional clamp and re-evaluate.\n5. Active bleeding\n6. Reassess patient\n7. Membranes ruptured – if yes, is amniotic fluid clear?\n8. Spontaneous or induced abortions may result in copious vaginal bleeding.  Reassure the mother, elevate legs, treat for shock, and transport.\n9. If the head does not deliver within 3 minutes, insert a gloved hand into the vagina an airway for the infant\n10. Report given and signature of RN ATRAUMATIC GI BLEED\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "normal delivery/emr stop/9",
+      "reference pulse oximetry/reference/5#19",
+      "reference pulse oximetry/reference/7",
+      "normal delivery/emr stop/6#2",
+      "reference pulse oximetry/reference/2#8",
+      "hypovolemic shock/aemt stop/9.b",
+      "reference pulse oximetry/reference/3#21",
+      "normal delivery/emt stop/3",
+      "breech or limb presentation/emr stop/6",
+      "reference pulse oximetry/reference/6#7"
+    ],
+    "call_succeeded": true
+  },
+  "normal delivery/emt stop/8": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nINT or IV LR TKO, if patient in active labor defined as: regular contractions q 3-5 mins with 30-60 second duration. 501 Normal Delivery NOTE: Considerations\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. INT or IV LR TKO, if patient in active labor defined as: regular contractions q 3-5 mins with 30-60 second duration. TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (96) 501 Normal Delivery NOTE: Considerations\n2. INT or IV, LR TKO, if hypotensive 20 mL/kg (peds 20 mL/kg)\n3. IVs should not be attempted in an injured extremity f. TKO (To Keep Open) indicates a flow rate of approximately 50 mL/hr (peds 5-10 mL/hr)\n4. INT or IV NS TKO – if hypotensive 20 mL/kg bolus (peds 20 mL/kg bolus)\n5. IV NS TKO (30 mL/hr) or INT\n6. IV NS or LR, large bore @ TKO – If hypotensive 20 mL/kg bolus (peds 20 mL/kg bolus)\n7. INT or IV NS TKO, if hypotensive 20 mL/kg (peds 20 mL/kg NS bolus)\n8. IV NS TKO or INT\n9. IV NS TKO or INT\n10. IV NS TKO or INT\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "normal delivery/emt stop/7",
+      "musculoskeletal trauma/emt stop/6",
+      "preamble/introduction/1.e#2",
+      "syncope/emt stop/5",
+      "cerebrovascular accident cva/emt stop/10",
+      "anaphylactic shock/emt stop/5",
+      "poisonous snake bite/emt stop/7",
+      "new onset atrial fibrillation and flutter/emt stop/5",
+      "seizures/emt stop/7",
+      "unconscious / unresponsive / altered mental status/emt stop/5"
+    ],
+    "call_succeeded": true
+  },
+  "prolapsed umbilical cord/emr stop/5": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nInstruct mother to pant with each contraction, which will prevent her from bearing down\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Instruct mother to pant with each contraction, which will prevent her from bearing down\n2. Position the mother with hips elevated\n3. Position the mother in a supine position with the head lowered and pelvis elevated\n4. Keep infant level with mother until cord is clamped\n5. Dry infant and wrap to keep warm.  Maintain airway\n6. After delivery, keep mother and infant on same level, camp cord @ 8 and 10 inches from the baby and cut between clamps\n7. Tighten per manufacturer instructions until hemorrhage stops and/or distal pulses in affected extremity disappear\n8. Restrain all 4 extremities with patient supine on stretcher.\n9. Stabilize the leg (or arm)\n10. Dry infant and wrap to keep warm (silver swaddler).  Maintain airway, suction PRN\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "prolapsed umbilical cord/emr stop/5",
+      "prolapsed umbilical cord/emr stop/4",
+      "breech or limb presentation/emr stop/8",
+      "pediatric cardiac emergency neonatal resuscitation/assessment/2",
+      "normal delivery/emr stop/6",
+      "normal delivery/emr stop/5",
+      "pediatric cardiac emergency neonatal resuscitation/procedure/2#10",
+      "patient refusal or declination of care / patient non-transport situations/miscellaneous/9",
+      "pediatric cardiac emergency neonatal resuscitation/procedure/6#6",
+      "normal delivery/emr stop/4#2"
+    ],
+    "call_succeeded": true
+  },
+  "pre-eclampsia and eclampsia/miscellaneous/f": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nInstructed to do so by the on-scene Paramedic Discontinuing Life Support Once life support has been initiated in the field, in order to discontinue life support, the following conditions must be met:\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. When presented a valid POST/DNR order or a copy as approved by the Tennessee Department of Health.  DNR and POST orders not on the official state form can be accepted if it is documented in a medical record such as a nursing chart, hospice care, or home nursing f. Instructed to do so by the on-scene Paramedic Discontinuing Life Support Once life support has been initiated in the field, in order to discontinue life support, the following conditions must be met:\n2. If no proceed to Post-Resuscitation protocol\n3. If AED is in use (defibrillating) prior to arrival, allow shocks to be completed, and then evaluate pulse. If no pulse, continue to provide CPR and basic life support. If a pulse is present, evaluate respirations and provide supportive care appropriate for the patient’s condition. EMR and EMT STOP\n4. Consider discontinuing efforts if criteria are met under Discontinuation/Withholding of Life Support standing order. TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (29) 110 Ventricular Asystole f. Consider Naloxone (Narcan) Reversible Causes: Hypovolemia Hypoxia Hydrogen ion (acidosis) Hyperkalemia/Hypokalemia Hypothermia Tablets (drug overdose) Tamponade (cardiac) Tension pneumothorax Thrombosis – Heart Thrombosis – Lungs TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (30) 111 Ventricular Fibrillation/Pulseless Ventricular Tachy\n5. The following refusal situations should be evaluated by a paramedic.\n6. For any drug administration or procedures outside these Guidelines, the EMS Provider must receive authorization from Medical Control.  Paramedics en-route to the scene are not authorized to issue orders.\n7. If pulse confirmed prepare for immediate transport.  The Mechanical CPR device may be turned off but must be left on the patient during the transport to the hospital\n8. AEMTs and Paramedics have standing orders for precautionary IV and INTs.  AEMTs have a standing order for the insertion of an IV or INT under the following guidelines:\n9. If an INT was started on the patient, ensure that it is discontinued prior to off-loading unless directed by the Triage or Charge Nurse.\n10. End tidal CO2 less than 20 while performing effective CPR Upon termination in the field any tubes, needles and IV lines will be left in place (IV lines to be tied off and cut with catheter left in place).\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "pre-eclampsia and eclampsia/miscellaneous/e",
+      "pediatric cardiac emergency neonatal resuscitation/procedure/1.a",
+      "automatic external defibrillator aed/assessment/4",
+      "ventricular asystole/aemt stop/9.e",
+      "preamble/introduction/b.17",
+      "preamble/introduction/8",
+      "pediatric cardiac emergency neonatal resuscitation/exclusion criteria/9",
+      "preamble/introduction/1#5",
+      "pediatric cardiac emergency neonatal resuscitation/procedure/3.b",
+      "pre-eclampsia and eclampsia/miscellaneous/h"
+    ],
+    "call_succeeded": true
+  },
+  "patient refusal or declination of care / patient non-transport situations/assessment/4#2": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nDo not release minor on the scene without parent/guardian consent Reasons for Non-Transport Minor illness or injury and acceptable alternative transportation available No Patient Found on the Scene Definition:  No person found to have any complaint of injury/illness of any type or degree PCR is to be completed in detail as to why no patient was found, i.e.: no person found on scene, person located with no complaint of injury/illness and denies needing medical assistance. REFERENCE – Mini Mental Status Exam\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Do not release minor on the scene without parent/guardian consent Reasons for Non-Transport Minor illness or injury and acceptable alternative transportation available No Patient Found on the Scene Definition:  No person found to have any complaint of injury/illness of any type or degree PCR is to be completed in detail as to why no patient was found, i.e.: no person found on scene, person located with no complaint of injury/illness and denies needing medical assistance. TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (108) REFERENCE – Mini Mental Status Exam\n2. Any patient refusing transport who has a potentially serious illness or injury\n3. Paramedics may transport the patient in a non-emergency status to the hospital.  This should be based on the signs and symptoms of the patient, mechanism of injury or nature of illness.\n4. DO NOT make unnecessary physical contact with the patient\n5. If possible, remove patient from situation and transport\n6. Document mechanism of injury or circumstances of illness\n7. Confirm and document the absence of intoxicating substance or injury\n8. Patient protection as applicable\n9. Description/location of patient on arrival\n10. Confirm patient is of legal age of majority, or emancipated minor\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "patient refusal or declination of care / patient non-transport situations/assessment/4#2",
+      "preamble/introduction/b#2",
+      "preamble/introduction/b.16",
+      "sexual assault/assessment/3",
+      "family violence/assessment/2#2",
+      "patient refusal or declination of care / patient non-transport situations/assessment/4",
+      "patient refusal or declination of care / patient non-transport situations/assessment/2",
+      "reference pulse oximetry/reference/5#25",
+      "reference pulse oximetry/reference/2#10",
+      "patient refusal or declination of care / patient non-transport situations/assessment/3"
+    ],
+    "call_succeeded": true
+  },
+  "patient refusal or declination of care / patient non-transport situations/aemt stop/4.b": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nVersed: 2-5 mg IV/IM/IN/IO, repeat once\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Midazolam (Versed): 2-5 mg IV/IM/IN/IO, repeat once\n2. Amiodarone 300 mg IV or IO, repeat after 5 min at 150 mg (peds 5 mg/kg, may repeat up to total of 15 mg/kg)\n3. Diazepam (Valium): 2-5 mg IV only, repeat once\n4. If repeat IM doses are required, consider:\n5. May repeat up to 3 total doses\n6. Amiodarone – 300 mg IV (peds 5 mg/kg, may repeat x 2), if one dose given and arrhythmia persists, give second dose 150 mg\n7. EPINEPHrine 1:10,000 (now 0.1 mg/mL) - 1 mg IO/IVP every 3-5 minutes (peds EPINEPHrine 1: 10,000 (now 0.1 mg/mL) - 0.01 mg/kg IV/IO q 3-5 min)\n8. Midazolam (Versed) IM 0.2 mg/kg IM (max single dose 6 mg) Repeat once if seizure activity persists after 10 minutes. Contact MEDICAL CONTROL if seizure activity persists after repeat dose.\n9. If rate >160/min – contact Medical Control, consider Amiodarone 150 – 300 mg IV/IO (peds 5 mg/kg, may repeat up to total of 15 mg/kg), transport.\n10. Number of repeat doses of the medication(s)\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "patient refusal or declination of care / patient non-transport situations/aemt stop/4.b",
+      "ventricular fibrillation / pulseless ventricular tachycardia/aemt stop/7.a",
+      "patient refusal or declination of care / patient non-transport situations/aemt stop/4.a",
+      "anaphylactic shock/aemt stop/9.a",
+      "croup/assessment/4.b",
+      "post resuscitation/aemt stop/9.a.i",
+      "ventricular asystole/aemt stop/7",
+      "seizures/aemt stop/13.b",
+      "torsades de pointe/aemt stop/2",
+      "medications at schools/assessment/3.c.viii"
+    ],
+    "call_succeeded": true
+  },
+  "patient refusal or declination of care / patient non-transport situations/aemt stop/1": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nNo one will be recognized as a physician without proof of license.  This must be in the form of a wallet card or visual personal recognition.  NO ORDERS will be accepted until proof of license is verified.\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. No one will be recognized as a physician without proof of license.  This must be in the form of a wallet card or visual personal recognition.  NO ORDERS will be accepted until proof of license is verified.\n2. Document must be signed by the primary physician\n3. Document must be signed by the primary physician\n4. Obtain and document the name and telephone number of the patient’s physician if possible.\n5. This documentation by the patient’s physician should list the following:\n6. If the medication(s) is/are not administered documentation must include those reasons for withholding\n7. If the medication(s) is/are not administered documentation must include reasons for withholding\n8. This documentation by the patient’s primary physician should list the following:\n9. Request the EMT. AEMT, or Paramedic to verify licensure of the physician.\n10. Copies of the care plan and physician order must be attached to the patient care report\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "patient refusal or declination of care / patient non-transport situations/miscellaneous/1#3",
+      "medications at schools/assessment/3.c.iii",
+      "non-formulary medications/assessment/3.c.iii",
+      "patient refusal or declination of care / patient non-transport situations/miscellaneous/3#5",
+      "non-formulary medications/assessment/3.c",
+      "non-formulary medications/assessment/6",
+      "medications at schools/assessment/6",
+      "medications at schools/assessment/3.c",
+      "patient refusal or declination of care / patient non-transport situations/miscellaneous/4.b",
+      "medications at schools/assessment/5"
+    ],
+    "call_succeeded": true
+  },
+  "patient refusal or declination of care / patient non-transport situations/aemt stop/5.c": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nTake responsibility for the care given by the EMS Provider if okay with Medical/Trauma Control, then physically accompany the patient to the Emergency Department where responsibility is assumed by the receiving physician; and shall,\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Take responsibility for the care given by the EMS Provider if okay with Medical/Trauma Control, then physically accompany the patient to the Emergency Department where responsibility is assumed by the receiving physician; and shall,\n2. Inform the physician that the EMS Provider must contact Medical/Trauma Control.\n3. If private physician intervenes by phone or in person the EMS provider shall:\n4. Inform the physician that they must contact Medical/Trauma Control.\n5. It is the responsibility of the most qualified Paramedic caring for the patient to ensure transmission of all aspects of the patient assessment and care to the responding Emergency Unit or Medical Control.\n6. Inform Medical/Trauma Control of the presence of a physician on scene.\n7. A police officer or other law enforcement personnel shall always accompany a patient in the ambulance if the patient has been restrained.\n8. Assist the EMT, AEMT, or Paramedic and allow you to operate under EMS standing orders and protocols. Offer assistance by allowing the EMS Provider to remain under Medical/Trauma Control; or\n9. The EMT or above shall:\n10. The Paramedic will be in charge and will be responsible for all of the actions and or activities as it relates to patient care.  On the scene of an emergency, the Paramedic will be responsible for patient care.  The EMT or AEMT will act within their scope of practice to any request for patient care or maintenance of the unit as directed by the Paramedic.  Patient care is limited to acts within their scope of practice as defined by these SOPs.  All EMS Personnel are responsible for reviewing all documentation and signing in the required manner\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "patient refusal or declination of care / patient non-transport situations/miscellaneous/5.c",
+      "patient refusal or declination of care / patient non-transport situations/miscellaneous/6.a",
+      "patient refusal or declination of care / patient non-transport situations/miscellaneous/6#2",
+      "patient refusal or declination of care / patient non-transport situations/miscellaneous/3.a",
+      "preamble/introduction/5",
+      "patient refusal or declination of care / patient non-transport situations/miscellaneous/3.b",
+      "patient refusal or declination of care / patient non-transport situations/miscellaneous/11",
+      "patient refusal or declination of care / patient non-transport situations/miscellaneous/5.a",
+      "patient refusal or declination of care / patient non-transport situations/miscellaneous/3#3",
+      "preamble/introduction/4"
+    ],
+    "call_succeeded": true
+  },
+  "patient refusal or declination of care / patient non-transport situations/aemt stop/5.e": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nContact should be made with Medical/Trauma Control if this happens.\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Contact should be made with Medical/Trauma Control if this happens.\n2. Inform the physician that they must contact Medical/Trauma Control.\n3. When in doubt contact Medical Control\n4. Inform the physician that the EMS Provider must contact Medical/Trauma Control.\n5. Request to talk to Medical/Trauma Control to offer advice and assistance; or\n6. Medical Control will direct the management of the call\n7. Contact Medical Control as soon as possible if time and patient condition allows\n8. Contact Medical Control If External Exposure:\n9. Medical/Trauma Control may:\n10. Contact Medical Control ASAP\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "patient refusal or declination of care / patient non-transport situations/miscellaneous/5.e",
+      "patient refusal or declination of care / patient non-transport situations/miscellaneous/3.a",
+      "reference pulse oximetry/reference/6#24",
+      "patient refusal or declination of care / patient non-transport situations/miscellaneous/6.a",
+      "patient refusal or declination of care / patient non-transport situations/miscellaneous/5.b",
+      "patient refusal or declination of care / patient non-transport situations/miscellaneous/5#4",
+      "prolapsed umbilical cord/emr stop/7",
+      "chemical exposure/assessment/2#2",
+      "patient refusal or declination of care / patient non-transport situations/miscellaneous/4#2",
+      "amniotic sac presentation/emr stop/4"
+    ],
+    "call_succeeded": true
+  },
+  "patient refusal or declination of care / patient non-transport situations/aemt stop/6.b": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nRequest the physician contact Medical Control and relay any orders through them.\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Request the physician contact Medical Control and relay any orders through them.\n2. Inform the physician that they must contact Medical/Trauma Control.\n3. Inform the physician that the EMS Provider must contact Medical/Trauma Control.\n4. Contact Medical Control\n5. Contact Medical Control\n6. Contact Medical Control\n7. Contact Medical Control\n8. Contact Medical Control ASAP\n9. Medical Control will direct the management of the call\n10. Contact Medical Control as soon as possible if time and patient condition allows\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "patient refusal or declination of care / patient non-transport situations/miscellaneous/6.b",
+      "patient refusal or declination of care / patient non-transport situations/miscellaneous/3.a",
+      "patient refusal or declination of care / patient non-transport situations/miscellaneous/6.a",
+      "bradycardia/aemt stop/2",
+      "chest pain / non-cardiac/aemt stop/14",
+      "ventricular tachycardia with a pulse/aemt stop/10.d",
+      "pediatric cardiac emergency neonatal resuscitation/procedure/8#2",
+      "amniotic sac presentation/emr stop/4",
+      "patient refusal or declination of care / patient non-transport situations/miscellaneous/5#4",
+      "prolapsed umbilical cord/emr stop/7"
+    ],
+    "call_succeeded": true
+  },
+  "patient refusal or declination of care / patient non-transport situations/miscellaneous/1#3": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nPregnant greater than 20 weeks\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Pregnant greater than 20 weeks\n2. Patient Pregnant:\n3. Length of gestation/estimated due date\n4. Be alert to the possibility of multiple births\n5. Multiple fetuses\n6. Allow placenta to deliver\n7. If the head delivers spontaneously, deliver the infant as noted in ‘Normal Delivery’\n8. Last time fetal movement REFUSALS Documentation of:\n9. Contact Medical Control and consider: Magnesium Sulfate 1-2 grams IV Slowly NOTE: Record a blood pressure and the presence or absence of edema in every pregnant woman you examine no matter what the chief complaint. TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (104) 601 Discontinuing/Withholding Life Support\n10. 12 Lead EKG if appropriate NOTE: Any painless bleeding in the last trimester should be considered Placenta Previa until proven otherwise.  If there are signs of eminent delivery membrane rupture is indicated followed by delivery of the baby.  The diagnosis of eminent delivery depends on the visual presence of the baby’s body part through the membrane. TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (102) 507 Prolapsed Umbilical Cord\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "patient refusal or declination of care / patient non-transport situations/miscellaneous/1#4",
+      "abdominal/pelvic trauma/emr stop/5",
+      "reference pulse oximetry/reference/3#19",
+      "normal delivery/emr stop/8.c",
+      "reference pulse oximetry/reference/1#21",
+      "normal delivery/emr stop/8",
+      "breech or limb presentation/emr stop/5",
+      "reference pulse oximetry/reference/8#9",
+      "pre-eclampsia and eclampsia/aemt stop/8",
+      "placenta previa/aemt stop/5"
+    ],
+    "call_succeeded": true
+  },
+  "patient refusal or declination of care / patient non-transport situations/miscellaneous/1#4": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nMaintain a calm environment and avoid performing measures beyond basic life support.\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Maintain a calm environment and avoid performing measures beyond basic life support.\n2. Do not allow patient to walk or exert themselves\n3. Do not place restraints in a manner that may interfere with evaluation and treatment of the patient or in any way that may compromise patient’s respiratory effort.\n4. Be calm and assuring with sensitivity toward the patient\n5. DO NOT cool patient to the point of shivering\n6. Plan your approach and activities before restraining the patient.\n7. DO NOT restrain patient in a hobbled, hog-tied, or prone position.\n8. Keep patient calm, reassure\n9. Use soft restraints to prevent the patient from injuring him or herself or others.\n10. Oxygen and airway maintenance appropriate to patient’s condition. Remove the patient from the cold environment\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "patient refusal or declination of care / patient non-transport situations/miscellaneous/1#5",
+      "hypothermia/assessment/5",
+      "patient refusal or declination of care / patient non-transport situations/miscellaneous/12",
+      "sexual assault/assessment/2",
+      "hyperthermia/assessment/2.b",
+      "patient refusal or declination of care / patient non-transport situations/miscellaneous/4",
+      "patient refusal or declination of care / patient non-transport situations/miscellaneous/16",
+      "hypertensive crisis/assessment/3",
+      "patient refusal or declination of care / patient non-transport situations/miscellaneous/10",
+      "hypothermia/assessment/1"
+    ],
+    "call_succeeded": true
+  },
+  "patient refusal or declination of care / patient non-transport situations/miscellaneous/6.b": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nSigned order in patient’s medical records: nursing home, hospice, or home care Note: If DNR/POST for is used to withhold or terminate resuscitation efforts, a copy must be attached to the PCR. 612 “Excited Delirium”/Taser Use\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Signed order in patient’s medical records: nursing home, hospice, or home care Note: If DNR/POST for is used to withhold or terminate resuscitation efforts, a copy must be attached to the PCR. TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (118) 612 “Excited Delirium”/Taser Use\n2. When presented a valid POST/DNR order or a copy as approved by the Tennessee Department of Health.  DNR and POST orders not on the official state form can be accepted if it is documented in a medical record such as a nursing chart, hospice care, or home nursing f. Instructed to do so by the on-scene Paramedic Discontinuing Life Support Once life support has been initiated in the field, in order to discontinue life support, the following conditions must be met:\n3. Accept DNR/POST forms (original or copy):\n4. Additional doses must be authorized by Medical Control Documentation: Review for documentation of frequent reassessment of vital signs, cardiopulmonary status, and neurovascular status or restrained extremities, reason for restraint and method used. TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (111) 606 Physician On Scene\n5. If AED is in use (defibrillating) prior to arrival, allow shocks to be completed, and then evaluate pulse. If no pulse, continue to provide CPR and basic life support. If a pulse is present, evaluate respirations and provide supportive care appropriate for the patient’s condition. EMR and EMT STOP\n6. Altered level of consciousness Stable (asymptomatic) – Indicates that the patient has no or very mild signs and symptoms associated with the current history of illness or trauma. Emergency Medical Responder – Personnel licensed by the Tennessee Department of Health, Office of EMS and authorized by the service Medical Director to perform lifesaving interventions while awaiting additional EMS response.  May also assist higher level personnel at scene and during transport under medical direction and within their scope of practice. EMT – Personnel licensed by the Tennessee Department of Health, Office of EMS and authorized by the Medical Director to provide basic emergency care according to the Standard of Care and these Guidelines. AEMT – Personnel licensed by the Tennessee Department of Health, Office of EMS and authorized by the Medical Director to provide limited advanced emergency care according to the Standard of Care and Standing Orders and Protocols. Paramedic – Personnel licensed by the Tennessee Department of Health, Office of EMS and authorized by the Medical Director to provide basic and advanced emergency patient care according to the standard of care and these guidelines Orders and Protocols Transfer of Care – Properly maintaining the continuity of care through appropriate verbal and/or written communication of patient care aspects to an equal or higher appropriate medical authority. Higher Medical Authority – Any medical personnel that possesses a current medical license or certificate recognized by the State of Tennessee with a higher level of medical training than the one possessed by EMS Personnel. TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (10) Definitions Medical Control (transport) – The instructions and advice provided by a physician, and the orders by a physician that define the treatment of the patient. To access Medical Control, contact the Emergency Department physician on duty of the patient’s first choice of destination.  If the patient does not have a preference, the patient’s condition and/or chief complaint may influence the choice of medical treatment facilities. All EMRs, EMTs, AEMTs, and Paramedics are expected to perform their duties in accordance with local, state, and federal guidelines. TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (11) Medical Directors Statement I have taken great care to make certain that doses of medications and schedules of treatment are compatible with generally accepted standards at time of publication.  Much effort has gone into the development, production, and proof reading of the Protocol Guidelines.  Unfortunately, this process may allow errors to go unnoticed or treatments may change between the creation of these protocols and their ultimate use.  Please do not hesitate to contact your medical director if you discover any errors, typos, dosage, or medication errors. I look forward to any questions, concerns, or comments regarding these protocols.  I expect all EMS personnel to follow these guidelines, but also to utilize and exercise good judgment to provide the best care for all patients. EMS Medical Director TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (12) 101 Automatic External Defibrillator (AED)\n7. AEMTs and Paramedics have standing orders for precautionary IV and INTs.  AEMTs have a standing order for the insertion of an IV or INT under the following guidelines:\n8. Consider discontinuing efforts if criteria are met under Discontinuation/Withholding of Life Support standing order. TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (29) 110 Ventricular Asystole f. Consider Naloxone (Narcan) Reversible Causes: Hypovolemia Hypoxia Hydrogen ion (acidosis) Hyperkalemia/Hypokalemia Hypothermia Tablets (drug overdose) Tamponade (cardiac) Tension pneumothorax Thrombosis – Heart Thrombosis – Lungs TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (30) 111 Ventricular Fibrillation/Pulseless Ventricular Tachy\n9. Report given and signature of RN CARDIAC ARREST\n10. If no proceed to Post-Resuscitation protocol\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "patient refusal or declination of care / patient non-transport situations/miscellaneous/6.b#2",
+      "pre-eclampsia and eclampsia/miscellaneous/e",
+      "patient refusal or declination of care / patient non-transport situations/miscellaneous/6#4",
+      "patient refusal or declination of care / patient non-transport situations/aemt stop/4.c",
+      "automatic external defibrillator aed/assessment/4",
+      "preamble/introduction/3.g",
+      "preamble/introduction/1#5",
+      "ventricular asystole/aemt stop/9.e",
+      "reference pulse oximetry/reference/9#3",
+      "pediatric cardiac emergency neonatal resuscitation/procedure/1.a"
+    ],
+    "call_succeeded": true
+  },
+  "miscellaneous/aemt stop/2": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\n12 Lead EKG if appropriate\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. 12 Lead EKG if appropriate\n2. 12 Lead EKG, if appropriate\n3. 12 Lead EKG transmit if appropriate\n4. 12 lead EKG, transmit if appropriate\n5. 12 Lead EKG, transmit if appropriate\n6. 12 Lead EKG, transmit if appropriate\n7. 12 Lead EKG, transmit if appropriate\n8. 12 Lead EKG, transmit if appropriate\n9. 12 Lead EKG, transmit if appropriate\n10. 12 Lead EKG, transmit if appropriate\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "miscellaneous/aemt stop/7",
+      "pediatric cardiac emergency neonatal resuscitation/aemt stop/9",
+      "soft tissue / crush injuries/aemt stop/7",
+      "cardiogenic shock/aemt stop/5",
+      "hypovolemic shock/aemt stop/7",
+      "musculoskeletal trauma/aemt stop/7",
+      "musculoskeletal trauma/aemt stop/6",
+      "septic shock/aemt stop/8",
+      "spinal cord injuries/aemt stop/6",
+      "traumatic cardiac arrest/aemt stop/6"
+    ],
+    "call_succeeded": true
+  },
+  "pediatric cardiac emergency neonatal resuscitation/exclusion criteria/•#2": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nChildren <42 kg/90 lbs. or any individual which when fitted with the device the suction cup does not make firm contact with the chest wall\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. An infant is less than one year of age\n2. Consider use of padded pediatric motion restricting board\n3. Support the infant’s body as it delivers\n4. Suction airway as needed.\n5. A child is from one to eight years of age\n6. Delivery to hospital: movement of patient to hospital stretchers should be done by limiting motion of the spine. Special Considerations: Patients with acute or chronic difficulty breathing: SMR has been found to limit respiratory function an average of 17% with the greatest effect experienced by geriatric and pediatric subjects restricted to a hard backboard. USE SMR WITH CAUTION with patients presenting with dyspnea and position appropriately. Pediatric patients, < 9 years of age:\n7. Is patient moving air\n8. Airway obstructions that cannot be quickly relieved by mechanical methods such as suction, or jaw-thrust maneuver\n9. Observe for symmetric chest wall expansion with ventilation\n10. Dry infant and wrap to keep warm.  Maintain airway\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "NONE",
+    "candidate_ids": [
+      "reference pulse oximetry/reference/1#28",
+      "patient refusal or declination of care / patient non-transport situations/treatment and interventions/11.o",
+      "breech or limb presentation/emr stop/4",
+      "hyperglycemia associated with diabetes/emr stop/3",
+      "reference pulse oximetry/reference/2#28",
+      "patient refusal or declination of care / patient non-transport situations/treatment and interventions/11",
+      "reference pulse oximetry/reference/2#5",
+      "reference pulse oximetry/reference/4.a",
+      "pediatric cardiac emergency neonatal resuscitation/precautions/3#3",
+      "normal delivery/emr stop/6"
+    ],
+    "call_succeeded": true
+  },
+  "pediatric cardiac emergency neonatal resuscitation/exclusion criteria/•.3": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nDefibrillation performed if indicated\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Defibrillation performed if indicated\n2. If AED is in use (defibrillating) prior to arrival, allow shocks to be completed, and then evaluate pulse. If no pulse, continue to provide CPR and basic life support. If a pulse is present, evaluate respirations and provide supportive care appropriate for the patient’s condition. EMR and EMT STOP\n3. Defibrillate @ 150, then 200 J, immediately perform two minutes of CPR and evaluate rhythm. If no change in rhythm, repeat defibrillation, perform two minutes of CPR and evaluate rhythm. If no change in rhythm, continue 5 cycles of CPR then defibrillation cycle. (peds begin at 2 j/kg).\n4. Defibrillation for possible fine ventricular fibrillation masquerading as asystole\n5. CPR as indicated EMR and EMT STOP\n6. Repeat defibrillation.  After defibrillation resume CPR without further pulse checks. If there IS a change in V-Fib\n7. If no proceed to Post-Resuscitation protocol\n8. Apply cardiac monitor and assess for changes (EMT and above only)\n9. Cardiac Arrest (Medical or Trauma)\n10. If patient is unconscious and pulseless – refer to the Cardiac Arrest Protocol\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "pediatric cardiac emergency neonatal resuscitation/exclusion criteria/3",
+      "automatic external defibrillator aed/assessment/4",
+      "ventricular fibrillation / pulseless ventricular tachycardia/aemt stop/6",
+      "ventricular asystole/aemt stop/9.b",
+      "pulseless electrical activity p e a/assessment/3",
+      "persistent ventricular fibrillation/pulseless ventricular tachycardia/assessment/2",
+      "pediatric cardiac emergency neonatal resuscitation/procedure/1.a",
+      "eye trauma/assessment/6.b.i",
+      "pediatric cardiac emergency neonatal resuscitation/indications/3.a",
+      "near drowning/assessment/3"
+    ],
+    "call_succeeded": true
+  },
+  "pediatric cardiac emergency neonatal resuscitation/exclusion criteria/•.5": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nObtain airway (adequate ventilation with OPA/NPA/BVM, King Airway or ETT)\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Obtain airway (adequate ventilation with OPA/NPA/BVM, King Airway or ETT)\n2. Be prepared to assist ventilation with a BVM\n3. If no, proceed with intubation, King Airway acceptable\n4. Oxygen and airway maintenance appropriate for patient’s condition\n5. Oxygen and airway maintenance appropriate for patient’s condition\n6. Oxygen and airway maintenance appropriate for patient’s condition\n7. Oxygen and airway maintenance appropriate for patient’s condition\n8. Oxygen and airway maintenance appropriate for patient’s condition\n9. Oxygen and airway maintenance appropriate for patient’s condition\n10. Oxygen and airway maintenance appropriate for patient’s condition\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "pediatric cardiac emergency neonatal resuscitation/exclusion criteria/5",
+      "untitled 2818/hypotension/2.b",
+      "pediatric cardiac emergency neonatal resuscitation/procedure/1.a.ii",
+      "hypertensive crisis/assessment/1",
+      "non-formulary medications/assessment/1",
+      "respiratory distress asthma/copd/assessment/1",
+      "unconscious / unresponsive / altered mental status/assessment/1",
+      "eye trauma/assessment/1",
+      "neurogenic shock/assessment/1",
+      "septic shock/assessment/1"
+    ],
+    "call_succeeded": true
+  },
+  "pediatric cardiac emergency neonatal resuscitation/exclusion criteria/•.8": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nAllow at least 90 seconds of CPR after any medications given before pausing to check rhythm\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Allow at least 90 seconds of CPR after any medications given before pausing to check rhythm\n2. Continue CPR with minimal interruptions\n3. Repeat defibrillation, pause 5 seconds maximum to check rhythm, pulse\n4. Resume CPR\n5. Continue CPR and rewarming attempts\n6. If severe respiratory distress and no contraindications. Begin CPAP\n7. Evaluate pulse for one full minute (Do not perform CPR until NO PULSE is confirmed)\n8. Consider use of mechanical CPR device if available.  Make sure that placement of the device takes no longer than 20 seconds.  Longer pauses in CPR substantially decrease the likelihood of a successful resuscitation.\n9. Detailed documentation with times of all initiation and termination of use of the Mechanical CPR device must be kept for statistical and feedback purposes Note: Placement and initiation of the device cannot exceed 20 seconds.  Longer pauses result in a significant decrease in a likelihood of a successful resuscitation. TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (141) PROCEDURE Rapid Sequence Intubation\n10. CPR\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "pediatric cardiac emergency neonatal resuscitation/exclusion criteria/8",
+      "pediatric cardiac emergency neonatal resuscitation/procedure/2.c",
+      "persistent ventricular fibrillation/pulseless ventricular tachycardia/assessment/3",
+      "persistent ventricular fibrillation/pulseless ventricular tachycardia/assessment/4",
+      "hypothermia/aemt stop/13.c",
+      "acute pulmonary edema / chf/aemt stop/8",
+      "hypothermia/assessment/3",
+      "preamble/introduction/1.g",
+      "pediatric cardiac emergency neonatal resuscitation/exclusion criteria/11",
+      "traumatic cardiac arrest/assessment/2"
+    ],
+    "call_succeeded": true
+  },
+  "pediatric cardiac emergency neonatal resuscitation/exclusion criteria/•.11": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nDetailed documentation with times of all initiation and termination of use of the Mechanical CPR device must be kept for statistical and feedback purposes Note: Placement and initiation of the device cannot exceed 20 seconds.  Longer pauses result in a significant decrease in a likelihood of a successful resuscitation. PROCEDURE Rapid Sequence Intubation\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Detailed documentation with times of all initiation and termination of use of the Mechanical CPR device must be kept for statistical and feedback purposes Note: Placement and initiation of the device cannot exceed 20 seconds.  Longer pauses result in a significant decrease in a likelihood of a successful resuscitation. TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (141) PROCEDURE Rapid Sequence Intubation\n2. Consider use of mechanical CPR device if available.  Make sure that placement of the device takes no longer than 20 seconds.  Longer pauses in CPR substantially decrease the likelihood of a successful resuscitation.\n3. After 2 minutes, the defibrillation/monitor pads will be applied to the patient.  At this time the Mechanical CPR device will also be applied to the patient\n4. Allow at least 90 seconds of CPR after any medications given before pausing to check rhythm\n5. CPR is most effective when done continuously, with minimum interruption. Maintain rate of 110 BPM (80 bpm if using ResQPump System), depth of 2 inches, and a compression fraction of >80%.\n6. Continue CPR with minimal interruptions\n7. Vecuronium – Administer: Adult and pediatric patient: 0.1 mg/kg IVP. Reconstitute 10 mg with 10 mL of sterile water. Onset of action is 1-3 minutes, duration is 30-40 minutes. Repeat PRN. TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (143) PROCEDURE Rapid Sequence Intubation If unable to intubate within 20 seconds, halt attempts, provide ventilatory assistance for 30-60 seconds and reattempt intubation. If intubation is unsuccessful and ventilatory assistance with a manual resuscitator is ineffective consider performing a surgical cricothyroidotomy on patients >12 years of age utilizing a #6-7 ETT; or a needle cricothyroidotomy on adults; and patients 12 years and younger. Should intubation induced bradycardia occur, temporarily halt the intubation procedure.  Hyperventilate with manual resuscitator and high flow oxygen.  If bradycardia continues administer atropine Verify correct ETT placement\n8. Consider blind airway devices whenever intubation takes longer than 30 seconds. f. Apply NC Oxygen 2-4 L during initial CPR.\n9. If pulse confirmed prepare for immediate transport.  The Mechanical CPR device may be turned off but must be left on the patient during the transport to the hospital\n10. CPR resumed using the Mechanical CPR Device\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "pediatric cardiac emergency neonatal resuscitation/exclusion criteria/11",
+      "preamble/introduction/1.g",
+      "pediatric cardiac emergency neonatal resuscitation/exclusion criteria/2",
+      "pediatric cardiac emergency neonatal resuscitation/exclusion criteria/8",
+      "preamble/introduction/1.a",
+      "pediatric cardiac emergency neonatal resuscitation/procedure/2.c",
+      "pediatric cardiac emergency neonatal resuscitation/precautions/8.c",
+      "preamble/introduction/1.e",
+      "pediatric cardiac emergency neonatal resuscitation/exclusion criteria/9",
+      "pediatric cardiac emergency neonatal resuscitation/exclusion criteria/4"
+    ],
+    "call_succeeded": true
+  },
+  "pediatric cardiac emergency neonatal resuscitation/precautions/4#2": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nMaintain systolic pressure of 90 or greater\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Maintain systolic pressure of 90 or greater\n2. If systolic BP >90 mmHg – stable/asymptomatic\n3. If systolic BP <90 mmHG and heart rate <60/min continues\n4. If systolic BP<90 mmHG and heart rate <60/min continues\n5. Hemodynamically unstable (Systolic BP <90)\n6. Hypotension (systolic B/P less than 90 mmHg in a 70 kg patient or greater)\n7. If Systolic BP >100 mmHg\n8. If Systolic BP <100 mmHg\n9. Systolic BP\n10. If systolic BP <90 mmHg, prepare for synchronized cardioversion\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "pediatric cardiac emergency neonatal resuscitation/precautions/3#2",
+      "ventricular tachycardia with a pulse/aemt stop/11",
+      "bradycardia/aemt stop/10.b",
+      "bradycardia/aemt stop/10.c",
+      "pediatric cardiac emergency neonatal resuscitation/indications/2.c",
+      "preamble/introduction/3.c",
+      "acute pulmonary edema / chf/emt stop/6",
+      "acute pulmonary edema / chf/emt stop/7",
+      "torsades de pointe/aemt stop/8",
+      "ventricular tachycardia with a pulse/aemt stop/10"
+    ],
+    "call_succeeded": true
+  },
+  "pediatric cardiac emergency neonatal resuscitation/procedure/4#8": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nNote time of tourniquet application and communicate this to receiving care providers\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Note time of tourniquet application and communicate this to receiving care providers\n2. If delayed or prolonged transport and tourniquet application time greater than 2 hours, contact medical control\n3. Tourniquet use\n4. Secure tourniquet per manufacturer instructions\n5. Contact Medical Control as soon as possible if time and patient condition allows\n6. Include Tourniquet in use in your report to the Trauma Center as soon as practical and in your documentation for the PCR\n7. Sign for all instructions given to the EMS Provider\n8. After 2 minutes, the defibrillation/monitor pads will be applied to the patient.  At this time the Mechanical CPR device will also be applied to the patient\n9. Place tourniquet proximal to wound\n10. Description/location of patient on arrival\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "pediatric cardiac emergency neonatal resuscitation/procedure/4#8",
+      "pediatric cardiac emergency neonatal resuscitation/procedure/6#7",
+      "reference pulse oximetry/reference/6#23",
+      "pediatric cardiac emergency neonatal resuscitation/procedure/3#9",
+      "prolapsed umbilical cord/emr stop/7",
+      "pediatric cardiac emergency neonatal resuscitation/procedure/7#6",
+      "patient refusal or declination of care / patient non-transport situations/miscellaneous/5.d",
+      "pediatric cardiac emergency neonatal resuscitation/exclusion criteria/2",
+      "pediatric cardiac emergency neonatal resuscitation/procedure/1#10",
+      "reference pulse oximetry/reference/2#10"
+    ],
+    "call_succeeded": true
+  },
+  "reference pulse oximetry/reference/6#9": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nChest pain/dyspnea\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Chest pain/dyspnea\n2. Chest pain/dyspnea\n3. Chest pain\n4. Chest pain\n5. Chest pain\n6. Possible cardiac chest pain\n7. Injuries, chest pain, dyspnea, nausea\n8. Dyspnea\n9. Dyspnea\n10. Dyspnea\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "reference pulse oximetry/reference/6#9",
+      "reference pulse oximetry/reference/1#15",
+      "preamble/introduction/3.a",
+      "reference pulse oximetry/reference/4#6",
+      "reference pulse oximetry/reference/1#12",
+      "patient refusal or declination of care / patient non-transport situations/miscellaneous/2#4",
+      "reference pulse oximetry/reference/2#25",
+      "preamble/introduction/3.b",
+      "reference pulse oximetry/reference/2#6",
+      "reference pulse oximetry/reference/2#12"
+    ],
+    "call_succeeded": true
+  },
+  "reference pulse oximetry/reference/2#12": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nDyspnea\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Dyspnea\n2. Dyspnea\n3. Dyspnea\n4. Dyspnea, cough\n5. Chest pain/dyspnea\n6. Chest pain/dyspnea\n7. Injuries, chest pain, dyspnea, nausea\n8. Shortness of breath\n9. Severe – unconsciousness, convulsions, apnea\n10. Reassess patient for breath sound changes\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "preamble/introduction/3.b",
+      "reference pulse oximetry/reference/2#6",
+      "reference pulse oximetry/reference/2#12",
+      "reference pulse oximetry/reference/3#11",
+      "reference pulse oximetry/reference/6#9",
+      "reference pulse oximetry/reference/1#15",
+      "reference pulse oximetry/reference/2#25",
+      "patient refusal or declination of care / patient non-transport situations/miscellaneous/3#4",
+      "nerve agent exposure/assessment/2.c",
+      "pediatric cardiac emergency neonatal resuscitation/procedure/6#2"
+    ],
+    "call_succeeded": true
+  },
+  "reference pulse oximetry/reference/3#21": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nMembranes ruptured – if yes, is amniotic fluid clear?\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Membranes ruptured – if yes, is amniotic fluid clear?\n2. 12 Lead EKG if appropriate NOTE: Any painless bleeding in the last trimester should be considered Placenta Previa until proven otherwise.  If there are signs of eminent delivery membrane rupture is indicated followed by delivery of the baby.  The diagnosis of eminent delivery depends on the visual presence of the baby’s body part through the membrane. TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (102) 507 Prolapsed Umbilical Cord\n3. Amniotic sac If no fetus visible, cover presenting part with moist, sterile dressing If head of the fetus has delivered, tear sac with fingers and continue steps for delivery\n4. Record a blood pressure and the presence or absence of edema in every pregnant woman you examine, regardless of chief complaint Complete patient care reports on BOTH mother and child. TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES - (97) 502 Abruptio Placenta\n5. Re-Evaluate vaginal bleeding Infant:\n6. Vaginal bleeding/discharge – if yes, describe\n7. Intravenous fluid or medications needed AND\n8. Vaginal bleeding/discharge if applicable\n9. Significant edema\n10. Hypovolemia – fluid administration/fluid challenge adult 20 mL/kg, (peds 20 mL/kg bolus)\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "reference pulse oximetry/reference/3#21",
+      "placenta previa/aemt stop/5",
+      "amniotic sac presentation/emr stop/3",
+      "normal delivery/emt stop/4",
+      "normal delivery/emr stop/9",
+      "reference pulse oximetry/reference/5#19",
+      "pediatric cardiac emergency neonatal resuscitation/indications/1",
+      "reference pulse oximetry/reference/7",
+      "pediatric cardiac emergency neonatal resuscitation/contraindications/5#3",
+      "pulseless electrical activity p e a/aemt stop/9.b"
+    ],
+    "call_succeeded": true
+  },
+  "reference pulse oximetry/reference/2#22": {
+    "prompt": "You are comparing a recommendation from an OLD edition of a document\nto candidate recommendations from a NEW edition, to determine whether\nthe same recommendation persists (possibly reworded) or was removed.\n\nOLD ITEM:\nObvious injures (mouth, head, tongue)\n\nCANDIDATE NEW ITEMS (numbered, most similar first):\n1. Obvious injures (mouth, head, tongue)\n2. Obvious injuries and area of pain\n3. Any obvious injuries or pain\n4. Any obvious injuries noted\n5. Any obvious injuries noted\n6. Another severe or painful distracting injury is present\n7. Any injuries noted\n8. Pay attention to the airway, bleeding and avulsed teeth may cause obstruction.\n9. Burns/singing (oral, nasal, facial area)\n10. Injuries, chest pain, dyspnea, nausea\n\nWhich candidate is the SAME recommendation as the OLD ITEM (reworded\nor not)? Reply with ONLY the number (1-10) of the best match, or reply\nNONE if none of the candidates represent the same recommendation.\nReply with nothing else - just the number or the word NONE.",
+    "raw_reply": "1",
+    "candidate_ids": [
+      "reference pulse oximetry/reference/2#22",
+      "reference pulse oximetry/reference/8#12",
+      "reference pulse oximetry/reference/3#4",
+      "reference pulse oximetry/reference/5#2",
+      "reference pulse oximetry/reference/3#3",
+      "patient refusal or declination of care / patient non-transport situations/treatment and interventions/1.e",
+      "reference pulse oximetry/reference/4#13",
+      "avulsed teeth standing order/assessment/4",
+      "reference pulse oximetry/reference/5#17",
+      "reference pulse oximetry/reference/2#25"
+    ],
+    "call_succeeded": true
+  }
+}

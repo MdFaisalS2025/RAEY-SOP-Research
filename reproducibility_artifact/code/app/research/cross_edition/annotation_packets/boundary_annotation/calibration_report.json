@@ -26,5 +26,22 @@
     }
   },
   "real_corpus_f1_at_r0": 0.794,
+  "real_corpus_f1_uncertainty": {
+    "n_points": 8,
+    "mean": 0.8034,
+    "range": [
+      0.7313,
+      0.8687
+    ],
+    "bootstrap_ci95": [
+      0.7597,
+      0.8472
+    ],
+    "per_annotator_mean": {
+      "1": 0.864,
+      "2": 0.743
+    },
+    "note": "n=8 (4 editions x 2 annotators) is small; the dominant uncertainty here is between-annotator disagreement, not resampling noise - the raw range/per-annotator means are the more honest picture than the bootstrap CI alone."
+  },
   "note_on_r0_discrepancy": "This sweep's r=0 F1 differs slightly (~1 point) from the standalone boundary_scoring_corrected.json r=0 numbers (0.8034 pooled-by-edition mean vs this sweep's 0.7940 flat mean): parser_titles here is derived from corrupt_edition's output items (sorted({it.guideline for it in corrupted.items})), which necessarily excludes zero-item guidelines the raw ParsedEdition.guidelines attribute includes (corrupt_edition only ever operates on items, so it cannot preserve or corrupt a guideline with no items under it). Used here for consistency across every r in this sweep (the same derivation at every point), at the cost of a small, well-understood offset from the standalone check. Both are legitimate, slightly different definitions of a 'detected guideline' - stated plainly rather than silently reconciled."
 }

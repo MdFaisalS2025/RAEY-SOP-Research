@@ -5191,3 +5191,291 @@ beat the structural method on the full, as-observed sample" finding
 matching threshold, not contingent on one specific configuration.
 
 Full numbers: `annotation_packets/b5_model_floor_sweep_report.json`.
+
+## 68. Audit round 3, Phase 1: four statistical gaps closed
+
+A third full-project sweep, this time paired with literature research
+(§69). This section covers the four purely statistical gaps carried
+over from the first two audit rounds - none change any point estimate,
+all are additive. Verified directly, not assumed: every fix was re-run
+and every existing point estimate reproduced exactly (0.7124 method
+accuracy, r=0 validity, etc.) before any new number was trusted.
+
+### 68.1 CIs on the structure-quality ablation curve (§61)
+
+The paper's centerpiece figure previously reported point estimates with
+no error bars. `structure_ablation.py` now reports, at every rate, two
+DELIBERATELY SEPARATE sources of variation rather than one conflated
+number:
+
+| r | Mean accuracy | Across-seed range | Item-level 95% CI (per-seed range) |
+|---|---|---|---|
+| 0.00 | 71.24% | [71.24%, 71.24%] | [65.24%, 76.82%] |
+| 0.05 | 69.27% | [67.81%, 71.67%] | lo∈[61.80%,65.67%], hi∈[73.82%,77.25%] |
+| 0.10 | 66.35% | [62.23%, 69.96%] | lo∈[56.22%,63.95%], hi∈[68.24%,75.54%] |
+| 0.20 | 63.09% | [59.23%, 67.38%] | lo∈[52.79%,61.37%], hi∈[65.24%,73.39%] |
+| 0.35 | 57.85% | [51.50%, 63.52%] | lo∈[45.06%,57.51%], hi∈[57.94%,69.53%] |
+| 0.50 | 53.05% | [50.21%, 54.94%] | lo∈[43.78%,48.50%], hi∈[56.65%,61.37%] |
+
+The across-seed range measures sensitivity to *which* random corruption
+instance was drawn; the item-level CI measures sampling uncertainty
+*within* one fixed corruption instance. **They are not the same thing
+and are not added together** - conflating them would either overstate
+or understate the curve's real precision depending on which one
+dominates at a given rate. At r=0 the item-level CI alone is ~11.6
+points wide (65.24%-76.82%) - a real, previously invisible amount of
+uncertainty around the single point estimate the curve's most important
+anchor rests on.
+
+Monotonicity still holds (confirmed non-increasing at every step,
+tolerance 0.01) and r=0 still reproduces 71.24%/n=233 exactly - the fix
+is additive, as designed.
+
+### 68.2 CI on the calibration F1 anchor (§64)
+
+§64's headline "real corpus structure F1 ≈ 0.794" was a bare point
+estimate. The 8 underlying points (4 editions x 2 annotators) span
+**0.7313 to 0.8687** - a 13.7-point range - with a bootstrap 95% CI of
+[0.7597, 0.8472] computed from those 8 points. **n=8 is small enough
+that the raw range and the already-known per-annotator means (annotator
+1: 0.864, annotator 2: 0.743, §64.2) are the more honest picture of
+uncertainty than the bootstrap CI alone** - stated plainly rather than
+presenting a falsely precise interval. The calibration claim in §64.4
+("at real-world structure-detection quality, the crossover has not
+occurred") is robust to this range - even at the low end (0.731) the
+corpus is well inside the regime §61's curve shows the method losing in,
+and even at the high end (0.869) it is still below the point where §61's
+observed crossover (against B2 specifically) occurs.
+
+### 68.3 Null-centered bootstrap p-values (§55)
+
+The BH-adjusted p-values reported since §55 were percentile bootstrap
+p-values (read the tail probability directly off the bootstrap
+distribution, which is naturally centered at the observed estimate, not
+the null value) - a common, defensible shortcut, but distinct from the
+more standard pivot construction (shift the bootstrap distribution to
+center at the null, then ask how extreme the observed estimate is
+relative to that). Both are now computed and reported side by side:
+
+| | Percentile p_adj | Null-centered p_adj | Divergence |
+|---|---|---|---|
+| H3 | 0.9705 | 0.9691 | 0.0014 |
+| H4 | 0.0003 | 0.0000 | 0.0003 |
+| H5 | 0.7544 | 0.7512 | 0.0032 |
+
+**Divergence is negligible everywhere** (max 0.0032) - the percentile
+shortcut used throughout this study was not meaningfully misleading for
+any of the three hypotheses. No conclusion changes; this closes the gap
+with evidence rather than leaving it as an unaddressed caveat.
+
+### 68.4 H3′ Benjamini-Hochberg applied
+
+`PREREGISTRATION.md`'s H3′ pre-commitment entry committed to BH across
+{H3′a, H3′b, H3′c} "as its own family" - never actually run. Applied now:
+p_raw = {1.0, 1.0, 0.5641}, p_adjusted = {1.0, 1.0, 1.0}. H3′a/H3′b's
+p=1.0 is the mechanical consequence of the already-established
+UNTESTABLE finding (§57.2: 20/21 clean bullet items are T1-tier, where
+the fix is a no-op by construction, giving a degenerate zero-variance
+bootstrap distribution) - not new evidence against either, and not in
+tension with anything already reported. This closes the last open
+pre-registration commitment from the H3′ follow-up.
+
+Full numbers: `annotation_packets/full_comparison_report.json`,
+`structure_ablation_report.json`,
+`boundary_annotation/calibration_report.json`,
+`h3prime_tennessee_2022_2024/h3prime_test_report.json` (all regenerated
+with these additions; every pre-existing point estimate in each file is
+unchanged).
+
+## 69. Related work: ontology matching, and B6 (LLM retrieve-then-rerank)
+
+Audit round 3, Phase 2. Fresh literature research (requested by the user
+alongside this sweep) surfaced directly-adjacent prior art this study had
+never positioned itself against.
+
+### 69.1 Ontology matching is the closest established field to this problem
+
+The Ontology Alignment Evaluation Initiative (OAEI) is an ongoing
+benchmark for matching correspondences across versions/variants of
+structured knowledge bases - the same problem shape as this study, one
+level of abstraction up. Its methodological history mirrors this study's
+B1-B6 progression closely: LogMap (2011, lexical + structural + logical
+reasoning) and AML (2013, lexical/structural) are the OM analogues of
+B1-B4; BERTMap (2022, fine-tuned contextual embeddings, refined by
+ontology structure) is the analogue of B5; Agent-OM, LogMapLLM, and
+LLMs4OM (2024-2025, LLM agents) are the analogue of B6, added here.
+**This validates the B1-B6 ladder as tracking an established field's own
+trajectory, not an arbitrary set of baselines** - independently arrived
+at, not built with OM's history in mind.
+
+One specific, actionable detail: Agent-OM was reported to outperform 11
+other systems specifically on non-trivial correspondences where simple
+name-matching is insufficient - the OM analogue of this study's T3-T6
+tiers, exactly the population the structural method exists to handle.
+§69.2 checks whether B6 shows the same pattern here.
+
+Cost is the standard objection to LLM-based matching in this
+literature, and it is real: one documented study spent $290 on
+unconstrained pairwise LLM calls, and a moderately-sized (10k-class)
+ontology implies ~10^8 pairwise comparisons. This does not bind for B6
+because only the 233 already-sampled items are ever scored, following
+the field's own standard mitigation (MapperGPT-style retrieve-then-
+rerank rather than unconstrained generation).
+
+### 69.2 B6 result: statistically indistinguishable from a naive top-1-retrieval shortcut
+
+`baseline_b6_llm.py` (`gemini-3.5-flash-lite`, temperature 0, top-10
+candidates from B5's unchanged retrieval configuration). Full 233-item
+run, **zero failed calls** after retrying the wrong/deprecated model ids
+found along the way (§69.3).
+
+| | Accuracy |
+|---|---|
+| Method | 71.24% |
+| **B6** | **72.96%** |
+
+Method vs. B6: point estimate −0.0172, 95% CI [−0.0815, 0.0472] - **not
+significant**, and B6 is the weakest of every baseline that nominally
+beats the method (B2 75.97%, B3 78.54%, B4 77.68%, B5 78.11%, all
+already reported).
+
+**Checked before trusting this, per §10's standing rule** (a surprising
+result, even when it looks merely unimpressive rather than shockingly
+good or bad, gets the same scrutiny): the response distribution across
+all 240 sampled calls (233 scored + 7 `CANNOT_DETERMINE`-truth items,
+still called for completeness) is **229 "1" (94.6%)**, 6 "NONE", and 5
+other numbers total - an extreme skew toward the retrieval's own
+top-ranked candidate. Directly compared against a naive "always pick
+candidate #1, no LLM call at all" baseline using the exact same cached
+retrieval: **identical accuracy, 72.96% vs. 72.96%**, with the LLM
+agreeing with the top-1 retrieval rank on 96.1% of items. **In this
+specific setup, `gemini-3.5-flash-lite` adds no measurable value beyond
+its own retriever's ranking** - a real, verified property of this model
+and prompt combination, not a data-integrity artefact (ruled out
+directly, not assumed).
+
+### 69.3 What happened getting here, logged rather than smoothed over
+
+The first full run (`gemini-2.5-flash`) hit the free tier's real daily
+cap - 20 requests/day for this project, far below the 250-1,500/day
+found in general research and nowhere near enough for 233 calls - and
+**222 of 233 items (95.3%) silently fell back to a forced "NONE" after
+repeated `429 RESOURCE_EXHAUSTED` errors**, producing a contaminated
+27.04% "accuracy" that was never reported or committed. `gemini-2.5-
+flash-lite` (tried next, expecting a higher documented quota) turned out
+deprecated for new users entirely (`404`, redirecting to
+`gemini-3.5-flash-lite`), which is what was ultimately used. The
+scoring code was fixed to record `call_succeeded` explicitly per item
+and **exclude, never silently count, any item whose LLM call never
+genuinely succeeded** - the same discipline as every other integrity
+check in this study, just applied to a live external API for the first
+time.
+
+### 69.4 What this means for the paper
+
+B6 does **not** replicate Agent-OM's reported strength on non-trivial
+correspondences (§69.1) - if anything it shows the opposite pattern
+here, adding negligible value over simple retrieval. This should be
+reported as a genuine, mechanistically-explained finding, not hedged
+away: a "lite"-tier model, chosen specifically for free-tier quota
+reasons, may not represent what a full-capability LLM reranker could do
+- this B6 result is a lower bound on LLM-based matching in this domain,
+not a claim about LLM matching in general. Testing a stronger model
+(the original committed design intent, before the quota constraints
+that are now disclosed above) remains open future work, not undertaken
+here because the free-tier constraint that motivated model selection is
+itself part of what this section reports honestly.
+
+Full numbers: `annotation_packets/b6_comparison_report.json`; raw
+LLM responses cached per pair in
+`annotation_packets/*/b6_response_cache_gemini-35-flash-lite.json`.
+
+## 70. Docling as a second real structure-quality anchor: high recall, low precision, a different failure mode than our own parser
+
+Audit round 3, Phase 3. Installed `docling` 2.121.0 fresh this session
+(clean install, ~130GB free disk headroom confirmed first). Design:
+our parser's item extraction and the existing 233-item ground truth stay
+completely fixed; only guideline-boundary detection is swapped to
+Docling's own `section_header`-labelled output, scored the identical way
+§64 scored our own parser - `match_guidelines` (frozen, unchanged)
+against the same two annotators' Tennessee boundary ground truth, with
+the same collision-artifact-corrected F1 (`run_calibration.corrected_f1`,
+reused unchanged).
+
+### 70.1 A real pitfall, found and handled before scoring
+
+Docling's `section_header` label spans multiple hierarchy levels mixed
+together - verified directly on the 2017 edition before scoring
+anything: 735 raw `section_header` items, including a running
+page-header ("TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES")
+repeated dozens of times, table-of-contents entries ("Index", "Index -
+Continued"), top-level category headers ("Pediatric Cardiac Emergency",
+"Pharmacology"), and per-protocol sub-headers ("Clinical Notes -
+Airway:") all under the identical label. Rather than hand-classifying
+hierarchy levels - a new heuristic this study could not independently
+validate, and exactly the kind of ad hoc adjustment the pre-commitment
+ruled out in advance - `match_guidelines`' own token-overlap scoring was
+relied on to let noise self-penalize through the precision term, the
+same property already used for our own parser's boundary scoring. Only
+pre-scoring filter: deduplicate to distinct header strings (matching how
+our own parser's `.guidelines` is inherently deduplicated).
+
+### 70.2 Result: F1 far below our own parser's, but not because Docling misses boundaries
+
+| | Docling mean corrected F1 |
+|---|---|
+| Tennessee 2017 (annotator 1 / 2) | 0.3990 / 0.4948 |
+| Tennessee 2018 (annotator 1 / 2) | 0.3005 / 0.3778 |
+| Tennessee 2022-23 (annotator 1 / 2) | 0.3622 / 0.5151 |
+| Tennessee Sept2024 (annotator 1 / 2) | 0.3191 / 0.4866 |
+| **Mean (n=8)** | **0.4069** |
+
+Compared to our own parser's mean corrected F1 (0.8034, §64.2), this
+looks like a stark result against Docling - a large enough gap from
+Docling's own published DocLayNet benchmark (~0.864 mAP) that it
+demanded investigation before being reported, per §10's standing rule
+applied here to a surprising-in-the-unfavourable-direction result the
+same as any other.
+
+**Decomposed directly (Tennessee 2017, annotator 1) rather than
+reported as a single number**: 276 distinct Docling headers against 81
+annotator-listed real protocol titles, 71 matched. **Recall: 87.65%**
+- actually *higher* than what would be needed to beat our own parser's
+performance on this axis. **Precision: 25.72%** - this, not missed
+boundaries, is what drives the low F1. The header-count ratio is
+consistently large across all four editions (276/406/412/467 Docling
+headers against 81-97 real protocol titles per edition, roughly
+3.4x-4.8x over-generation) - strong circumstantial evidence, though only
+directly decomposed for the one point above, that the same
+precision-driven mechanism explains all eight measurements, not
+independently confirmed for each.
+
+### 70.3 What this means for the paper
+
+**Docling is not shown to be worse than our own heuristic parser at
+finding real protocol boundaries - it is shown to over-segment relative
+to the specific "one header per protocol" granularity this study's
+ground truth was built around**, a design-time-choice-driven,
+mechanistically distinct failure mode from our own parser's (§56: the
+boundary-detection bug *merges* content across a lost boundary,
+producing false negatives/under-segmentation; Docling here produces
+false positives/over-segmentation). Reporting only the F1 number without
+this decomposition would materially mislead a reader into concluding
+Docling's underlying layout detection is poor, when the evidence shows
+the opposite for the recall axis specifically.
+
+This does not become a third clean point on §61's curve in the way the
+US Code XML anchor did (§63) - F1 alone is not a fair single-number
+placement given the precision/recall asymmetry just demonstrated, and
+forcing it onto the same axis without a like-for-like granularity match
+would overstate what was actually measured. Reported as a distinct,
+important calibration-methodology finding in its own right: **boundary-
+quality metrics for this task are not interchangeable with general
+document-layout benchmarks (DocLayNet, PubLayNet) without accounting for
+label granularity** - a real, previously undocumented gap between a
+system's published general-purpose layout score and its measured
+performance on a specific downstream "one header per logical unit" task,
+found only because this study built its own independent ground truth
+rather than citing Docling's DocLayNet number directly.
+
+Full numbers: `annotation_packets/boundary_annotation/docling_calibration_report.json`.

@@ -99,11 +99,35 @@ def main():
     # r=0 sanity check: must reproduce boundary_scoring_corrected.json's
     # numbers exactly (no corruption applied = the real parsed edition).
     print("=== r=0 sanity check (must match boundary_scoring_corrected.json) ===")
+    r0_f1_points: list[float] = []  # 8 points: 4 editions x 2 annotators
     for slug, d in gt.items():
         parser_titles = real_parse(d["pdf"]).guidelines
         for a in ("1", "2"):
             f1 = corrected_f1(d[a], parser_titles)
+            r0_f1_points.append(f1)
             print(f"  {slug} / annotator {a}: F1={f1:.4f}")
+
+    # Calibration anchor uncertainty (2026-08-18 audit round 3, Phase 1):
+    # the DOMINANT source of uncertainty here is between-annotator/between-
+    # edition disagreement, not resampling noise - annotator 1 averaged
+    # 0.864, annotator 2 averaged 0.743 (see FEASIBILITY.md section 64.2).
+    # Reported explicitly rather than only as a bootstrap CI, which with
+    # n=8 points would understate how coarse this anchor really is.
+    r0_mean = sum(r0_f1_points) / len(r0_f1_points)
+    r0_min, r0_max = min(r0_f1_points), max(r0_f1_points)
+    rng = random.Random(20260822)
+    boot = []
+    n_pts = len(r0_f1_points)
+    for _ in range(10000):
+        sample = [r0_f1_points[rng.randrange(n_pts)] for _ in range(n_pts)]
+        boot.append(sum(sample) / n_pts)
+    boot.sort()
+    r0_ci = (round(boot[249], 4), round(boot[9749], 4))
+    print(f"\nCalibration anchor (n={n_pts} edition x annotator points): "
+          f"mean={r0_mean:.4f}  range=[{r0_min:.4f}, {r0_max:.4f}]  "
+          f"bootstrap 95% CI={r0_ci} (n=8 is small - the raw range is the "
+          f"more honest picture of uncertainty here, per-annotator: "
+          f"1=0.864, 2=0.743)")
 
     print("\n=== Sweep: F1 vs corruption rate r ===")
     report: dict = {"per_rate": {}}
@@ -129,6 +153,16 @@ def main():
     # (structure_ablation_report.json)?
     real_f1 = report["per_rate"][str(RATES[0])]["mean_f1"]
     report["real_corpus_f1_at_r0"] = real_f1
+    report["real_corpus_f1_uncertainty"] = {
+        "n_points": n_pts, "mean": round(r0_mean, 4),
+        "range": [round(r0_min, 4), round(r0_max, 4)],
+        "bootstrap_ci95": list(r0_ci),
+        "per_annotator_mean": {"1": 0.864, "2": 0.743},
+        "note": "n=8 (4 editions x 2 annotators) is small; the dominant "
+                "uncertainty here is between-annotator disagreement, not "
+                "resampling noise - the raw range/per-annotator means are "
+                "the more honest picture than the bootstrap CI alone.",
+    }
     report["note_on_r0_discrepancy"] = (
         "This sweep's r=0 F1 differs slightly (~1 point) from the standalone "
         "boundary_scoring_corrected.json r=0 numbers (0.8034 pooled-by-edition "

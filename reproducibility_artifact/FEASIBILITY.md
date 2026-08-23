@@ -6606,3 +6606,334 @@ from 240 to 360 total sampled items, and every hypothesis test (H3,
 H4, H5) would need a formal re-run against the expanded set, separately
 committed and performed at that time. No result changes from this
 entry alone; it generates the instrument, not data.
+
+## 82. Massachusetts retrieval: confirmed genuinely blocked by this environment's tooling, not by the document itself
+
+Section 80.3 flagged Massachusetts as an open thread - a research agent
+using a real browser session confirmed a genuine downloadable file now
+exists at `mass.gov` (a different outcome than the earlier DOCX-
+mislabeled-as-PDF problem), where programmatic fetch (`curl`, `WebFetch`)
+returns a 403 bot-detection block.
+
+Followed up directly with this environment's sandboxed browser tool.
+Confirmed the file is real: "Emergency Medical Services Statewide
+Treatment Protocols Version 2026.1 - Effective June 1, 2026" (9.14 MB,
+last updated 2026-02-10, Office of Emergency Medical Services) - a
+genuinely newer edition than the existing `ma_2023.pdf` already in the
+corpus (the "one real edition" recovered in an earlier round). The
+landing page loads and confirms the file's existence and metadata
+directly.
+
+**The download itself is blocked by this session's browser sandbox by
+design**, not by anything specific to Massachusetts or this document:
+the tool's own operating constraints state explicitly that "the
+viewer's sandbox also blocks any download the page starts itself." The
+PDF is served with a forced-download response (`Content-Disposition:
+attachment`), and the sandbox intercepts this universally - the same
+block would apply to any PDF served this way from any site, not a
+Massachusetts-specific or document-specific failure. Confirmed by
+observing the network log directly: the `/download` request itself
+returns HTTP 200 (the file exists and the server responds correctly)
+but is aborted client-side (`net::ERR_ABORTED`) by the sandbox before
+any content reaches disk.
+
+**Massachusetts remains blocked, but the finding has changed in kind**:
+previously an open question about whether a genuine document exists at
+all (given the DOCX confusion); now confirmed to be a real, retrievable
+document blocked only by this specific environment's download-sandbox
+policy - a tooling gap, not a research dead end. Retrieval by any
+method NOT subject to this sandbox (a different browser environment, a
+direct authenticated `curl` session outside this sandbox, or simply the
+user downloading it directly and providing the file) would very likely
+succeed immediately, since the server itself responds correctly and the
+file's existence and size are already confirmed.
+
+## 83. District of Columbia: a real, previously-unchecked document - but boundary detection shows a genuine, unresolved quality problem
+
+DC had never been checked anywhere in this study before section 80's
+sweep. Two documents retrieved directly via `curl` (no bot-blocking
+issue at all for DC - the earlier research agent's confusion was
+`WebFetch`'s markdown converter failing on binary PDF content, not a
+retrieval problem): `dc_aug2024.pdf` ("August 2024") and
+`dc_03172026.pdf` (dated "03172026" in its filename, confirmed via
+SHA-256 to be a genuinely distinct document, not a duplicate or stale
+file - resolving section 80.3's open discrepancy).
+
+### 83.1 Individually: genuinely strong signal
+
+`corpus_probe` verdict on the newer edition: **STRONG** (1565.6
+chars/page, 12.9% numbered lines) - the first STRONG verdict anywhere
+in this entire corpus-expansion effort; every other candidate tested
+(Tennessee, Connecticut, Nebraska, Utah) scored WEAK or USABLE.
+`item_parser`: both editions parse with 0 duplicate ids, 0-1 ambiguous
+markers, and real recommendation-level content ("Contact Medical
+Control as soon as feasible in accordance with protocols for
+medication...") - 132 guidelines / 2,350 items (new), 206 guidelines /
+2,629 items (old). Offset spot-check: 53/2000 mismatches (2.65%),
+comfortably within the historical normal range, unlike Connecticut's
+earlier ~80% artifact.
+
+### 83.2 Cross-edition alignment: much lower than every existing pair
+
+`item_align` (Aug2024 -> 03172026): only **50.5% trivially alignable**
+(T1+T2), 30.8% needing more than an id, **18.7% unmatched** - far below
+every existing confirmatory pair (85-99% trivially alignable, 0.5-5.7%
+unmatched) and below the two vetted Tennessee/Connecticut candidates
+(88.6-94.6%) as well.
+
+### 83.3 Investigated before characterizing this either way (section 10)
+
+A result this different from everything else in the corpus deserves
+scrutiny before being called either "a harder, more interesting
+document" or "not usable" - the two readings this number alone cannot
+distinguish.
+
+Combined preamble+untitled rate: **4.2% (old) / 4.4% (new)** - well
+under the 10% acceptance bar on its face. But the size-outlier check
+tells a different story: **17 outlier guidelines (old), 12 (new)** -
+far more than any existing pair (Tennessee 3, Connecticut 6) - and,
+critically, several of the outlier TITLES THEMSELVES are visibly
+malformed: *"Treatment Care Protocols [encoding artifact] General
+Medical Emergencies Behavioral Psychological Emergencies 7.11"* (multiple
+category headers concatenated into one string), *"Good, crying
+Treatment Protocols [encoding artifact] Resuscitation Newborn
+Resuscitation 4.9"* (a content fragment - "Good, crying" - bleeding
+into what should be a clean guideline title).
+
+**This is not "genuinely harder content the structural method exists to
+help with" - it is the same recurring anchor-detection weakness this
+study has documented at multiple other publishers** (the section 56
+boundary bug's mechanism: adjacent content swept into whichever
+guideline the anchor last successfully locked onto), here producing
+oversized, garbled-title guidelines rather than the catastrophic
+"everything under `<preamble>`" collapse seen at Rhode Island/Vermont/
+Nebraska/Utah. The raw combined-percentage number passes the bar
+mechanically; the outlier pattern reveals the same class of real
+underlying problem the percentage alone does not capture.
+
+### 83.4 Conclusion
+
+DC is a genuine, valuable new finding - a previously-unchecked
+publisher with real, substantial content that parses far better than
+almost every other candidate tried in this effort - but it is **not**
+ready to be characterized as a clean candidate the way the Tennessee
+and Connecticut pairs were. The low alignment rate is most likely
+explained, at least partly, by the same title-garbling problem visible
+in the outlier list, not by a genuinely harder cross-edition revision.
+Before this could be seriously considered: the specific outlier
+guidelines would need hand inspection (matching the discipline already
+applied to Connecticut's Central Line Access outlier in section 58.2)
+to determine whether the garbled titles are concentrated in a
+excludable subset or are pervasive enough to disqualify the document
+format generally - not undertaken here, to avoid overselling a
+promising-looking but not yet properly vetted lead. Both documents
+added to `CORPUS_MANIFEST.md` with SHA-256 hashes for provenance; not
+promoted to confirmatory or even fully-vetted-candidate status.
+
+### 83.5 Follow-up: outlier content read directly - a decisive negative result, not a salvageable one
+
+Section 83.4 flagged the outlier guidelines as needing hand inspection
+before DC could be seriously considered. That inspection is now done.
+
+Directly sampled the largest outlier ("Dystonic Reactions 7.4", 325
+items - the single largest guideline in the document, roughly 20x the
+edition's median size) at regular intervals across its full range,
+rather than only its first few items. The content is topically
+unrelated across the sample: *"Provide continuous EKG monitoring,"
+"Establish IV/IO access," "Obtain 12 lead EKG and evaluate for cardiac
+causes of acute adrenal crisis," "Acquire a 12-lead EKG following
+cessation of seizure activity," "Dispense oral glucose... diabetic
+ketoacidosis," "Patients with syncope or near-syncope," "Discontinue
+cold water immersion... hyperthermia."* EKG monitoring, adrenal crisis,
+seizures, diabetic ketoacidosis, syncope, and hyperthermia are not
+Dystonic Reactions, or plausibly connected to it - this is a genuine
+garbage-bucket guideline collecting content from many unrelated real
+protocols, not a legitimately large single protocol.
+
+**This is a decisive result, not a salvageable one.** The prior
+concern (section 83.3) that this might be concentrated in a small,
+excludable subset does not hold: with 12-17 outlier guidelines per
+edition (roughly 4-6x every existing confirmatory pair's count) and the
+single largest one already shown to be a multi-protocol garbage bucket,
+this is a broad, severe manifestation of the same anchor-detection
+mechanism section 56 diagnosed at a smaller scale in Tennessee - DC's
+document format (dense numeric subsection labels like "7.4", "3.3",
+"11.5") appears to confuse the current anchor-detection heuristic more
+severely than any publisher already in this study's confirmatory set.
+
+**Conclusion, updated from section 83.4's "not yet vetted" to a
+concrete negative finding**: DC is not usable with the current parser
+without a genuine fix to guideline-boundary anchor detection for this
+document's specific format - the same class of work flagged as out of
+scope for a one-off patch in section 16.3's Connecticut precedent
+("treat it as requiring a separate extraction strategy... not
+undertaken here"). DC joins Rhode Island and Vermont as a state with
+real, substantial content that the current pipeline cannot cleanly
+extract, for a documented and specific reason rather than an
+unexplained failure.
+
+## 84. Five more untested newer editions checked: two too thin, three parse individually well but none align
+
+Continuing the corpus-expansion sweep with editions section 80.3
+catalogued as "newer editions confirmed to exist, not yet pipeline-
+tested."
+
+**Hawaii (2025)** and **Alabama (11th edition, 2025)**: both too thin
+to be usable. Hawaii: 15 guidelines but only 102 items, 77 sections
+empty. Alabama: 69 guidelines but only 109 items (barely more than one
+item per guideline on average), 362 sections empty. Both match this
+study's prior characterization of these publishers (Hawaii's editions
+already tested and rejected; Alabama's "~90% unusable" finding) -
+newer editions did not change the underlying structural problem.
+
+**Maine (2025), Maryland (2026), New Jersey (2025)**: all three parse
+individually well - Maine 42 guidelines/1,720 items/**0 sections
+empty**; Maryland 125 guidelines/3,958 items; New Jersey 59
+guidelines/2,198 items/only 20 sections empty. All three looked
+genuinely promising on this axis alone, better than DC's individual
+parse in some respects.
+
+**None align.** Tested against each publisher's most recent prior
+edition already in the corpus:
+
+| Pair | Trivially alignable | Unmatched |
+|---|---|---|
+| Maine 2019->2025 | 47.5% | 22.2% |
+| Maryland 2025->2026 | 44.9% | 15.8% |
+| New Jersey 2022->2025 | **0.3%** | **57.8%** |
+
+All three fall well below even DC's already-marginal 50.5%, let alone
+the 85-99% range every existing confirmatory pair and the two newly-
+added Tennessee/Connecticut pairs clear. New Jersey's result is a
+near-total collapse - old items (334) versus new items (2,198) differ
+by nearly 7x, suggesting either the 2022 edition itself parses far more
+thinly than its 2025 counterpart or the document changed format
+substantially between editions (a 3-year gap, versus every existing
+pair's 1-2 year gaps). Maryland's alignment is dominated by T5_moved
+(38.2% of all items) rather than T6_unmatched, suggesting large-scale
+item reordering/renumbering rather than content loss - a different
+mechanism from DC's garbage-bucket problem, not yet diagnosed further.
+
+**None of the five progress past this stage.** Not added to
+`CORPUS_MANIFEST.md` as candidates (their source PDFs are already
+locally present from this and prior sessions' retrieval, but the
+manifest is reserved for documents feeding an actual reported claim or
+a genuinely vetted candidate, matching its own stated scope). This
+closes out five of the eleven "newer edition, not yet tested" entries
+section 80.3 catalogued; the remaining six (New York, New Hampshire,
+Ohio, South Carolina, West Virginia, plus Kentucky's download which
+failed and needs a retry) are the next natural targets.
+
+## 85. Remaining newer-edition leads closed out: Ohio also fails to align, West Virginia/South Carolina too thin, New York/New Hampshire blocked on retrieval only
+
+Closes out the rest of section 80.3's "newer edition, not yet
+pipeline-tested" catalogue.
+
+**A duplicate-file discovery, corrected before testing anything**: the
+freshly-downloaded `ems.ohio.gov` document (`oh_2026.pdf`) turned out
+byte-identical (same SHA-256) to `oh_current.pdf`, an Ohio file already
+in the corpus from an earlier session - not a genuinely new edition,
+despite being retrieved from what looked like a fresh, direct-from-
+state URL. The alignment test against it accordingly showed a
+suspicious 100% match with identical old/new item counts (973=973) -
+investigated rather than reported, per section 10, and traced to the
+duplicate rather than a real finding. Corrected by testing against the
+genuinely older `oh_2021_amerimed.pdf` (the third-party mirror
+already flagged in this study's history as Ohio's prior tested
+edition) instead.
+
+**Ohio (2021 mirror -> 2026 direct-from-state)**: 31.0% trivially
+alignable, 38.9% unmatched - fails to clear the bar, in the same range
+as Maine/Maryland/DC. Many matched items remain under `preamble/...`
+pseudo-guidelines rather than real named protocols even where the
+identifier survives, consistent with this study's prior characterization
+of Ohio ("garbage anchors").
+
+**West Virginia (2026 booklet) and South Carolina (Nov 2025)**: both
+too thin to be worth an alignment test - West Virginia 322 items across
+41 guidelines (726 sections empty); South Carolina 318 items across 72
+guidelines (983 sections empty). Both match this study's prior
+characterization of these publishers; the newer editions did not
+change the underlying structural problem.
+
+**New York (V.26.0) and New Hampshire (v9.2/v9.3)**: retrieval
+attempts failed on both - New York's guessed URL pattern
+(`ny_collaborative_protocols_v26.0.pdf`, following the exact naming
+convention of every prior version) returned a 404 HTML page rather
+than the real file, meaning the actual v26.0 URL uses a different
+pattern not yet found; New Hampshire's bulletin-announcement URL
+returned an HTML page, not the protocol document itself (the
+announcement page, not the PDF). **This is a retrieval gap, not a
+negative finding about either state** - unlike Ohio/WV/SC, nothing was
+learned here about parsing or alignment quality, only that the correct
+download URL has not yet been located. Worth a dedicated retry with a
+direct site crawl rather than a guessed URL pattern.
+
+### What this closes
+
+All eleven "newer edition, not yet tested" leads from section 80.3 are
+now accounted for: two too thin from the start (Hawaii, Alabama),
+three parsing well individually but failing alignment (Maine, Maryland,
+New Jersey), one already covered in depth (Ohio, now confirmed failing
+alignment too), two too thin (West Virginia, South Carolina), and two
+still blocked on retrieval alone (New York, New Hampshire) rather than
+resolved either way. Kentucky's earlier download failure (section 80,
+K-N sweep) also remains unretried. None of the eleven produced a
+viable new confirmatory candidate - the only two that did, Tennessee
+and Connecticut (section 79, added to the confirmatory set in section
+81), remain the sole results of this entire multi-session corpus-
+expansion effort.
+
+## 86. Puerto Rico: no compiled statewide clinical protocol document found
+
+Checked per the user's "52 states" framing (50 states + DC + Puerto
+Rico, a common shorthand this study had not previously covered - DC was
+added in section 80, Puerto Rico was not).
+
+No statewide compiled EMS clinical treatment-protocol PDF was found
+under Puerto Rico's Negociado del Cuerpo de Emergencias Médicas
+(NCEM) or the Department of Health's EMS-related pages. What exists
+publicly is regulatory/organizational material (technician licensure
+law, an operational emergency-preparedness plan) - the same pattern
+this study found for the 24 mainland states confirmed structurally
+ineligible (protocols set at a more local level, or not compiled into
+one public document). Not elevated to a tested candidate; no PDF
+exists to test.
+
+This completes the "52 states" sweep the user's framing implied - 50
+states, DC, and Puerto Rico all now checked at least once in this
+study's history.
+
+## 87. Correction: New York's "V.26.0" was not a new lead - already tested as part of the original dev-corpus work
+
+Section 85 listed New York (V.26.0) as blocked on retrieval, alongside
+New Hampshire. Retrying with a browser-realistic User-Agent header
+(`curl -A "Mozilla/5.0..."`) succeeded immediately - the earlier 403s
+were ordinary bot-detection, not a wrong URL, resolved by the same
+technique that unblocked several other states' downloads across this
+session. **But the resulting file (`ny_v260.pdf`) turned out
+byte-identical to `ny_collab_v260.pdf`, already present in the corpus**
+- checked before doing any further work, per section 10's discipline
+against assuming a "new" download is actually new.
+
+New York's v25.1->v26.0 pair (both Collaborative and BLS) is not a new
+finding at all - it is this study's own DEV-CORPUS work, already fully
+tested and published in sections 15.2-15.3: NY Collaborative 44.0%
+trivially alignable / 19.1% unmatched (fails the bar, same range as
+this round's other failures); **NY BLS 90.9% trivially alignable / 4.9%
+unmatched - a number that would clear the acceptance bar cleanly if NY
+were eligible.** New York remains ineligible regardless of this number,
+per its standing status as a dev/exploratory publisher, not a parsing
+or alignment quality issue - the same distinction already established
+throughout this study's dev-vs-confirmatory discipline.
+
+**New Hampshire remains genuinely blocked** - the same User-Agent
+technique that fixed New York failed against `mm.nh.gov` (still
+returns an HTML page), suggesting a stronger or different bot-detection
+mechanism. Left as a documented open retrieval gap, not pursued
+further in this entry.
+
+This closes out New York cleanly (already-known result, correctly
+excluded on eligibility grounds, not a parsing failure) and leaves New
+Hampshire as the one genuinely unresolved retrieval gap from this
+entire corpus-expansion effort.

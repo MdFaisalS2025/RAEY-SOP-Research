@@ -6048,3 +6048,58 @@ Cohen's kappa automatically. Until then, section 57's H3' results
 continue to rest on the single unverified judgment already disclosed
 there - an open, disclosed limitation, now with the tooling in place to
 close it the moment real data exists.
+
+## 77. Remaining prior-art gaps closed: OAEI's benchmark track as direct precedent for section 61, discriminability, and parser robustness auditing
+
+Section 69.1 already positioned this study's B1-B6 baseline ladder
+against OAEI's own matcher-development history. Audit round 4's
+literature research found two adjacent citations still missing: OAEI's
+BENCHMARK TRACK specifically (as opposed to its matcher-comparison
+tracks) is a direct methodological precedent for section 61's own
+approach, not just an analogous baseline progression, and this had not
+been stated.
+
+**OAEI's benchmark track** performs exactly section 61's kind of
+experiment one level up: starting from a seed ontology and
+systematically altering it - discarding labels, restructuring, removing
+information - to test how matchers degrade as a controlled function of
+information loss (Euzenat, Rosoiu & Trojahn, "Ontology matching
+benchmarks: Generation, stability, and discriminability," Journal of Web
+Semantics, 2013). This is the same experimental shape as
+`structure_ablation.py`'s corruption-rate sweep, arrived at
+independently in this study without knowledge of the OAEI precedent -
+worth citing as validation that the experimental design is a recognized
+approach in an adjacent field, not an ad hoc invention.
+
+That paper's own vocabulary is directly useful here: it distinguishes
+**stability** (does the benchmark's difficulty ranking of matchers stay
+consistent across repeated generations) from **discriminability** (does
+the benchmark actually separate matchers that should be separated, or
+do they respond in lockstep). Section 61's original design measured
+something adjacent to stability (across-seed spread at a fixed rate,
+section 68.1) but never discriminability directly - whether the
+STRUCTURAL method's curve declines differently from a text-only
+control's. Audit round 4's Phase 3b (sections 73-74) closed exactly this
+gap: B2/B5 were tested across the same sweep and found genuinely
+invariant (once a synthetic-corruption defect was fixed) - the sharpest
+possible discriminability result, since a control that does not move at
+all while the method under test does is a clean separation, not merely
+a statistical one.
+
+**ProSA** (arXiv:2605.19309, "How Do Document Parsers Break? Auditing
+Structural Vulnerability in Document Intelligence") is a 2026 paper
+performing a structurally similar audit one layer down the stack - it
+systematically perturbs document layout to test parser robustness,
+rather than perturbing already-parsed structure to test a matcher, the
+axis this study perturbs. Cited here as evidence that "systematically
+break the input and measure the degradation" is an active, current
+methodology in the broader document-intelligence literature, not unique
+to this study or to OAEI.
+
+Together, these three citations complete the positioning section 69.1
+started: this study's central experimental contribution (section 61's
+structure-quality curve, now corrected per section 74) sits inside an
+established methodological tradition spanning ontology matching (OAEI's
+benchmark track, and its Euzenat et al. formalization of what makes a
+degradation benchmark informative) and document intelligence (ProSA),
+not as an isolated technique invented for this problem.

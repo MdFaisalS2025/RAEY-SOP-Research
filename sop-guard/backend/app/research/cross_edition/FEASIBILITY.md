@@ -5479,3 +5479,89 @@ found only because this study built its own independent ground truth
 rather than citing Docling's DocLayNet number directly.
 
 Full numbers: `annotation_packets/boundary_annotation/docling_calibration_report.json`.
+
+## 71. Audit round 4, Phase 1: the join-bug fix had not reached two scripts, and §54's headline diagnostic moves under the fix
+
+A fresh full-project sweep (requested by the user: "do another full sweep...
+see if our paper can be improved") found that the 2026-08-18 join-bug fix
+(§65) - converting seven baseline-joining drivers from an id-string lookup
+to `sample_join.py`'s parse-order index join - had not reached two scripts:
+`run_h3_test.py` and `diagnose_t2_mechanism.py`. Both pre-date
+`sample_join.py` and were never converted when it was introduced.
+
+### 71.1 The gap
+
+`run_h3_test.py`'s own inline comment at the point of failure read
+verbatim: `continue  # should not happen - same parse() on the same
+file` - the exact assumption `sample_join.py`'s module docstring
+identifies as the root cause of the original bug (`item_align.py`
+mutates `item_id` into the new edition's guideline vocabulary;
+`annotation_packet.csv` stores the post-remap id; a fresh `parse()`
+yields the raw pre-remap id; the two disagree for any item whose
+guideline was renamed between editions). `diagnose_t2_mechanism.py`
+carried the identical pattern independently.
+
+This matters specifically because `diagnose_t2_mechanism.py` produced
+§54's bullet-vs-ordinal decomposition - the mechanistic explanation for
+*why* H3 (structure-aware vs. text-only matching) failed, concentrated
+in bullet-marker items where an inserted item shifts every later
+sibling's position-based marker. That decomposition had never been
+recomputed under the fix, and the script wrote no JSON output, so there
+was nothing to even flag as stale.
+
+Both scripts converted to `build_index_join`/`join_baseline`/
+`verify_sample_identity`, the identical pattern the other seven drivers
+use. `run_h3_test.py`'s rerun reproduces `full_comparison_report.json`'s
+H3 figures exactly (method 71.24%, B2 75.97%, diff -0.0472 [-0.0987,
+0.0043]) - an independent cross-check via a second, now-fixed code path,
+not merely a code change taken on faith. Its stale output
+(`h3_test_report.json`, n=209) was removed; the rerun writes
+`h3_test_report.SUPERSEDED.json` with an in-file note, since
+`full_comparison_report.json` already supersedes this entire analysis.
+
+`diagnose_t2_mechanism.py` was additionally given a JSON output
+(`diagnose_t2_mechanism_report.json`, it previously wrote none) and a
+bootstrap 95% CI on each marker-kind subgroup's diff - closing a gap the
+2026-08-18 marker-kind entry explicitly left open ("no bootstrap CI was
+computed for the subgroup split").
+
+### 71.2 §54 recomputed: the bullet finding shrinks but survives; the ordinal finding does not
+
+| Marker kind | n (before → after) | Method acc. | B2 acc. | Diff (before → after) | Bootstrap 95% CI |
+|---|---|---|---|---|---|
+| Bullet | 72 → **88** | 62.50% | 80.68% | −22.22% → **−18.18%** | **[−0.2841, −0.0909]** |
+| Ordinal | 137 → **145** | 76.55% | 73.10% | +5.11% → **+3.45%** | **[−0.0207, 0.0897]** |
+
+The bullet-marker mechanism (§54.1's original explanation: T2's
+identifier-trust tier breaks when bullet renumbering shifts a stable
+position-based marker) **survives as a real, CI-confirmed finding**,
+smaller in magnitude than originally reported (−18.2 points, not
+−22.2) but with a 95% CI that still excludes zero.
+
+The ordinal-marker "advantage" **does not survive**. Its CI now includes
+zero, and it must not be described as a confirmed subgroup finding going
+forward - only as "not statistically distinguishable from zero under the
+corrected join."
+
+Connecticut v2023.1→v2024.1 (the pair driving the pooled significant
+effect in §53) recomputed under the fix: bullet n=40, diff −35.00%
+(method 65.00%, B2 100.00%); ordinal n=19, diff 0.00% (both 89.47%) -
+unchanged in direction from the original finding, confirming the bullet
+mechanism remains concentrated in this one pair's bulleted
+medication-reference appendix rather than spreading out once the dropped
+items are restored.
+
+This does not change H3's own confirmed status (still NOT CONFIRMED,
+`full_comparison_report.json` unaffected by this recompute - it was
+already correctly computed). What changes is the mechanistic
+sub-analysis explaining H3's pooled result: the bullet-renumbering
+explanation stands at a smaller effect size, and the previously-reported
+ordinal-side "the method does slightly better on ordinal items" claim
+must be dropped from any future write-up.
+
+Full numbers, including the pre-fix reference values for direct
+comparison: `annotation_packets/diagnose_t2_mechanism_report.json`. Code
+state unchanged at `d3068ee`; only `diagnose_t2_mechanism.py` and
+`run_h3_test.py` (neither frozen) were modified. Full dated entries in
+`PREREGISTRATION.md` §11 (2026-08-22, two entries: the join-bug-gap
+correction and this recompute result).

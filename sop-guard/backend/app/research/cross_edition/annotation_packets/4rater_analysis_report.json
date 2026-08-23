@@ -1,4 +1,5 @@
 {
+  "_note_both_kappas_retracted": "FEASIBILITY.md section 50's 2026-08-18 correction found Annotator A's answers byte-identical to B's, and C's byte-identical to D's, on every one of 240 items (confirmed via content comparison, not just file hashes) - two distinct answer sets uploaded as four. Every 'cohens_kappa_AB' value below (kappa=1.0, 0 disagreements, all four pairs) is a file agreeing with a copy of itself. 'fleiss_kappa_4rater' (0.8770 pooled) is ALSO withdrawn, not merely the Cohen's kappa - it requires four genuinely independent raters, which this data never provided, and per section 50's correction it is 'not reported as a statistic anywhere in this study going forward.' The honest number is Cohen's kappa between the two REAL distinct answer sets: 0.8168 pooled (section 50.1), computed separately in run_h3_test.py's cohort, not in this file. Only 'n_needing_adjudication' and the flagged item ids below are usable from this report - every one of the 43 flagged items is confirmed a genuine (2,2) split between the two real answer sets, not a 4-rater artifact, so the adjudication list itself is unaffected by this retraction.",
   "pairs": {
     "Tennessee 2017→2018": {
       "cohens_kappa_AB": {
@@ -12,12 +13,11 @@
         "n_items": 60,
         "n_raters": 4,
         "categories": [
-          "CANNOT_DETERMINE",
-          "NONE",
           "acute coronary syndrome/stemi/aemt stop/11",
           "acute coronary syndrome/stemi/aemt stop/13",
           "acute coronary syndrome/stemi/aemt stop/14",
           "acute coronary syndrome/stemi/aemt stop/15",
+          "cannot_determine",
           "family violence/assessment/4#2",
           "hypertensive crisis/emt stop/4",
           "hyperthermia/notes/o#6",
@@ -28,6 +28,7 @@
           "musculoskeletal trauma/aemt stop/7#2",
           "musculoskeletal trauma/emr stop/5",
           "new onset atrial fibrillation and flutter/assessment/2",
+          "none",
           "normal delivery/emr stop/8.a",
           "normal delivery/emr stop/9",
           "normal delivery/emt stop/7",
@@ -96,11 +97,10 @@
         "n_items": 60,
         "n_raters": 4,
         "categories": [
-          "CANNOT_DETERMINE",
-          "NONE",
           "altered level of consciousness - adult/criteria/a.3",
           "altered level of consciousness - pediatric/notes/13.e",
           "burns/performance parameters/b.•#11",
+          "cannot_determine",
           "cardiac arrest hypothermia/notes/4.•#6",
           "chest pain / suspected acute coronary syndrome/notes/6.a",
           "chest pain / suspected acute coronary syndrome/notes/6.b",
@@ -121,6 +121,7 @@
           "musculoskeletal trauma/notes/1",
           "narrow complex tachycardia pediatric/performance parameters/b",
           "nerve agent/pesticide exposure/criteria/a.1",
+          "none",
           "nontraumatic pain management/exclusion criteria/d",
           "nontraumatic pain management/performance parameters/b",
           "poisoning/toxin exposure/criteria/a.3.a",
@@ -191,8 +192,6 @@
           "5 2 1 bilevel positive airway pressure - adult/protocol/•.o.4",
           "5 2 1 bilevel positive airway pressure - adult/protocol/•.o.7",
           "5 2 1 bilevel positive airway pressure - adult/protocol/•.o.8",
-          "CANNOT_DETERMINE",
-          "NONE",
           "abuse and neglect of children and the elderly/protocol/•#10",
           "abuse and neglect of children and the elderly/protocol/•#35",
           "abuse and neglect of children and the elderly/protocol/•#37",
@@ -204,6 +203,7 @@
           "appendix 2 ct pediatric color coded medication reference/protocol/-#55",
           "appendix 4 covid-19 updates/protocol/o.•#26",
           "asthma/bronchiolitis/croup pediatric/protocol/o.•#5",
+          "cannot_determine",
           "cardiac arrest pediatric/protocol/•#11",
           "cardiac arrest pediatric/protocol/•#13",
           "childbirth & newborn care/protocol/o#26",
@@ -215,6 +215,7 @@
           "new central line access/protocol/4.•",
           "new central line access/protocol/5.b",
           "new central line access/protocol/7#5",
+          "none",
           "orotracheal intubation/protocol/10.-",
           "pain management adult/protocol/o#10",
           "pain management adult/protocol/o#3",
@@ -271,7 +272,6 @@
           "5 2 1 bilevel positive airway pressure - adult/protocol/•.4",
           "5 2 1 bilevel positive airway pressure - adult/protocol/•.6",
           "5 2 1 bilevel positive airway pressure - adult/protocol/•.8",
-          "CANNOT_DETERMINE",
           "adult/protocol/•#18",
           "adult/protocol/•#46",
           "adult/protocol/•.o#11",
@@ -294,6 +294,7 @@
           "appendix 4 covid-19 updates/protocol/o.•#17",
           "appendix 4 covid-19 updates/protocol/o.•#20",
           "asthma/bronchiolitis/croup pediatric/protocol/o.•#5",
+          "cannot_determine",
           "cardiac arrest pediatric/protocol/•#17",
           "cardiac arrest pediatric/protocol/•#9",
           "emergency incident rehabilitation/protocol/a.3",
@@ -368,8 +369,6 @@
         "5 2 1 bilevel positive airway pressure - adult/protocol/•.o.4",
         "5 2 1 bilevel positive airway pressure - adult/protocol/•.o.7",
         "5 2 1 bilevel positive airway pressure - adult/protocol/•.o.8",
-        "CANNOT_DETERMINE",
-        "NONE",
         "abuse and neglect of children and the elderly/protocol/•#10",
         "abuse and neglect of children and the elderly/protocol/•#35",
         "abuse and neglect of children and the elderly/protocol/•#37",
@@ -409,6 +408,7 @@
         "appendix 4 covid-19 updates/protocol/o.•#26",
         "asthma/bronchiolitis/croup pediatric/protocol/o.•#5",
         "burns/performance parameters/b.•#11",
+        "cannot_determine",
         "cardiac arrest hypothermia/notes/4.•#6",
         "cardiac arrest pediatric/protocol/•#11",
         "cardiac arrest pediatric/protocol/•#13",
@@ -458,6 +458,7 @@
         "new transcutaneous pacing - adult and pediatric/protocol/1",
         "new transcutaneous pacing - adult and pediatric/protocol/7",
         "new transcutaneous pacing - adult and pediatric/protocol/8.•.o#3",
+        "none",
         "nontraumatic pain management/exclusion criteria/d",
         "nontraumatic pain management/performance parameters/b",
         "normal delivery/emr stop/8.a",
@@ -573,7 +574,7 @@
       "Connecticut 2022.1→2023.1::S021": {
         "answer": null,
         "votes": {
-          "NONE": 2,
+          "none": 2,
           "restraints/protocol/9": 2
         },
         "unanimous": false,
@@ -582,7 +583,7 @@
       "Connecticut 2022.1→2023.1::S026": {
         "answer": null,
         "votes": {
-          "CANNOT_DETERMINE": 2,
+          "cannot_determine": 2,
           "cardiac arrest pediatric/protocol/•#13": 2
         },
         "unanimous": false,
@@ -591,7 +592,7 @@
       "Connecticut 2022.1→2023.1::S027": {
         "answer": null,
         "votes": {
-          "NONE": 2,
+          "none": 2,
           "poisoning/overdose/substance use disorder adult/protocol/o": 2
         },
         "unanimous": false,
@@ -609,7 +610,7 @@
       "Connecticut 2022.1→2023.1::S053": {
         "answer": null,
         "votes": {
-          "CANNOT_DETERMINE": 2,
+          "cannot_determine": 2,
           "adult/protocol/•#24": 2
         },
         "unanimous": false,
@@ -618,8 +619,8 @@
       "Connecticut 2022.1→2023.1::S056": {
         "answer": null,
         "votes": {
-          "CANNOT_DETERMINE": 2,
-          "NONE": 2
+          "cannot_determine": 2,
+          "none": 2
         },
         "unanimous": false,
         "needs_adjudication": true
@@ -627,8 +628,8 @@
       "Connecticut 2022.1→2023.1::S057": {
         "answer": null,
         "votes": {
-          "CANNOT_DETERMINE": 2,
-          "NONE": 2
+          "cannot_determine": 2,
+          "none": 2
         },
         "unanimous": false,
         "needs_adjudication": true
@@ -636,7 +637,7 @@
       "Connecticut 2022.1→2023.1::S058": {
         "answer": null,
         "votes": {
-          "NONE": 2,
+          "none": 2,
           "poisoning/overdose/substance use disorder adult/protocol/o": 2
         },
         "unanimous": false,
@@ -645,7 +646,7 @@
       "Connecticut 2022.1→2023.1::S060": {
         "answer": null,
         "votes": {
-          "CANNOT_DETERMINE": 2,
+          "cannot_determine": 2,
           "adult/protocol/•.o#6": 2
         },
         "unanimous": false,
@@ -663,7 +664,7 @@
       "Connecticut 2023.1→2024.1::S060": {
         "answer": null,
         "votes": {
-          "CANNOT_DETERMINE": 2,
+          "cannot_determine": 2,
           "5 2 1 bilevel positive airway pressure - adult/protocol/•.10": 2
         },
         "unanimous": false,
@@ -681,8 +682,8 @@
       "Pennsylvania 2021→2023::S041": {
         "answer": null,
         "votes": {
-          "CANNOT_DETERMINE": 2,
-          "NONE": 2
+          "cannot_determine": 2,
+          "none": 2
         },
         "unanimous": false,
         "needs_adjudication": true
@@ -690,8 +691,8 @@
       "Pennsylvania 2021→2023::S042": {
         "answer": null,
         "votes": {
-          "CANNOT_DETERMINE": 2,
-          "NONE": 2
+          "cannot_determine": 2,
+          "none": 2
         },
         "unanimous": false,
         "needs_adjudication": true
@@ -699,8 +700,8 @@
       "Pennsylvania 2021→2023::S043": {
         "answer": null,
         "votes": {
-          "CANNOT_DETERMINE": 2,
-          "NONE": 2
+          "cannot_determine": 2,
+          "none": 2
         },
         "unanimous": false,
         "needs_adjudication": true
@@ -708,8 +709,8 @@
       "Pennsylvania 2021→2023::S044": {
         "answer": null,
         "votes": {
-          "CANNOT_DETERMINE": 2,
-          "NONE": 2
+          "cannot_determine": 2,
+          "none": 2
         },
         "unanimous": false,
         "needs_adjudication": true
@@ -717,8 +718,8 @@
       "Pennsylvania 2021→2023::S045": {
         "answer": null,
         "votes": {
-          "CANNOT_DETERMINE": 2,
-          "NONE": 2
+          "cannot_determine": 2,
+          "none": 2
         },
         "unanimous": false,
         "needs_adjudication": true
@@ -726,8 +727,8 @@
       "Pennsylvania 2021→2023::S046": {
         "answer": null,
         "votes": {
-          "CANNOT_DETERMINE": 2,
-          "NONE": 2
+          "cannot_determine": 2,
+          "none": 2
         },
         "unanimous": false,
         "needs_adjudication": true
@@ -735,8 +736,8 @@
       "Pennsylvania 2021→2023::S047": {
         "answer": null,
         "votes": {
-          "CANNOT_DETERMINE": 2,
-          "NONE": 2
+          "cannot_determine": 2,
+          "none": 2
         },
         "unanimous": false,
         "needs_adjudication": true
@@ -744,8 +745,8 @@
       "Pennsylvania 2021→2023::S048": {
         "answer": null,
         "votes": {
-          "CANNOT_DETERMINE": 2,
-          "NONE": 2
+          "cannot_determine": 2,
+          "none": 2
         },
         "unanimous": false,
         "needs_adjudication": true
@@ -753,8 +754,8 @@
       "Pennsylvania 2021→2023::S049": {
         "answer": null,
         "votes": {
-          "CANNOT_DETERMINE": 2,
-          "NONE": 2
+          "cannot_determine": 2,
+          "none": 2
         },
         "unanimous": false,
         "needs_adjudication": true
@@ -762,8 +763,8 @@
       "Pennsylvania 2021→2023::S050": {
         "answer": null,
         "votes": {
-          "CANNOT_DETERMINE": 2,
-          "NONE": 2
+          "cannot_determine": 2,
+          "none": 2
         },
         "unanimous": false,
         "needs_adjudication": true
@@ -771,8 +772,8 @@
       "Pennsylvania 2021→2023::S051": {
         "answer": null,
         "votes": {
-          "CANNOT_DETERMINE": 2,
-          "NONE": 2
+          "cannot_determine": 2,
+          "none": 2
         },
         "unanimous": false,
         "needs_adjudication": true
@@ -780,8 +781,8 @@
       "Pennsylvania 2021→2023::S052": {
         "answer": null,
         "votes": {
-          "CANNOT_DETERMINE": 2,
-          "NONE": 2
+          "cannot_determine": 2,
+          "none": 2
         },
         "unanimous": false,
         "needs_adjudication": true
@@ -789,8 +790,8 @@
       "Pennsylvania 2021→2023::S053": {
         "answer": null,
         "votes": {
-          "CANNOT_DETERMINE": 2,
-          "NONE": 2
+          "cannot_determine": 2,
+          "none": 2
         },
         "unanimous": false,
         "needs_adjudication": true
@@ -798,8 +799,8 @@
       "Pennsylvania 2021→2023::S055": {
         "answer": null,
         "votes": {
-          "CANNOT_DETERMINE": 2,
-          "NONE": 2
+          "cannot_determine": 2,
+          "none": 2
         },
         "unanimous": false,
         "needs_adjudication": true
@@ -807,8 +808,8 @@
       "Pennsylvania 2021→2023::S056": {
         "answer": null,
         "votes": {
-          "CANNOT_DETERMINE": 2,
-          "NONE": 2
+          "cannot_determine": 2,
+          "none": 2
         },
         "unanimous": false,
         "needs_adjudication": true
@@ -816,8 +817,8 @@
       "Pennsylvania 2021→2023::S057": {
         "answer": null,
         "votes": {
-          "CANNOT_DETERMINE": 2,
-          "NONE": 2
+          "cannot_determine": 2,
+          "none": 2
         },
         "unanimous": false,
         "needs_adjudication": true
@@ -825,8 +826,8 @@
       "Pennsylvania 2021→2023::S060": {
         "answer": null,
         "votes": {
-          "CANNOT_DETERMINE": 2,
-          "NONE": 2
+          "cannot_determine": 2,
+          "none": 2
         },
         "unanimous": false,
         "needs_adjudication": true
@@ -852,7 +853,7 @@
       "Tennessee 2017→2018::S021": {
         "answer": null,
         "votes": {
-          "CANNOT_DETERMINE": 2,
+          "cannot_determine": 2,
           "pediatric cardiac emergency neonatal resuscitation/procedure/6#5": 2
         },
         "unanimous": false,
@@ -861,8 +862,8 @@
       "Tennessee 2017→2018::S026": {
         "answer": null,
         "votes": {
-          "CANNOT_DETERMINE": 2,
-          "NONE": 2
+          "cannot_determine": 2,
+          "none": 2
         },
         "unanimous": false,
         "needs_adjudication": true
@@ -870,8 +871,8 @@
       "Tennessee 2017→2018::S035": {
         "answer": null,
         "votes": {
-          "NONE": 2,
-          "CANNOT_DETERMINE": 2
+          "none": 2,
+          "cannot_determine": 2
         },
         "unanimous": false,
         "needs_adjudication": true
@@ -879,8 +880,8 @@
       "Tennessee 2017→2018::S041": {
         "answer": null,
         "votes": {
-          "CANNOT_DETERMINE": 2,
-          "NONE": 2
+          "cannot_determine": 2,
+          "none": 2
         },
         "unanimous": false,
         "needs_adjudication": true
@@ -888,8 +889,8 @@
       "Tennessee 2017→2018::S043": {
         "answer": null,
         "votes": {
-          "CANNOT_DETERMINE": 2,
-          "NONE": 2
+          "cannot_determine": 2,
+          "none": 2
         },
         "unanimous": false,
         "needs_adjudication": true
@@ -897,8 +898,8 @@
       "Tennessee 2017→2018::S044": {
         "answer": null,
         "votes": {
-          "CANNOT_DETERMINE": 2,
-          "NONE": 2
+          "cannot_determine": 2,
+          "none": 2
         },
         "unanimous": false,
         "needs_adjudication": true
@@ -906,8 +907,8 @@
       "Tennessee 2017→2018::S045": {
         "answer": null,
         "votes": {
-          "CANNOT_DETERMINE": 2,
-          "NONE": 2
+          "cannot_determine": 2,
+          "none": 2
         },
         "unanimous": false,
         "needs_adjudication": true
@@ -915,8 +916,8 @@
       "Tennessee 2017→2018::S046": {
         "answer": null,
         "votes": {
-          "CANNOT_DETERMINE": 2,
-          "NONE": 2
+          "cannot_determine": 2,
+          "none": 2
         },
         "unanimous": false,
         "needs_adjudication": true
@@ -924,8 +925,8 @@
       "Tennessee 2017→2018::S047": {
         "answer": null,
         "votes": {
-          "CANNOT_DETERMINE": 2,
-          "NONE": 2
+          "cannot_determine": 2,
+          "none": 2
         },
         "unanimous": false,
         "needs_adjudication": true
@@ -933,8 +934,8 @@
       "Tennessee 2017→2018::S051": {
         "answer": null,
         "votes": {
-          "CANNOT_DETERMINE": 2,
-          "NONE": 2
+          "cannot_determine": 2,
+          "none": 2
         },
         "unanimous": false,
         "needs_adjudication": true

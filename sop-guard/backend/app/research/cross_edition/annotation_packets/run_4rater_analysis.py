@@ -54,7 +54,30 @@ def main():
     raw = {label: load_completed_xlsx(path) for label, path in FILES.items()}
     pairs = list(raw["A"].keys())
 
-    report = {"pairs": {}, "pooled": {}}
+    report = {
+        "_note_both_kappas_retracted": (
+            "FEASIBILITY.md section 50's 2026-08-18 correction found "
+            "Annotator A's answers byte-identical to B's, and C's "
+            "byte-identical to D's, on every one of 240 items (confirmed "
+            "via content comparison, not just file hashes) - two distinct "
+            "answer sets uploaded as four. Every 'cohens_kappa_AB' value "
+            "below (kappa=1.0, 0 disagreements, all four pairs) is a file "
+            "agreeing with a copy of itself. 'fleiss_kappa_4rater' "
+            "(0.8770 pooled) is ALSO withdrawn, not merely the Cohen's "
+            "kappa - it requires four genuinely independent raters, which "
+            "this data never provided, and per section 50's correction it "
+            "is 'not reported as a statistic anywhere in this study going "
+            "forward.' The honest number is Cohen's kappa between the two "
+            "REAL distinct answer sets: 0.8168 pooled (section 50.1), "
+            "computed separately in run_h3_test.py's cohort, not in this "
+            "file. Only 'n_needing_adjudication' and the flagged item ids "
+            "below are usable from this report - every one of the 43 "
+            "flagged items is confirmed a genuine (2,2) split between the "
+            "two real answer sets, not a 4-rater artifact, so the "
+            "adjudication list itself is unaffected by this retraction."
+        ),
+        "pairs": {}, "pooled": {},
+    }
     pooled_norm = {label: {} for label in FILES}
 
     for pair in pairs:

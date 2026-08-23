@@ -55,9 +55,21 @@ def extract_docling_headers(pdf_path: str) -> list[str]:
     result = conv.convert(pdf_path)
     doc = result.document
 
+    # AUDIT ROUND 4 FIX (2026-08-22): the str(item.label) == "section_header"
+    # equality test below is brittle against a Docling version change -
+    # DocItemLabel is an enum whose str() rendering already differed once
+    # in this study's own history ('DocLayNet.SECTION_HEADER' assumed vs.
+    # the actual 'section_header', caught by inspecting the label
+    # distribution directly per the section-70 pre-commitment). A future
+    # version bump that changes the rendering again would silently filter
+    # every item out, producing headers=[] -> corrected_f1 ~0, which looks
+    # exactly like a real (very bad) Docling result rather than a broken
+    # check. Assert non-empty against the total item count so that failure
+    # mode raises instead of masquerading as a measurement.
+    all_items = list(doc.iterate_items())
     seen: set[str] = set()
     headers: list[str] = []
-    for item, _level in doc.iterate_items():
+    for item, _level in all_items:
         if not hasattr(item, "label") or str(item.label) != "section_header":
             continue
         text = item.text.strip()
@@ -65,6 +77,20 @@ def extract_docling_headers(pdf_path: str) -> list[str]:
             continue
         seen.add(text)
         headers.append(text)
+
+    if not headers:
+        raise RuntimeError(
+            f"extract_docling_headers found 0 section_header items among "
+            f"{len(all_items)} total document items for {pdf_path!r}. This "
+            f"almost certainly means the label string 'section_header' no "
+            f"longer matches this Docling version's str(item.label) "
+            f"rendering (see the 2026-08-18 pre-commitment entry for the "
+            f"prior occurrence of exactly this failure) - not that Docling "
+            f"genuinely found zero headers in a multi-page protocol "
+            f"document. Inspect Counter(str(i.label) for i, _ in "
+            f"doc.iterate_items()) before trusting any score computed from "
+            f"an empty header list."
+        )
     return headers
 
 

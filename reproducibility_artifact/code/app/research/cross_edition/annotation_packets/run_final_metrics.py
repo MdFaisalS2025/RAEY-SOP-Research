@@ -18,12 +18,12 @@ from app.research.cross_edition.annotation import (  # noqa: E402
 BASE = Path(__file__).parent
 
 ANNOTATOR_FILES = {
-    "A": r"C:\Users\Faisal\Desktop\Annotator_A.xlsx",
-    "B": r"C:\Users\Faisal\Desktop\Annotator_B.xlsx",
-    "C": r"C:\Users\Faisal\Desktop\Annotator_C.xlsx",
-    "D": r"C:\Users\Faisal\Desktop\Annotator_D.xlsx",
+    "A": r"C:\Users\Faisal\Desktop\research paper\Annotator_A.xlsx",
+    "B": r"C:\Users\Faisal\Desktop\research paper\Annotator_B.xlsx",
+    "C": r"C:\Users\Faisal\Desktop\research paper\Annotator_C.xlsx",
+    "D": r"C:\Users\Faisal\Desktop\research paper\Annotator_D.xlsx",
 }
-ADJUDICATION_FILE = r"C:\Users\Faisal\Downloads\Adjudication_43_items_completed.xlsx"
+ADJUDICATION_FILE = r"C:\Users\Faisal\Desktop\research paper\Adjudication_43_items_completed.xlsx"
 
 PAIR_SLUGS = {
     "Tennessee 2017→2018": "tennessee_2017_2018",

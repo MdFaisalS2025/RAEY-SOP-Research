@@ -55,7 +55,7 @@ from app.research.cross_edition.baseline_b2 import align_items_b2  # noqa: E402
 from app.research.cross_edition.baseline_b5 import align_items_b5  # noqa: E402
 from app.research.cross_edition.annotation import _norm_answer  # noqa: E402
 
-SP = r"C:\Users\Faisal\AppData\Local\Temp\claude\C--Users-Faisal-Desktop-research-paper\1642f160-3dba-4100-baa8-850fde74b388\scratchpad\protocols\uscode"
+SP = r"C:\Users\Faisal\Desktop\Hospital SOP's Research\corpus\uscode"
 OLD_XML = f"{SP}\\117-81\\usc18.xml"
 NEW_XML = f"{SP}\\118-158\\usc18.xml"
 OLD_ID = "usc18@117-81"

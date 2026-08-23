@@ -50,7 +50,13 @@ import time
 from app.research.cross_edition.item_parser import parse
 from app.rag.embeddings import get_embedding_provider
 
-MODEL_ID = "gemini-2.5-flash"
+# AUDIT ROUND 4 FIX (2026-08-22): MODEL_ID previously read "gemini-2.5-flash",
+# which is NOT the model that produced this study's reported B6 result -
+# that model hit the free tier's real 20-requests/day cap (95.3% forced
+# NONE fallback, discarded per PREREGISTRATION.md's 2026-08-18 B6 entry)
+# and was replaced with gemini-3.5-flash-lite, run to completion with zero
+# failures. Pinned to what actually ran, not what was originally intended.
+MODEL_ID = "gemini-3.5-flash-lite"
 TOP_K = 10
 RETRIEVAL_MODEL = "BAAI/bge-small-en-v1.5"  # matches baseline_b5.py's default
 
@@ -109,14 +115,27 @@ def _extract_retry_delay(exc: Exception) -> float | None:
 
 
 def parse_llm_reply(reply: str, candidates: list[tuple[float, object]]) -> str:
-    """Returns the chosen item's item_id, or 'NONE'."""
+    """Returns the chosen item's item_id, or 'NONE'.
+
+    AUDIT ROUND 4 FIX (2026-08-22): previously concatenated ALL digits in
+    the reply before parsing, so a verbose reply like "1 or 2" became
+    "12" (out of range -> silently NONE) and "Candidate 3 (100% match)"
+    became "3100" (out of range -> silently NONE) - a real answer
+    degrading to a false "no correspondence" prediction with no signal
+    that parsing, not judgement, produced it. Not triggered in this
+    study's actual 240 replies (all bare digits or "NONE" - verified by
+    inspecting every cached raw_reply directly), but unguarded against
+    any future run with a more verbose model. Now extracts the reply's
+    FIRST standalone integer token (1-2 digits, matching the 1-10 range
+    the prompt asks for) instead of concatenating every digit found."""
+    import re
     cleaned = reply.strip().upper()
     if cleaned == "NONE" or not cleaned:
         return "NONE"
-    digits = "".join(c for c in cleaned if c.isdigit())
-    if not digits:
+    m = re.search(r"\b(\d{1,2})\b", cleaned)
+    if not m:
         return "NONE"
-    idx = int(digits) - 1
+    idx = int(m.group(1)) - 1
     if 0 <= idx < len(candidates):
         return candidates[idx][1].item_id
     return "NONE"
@@ -161,7 +180,15 @@ def align_items_b6_for_sample(
         candidates = get_topk_candidates(a, new_items, a_vec, new_vecs, provider, TOP_K)
         prompt = build_prompt(a.text, candidates)
 
-        cache_key = a.item_id
+        # AUDIT ROUND 4 FIX (2026-08-22): cache key previously was bare
+        # a.item_id, with no model/TOP_K/retrieval-model component. Changing
+        # TOP_K or RETRIEVAL_MODEL would have silently reused a cached reply
+        # of e.g. "3" against a DIFFERENT candidate list under the new
+        # config - the same class of index-mismatch bug sample_join.py
+        # exists to fix elsewhere in this study. Composite key makes a
+        # config change a cache miss (forcing a fresh, correct call)
+        # instead of a silent wrong answer.
+        cache_key = f"{a.item_id}::{active_model}::top{TOP_K}::{RETRIEVAL_MODEL}"
         if cache_key in cache and cache[cache_key].get("call_succeeded"):
             reply = cache[cache_key]["raw_reply"]
         else:

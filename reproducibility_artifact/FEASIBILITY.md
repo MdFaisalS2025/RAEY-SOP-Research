@@ -5479,3 +5479,627 @@ found only because this study built its own independent ground truth
 rather than citing Docling's DocLayNet number directly.
 
 Full numbers: `annotation_packets/boundary_annotation/docling_calibration_report.json`.
+
+## 71. Audit round 4, Phase 1: the join-bug fix had not reached two scripts, and §54's headline diagnostic moves under the fix
+
+A fresh full-project sweep (requested by the user: "do another full sweep...
+see if our paper can be improved") found that the 2026-08-18 join-bug fix
+(§65) - converting seven baseline-joining drivers from an id-string lookup
+to `sample_join.py`'s parse-order index join - had not reached two scripts:
+`run_h3_test.py` and `diagnose_t2_mechanism.py`. Both pre-date
+`sample_join.py` and were never converted when it was introduced.
+
+### 71.1 The gap
+
+`run_h3_test.py`'s own inline comment at the point of failure read
+verbatim: `continue  # should not happen - same parse() on the same
+file` - the exact assumption `sample_join.py`'s module docstring
+identifies as the root cause of the original bug (`item_align.py`
+mutates `item_id` into the new edition's guideline vocabulary;
+`annotation_packet.csv` stores the post-remap id; a fresh `parse()`
+yields the raw pre-remap id; the two disagree for any item whose
+guideline was renamed between editions). `diagnose_t2_mechanism.py`
+carried the identical pattern independently.
+
+This matters specifically because `diagnose_t2_mechanism.py` produced
+§54's bullet-vs-ordinal decomposition - the mechanistic explanation for
+*why* H3 (structure-aware vs. text-only matching) failed, concentrated
+in bullet-marker items where an inserted item shifts every later
+sibling's position-based marker. That decomposition had never been
+recomputed under the fix, and the script wrote no JSON output, so there
+was nothing to even flag as stale.
+
+Both scripts converted to `build_index_join`/`join_baseline`/
+`verify_sample_identity`, the identical pattern the other seven drivers
+use. `run_h3_test.py`'s rerun reproduces `full_comparison_report.json`'s
+H3 figures exactly (method 71.24%, B2 75.97%, diff -0.0472 [-0.0987,
+0.0043]) - an independent cross-check via a second, now-fixed code path,
+not merely a code change taken on faith. Its stale output
+(`h3_test_report.json`, n=209) was removed; the rerun writes
+`h3_test_report.SUPERSEDED.json` with an in-file note, since
+`full_comparison_report.json` already supersedes this entire analysis.
+
+`diagnose_t2_mechanism.py` was additionally given a JSON output
+(`diagnose_t2_mechanism_report.json`, it previously wrote none) and a
+bootstrap 95% CI on each marker-kind subgroup's diff - closing a gap the
+2026-08-18 marker-kind entry explicitly left open ("no bootstrap CI was
+computed for the subgroup split").
+
+### 71.2 §54 recomputed: the bullet finding shrinks but survives; the ordinal finding does not
+
+| Marker kind | n (before → after) | Method acc. | B2 acc. | Diff (before → after) | Bootstrap 95% CI |
+|---|---|---|---|---|---|
+| Bullet | 72 → **88** | 62.50% | 80.68% | −22.22% → **−18.18%** | **[−0.2841, −0.0909]** |
+| Ordinal | 137 → **145** | 76.55% | 73.10% | +5.11% → **+3.45%** | **[−0.0207, 0.0897]** |
+
+The bullet-marker mechanism (§54.1's original explanation: T2's
+identifier-trust tier breaks when bullet renumbering shifts a stable
+position-based marker) **survives as a real, CI-confirmed finding**,
+smaller in magnitude than originally reported (−18.2 points, not
+−22.2) but with a 95% CI that still excludes zero.
+
+The ordinal-marker "advantage" **does not survive**. Its CI now includes
+zero, and it must not be described as a confirmed subgroup finding going
+forward - only as "not statistically distinguishable from zero under the
+corrected join."
+
+Connecticut v2023.1→v2024.1 (the pair driving the pooled significant
+effect in §53) recomputed under the fix: bullet n=40, diff −35.00%
+(method 65.00%, B2 100.00%); ordinal n=19, diff 0.00% (both 89.47%) -
+unchanged in direction from the original finding, confirming the bullet
+mechanism remains concentrated in this one pair's bulleted
+medication-reference appendix rather than spreading out once the dropped
+items are restored.
+
+This does not change H3's own confirmed status (still NOT CONFIRMED,
+`full_comparison_report.json` unaffected by this recompute - it was
+already correctly computed). What changes is the mechanistic
+sub-analysis explaining H3's pooled result: the bullet-renumbering
+explanation stands at a smaller effect size, and the previously-reported
+ordinal-side "the method does slightly better on ordinal items" claim
+must be dropped from any future write-up.
+
+Full numbers, including the pre-fix reference values for direct
+comparison: `annotation_packets/diagnose_t2_mechanism_report.json`. Code
+state unchanged at `d3068ee`; only `diagnose_t2_mechanism.py` and
+`run_h3_test.py` (neither frozen) were modified. Full dated entries in
+`PREREGISTRATION.md` §11 (2026-08-22, two entries: the join-bug-gap
+correction and this recompute result).
+
+## 72. B7 (local cross-encoder reranker): worse than no reranking at all, and why
+
+Audit round 4, Phase 3. B6 (§69) found a general LLM reranker adds no
+measurable value over trusting the embedding retriever's own top-1
+ranking. Fresh literature research turned up a specific, testable
+follow-up question: purpose-built cross-encoder rerankers are reported
+in 2025-2026 benchmarks to beat LLM rerankers by up to 15% NDCG@10 while
+being far cheaper - does a reranker actually built for this task class,
+rather than a general LLM, do better?
+
+### 72.1 Design
+
+`baseline_b7_reranker.py` reuses B6's retrieval unchanged
+(`get_topk_candidates`: top-k=10 by cosine similarity, `bge-small-en-v1.5`,
+unscoped across the whole new document) so any accuracy difference
+between B6 and B7 isolates the reranking step itself. The reranker is
+`BAAI/bge-reranker-v2-m3` via `sentence_transformers.CrossEncoder`, run
+entirely locally - no API key, no rate limit, no cost, fully
+deterministic. Each of the 10 retrieved candidates is scored
+independently against the old item's text; a NONE-prediction floor is
+swept over {0.0, 0.3, 0.5, 0.7} rather than a single calibrated choice,
+matching `b5_model_floor_sweep.py`'s existing discipline. Reported
+against the naive top-1-retrieval-only shortcut (no reranking at all) -
+the same comparison that made B6's null result interpretable.
+
+### 72.2 Result: worse than no reranking, at every floor tested
+
+| Floor | B7 accuracy | vs. naive top-1 (raw) | 95% CI |
+|---|---|---|---|
+| 0.0 (always pick argmax) | 69.53% | **−0.0343** | **[−0.0644, −0.0086]** — significant |
+| 0.3 | 70.82% | −0.0215 | [−0.0558, 0.0086] |
+| 0.5 | 72.10% | −0.0086 | [−0.0472, 0.0300] |
+| 0.7 | 70.82% | −0.0215 | [−0.0601, 0.0172] |
+
+For reference: naive top-1-retrieval-only accuracy is **72.96%**
+(identical to B6's finding, as expected - same retrieval). B7 never
+exceeds the naive shortcut at any floor tested, and against the method
+itself (71.24%) none of the four floors reach significance in either
+direction.
+
+### 72.3 Investigated before trusting this (section 10)
+
+A purpose-built reranker actively hurting accuracy is a surprising
+result in the unfavourable direction, and got the same scrutiny section
+10 requires for a suspiciously favourable one. Of 233 items, the
+reranker disagreed with naive top-1 on 22 (9.4%): 2 cases where the
+reranker was right and naive was wrong, 10 where naive was right and the
+reranker was wrong, 10 where both were wrong.
+
+Direct inspection of all 10 naive-right/reranker-wrong cases found a
+consistent mechanism, not scattered noise:
+
+- "5 2 1 Bilevel Positive Airway Pressure - Adult" scored **0.9999**
+  against "New Transcutaneous Pacing - Adult and Pediatric" - an
+  unrelated intervention, not even the same organ system.
+- "Tachycardia Adult" scored **1.0** against the same transcutaneous-
+  pacing item.
+- "Ventricular Tachycardia with a Pulse" confidently matched to
+  "Torsades de Pointe" - a related but genuinely distinct arrhythmia
+  protocol requiring different management.
+
+Ruled out as explanations: truncation (item texts are short, well under
+`max_length=512`) and retrieval failure (naive top-1, using the
+identical 10-candidate list the reranker also saw, picked the correct
+item in every one of these 10 cases - the true match was always present
+and ranked first by retrieval before reranking demoted it).
+
+The pattern is consistent with `bge-reranker-v2-m3` - trained for
+general open-domain relevance, not EMS protocol documents specifically -
+weighting this corpus's own already-documented templated structure
+(section 3.1: "the structure is templated, which matters more than the
+numbering") and shared clinical-protocol boilerplate over the actual
+distinguishing semantic content. This is exactly the kind of domain-
+transfer failure the retrieve-then-rerank literature warns reranking can
+introduce when the reranker was not evaluated on template-heavy
+specialized documents during its own training/benchmarking.
+
+### 72.4 What this means for the paper
+
+A second, independently-obtained negative result on top of B6's, not a
+repeat of the same one. Neither a general LLM (B6) nor a purpose-built
+cross-encoder reranker (B7) improves on simply trusting the embedding
+retriever's own top-1 ranking for this specific task - and B7 actively
+HURTS accuracy at its most permissive floor, a stronger and more
+surprising finding than B6's mere null result. The two failures are
+mechanistically different and independently diagnosed: B6 essentially
+echoed its retriever (agreed with it 96.1% of the time, added nothing);
+B7 actively disagrees with its retriever on 9.4% of items and is wrong
+more often than right when it does, with a specific, identified cause
+(confident domain-transfer errors on templated documents). Together they
+constitute complementary evidence that this task's difficulty is not a
+reranking-capability gap generic rerankers or generic LLMs can close
+out of the box - it requires either fine-tuning on this specific
+document genre or a structurally-aware method, which is exactly the
+gap this study's own structural method was built to address (even
+though the structural method itself does not clear B2's text-only
+baseline either, per section 53).
+
+Full numbers: `annotation_packets/b7_comparison_report.json`.
+
+## 73. CRITICAL FINDING: the structure-quality ablation's synthetic corruption creates real id collisions, confounding B2/B5 - and very likely section 61's own curve too
+
+Audit round 4, Phase 3b. `structure_ablation.py`'s docstring states B2 and
+B5's accuracy is "provably invariant" to its synthetic corruption, since
+the corruption only ever mutates `.guideline`/`.item_id`, never `.text`,
+and B2/B5 search `.text` only. The docstring cites a function,
+`verify_b2_b5_invariance`, as having checked this. It does not - grep-
+confirmed two occurrences in the whole file (the definition and the
+docstring's own citation), never called anywhere, and even its body only
+samples 3 of B2's clean predictions without comparing anything. The claim
+was asserted, not verified.
+
+### 73.1 What was actually run
+
+`annotation_packets/run_discriminability_curves.py` (new) reuses
+`structure_ablation.corrupt_edition` with the IDENTICAL seed scheme
+`run_trial` already uses, so B2/B5 are corrupted by the exact same random
+instance as the method's own curve at each (rate, seed) - a true
+apples-to-apples comparison. B2 reimplemented inline using
+`item_align._sim`/`_SIM_FLOOR` unchanged; B5 reuses
+`baseline_b5.greedy_match_from_embeddings` unchanged, called directly on
+corrupted items. Scored via `_orig_id`, mirroring exactly how
+`structure_ablation.run_trial` already scores the method. Seed count
+reduced to 2 per non-zero rate (timed at ~90s/trial x 4 pairs; the full
+5-seed grid would run ~70 minutes) - disclosed and decided before
+running, in the pre-commitment entry.
+
+### 73.2 Result: not invariant
+
+r=0 passed exactly (B2 75.97%, B5 78.11%, matching every other driver in
+this study bit-for-bit). Across the sweep:
+
+| Rate | B2 accuracy | B5 accuracy |
+|---|---|---|
+| 0.00 | 75.97% | 78.11% |
+| 0.05 | 75.11% / 75.97% | 76.39% / 77.68% |
+| 0.10 | 73.82% / 75.11% | 72.96% / 76.39% |
+| 0.20 | 73.39% / 73.82% | 69.53% / 72.53% |
+| 0.35 | 70.39% / 70.82% | 65.24% (both seeds) |
+| 0.50 | 68.67% / 70.39% | 60.52% / 61.37% |
+
+Both baselines decline substantially. B5's decline is larger than B2's in
+both absolute and relative terms, despite starting from a higher
+baseline.
+
+### 73.3 Investigated before trusting this (section 10)
+
+This directly falsifies a claim already published and quoted throughout
+both governance documents, so it was investigated immediately rather
+than reported as a bare contradiction.
+
+`corrupt_edition` reconstructs each corrupted item's `item_id` as
+`f"{_norm_title(new_title)}/{it.section}/{it.marker_path}{suffix}"`,
+preserving only a pre-existing `#N` suffix from the item's ORIGINAL id.
+It does not run the uniqueness-preserving `seen_ids` counter logic
+`item_parser.py` itself uses - and that logic exists in the real parser
+specifically because an earlier version produced "282 colliding ids on a
+previous run" (item_parser.py's own commit history).
+
+Direct measurement (all 4 pairs, seed=1):
+
+| Rate | Tennessee | Pennsylvania | Connecticut #1 | Connecticut #2 |
+|---|---|---|---|---|
+| 0.00 | 0 | 0 | 0 | 0 |
+| 0.20 | 67 (4.5%) | 143 (8.4%) | 35 (2.9%) | 51 (3.3%) |
+| 0.50 | 180 (12.0%) | 363 (21.4%) | 133 (11.0%) | 183 (11.9%) |
+
+When two originally-distinct items from different source guidelines
+happen to share the same `section`/`marker_path` - extremely common,
+since independently-numbered bulleted sub-lists ("1.", "2." or "a.",
+"b.") recur constantly across unrelated guidelines - and their
+guidelines get merged into the same run by corruption, their
+reconstructed ids become literally identical strings. B2/B5's greedy
+matching loop tracks consumption via a `set()` keyed by `item_id`: a
+collision makes two genuinely different items indistinguishable to the
+consumption tracker, so consuming one can spuriously block the other,
+and which of two colliding items "wins" becomes an artifact of
+iteration order, not text similarity.
+
+**This is a defect in the synthetic corruption model, not a real
+property of guideline-boundary quality.** It does not correspond to
+anything that happens when a real parser genuinely merges guideline
+boundaries - a real merge does not duplicate marker paths across
+unrelated content.
+
+### 73.4 What this means for the paper - and for section 61
+
+`structure_ablation.py` itself was not modified in this investigation,
+so section 61's already-published curve is unchanged and this entry does
+not correct any number reported there. But the implication is serious:
+**`item_align.align_items` (the method) is run on the SAME corrupted
+editions via the SAME id-reconstruction scheme**, and the method's own
+T1 (exact-id) and T2 (identifier-trust) tiers explicitly depend on
+`item_id` string identity. The method's own already-published accuracy
+decline across section 61's curve is very likely partly or substantially
+an artifact of this same id-collision defect, not purely a measurement
+of guideline-boundary-detection quality as the curve has been presented.
+
+This does not mean section 61's qualitative finding (a monotonic
+relationship exists) is false - a genuine boundary-quality effect may
+well coexist with this artifact. But the MAGNITUDE of the reported
+decline, and therefore the location of the reported crossover point,
+cannot currently be trusted as clean. **This is now the single largest
+open threat to this study's central empirical claim.**
+
+This must be stated as an open, unresolved limitation in any paper
+draft. Re-quantifying section 61 with a corrected, collision-free
+id-reconstruction scheme (adding the same `seen_ids`-style uniqueness
+suffix `item_parser.py` already uses to `corrupt_edition`, then
+re-running the full sweep) is flagged as necessary follow-up work - not
+undertaken here, to avoid silently expanding this round's scope without
+its own separate pre-commitment.
+
+Full numbers: `annotation_packets/discriminability_curves_report.json`.
+
+## 74. The id-collision fix: section 61's curve corrected, B2/B5 confirmed genuinely invariant
+
+Given the severity of section 73's finding to this study's central
+empirical claim, the flagged follow-up was undertaken immediately rather
+than left open.
+
+### 74.1 The fix
+
+Added a `seen_ids`-style uniqueness counter to
+`structure_ablation.corrupt_edition`, mirroring `item_parser.py`'s own
+pattern exactly: a per-edition `dict[str, int]` counting occurrences of
+each reconstructed id, appending `#N` on any repeat beyond the first,
+applied globally (not only to items whose guideline changed - an
+unchanged item can still collide with a changed one). This does not
+alter the corruption model's semantics (which guidelines merge, or when)
+- it only guarantees the resulting ids remain unique, which they always
+are everywhere else in this study.
+
+### 74.2 Four validity checks, in the pre-committed order
+
+1. **r=0 still reproduces 0.7124/n=233 exactly** - unchanged corruption
+   at r=0 means the fix cannot touch this, and it didn't.
+2. **Collision recheck: 0 collisions at every rate, all 4 pairs** (was
+   35-363 depending on rate/pair before the fix) - the fix works.
+3. **Full 6-rate x 5-seed sweep, re-run under the fix.**
+4. **`run_discriminability_curves.py` re-run under the fix**, to test
+   whether B2/B5 are now genuinely invariant.
+
+### 74.3 Corrected section 61 curve
+
+| Rate | Original (pre-fix) | Corrected (post-fix) | Difference |
+|---|---|---|---|
+| 0.00 | 71.24% | 71.24% | 0 |
+| 0.05 | 69.27% | 69.78% | +0.51 |
+| 0.10 | 66.35% | 67.81% | +1.46 |
+| 0.20 | 63.09% | 65.24% | +2.15 |
+| 0.35 | 57.85% | 61.80% | +3.95 |
+| 0.50 | 53.05% | 57.00% | +3.95 |
+
+Monotonic non-increasing still holds (confirmed within the pre-registered
+0.01 tolerance at every step). The gap between corrected and original
+grows with corruption rate exactly as section 73's collision-rate
+measurement predicted (0% collisions at r=0, rising to 11-24% at
+r=0.50).
+
+**At r=0.50, the corrected curve's total decline from r=0 is 14.24
+points, versus the original's 18.19 points: 3.95 of those 18.19 points
+(21.7%) were collision artifact, not genuine information loss from
+guideline-boundary corruption.**
+
+### 74.4 B2/B5: confirmed genuinely invariant
+
+Re-running `run_discriminability_curves.py` under the fix: B2 and B5 are
+now **bit-identical across all 11 trials** - B2 exactly 0.7597, B5
+exactly 0.7811, at every single rate and seed tested, zero deviation.
+
+This is a clean confirmation, not merely an absence of a detected
+problem: the ORIGINAL "provably invariant" claim was correct in
+substance - the corruption model genuinely cannot affect B2/B5's
+decisions once ids are unique. The prior non-invariant result (section
+73) was entirely attributable to the collision bug, with no remaining
+unexplained variance.
+
+### 74.5 What this means for the paper
+
+**Section 61's qualitative finding survives intact and is now on firmer
+ground than before this investigation**: the monotonic threshold
+relationship is real, not an artifact, and the crossover's existence is
+unaffected. **What changes**: the reported MAGNITUDE of the method's
+decline was overstated by up to ~4 points at the highest corruption
+rates - the corrected curve should replace the original in any paper
+draft, with both reported side by side for transparency about the
+correction's size, not silently.
+
+This also retroactively validates every "B2/B5 held fixed as reference
+lines" design decision made throughout this study's ablation work
+(section 61, section 68.1) - the shortcut was mathematically sound; its
+only flaw was in the corruption harness's id construction, now fixed.
+
+The most important outcome is procedural, not just numerical: this
+closes the loop opened by finding `verify_b2_b5_invariance` was a
+non-functional stub (section 73.1) - the claim it was meant to check is
+now genuinely, empirically confirmed, not merely asserted a second time.
+This is the audit process working as designed: a cited-but-broken
+verification function was found, the claim it was supposed to protect
+was tested and found (initially) false, the root cause was diagnosed and
+fixed, and the claim was re-tested and found true. Nothing was assumed
+at any step.
+
+Full numbers: `annotation_packets/structure_ablation_report.json`,
+`annotation_packets/discriminability_curves_report.json` (both
+regenerated under the fix - the pre-fix numbers are preserved in this
+document's sections 61/68.1/73 and in `PREREGISTRATION.md`'s dated
+entries, per append-only discipline, not in the JSON artifacts
+themselves).
+
+## 75. VLM boundary anchor: a genuine third point on the structure-quality curve, and it beats our own parser
+
+Audit round 4, Phase 3c. Docling (section 70) supplied high recall
+(87.65%) but low precision (25.72%) because its generic
+`section_header` label mixes hierarchy levels our study's ground truth
+doesn't distinguish. This tests whether that mismatch - not a genuine
+boundary-finding weakness - was the actual problem, by prompting a VLM
+for exactly the granularity the human annotators used.
+
+### 75.1 Design
+
+`vlm_boundaries.py` uses `gemini-3.5-flash-lite` (the only model with
+confirmed headroom this study has established), called via the Gemini
+Files API so the model reads the actual PDF natively - a genuinely
+different input modality from every other boundary-detection method
+tested (our parser: text + layout heuristics; Docling: layout model;
+VLM: native document understanding). The prompt reuses
+`build_boundary_workbooks.py`'s own annotator instructions and
+known-subsection exclusion list VERBATIM, not paraphrased - the one
+design choice expected to matter most, since Docling's failure was
+specifically a granularity mismatch. Only 4 calls needed (one per
+Tennessee edition), scored against the same two annotators via
+`run_calibration.corrected_f1` unchanged. Precision and recall reported
+separately, never F1 alone - the explicit lesson from section 70.3.
+
+### 75.2 Result: better than our own parser, and genuinely balanced
+
+| Edition | VLM titles | Annotator 1 F1 | Annotator 2 F1 |
+|---|---|---|---|
+| TN2017 | 97 | 0.8753 | 0.9005 |
+| TN2018 | 80 | 0.9752 | 0.8346 |
+| TN2022-23 | 115 | 0.8816 | 0.8993 |
+| TNSept2024 | 95 | 0.9844 | 0.8124 |
+
+**Mean corrected F1: 0.8954** - higher than our own parser's 0.8034.
+Mean recall 0.8754, mean precision 0.9328 - genuinely balanced, unlike
+Docling's severe asymmetry (recall 0.8765, precision 0.2572). VLM title
+counts (80-115 per edition) are much closer to the annotators' own
+counts (81-97 for annotator 1, 119-164 for annotator 2) than Docling's
+276-467 - direct evidence the granularity-matching prompt worked as
+intended, not a coincidence of the scoring method.
+
+### 75.3 Investigated before trusting this (section 10)
+
+A favourable, higher-than-expected result gets the same scrutiny as an
+unfavourable one.
+
+1. **Annotator 2's recall is consistently lower than annotator 1's
+   across every edition (0.57-0.77 vs 0.95-0.97).** This is not a new
+   anomaly - it is the SAME already-documented annotator-style gap
+   section 64.2 found for our own parser (annotator 1 averaged corrected
+   F1 0.864, annotator 2 averaged 0.743, attributed there to annotator
+   2's longer, more granular title lists). Reappearing consistently here
+   is reassuring - it means the VLM's output is being scored against
+   real, previously-characterised annotator variation, not producing a
+   new artifact.
+2. **High precision and substantial recall simultaneously** (0.79-0.99
+   precision, 0.57-0.98 recall) is the specific combination Docling
+   could never produce given its label-granularity mismatch - direct
+   evidence the VLM's title list genuinely operates at the annotators'
+   intended granularity.
+3. **The TN2017 smoke-test sample (80 titles) was read by hand** before
+   committing to the full 4-edition run and consists entirely of
+   recognizable, correctly-formed clinical protocol names ("Torsades de
+   Pointe", "Anaphylactic Shock", "Cerebrovascular Accident (CVA)") - no
+   garbage, no running-header repeats, no table-of-contents artifacts,
+   the three failure modes that inflated Docling's counts.
+
+### 75.4 What this means for the paper
+
+This DOES become a genuine, clean third point on section 61's
+structure-quality curve, unlike Docling - the balanced precision/recall
+means F1 alone is not misleading here the way it would have been for
+Docling.
+
+More significantly: **a general-purpose VLM, given a granularity-matched
+prompt reused verbatim from the human annotator instructions, outperforms
+this study's own purpose-built rule-based parser at guideline-boundary
+detection** (F1 0.8954 vs 0.8034). This is a substantive finding about
+the relative cost-effectiveness of prompt-engineered VLM document
+understanding versus a hand-built heuristic parser for this specific
+task - and it is independent of, and complementary to, B6/B7's findings
+that general models add no value on the DOWNSTREAM item-matching task.
+Boundary detection and item matching are evidently different-difficulty
+problems for current general-purpose models: the VLM succeeds at finding
+where protocols start (a task closer to what VLMs are broadly good at -
+visual document structure recognition) while both the LLM (B6) and the
+cross-encoder (B7) failed to improve on simple retrieval for matching
+which specific item corresponds to which (a task requiring fine-grained
+semantic discrimination between clinically similar but distinct content,
+where B7's section 72 findings showed a general model actively
+confusing surface-level similarity for genuine correspondence).
+
+Full numbers: `annotation_packets/boundary_annotation/vlm_calibration_report.json`,
+raw titles in `vlm_raw_titles.json`.
+
+## 76. Two human-labor gates: instruments built, review still outstanding
+
+Audit round 4, Phase 4. Two pre-registration commitments require actual
+human judgement, not more code - this section builds the instruments
+that make that judgement tractable and generates them for the user, but
+does not (and cannot) perform the review itself.
+
+### 76.1 Appendix B item 3: the guideline-pair audit
+
+Registered at pre-registration: "A manual audit of all accepted
+guideline pairs is required before publication." Never begun until this
+round.
+
+`build_appendix_b_audit.py` reuses `item_align.match_guidelines` and its
+internal scoring formula unchanged, exposing every candidate score the
+function itself computes but never returns, so a reviewer can see not
+just what was accepted but what it beat. Two disclosed failure modes are
+flagged and ranked to the top:
+
+- **Containment**: an accepted score of exactly 1.0 where the two titles
+  have unequal token-set length - the exact mechanism behind the
+  documented "Hypothermia" -> "Induced Hypothermia Following ROSC"
+  collision.
+- **Ties**: one or more other candidates scored at or above the accepted
+  one - the mechanism `tiebreak_sensitivity.py` (audit round 3) measured
+  affecting 34-35% of Connecticut's old guidelines.
+
+**Result: 294 total accepted pairs across the 4 confirmatory edition
+pairs, 73 flagged (24.8%)** - Tennessee 68 pairs/1 flagged; Pennsylvania
+48/5; Connecticut #1 85/34; Connecticut #2 93/33. The Connecticut tie
+rates (34/85 = 40%, 33/93 = 35%) land almost exactly on
+`tiebreak_sensitivity.py`'s independently-measured 34%/35% - a
+consistency check this script passed without being designed around it,
+evidence the flagging logic is measuring the same real phenomenon two
+different ways.
+
+Written to `annotation_packets/Appendix_B_guideline_pair_audit.xlsx`,
+ranked flagged-first with Verdict and Notes columns, so a reviewer faces
+73 prioritized rows rather than all 294. **The review itself has not
+been performed** - this closes the "the audit never started" gap, not
+the audit.
+
+### 76.2 H3' second annotator
+
+The 2026-08-18 CRITICAL CORRECTION left this explicitly open: "A
+genuinely independent second annotator for the same 92-item H3' packet
+is needed before H3''s reliability can be stated."
+
+Investigating the H3' directory found `Annotator_G_ANNOTATION.xlsx`
+present with no generating script referencing it anywhere in the tree -
+its provenance is not confirmed by any code. Direct inspection: **0 of
+92 correspondence cells are filled in.** It is a blank template, not
+collected data, despite its presence potentially suggesting otherwise.
+
+A fresh blind workbook, `Annotator_H_ANNOTATION.xlsx`, was generated
+reusing `build_annotator_workbooks.py`'s instructions, column layout,
+and blind-design formatting unchanged - the same helpers already used
+for the now-retired E/F pair (retired for the same duplication failure
+that hit the main round's A/B annotators).
+
+`run_h3prime_second_annotator.py` mirrors `run_boundary_scoring.py`'s
+`verify_independence` exactly - byte-hash AND cell-level answer
+comparison, raising rather than silently proceeding on a suspicious
+match - built in from the start this time rather than added after a
+collection failure was already discovered. A completion-count guard was
+added and verified: a naive `.exists()` check would have treated G's
+blank template as a completed file; `_n_filled()` correctly reports
+"0/92 filled (G), 0/92 filled (H)" instead.
+
+**No H3' number changes.** Once both files are genuinely completed by
+two independent people, the script verifies independence and computes
+Cohen's kappa automatically. Until then, section 57's H3' results
+continue to rest on the single unverified judgment already disclosed
+there - an open, disclosed limitation, now with the tooling in place to
+close it the moment real data exists.
+
+## 77. Remaining prior-art gaps closed: OAEI's benchmark track as direct precedent for section 61, discriminability, and parser robustness auditing
+
+Section 69.1 already positioned this study's B1-B6 baseline ladder
+against OAEI's own matcher-development history. Audit round 4's
+literature research found two adjacent citations still missing: OAEI's
+BENCHMARK TRACK specifically (as opposed to its matcher-comparison
+tracks) is a direct methodological precedent for section 61's own
+approach, not just an analogous baseline progression, and this had not
+been stated.
+
+**OAEI's benchmark track** performs exactly section 61's kind of
+experiment one level up: starting from a seed ontology and
+systematically altering it - discarding labels, restructuring, removing
+information - to test how matchers degrade as a controlled function of
+information loss (Euzenat, Rosoiu & Trojahn, "Ontology matching
+benchmarks: Generation, stability, and discriminability," Journal of Web
+Semantics, 2013). This is the same experimental shape as
+`structure_ablation.py`'s corruption-rate sweep, arrived at
+independently in this study without knowledge of the OAEI precedent -
+worth citing as validation that the experimental design is a recognized
+approach in an adjacent field, not an ad hoc invention.
+
+That paper's own vocabulary is directly useful here: it distinguishes
+**stability** (does the benchmark's difficulty ranking of matchers stay
+consistent across repeated generations) from **discriminability** (does
+the benchmark actually separate matchers that should be separated, or
+do they respond in lockstep). Section 61's original design measured
+something adjacent to stability (across-seed spread at a fixed rate,
+section 68.1) but never discriminability directly - whether the
+STRUCTURAL method's curve declines differently from a text-only
+control's. Audit round 4's Phase 3b (sections 73-74) closed exactly this
+gap: B2/B5 were tested across the same sweep and found genuinely
+invariant (once a synthetic-corruption defect was fixed) - the sharpest
+possible discriminability result, since a control that does not move at
+all while the method under test does is a clean separation, not merely
+a statistical one.
+
+**ProSA** (arXiv:2605.19309, "How Do Document Parsers Break? Auditing
+Structural Vulnerability in Document Intelligence") is a 2026 paper
+performing a structurally similar audit one layer down the stack - it
+systematically perturbs document layout to test parser robustness,
+rather than perturbing already-parsed structure to test a matcher, the
+axis this study perturbs. Cited here as evidence that "systematically
+break the input and measure the degradation" is an active, current
+methodology in the broader document-intelligence literature, not unique
+to this study or to OAEI.
+
+Together, these three citations complete the positioning section 69.1
+started: this study's central experimental contribution (section 61's
+structure-quality curve, now corrected per section 74) sits inside an
+established methodological tradition spanning ontology matching (OAEI's
+benchmark track, and its Euzenat et al. formalization of what makes a
+degradation benchmark informative) and document intelligence (ProSA),
+not as an isolated technique invented for this problem.

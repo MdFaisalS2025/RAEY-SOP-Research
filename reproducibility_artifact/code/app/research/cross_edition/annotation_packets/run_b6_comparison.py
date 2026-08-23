@@ -18,10 +18,6 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[4]))  # backend/ on sys.path
 
-import app.research.cross_edition.annotation_packets.run_h3_test as _rt  # noqa: E402
-_rt.ANNOTATOR_FILES = {k: rf"C:\Users\Faisal\Desktop\research paper\Annotator_{k}.xlsx" for k in "ABCD"}
-_rt.ADJUDICATION_FILE = r"C:\Users\Faisal\Desktop\research paper\Adjudication_43_items_completed.xlsx"
-
 from app.research.cross_edition.annotation import _norm_answer  # noqa: E402
 from app.research.cross_edition.item_parser import parse  # noqa: E402
 from app.research.cross_edition.baseline_b6_llm import align_items_b6_for_sample  # noqa: E402
@@ -126,14 +122,21 @@ def build_records_with_b6(model_id: str | None = None, only_first_n: int | None 
 
 def main():
     import sys as _sys
+    from app.research.cross_edition.baseline_b6_llm import MODEL_ID as DEFAULT_MODEL
     model_id = None
     only_first_n = None
     if "--model" in _sys.argv:
         model_id = _sys.argv[_sys.argv.index("--model") + 1]
     if "--test-n" in _sys.argv:
         only_first_n = int(_sys.argv[_sys.argv.index("--test-n") + 1])
+    # AUDIT ROUND 4 FIX (2026-08-22): resolve the model actually used up
+    # front, rather than writing the raw CLI arg (None on a default run) to
+    # the report - previously b6_comparison_report.json's "model" field was
+    # null on every default run, forcing a reader to infer the real model
+    # from the cache filename instead of the report itself.
+    resolved_model = model_id or DEFAULT_MODEL
 
-    print(f"Scoring B6 (LLM retrieve-then-rerank, model={model_id or '(default)'}, "
+    print(f"Scoring B6 (LLM retrieve-then-rerank, model={resolved_model}, "
           f"{'FULL RUN' if only_first_n is None else f'TEST: first {only_first_n}/pair'}) "
           f"- this makes real API calls, cached per pair for reproducibility...")
     records = build_records_with_b6(model_id=model_id, only_first_n=only_first_n)
@@ -157,7 +160,7 @@ def main():
 
     result = {
         "n_items": len(records),
-        "model": model_id,
+        "model": resolved_model,
         "method_accuracy_raw": round(method_acc, 4),
         "b6_accuracy_raw": round(b6_acc, 4),
         "method_minus_b6_raw": d["item"],

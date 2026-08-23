@@ -27,14 +27,37 @@ BASE = Path(__file__).parent
 
 
 def main():
+    # AUDIT ROUND 4 FIX (2026-08-22): the parser reference F1 was previously
+    # hardcoded as the literal 0.8034 rather than read from
+    # boundary_scoring_corrected.json (itself, until this same audit round,
+    # an orphan file nothing in the tree regenerated - see
+    # run_boundary_scoring_corrected.py). Reading it live means a future
+    # re-annotation or methodology change can't silently drift out of sync
+    # with the number this script compares Docling against.
+    corrected_path = BASE / "boundary_annotation" / "boundary_scoring_corrected.json"
+    with open(corrected_path, encoding="utf-8") as f:
+        our_parser_scores = json.load(f)
+    our_parser_all_f1 = [
+        edition["corrected_f1"]
+        for annotator in our_parser_scores.values()
+        for edition in annotator.values()
+    ]
+    our_parser_mean_f1 = round(sum(our_parser_all_f1) / len(our_parser_all_f1), 4)
+
     results = {}
     all_f1 = []
+    # AUDIT ROUND 4 FIX: Docling's raw header lists were previously never
+    # persisted - only counts and F1s - so reproducing or auditing a given
+    # F1 required re-running the converter and getting a bit-identical
+    # model. Now saved alongside the scores.
+    raw_headers_by_edition = {}
 
     for slug, title, pdf in EDITIONS:
         print(f"\n=== {title} ===")
         print("  running Docling (this takes a few minutes per edition)...")
         headers = extract_docling_headers(pdf)
         print(f"  {len(headers)} distinct Docling section headers")
+        raw_headers_by_edition[slug] = headers
 
         edition_result = {"n_docling_headers": len(headers)}
         for a_label, a_path in [("1", ANNOTATOR_1), ("2", ANNOTATOR_2)]:
@@ -49,14 +72,20 @@ def main():
     mean_f1 = sum(all_f1) / len(all_f1)
     print(f"\n=== Docling mean corrected F1 (n={len(all_f1)} edition x annotator points): "
           f"{mean_f1:.4f} ===")
-    print("Reference: our own parser's mean corrected F1 (FEASIBILITY.md section 64.2): 0.8034")
+    print(f"Reference: our own parser's mean corrected F1 "
+          f"(boundary_scoring_corrected.json, live-read): {our_parser_mean_f1}")
 
     report = {"per_edition": results, "mean_f1": round(mean_f1, 4),
-               "our_parser_mean_f1_reference": 0.8034}
+               "our_parser_mean_f1_reference": our_parser_mean_f1}
     out = BASE / "boundary_annotation" / "docling_calibration_report.json"
     with open(out, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2, ensure_ascii=False)
     print(f"\nwrote {out}")
+
+    headers_out = BASE / "boundary_annotation" / "docling_raw_headers.json"
+    with open(headers_out, "w", encoding="utf-8") as f:
+        json.dump(raw_headers_by_edition, f, indent=2, ensure_ascii=False)
+    print(f"wrote {headers_out}")
 
 
 if __name__ == "__main__":

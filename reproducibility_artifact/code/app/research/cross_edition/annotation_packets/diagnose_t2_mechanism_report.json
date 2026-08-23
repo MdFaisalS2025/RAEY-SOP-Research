@@ -1,0 +1,91 @@
+{
+  "_note": "Recomputed under the audit-round-4 join-bug fix (see this file's module docstring). 'pre_fix_reference' in each kind's entry is the number originally reported in FEASIBILITY.md section 54.1, kept for direct comparison, not recomputed.",
+  "by_marker_kind": {
+    "bullet": {
+      "n": 88,
+      "method_accuracy": 0.625,
+      "b2_accuracy": 0.8068,
+      "diff": -0.1818,
+      "tier_t2_share": 0.2386,
+      "bootstrap_ci_on_diff": {
+        "n": 88,
+        "n_bootstrap": 10000,
+        "point_estimate": -0.1818,
+        "ci95_low": -0.2841,
+        "ci95_high": -0.0909
+      },
+      "pre_fix_reference": {
+        "n": 72,
+        "method_acc": 0.7222,
+        "b2_acc": 0.9444,
+        "diff": -0.2222
+      }
+    },
+    "ordinal": {
+      "n": 145,
+      "method_accuracy": 0.7655,
+      "b2_accuracy": 0.731,
+      "diff": 0.0345,
+      "tier_t2_share": 0.1517,
+      "bootstrap_ci_on_diff": {
+        "n": 145,
+        "n_bootstrap": 10000,
+        "point_estimate": 0.0345,
+        "ci95_low": -0.0207,
+        "ci95_high": 0.0897
+      },
+      "pre_fix_reference": {
+        "n": 137,
+        "method_acc": 0.7664,
+        "b2_acc": 0.7153,
+        "diff": 0.0511
+      }
+    }
+  },
+  "bullet_kind_by_tier": {
+    "T1_id_exact": {
+      "n": 36,
+      "method_accuracy": 0.9722,
+      "b2_accuracy": 0.9722
+    },
+    "T2_id_text_changed": {
+      "n": 21,
+      "method_accuracy": 0.381,
+      "b2_accuracy": 0.9048
+    },
+    "T3_renumbered": {
+      "n": 3,
+      "method_accuracy": 1.0,
+      "b2_accuracy": 1.0
+    },
+    "T4_reworded": {
+      "n": 2,
+      "method_accuracy": 1.0,
+      "b2_accuracy": 1.0
+    },
+    "T5_moved": {
+      "n": 10,
+      "method_accuracy": 0.0,
+      "b2_accuracy": 0.0
+    },
+    "T6_unmatched_old": {
+      "n": 16,
+      "method_accuracy": 0.4375,
+      "b2_accuracy": 0.75
+    }
+  },
+  "connecticut_2023_2024_only": {
+    "bullet": {
+      "n": 40,
+      "method_accuracy": 0.65,
+      "b2_accuracy": 1.0,
+      "diff": -0.35
+    },
+    "ordinal": {
+      "n": 19,
+      "method_accuracy": 0.8947,
+      "b2_accuracy": 0.8947,
+      "diff": 0.0
+    }
+  }
+}

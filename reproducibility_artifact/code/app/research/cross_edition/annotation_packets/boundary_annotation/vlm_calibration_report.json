@@ -1,0 +1,73 @@
+{
+  "per_edition": {
+    "tn_2017": {
+      "n_vlm_titles": 97,
+      "annotator_1": {
+        "raw_recall": 0.9506,
+        "corrected_recall": 0.9753,
+        "precision": 0.7938,
+        "corrected_f1": 0.8753
+      },
+      "annotator_2": {
+        "raw_recall": 0.7731,
+        "corrected_recall": 0.8571,
+        "precision": 0.9485,
+        "corrected_f1": 0.9005
+      }
+    },
+    "tn_2018": {
+      "n_vlm_titles": 80,
+      "annotator_1": {
+        "raw_recall": 0.963,
+        "corrected_recall": 0.9753,
+        "precision": 0.975,
+        "corrected_f1": 0.9752
+      },
+      "annotator_2": {
+        "raw_recall": 0.6393,
+        "corrected_recall": 0.7295,
+        "precision": 0.975,
+        "corrected_f1": 0.8346
+      }
+    },
+    "tn_2022_23": {
+      "n_vlm_titles": 115,
+      "annotator_1": {
+        "raw_recall": 0.9588,
+        "corrected_recall": 0.9691,
+        "precision": 0.8087,
+        "corrected_f1": 0.8816
+      },
+      "annotator_2": {
+        "raw_recall": 0.7434,
+        "corrected_recall": 0.8289,
+        "precision": 0.9826,
+        "corrected_f1": 0.8993
+      }
+    },
+    "tn_sept2024": {
+      "n_vlm_titles": 95,
+      "annotator_1": {
+        "raw_recall": 0.9691,
+        "corrected_recall": 0.9794,
+        "precision": 0.9895,
+        "corrected_f1": 0.9844
+      },
+      "annotator_2": {
+        "raw_recall": 0.5732,
+        "corrected_recall": 0.689,
+        "precision": 0.9895,
+        "corrected_f1": 0.8124
+      }
+    }
+  },
+  "mean_f1": 0.8954,
+  "mean_recall": 0.8754,
+  "mean_precision": 0.9328,
+  "our_parser_mean_f1_reference": 0.8034,
+  "docling_reference": {
+    "mean_f1": 0.4069,
+    "recall": 0.8765,
+    "precision": 0.2572
+  }
+}

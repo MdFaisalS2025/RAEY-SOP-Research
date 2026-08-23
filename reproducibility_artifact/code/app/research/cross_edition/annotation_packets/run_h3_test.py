@@ -20,19 +20,22 @@ from app.research.cross_edition.annotation import (  # noqa: E402
     load_completed_xlsx, _norm_answer, majority_vote,
 )
 from app.research.cross_edition.baseline_b2 import align_items_b2  # noqa: E402
+from app.research.cross_edition.annotation_packets.sample_join import (  # noqa: E402
+    build_index_join, verify_sample_identity, join_baseline,
+)
 
 BASE = Path(__file__).parent
 
 ANNOTATOR_FILES = {
-    "A": r"C:\Users\Faisal\Desktop\Annotator_A.xlsx",
-    "B": r"C:\Users\Faisal\Desktop\Annotator_B.xlsx",
-    "C": r"C:\Users\Faisal\Desktop\Annotator_C.xlsx",
-    "D": r"C:\Users\Faisal\Desktop\Annotator_D.xlsx",
+    "A": r"C:\Users\Faisal\Desktop\research paper\Annotator_A.xlsx",
+    "B": r"C:\Users\Faisal\Desktop\research paper\Annotator_B.xlsx",
+    "C": r"C:\Users\Faisal\Desktop\research paper\Annotator_C.xlsx",
+    "D": r"C:\Users\Faisal\Desktop\research paper\Annotator_D.xlsx",
 }
-ADJUDICATION_FILE = r"C:\Users\Faisal\Downloads\Adjudication_43_items_completed.xlsx"
+ADJUDICATION_FILE = r"C:\Users\Faisal\Desktop\research paper\Adjudication_43_items_completed.xlsx"
 
 # pair title -> (slug for the CSV/JSON dirs, old_pdf, new_pdf)
-SP = r"C:\Users\Faisal\AppData\Local\Temp\claude\C--Users-Faisal-Desktop-research-paper\1642f160-3dba-4100-baa8-850fde74b388\scratchpad\protocols"
+SP = r"C:\Users\Faisal\Desktop\Hospital SOP's Research\corpus\protocols"
 PAIRS = {
     "Tennessee 2017→2018": ("tennessee_2017_2018", f"{SP}\\tn_2017.pdf", f"{SP}\\tn_2018.pdf"),
     "Pennsylvania 2021→2023": ("pennsylvania_2021_2023", f"{SP}\\pa_2021_als.pdf", f"{SP}\\pa_2023_als.pdf"),
@@ -121,11 +124,22 @@ def main():
     per_pair_report = {}
 
     for pair, (slug, old_pdf, new_pdf) in PAIRS.items():
-        with open(BASE / slug / "annotation_packet.csv", encoding="utf-8") as f:
+        packet_csv = BASE / slug / "annotation_packet.csv"
+        with open(packet_csv, encoding="utf-8") as f:
             method_rows = {r["sample_id"]: r for r in csv.DictReader(f)}
 
+        # Joined by PARSE-ORDER INDEX, not by old_item_id string - see
+        # sample_join.py's module docstring. align_items mutates item_id
+        # into the new edition's guideline vocabulary; annotation_packet.csv
+        # stores that post-remap id while B2 (via align_items_b2 -> parse())
+        # keys its own results by the raw parse() id. The id-based lookup
+        # this loop used before the 2026-08-18 audit silently dropped any
+        # sampled item whose guideline title changed between editions - 24
+        # of 233 usable items project-wide, 21 of them (36%) in Connecticut
+        # #1 alone - non-randomly inflating the reported method accuracy.
         b2 = align_items_b2(old_pdf, new_pdf)
-        b2_by_old_id = {r["old_item_id"]: r for r in b2["_all_results"]}
+        id_to_index, _ = build_index_join(old_pdf, new_pdf)
+        verify_sample_identity(packet_csv, id_to_index)  # fail loudly, not silently
 
         gt = ground_truth[pair]
         pair_triples: list[tuple[int, int, float]] = []
@@ -138,11 +152,8 @@ def main():
                 skipped_cannot_determine += 1
                 continue
             method_answer = _norm_answer(row["method_predicted_item_id"])
-            old_id = row["old_item_id"]
-            b2_row = b2_by_old_id.get(old_id)
-            if b2_row is None:
-                continue  # should not happen - same parse() on the same file
-            b2_answer = _norm_answer(b2_row["b2_predicted_item_id"])
+            idx = id_to_index[row["old_item_id"]]  # KeyError, not silent skip, if this ever fails
+            b2_answer = _norm_answer(join_baseline(b2, idx, "b2_predicted_item_id"))
             weight = float(row.get("sample_weight", 1.0) or 1.0)
 
             m_correct = 1 if method_answer == truth else 0
@@ -180,6 +191,14 @@ def main():
     print(f"  H3 (weighted) {'CONFIRMED' if confirmed_weighted else 'NOT CONFIRMED'}")
 
     report = {
+        "_superseded_by": (
+            "full_comparison_report.json's 'H3 re-run' section, which "
+            "recomputes this exact same analysis (method vs B2 accuracy, "
+            "item-level and pair-level, raw and weighted) alongside H4/H5 "
+            "with Benjamini-Hochberg correction across all three. This "
+            "file is kept only as a standalone single-hypothesis check; "
+            "do not cite it in place of full_comparison_report.json."
+        ),
         "pairs": per_pair_report,
         "pooled": {
             "n": len(all_paired),
@@ -190,7 +209,7 @@ def main():
             "h3_confirmed_weighted": confirmed_weighted,
         },
     }
-    out_path = BASE / "h3_test_report.json"
+    out_path = BASE / "h3_test_report.SUPERSEDED.json"
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2, ensure_ascii=False)
     print(f"\nwrote {out_path}")

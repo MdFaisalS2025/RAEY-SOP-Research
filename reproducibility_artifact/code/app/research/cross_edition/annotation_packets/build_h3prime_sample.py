@@ -35,7 +35,7 @@ from app.research.cross_edition.item_align_v2 import align_items_v2, _is_bullet_
 from app.research.cross_edition.baseline_b2 import align_items_b2  # noqa: E402
 from app.research.cross_edition.annotation import write_annotation_packet  # noqa: E402
 
-SP = r"C:\Users\Faisal\AppData\Local\Temp\claude\C--Users-Faisal-Desktop-research-paper\1642f160-3dba-4100-baa8-850fde74b388\scratchpad\protocols"
+SP = r"C:\Users\Faisal\Desktop\Hospital SOP's Research\corpus\protocols"
 OLD_PDF = f"{SP}\\tn_2022_23.pdf"
 NEW_PDF = f"{SP}\\tn_sept2024.pdf"
 BASE = Path(__file__).parent / "h3prime_tennessee_2022_2024"

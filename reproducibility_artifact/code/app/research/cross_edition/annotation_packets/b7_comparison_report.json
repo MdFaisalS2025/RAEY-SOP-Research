@@ -1,0 +1,73 @@
+{
+  "n_items": 233,
+  "reranker_model": "BAAI/bge-reranker-v2-m3",
+  "retrieval_model": "BAAI/bge-small-en-v1.5",
+  "method_accuracy_raw": 0.7124,
+  "naive_top1_accuracy_raw": 0.7296,
+  "per_floor": {
+    "0.0": {
+      "b7_accuracy_raw": 0.6953,
+      "n_none_predicted": 0,
+      "method_minus_b7_raw": {
+        "point_estimate": 0.0172,
+        "ci95_low": -0.0472,
+        "ci95_high": 0.0858,
+        "n_valid": 10000
+      },
+      "b7_minus_naive_top1_raw": {
+        "point_estimate": -0.0343,
+        "ci95_low": -0.0644,
+        "ci95_high": -0.0086,
+        "n_valid": 10000
+      }
+    },
+    "0.3": {
+      "b7_accuracy_raw": 0.7082,
+      "n_none_predicted": 3,
+      "method_minus_b7_raw": {
+        "point_estimate": 0.0043,
+        "ci95_low": -0.0601,
+        "ci95_high": 0.0687,
+        "n_valid": 10000
+      },
+      "b7_minus_naive_top1_raw": {
+        "point_estimate": -0.0215,
+        "ci95_low": -0.0558,
+        "ci95_high": 0.0086,
+        "n_valid": 10000
+      }
+    },
+    "0.5": {
+      "b7_accuracy_raw": 0.721,
+      "n_none_predicted": 10,
+      "method_minus_b7_raw": {
+        "point_estimate": -0.0086,
+        "ci95_low": -0.073,
+        "ci95_high": 0.0558,
+        "n_valid": 10000
+      },
+      "b7_minus_naive_top1_raw": {
+        "point_estimate": -0.0086,
+        "ci95_low": -0.0472,
+        "ci95_high": 0.03,
+        "n_valid": 10000
+      }
+    },
+    "0.7": {
+      "b7_accuracy_raw": 0.7082,
+      "n_none_predicted": 14,
+      "method_minus_b7_raw": {
+        "point_estimate": 0.0043,
+        "ci95_low": -0.0601,
+        "ci95_high": 0.0687,
+        "n_valid": 10000
+      },
+      "b7_minus_naive_top1_raw": {
+        "point_estimate": -0.0215,
+        "ci95_low": -0.0601,
+        "ci95_high": 0.0172,
+        "n_valid": 10000
+      }
+    }
+  }
+}

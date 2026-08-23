@@ -5665,3 +5665,118 @@ though the structural method itself does not clear B2's text-only
 baseline either, per section 53).
 
 Full numbers: `annotation_packets/b7_comparison_report.json`.
+
+## 73. CRITICAL FINDING: the structure-quality ablation's synthetic corruption creates real id collisions, confounding B2/B5 - and very likely section 61's own curve too
+
+Audit round 4, Phase 3b. `structure_ablation.py`'s docstring states B2 and
+B5's accuracy is "provably invariant" to its synthetic corruption, since
+the corruption only ever mutates `.guideline`/`.item_id`, never `.text`,
+and B2/B5 search `.text` only. The docstring cites a function,
+`verify_b2_b5_invariance`, as having checked this. It does not - grep-
+confirmed two occurrences in the whole file (the definition and the
+docstring's own citation), never called anywhere, and even its body only
+samples 3 of B2's clean predictions without comparing anything. The claim
+was asserted, not verified.
+
+### 73.1 What was actually run
+
+`annotation_packets/run_discriminability_curves.py` (new) reuses
+`structure_ablation.corrupt_edition` with the IDENTICAL seed scheme
+`run_trial` already uses, so B2/B5 are corrupted by the exact same random
+instance as the method's own curve at each (rate, seed) - a true
+apples-to-apples comparison. B2 reimplemented inline using
+`item_align._sim`/`_SIM_FLOOR` unchanged; B5 reuses
+`baseline_b5.greedy_match_from_embeddings` unchanged, called directly on
+corrupted items. Scored via `_orig_id`, mirroring exactly how
+`structure_ablation.run_trial` already scores the method. Seed count
+reduced to 2 per non-zero rate (timed at ~90s/trial x 4 pairs; the full
+5-seed grid would run ~70 minutes) - disclosed and decided before
+running, in the pre-commitment entry.
+
+### 73.2 Result: not invariant
+
+r=0 passed exactly (B2 75.97%, B5 78.11%, matching every other driver in
+this study bit-for-bit). Across the sweep:
+
+| Rate | B2 accuracy | B5 accuracy |
+|---|---|---|
+| 0.00 | 75.97% | 78.11% |
+| 0.05 | 75.11% / 75.97% | 76.39% / 77.68% |
+| 0.10 | 73.82% / 75.11% | 72.96% / 76.39% |
+| 0.20 | 73.39% / 73.82% | 69.53% / 72.53% |
+| 0.35 | 70.39% / 70.82% | 65.24% (both seeds) |
+| 0.50 | 68.67% / 70.39% | 60.52% / 61.37% |
+
+Both baselines decline substantially. B5's decline is larger than B2's in
+both absolute and relative terms, despite starting from a higher
+baseline.
+
+### 73.3 Investigated before trusting this (section 10)
+
+This directly falsifies a claim already published and quoted throughout
+both governance documents, so it was investigated immediately rather
+than reported as a bare contradiction.
+
+`corrupt_edition` reconstructs each corrupted item's `item_id` as
+`f"{_norm_title(new_title)}/{it.section}/{it.marker_path}{suffix}"`,
+preserving only a pre-existing `#N` suffix from the item's ORIGINAL id.
+It does not run the uniqueness-preserving `seen_ids` counter logic
+`item_parser.py` itself uses - and that logic exists in the real parser
+specifically because an earlier version produced "282 colliding ids on a
+previous run" (item_parser.py's own commit history).
+
+Direct measurement (all 4 pairs, seed=1):
+
+| Rate | Tennessee | Pennsylvania | Connecticut #1 | Connecticut #2 |
+|---|---|---|---|---|
+| 0.00 | 0 | 0 | 0 | 0 |
+| 0.20 | 67 (4.5%) | 143 (8.4%) | 35 (2.9%) | 51 (3.3%) |
+| 0.50 | 180 (12.0%) | 363 (21.4%) | 133 (11.0%) | 183 (11.9%) |
+
+When two originally-distinct items from different source guidelines
+happen to share the same `section`/`marker_path` - extremely common,
+since independently-numbered bulleted sub-lists ("1.", "2." or "a.",
+"b.") recur constantly across unrelated guidelines - and their
+guidelines get merged into the same run by corruption, their
+reconstructed ids become literally identical strings. B2/B5's greedy
+matching loop tracks consumption via a `set()` keyed by `item_id`: a
+collision makes two genuinely different items indistinguishable to the
+consumption tracker, so consuming one can spuriously block the other,
+and which of two colliding items "wins" becomes an artifact of
+iteration order, not text similarity.
+
+**This is a defect in the synthetic corruption model, not a real
+property of guideline-boundary quality.** It does not correspond to
+anything that happens when a real parser genuinely merges guideline
+boundaries - a real merge does not duplicate marker paths across
+unrelated content.
+
+### 73.4 What this means for the paper - and for section 61
+
+`structure_ablation.py` itself was not modified in this investigation,
+so section 61's already-published curve is unchanged and this entry does
+not correct any number reported there. But the implication is serious:
+**`item_align.align_items` (the method) is run on the SAME corrupted
+editions via the SAME id-reconstruction scheme**, and the method's own
+T1 (exact-id) and T2 (identifier-trust) tiers explicitly depend on
+`item_id` string identity. The method's own already-published accuracy
+decline across section 61's curve is very likely partly or substantially
+an artifact of this same id-collision defect, not purely a measurement
+of guideline-boundary-detection quality as the curve has been presented.
+
+This does not mean section 61's qualitative finding (a monotonic
+relationship exists) is false - a genuine boundary-quality effect may
+well coexist with this artifact. But the MAGNITUDE of the reported
+decline, and therefore the location of the reported crossover point,
+cannot currently be trusted as clean. **This is now the single largest
+open threat to this study's central empirical claim.**
+
+This must be stated as an open, unresolved limitation in any paper
+draft. Re-quantifying section 61 with a corrected, collision-free
+id-reconstruction scheme (adding the same `seen_ids`-style uniqueness
+suffix `item_parser.py` already uses to `corrupt_edition`, then
+re-running the full sweep) is flagged as necessary follow-up work - not
+undertaken here, to avoid silently expanding this round's scope without
+its own separate pre-commitment.
+
+Full numbers: `annotation_packets/discriminability_curves_report.json`.

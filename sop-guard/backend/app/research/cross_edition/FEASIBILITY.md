@@ -6606,3 +6606,44 @@ from 240 to 360 total sampled items, and every hypothesis test (H3,
 H4, H5) would need a formal re-run against the expanded set, separately
 committed and performed at that time. No result changes from this
 entry alone; it generates the instrument, not data.
+
+## 82. Massachusetts retrieval: confirmed genuinely blocked by this environment's tooling, not by the document itself
+
+Section 80.3 flagged Massachusetts as an open thread - a research agent
+using a real browser session confirmed a genuine downloadable file now
+exists at `mass.gov` (a different outcome than the earlier DOCX-
+mislabeled-as-PDF problem), where programmatic fetch (`curl`, `WebFetch`)
+returns a 403 bot-detection block.
+
+Followed up directly with this environment's sandboxed browser tool.
+Confirmed the file is real: "Emergency Medical Services Statewide
+Treatment Protocols Version 2026.1 - Effective June 1, 2026" (9.14 MB,
+last updated 2026-02-10, Office of Emergency Medical Services) - a
+genuinely newer edition than the existing `ma_2023.pdf` already in the
+corpus (the "one real edition" recovered in an earlier round). The
+landing page loads and confirms the file's existence and metadata
+directly.
+
+**The download itself is blocked by this session's browser sandbox by
+design**, not by anything specific to Massachusetts or this document:
+the tool's own operating constraints state explicitly that "the
+viewer's sandbox also blocks any download the page starts itself." The
+PDF is served with a forced-download response (`Content-Disposition:
+attachment`), and the sandbox intercepts this universally - the same
+block would apply to any PDF served this way from any site, not a
+Massachusetts-specific or document-specific failure. Confirmed by
+observing the network log directly: the `/download` request itself
+returns HTTP 200 (the file exists and the server responds correctly)
+but is aborted client-side (`net::ERR_ABORTED`) by the sandbox before
+any content reaches disk.
+
+**Massachusetts remains blocked, but the finding has changed in kind**:
+previously an open question about whether a genuine document exists at
+all (given the DOCX confusion); now confirmed to be a real, retrievable
+document blocked only by this specific environment's download-sandbox
+policy - a tooling gap, not a research dead end. Retrieval by any
+method NOT subject to this sandbox (a different browser environment, a
+direct authenticated `curl` session outside this sandbox, or simply the
+user downloading it directly and providing the file) would very likely
+succeed immediately, since the server itself responds correctly and the
+file's existence and size are already confirmed.

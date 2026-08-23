@@ -165,6 +165,31 @@ def corrupt_edition(ed, rate: float, rng: random.Random):
             suffix = "#" + it.item_id.rsplit("#", 1)[1]
         it.guideline = new_title
         it.item_id = f"{_norm_title(new_title)}/{it.section}/{it.marker_path}{suffix}"
+
+    # AUDIT ROUND 4 FIX (2026-08-23): the reconstruction above does not
+    # guarantee uniqueness the way item_parser.py's own id construction
+    # does (its seen_ids counter, added there after "282 colliding ids on
+    # a previous run"). When two originally-distinct items from DIFFERENT
+    # source guidelines share the same section/marker_path (common - many
+    # guidelines independently number sub-items "1.", "2." or "a.", "b."),
+    # merging those guidelines makes their reconstructed ids collide -
+    # measured at 2.9-23.7% of items depending on rate (see
+    # PREREGISTRATION.md's 2026-08-23 CRITICAL FINDING entry). A collision
+    # makes B1-B5's set-keyed consumption tracking and the method's own
+    # T1/T2 identifier-based tiers unable to distinguish two genuinely
+    # different items, degrading accuracy for reasons unrelated to
+    # guideline-boundary quality - a synthetic-corruption-model defect,
+    # not a real property of boundary detection. Fixed with the same
+    # disambiguation pattern item_parser.py uses: a per-edition counter,
+    # applied globally (not just to items whose guideline changed - an
+    # unchanged item can still collide with a changed one) so uniqueness
+    # is guaranteed regardless of source.
+    seen_ids: dict[str, int] = {}
+    for it in ed2.items:
+        seen_ids[it.item_id] = seen_ids.get(it.item_id, 0) + 1
+        if seen_ids[it.item_id] > 1:
+            it.item_id = f"{it.item_id}##dedup{seen_ids[it.item_id]}"
+
     return ed2
 
 

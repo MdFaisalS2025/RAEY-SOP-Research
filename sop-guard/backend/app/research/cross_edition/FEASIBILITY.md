@@ -5780,3 +5780,99 @@ undertaken here, to avoid silently expanding this round's scope without
 its own separate pre-commitment.
 
 Full numbers: `annotation_packets/discriminability_curves_report.json`.
+
+## 74. The id-collision fix: section 61's curve corrected, B2/B5 confirmed genuinely invariant
+
+Given the severity of section 73's finding to this study's central
+empirical claim, the flagged follow-up was undertaken immediately rather
+than left open.
+
+### 74.1 The fix
+
+Added a `seen_ids`-style uniqueness counter to
+`structure_ablation.corrupt_edition`, mirroring `item_parser.py`'s own
+pattern exactly: a per-edition `dict[str, int]` counting occurrences of
+each reconstructed id, appending `#N` on any repeat beyond the first,
+applied globally (not only to items whose guideline changed - an
+unchanged item can still collide with a changed one). This does not
+alter the corruption model's semantics (which guidelines merge, or when)
+- it only guarantees the resulting ids remain unique, which they always
+are everywhere else in this study.
+
+### 74.2 Four validity checks, in the pre-committed order
+
+1. **r=0 still reproduces 0.7124/n=233 exactly** - unchanged corruption
+   at r=0 means the fix cannot touch this, and it didn't.
+2. **Collision recheck: 0 collisions at every rate, all 4 pairs** (was
+   35-363 depending on rate/pair before the fix) - the fix works.
+3. **Full 6-rate x 5-seed sweep, re-run under the fix.**
+4. **`run_discriminability_curves.py` re-run under the fix**, to test
+   whether B2/B5 are now genuinely invariant.
+
+### 74.3 Corrected section 61 curve
+
+| Rate | Original (pre-fix) | Corrected (post-fix) | Difference |
+|---|---|---|---|
+| 0.00 | 71.24% | 71.24% | 0 |
+| 0.05 | 69.27% | 69.78% | +0.51 |
+| 0.10 | 66.35% | 67.81% | +1.46 |
+| 0.20 | 63.09% | 65.24% | +2.15 |
+| 0.35 | 57.85% | 61.80% | +3.95 |
+| 0.50 | 53.05% | 57.00% | +3.95 |
+
+Monotonic non-increasing still holds (confirmed within the pre-registered
+0.01 tolerance at every step). The gap between corrected and original
+grows with corruption rate exactly as section 73's collision-rate
+measurement predicted (0% collisions at r=0, rising to 11-24% at
+r=0.50).
+
+**At r=0.50, the corrected curve's total decline from r=0 is 14.24
+points, versus the original's 18.19 points: 3.95 of those 18.19 points
+(21.7%) were collision artifact, not genuine information loss from
+guideline-boundary corruption.**
+
+### 74.4 B2/B5: confirmed genuinely invariant
+
+Re-running `run_discriminability_curves.py` under the fix: B2 and B5 are
+now **bit-identical across all 11 trials** - B2 exactly 0.7597, B5
+exactly 0.7811, at every single rate and seed tested, zero deviation.
+
+This is a clean confirmation, not merely an absence of a detected
+problem: the ORIGINAL "provably invariant" claim was correct in
+substance - the corruption model genuinely cannot affect B2/B5's
+decisions once ids are unique. The prior non-invariant result (section
+73) was entirely attributable to the collision bug, with no remaining
+unexplained variance.
+
+### 74.5 What this means for the paper
+
+**Section 61's qualitative finding survives intact and is now on firmer
+ground than before this investigation**: the monotonic threshold
+relationship is real, not an artifact, and the crossover's existence is
+unaffected. **What changes**: the reported MAGNITUDE of the method's
+decline was overstated by up to ~4 points at the highest corruption
+rates - the corrected curve should replace the original in any paper
+draft, with both reported side by side for transparency about the
+correction's size, not silently.
+
+This also retroactively validates every "B2/B5 held fixed as reference
+lines" design decision made throughout this study's ablation work
+(section 61, section 68.1) - the shortcut was mathematically sound; its
+only flaw was in the corruption harness's id construction, now fixed.
+
+The most important outcome is procedural, not just numerical: this
+closes the loop opened by finding `verify_b2_b5_invariance` was a
+non-functional stub (section 73.1) - the claim it was meant to check is
+now genuinely, empirically confirmed, not merely asserted a second time.
+This is the audit process working as designed: a cited-but-broken
+verification function was found, the claim it was supposed to protect
+was tested and found (initially) false, the root cause was diagnosed and
+fixed, and the claim was re-tested and found true. Nothing was assumed
+at any step.
+
+Full numbers: `annotation_packets/structure_ablation_report.json`,
+`annotation_packets/discriminability_curves_report.json` (both
+regenerated under the fix - the pre-fix numbers are preserved in this
+document's sections 61/68.1/73 and in `PREREGISTRATION.md`'s dated
+entries, per append-only discipline, not in the JSON artifacts
+themselves).

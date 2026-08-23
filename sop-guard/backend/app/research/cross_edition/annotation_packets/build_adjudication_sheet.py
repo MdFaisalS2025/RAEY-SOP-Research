@@ -42,10 +42,10 @@ PAIR_SLUGS = {
 }
 
 ANNOTATOR_FILES = {
-    "A": r"C:\Users\Faisal\Desktop\Annotator_A.xlsx",
-    "B": r"C:\Users\Faisal\Desktop\Annotator_B.xlsx",
-    "C": r"C:\Users\Faisal\Desktop\Annotator_C.xlsx",
-    "D": r"C:\Users\Faisal\Desktop\Annotator_D.xlsx",
+    "A": r"C:\Users\Faisal\Desktop\research paper\Annotator_A.xlsx",
+    "B": r"C:\Users\Faisal\Desktop\research paper\Annotator_B.xlsx",
+    "C": r"C:\Users\Faisal\Desktop\research paper\Annotator_C.xlsx",
+    "D": r"C:\Users\Faisal\Desktop\research paper\Annotator_D.xlsx",
 }
 
 FONT_NAME = "Calibri"

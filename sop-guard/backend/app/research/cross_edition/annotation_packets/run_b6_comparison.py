@@ -18,10 +18,6 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[4]))  # backend/ on sys.path
 
-import app.research.cross_edition.annotation_packets.run_h3_test as _rt  # noqa: E402
-_rt.ANNOTATOR_FILES = {k: rf"C:\Users\Faisal\Desktop\research paper\Annotator_{k}.xlsx" for k in "ABCD"}
-_rt.ADJUDICATION_FILE = r"C:\Users\Faisal\Desktop\research paper\Adjudication_43_items_completed.xlsx"
-
 from app.research.cross_edition.annotation import _norm_answer  # noqa: E402
 from app.research.cross_edition.item_parser import parse  # noqa: E402
 from app.research.cross_edition.baseline_b6_llm import align_items_b6_for_sample  # noqa: E402

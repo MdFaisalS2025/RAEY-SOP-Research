@@ -31,3 +31,7 @@ Thumbs.db
 
 # Claude Code local config
 .claude/settings.local.json
+
+# Research corpus source PDFs/XML - not redistributed (see CORPUS_MANIFEST.md);
+# re-downloaded from the manifest's URLs and verified against its SHA-256 hashes.
+/corpus/

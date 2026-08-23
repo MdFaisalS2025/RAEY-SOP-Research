@@ -24,15 +24,15 @@ from app.research.cross_edition.baseline_b2 import align_items_b2  # noqa: E402
 BASE = Path(__file__).parent
 
 ANNOTATOR_FILES = {
-    "A": r"C:\Users\Faisal\Desktop\Annotator_A.xlsx",
-    "B": r"C:\Users\Faisal\Desktop\Annotator_B.xlsx",
-    "C": r"C:\Users\Faisal\Desktop\Annotator_C.xlsx",
-    "D": r"C:\Users\Faisal\Desktop\Annotator_D.xlsx",
+    "A": r"C:\Users\Faisal\Desktop\research paper\Annotator_A.xlsx",
+    "B": r"C:\Users\Faisal\Desktop\research paper\Annotator_B.xlsx",
+    "C": r"C:\Users\Faisal\Desktop\research paper\Annotator_C.xlsx",
+    "D": r"C:\Users\Faisal\Desktop\research paper\Annotator_D.xlsx",
 }
-ADJUDICATION_FILE = r"C:\Users\Faisal\Downloads\Adjudication_43_items_completed.xlsx"
+ADJUDICATION_FILE = r"C:\Users\Faisal\Desktop\research paper\Adjudication_43_items_completed.xlsx"
 
 # pair title -> (slug for the CSV/JSON dirs, old_pdf, new_pdf)
-SP = r"C:\Users\Faisal\AppData\Local\Temp\claude\C--Users-Faisal-Desktop-research-paper\1642f160-3dba-4100-baa8-850fde74b388\scratchpad\protocols"
+SP = r"C:\Users\Faisal\Desktop\Hospital SOP's Research\corpus\protocols"
 PAIRS = {
     "Tennessee 2017→2018": ("tennessee_2017_2018", f"{SP}\\tn_2017.pdf", f"{SP}\\tn_2018.pdf"),
     "Pennsylvania 2021→2023": ("pennsylvania_2021_2023", f"{SP}\\pa_2021_als.pdf", f"{SP}\\pa_2023_als.pdf"),

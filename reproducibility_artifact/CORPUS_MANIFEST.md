@@ -95,6 +95,12 @@ Uses `tn_2017.pdf`, `tn_2018.pdf`, `tn_2022_23.pdf`, and
    original bytes is what `code/app/research/cross_edition/*.py` and the
    frozen `d3068ee` pipeline actually saw, not necessarily whatever
    currently lives at the URL.
-3. Place files at the paths each script's `SP`/path constant expects
-   (see each script's header — most default to a local `protocols/`
-   working directory; adjust the constant or pass the path directly).
+3. Place files at the paths each script's `SP` constant expects. In the
+   live working tree (not this artifact) `SP` resolves to
+   `<repo root>/corpus/protocols` (protocol PDFs) and
+   `<repo root>/corpus/uscode` (US Code release-point XML) — a stable,
+   git-ignored, repo-local directory (see `.gitignore`), chosen
+   2026-08-22 after the corpus was found living in a session-scoped
+   temp path (`AppData\Local\Temp\claude\...\scratchpad\protocols`) one
+   cleanup away from unreproducible. Adjust each script's `SP` constant
+   if placing the corpus elsewhere.

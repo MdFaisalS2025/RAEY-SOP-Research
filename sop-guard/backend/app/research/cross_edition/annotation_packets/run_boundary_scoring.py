@@ -51,7 +51,7 @@ from openpyxl import load_workbook  # noqa: E402
 from app.research.cross_edition.item_parser import parse  # noqa: E402
 from app.research.cross_edition.item_align import match_guidelines  # noqa: E402
 
-SP = r"C:\Users\Faisal\AppData\Local\Temp\claude\C--Users-Faisal-Desktop-research-paper\1642f160-3dba-4100-baa8-850fde74b388\scratchpad\protocols"
+SP = r"C:\Users\Faisal\Desktop\Hospital SOP's Research\corpus\protocols"
 EDITIONS = [
     ("tn_2017", "Tennessee 2017 (Rev 11.7.2017)", f"{SP}\\tn_2017.pdf"),
     ("tn_2018", "Tennessee 2018 (Rev 7.7.18)", f"{SP}\\tn_2018.pdf"),

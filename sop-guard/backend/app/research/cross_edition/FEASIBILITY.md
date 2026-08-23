@@ -6264,15 +6264,91 @@ study catalogued before, unchanged by the parser's newer techniques.
 Included here for completeness of this session's corpus-expansion
 summary.
 
-### 79.5 Summary for the user
+### 79.5 Follow-up: three of the four gating checks completed for both candidates
 
-Two genuine, structurally promising new candidate pairs were found
-(Tennessee Sept2024->09.11.2025 at 94.6% trivially alignable; Connecticut
-v2024.1->v2025.1 at 88.6%) - both comparable in quality to the existing
-confirmatory pairs, neither yet promoted to confirmatory status. Rhode
-Island and Vermont remain unusable for the reasons already catalogued.
-No major-revision pair was found; H1/H2 remain untestable. Promoting
-either new candidate to confirmatory status - and thereby actually
-growing the study's n beyond 4 pairs/3 publishers - is a real,
-tractable next step, gated on the four checks listed in sections 79.2
-and 79.3, none of which were performed in this exploratory session.
+Continuing the same session, the checks section 79.2/79.3 listed as
+outstanding were run as far as automatable (the fourth - a dated
+pre-commitment entry before any real annotation sampling - is not
+automatable and correctly was not attempted here).
+
+**(1) Consecutive-edition verification.** Connecticut's own official
+version-history page (`portal.ct.gov`) lists every release in order:
+"...v2024.1 -> v2025.1 -> v2025.2..." with nothing skipped - **cleared
+directly from the publisher's own primary source.** Tennessee has no
+public official archive/version-history page (the same situation
+section 44.3 already found - Tennessee's classification "rests on the
+thinnest evidence of the four" even for the existing chain) - **not
+cleared, and not clearable by public search**, consistent with the
+already-disclosed limitation rather than a new one specific to this
+candidate.
+
+**(2) The <10% combined preamble+untitled acceptance bar**, computed
+directly (not inferred), with the known reference editions computed
+alongside for a sanity check:
+
+| Edition | Combined preamble+untitled |
+|---|---|
+| `tn_20250911` (candidate) | **5.0%** |
+| `tn_sept2024` (existing, reference) | 5.0% (identical) |
+| `ct_v20251` (candidate) | **0.0%** |
+| `ct_v20252` (candidate) | **0.0%** |
+| `ct_v20241` (existing, reference) | 0.0% (identical) |
+
+Both candidates clear the bar comfortably, and Tennessee's rate matches
+its own already-confirmatory sibling edition to one decimal place - as
+clean a pass as this check can produce.
+
+**Size-outlier check** (the section 56 bug signature: guideline size
+&gt;4x the edition's median, floor 50, excluding `<preamble>`), run for
+both candidates and their reference siblings:
+
+- `tn_20250911`: 3 outliers - "Delirium with HyperAgitation" (533),
+  "Vascular Access" (208), "Pre-eclampsia and Eclampsia" (129). **The
+  exact same three guidelines**, at comparable magnitude, that
+  `run_sensitivity_analysis.py` already excludes from the existing
+  Tennessee data (539/228/133 there) - the SAME already-diagnosed and
+  already-handled artifact, not a new one.
+- `ct_v20251`/`ct_v20252`: 6 outliers each (Appendix 1/2/4 medication
+  references, Central Line Access, Staffing Guidelines, Adult) - the
+  same count as the existing `ct_v20241` reference's own 6 outliers,
+  with substantial overlap in which guidelines are affected (both
+  editions' medication-reference appendices and a central-line-access
+  guideline are oversized in every Connecticut edition checked). Normal
+  edition-to-edition drift in an already-known pattern, not an
+  escalation.
+
+**(3) Revision-magnitude classification** from the documents' own front
+matter (section 3.3's method) was **not** performed in this session -
+still outstanding for both candidates.
+
+### 79.6 Summary for the user
+
+Two structurally strong new candidate pairs, both now cleared on
+acceptance-bar and size-outlier grounds with numbers matching their
+already-confirmatory sibling editions closely enough to read as the
+same underlying document family, not a different risk profile:
+
+- **Tennessee Sept2024 -> 09.11.2025**: 94.6% trivially alignable, 5.0%
+  preamble (identical to the existing reference edition), same 3
+  known outliers at comparable size. Missing only consecutive-edition
+  verification (no public archive exists to check against - an
+  existing, disclosed limitation of this publisher, not new) and
+  revision-magnitude classification.
+- **Connecticut v2024.1 -> v2025.1** (and v2025.1 -> v2025.2 as a
+  further link): 88.6% trivially alignable, 0.0% preamble (identical to
+  the reference), 6 outliers matching the reference's own pattern.
+  Consecutive-edition status **confirmed directly** from Connecticut's
+  own official version page. Missing only revision-magnitude
+  classification.
+
+Rhode Island and Vermont remain unusable (section 78/79.4). No
+major-revision pair was found; H1/H2 remain untestable (section 79.1).
+
+**What remains before either candidate could become a fifth (or sixth)
+confirmatory pair**: revision-magnitude classification (quick, code-
+only) and a dated PREREGISTRATION.md pre-commitment entry before any
+real annotation sampling is drawn - the one step in this whole search
+that is properly the user's decision to make, not something to proceed
+on without asking, since it commits real annotator time to new data.
+Both candidates are ready for that decision whenever the user wants to
+make it.

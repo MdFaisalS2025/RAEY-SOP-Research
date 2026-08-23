@@ -6647,3 +6647,85 @@ direct authenticated `curl` session outside this sandbox, or simply the
 user downloading it directly and providing the file) would very likely
 succeed immediately, since the server itself responds correctly and the
 file's existence and size are already confirmed.
+
+## 83. District of Columbia: a real, previously-unchecked document - but boundary detection shows a genuine, unresolved quality problem
+
+DC had never been checked anywhere in this study before section 80's
+sweep. Two documents retrieved directly via `curl` (no bot-blocking
+issue at all for DC - the earlier research agent's confusion was
+`WebFetch`'s markdown converter failing on binary PDF content, not a
+retrieval problem): `dc_aug2024.pdf` ("August 2024") and
+`dc_03172026.pdf` (dated "03172026" in its filename, confirmed via
+SHA-256 to be a genuinely distinct document, not a duplicate or stale
+file - resolving section 80.3's open discrepancy).
+
+### 83.1 Individually: genuinely strong signal
+
+`corpus_probe` verdict on the newer edition: **STRONG** (1565.6
+chars/page, 12.9% numbered lines) - the first STRONG verdict anywhere
+in this entire corpus-expansion effort; every other candidate tested
+(Tennessee, Connecticut, Nebraska, Utah) scored WEAK or USABLE.
+`item_parser`: both editions parse with 0 duplicate ids, 0-1 ambiguous
+markers, and real recommendation-level content ("Contact Medical
+Control as soon as feasible in accordance with protocols for
+medication...") - 132 guidelines / 2,350 items (new), 206 guidelines /
+2,629 items (old). Offset spot-check: 53/2000 mismatches (2.65%),
+comfortably within the historical normal range, unlike Connecticut's
+earlier ~80% artifact.
+
+### 83.2 Cross-edition alignment: much lower than every existing pair
+
+`item_align` (Aug2024 -> 03172026): only **50.5% trivially alignable**
+(T1+T2), 30.8% needing more than an id, **18.7% unmatched** - far below
+every existing confirmatory pair (85-99% trivially alignable, 0.5-5.7%
+unmatched) and below the two vetted Tennessee/Connecticut candidates
+(88.6-94.6%) as well.
+
+### 83.3 Investigated before characterizing this either way (section 10)
+
+A result this different from everything else in the corpus deserves
+scrutiny before being called either "a harder, more interesting
+document" or "not usable" - the two readings this number alone cannot
+distinguish.
+
+Combined preamble+untitled rate: **4.2% (old) / 4.4% (new)** - well
+under the 10% acceptance bar on its face. But the size-outlier check
+tells a different story: **17 outlier guidelines (old), 12 (new)** -
+far more than any existing pair (Tennessee 3, Connecticut 6) - and,
+critically, several of the outlier TITLES THEMSELVES are visibly
+malformed: *"Treatment Care Protocols [encoding artifact] General
+Medical Emergencies Behavioral Psychological Emergencies 7.11"* (multiple
+category headers concatenated into one string), *"Good, crying
+Treatment Protocols [encoding artifact] Resuscitation Newborn
+Resuscitation 4.9"* (a content fragment - "Good, crying" - bleeding
+into what should be a clean guideline title).
+
+**This is not "genuinely harder content the structural method exists to
+help with" - it is the same recurring anchor-detection weakness this
+study has documented at multiple other publishers** (the section 56
+boundary bug's mechanism: adjacent content swept into whichever
+guideline the anchor last successfully locked onto), here producing
+oversized, garbled-title guidelines rather than the catastrophic
+"everything under `<preamble>`" collapse seen at Rhode Island/Vermont/
+Nebraska/Utah. The raw combined-percentage number passes the bar
+mechanically; the outlier pattern reveals the same class of real
+underlying problem the percentage alone does not capture.
+
+### 83.4 Conclusion
+
+DC is a genuine, valuable new finding - a previously-unchecked
+publisher with real, substantial content that parses far better than
+almost every other candidate tried in this effort - but it is **not**
+ready to be characterized as a clean candidate the way the Tennessee
+and Connecticut pairs were. The low alignment rate is most likely
+explained, at least partly, by the same title-garbling problem visible
+in the outlier list, not by a genuinely harder cross-edition revision.
+Before this could be seriously considered: the specific outlier
+guidelines would need hand inspection (matching the discipline already
+applied to Connecticut's Central Line Access outlier in section 58.2)
+to determine whether the garbled titles are concentrated in a
+excludable subset or are pervasive enough to disqualify the document
+format generally - not undertaken here, to avoid overselling a
+promising-looking but not yet properly vetted lead. Both documents
+added to `CORPUS_MANIFEST.md` with SHA-256 hashes for provenance; not
+promoted to confirmatory or even fully-vetted-candidate status.

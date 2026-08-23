@@ -76,6 +76,8 @@ for provenance/reproducibility only.
 | `ne_2024_new.pdf` | Nebraska EMS Model Protocols, "completely revised" 2024 edition (Last Revised 5/2026) — genuine major-revision language, does NOT parse cleanly, §80.1 | ✅ `https://dhhs.ne.gov/OEHS%20Program%20Documents/EMS%20Model%20Protocols.pdf` | `8d36ea3d4a1088202504198a82ac1eac09acccf32a4f00483054b9181f5ac839` | 7,831,906 B |
 | `ne_2020_prior.pdf` | Nebraska EMS Protocols, 2020 edition (pre-revision, for comparison) | ✅ `http://govdocs.nebraska.gov/epubs/H8355/H004-2020.pdf` | `0b3b38673369d6aa40fd39349e43e7985ff287caa33c2163aa4c9021f8a703a3` | 6,033,775 B |
 | `ut_2025_new.pdf` | Utah EMS Protocol Guidelines, 2025 edition (Utah's first-ever second edition) — parsing still collapses (3 items), §80.2 | ✅ `https://ems.utah.gov/wp-content/uploads/sites/34/2025/12/2025-Utah-EMS-Protocol-Guidelines-3.pdf` | `f4f8d742db663cc5de77ded0eb4c65ed68464348add5ae8578fea9a52ad9a1e0` | 5,359,192 B |
+| `dc_aug2024.pdf` | DC Fire & EMS Protocols, August 2024 — real content, parses well individually, §83 | ✅ `https://fems.dc.gov/sites/default/files/dc/sites/fems/page_content/attachments/DC_Fire_&_EMS_Protocols_August_2024.pdf` | `37578a84b137f96c7fac1b958c4e7c9df0d0098613d3796fc62322ae86a89fcf` | 13,071,818 B |
+| `dc_03172026.pdf` | DC Fire & EMS Protocols, dated "03172026" in filename — genuinely distinct from the Aug2024 edition, alignment shows a real boundary-detection quality problem, §83 | ✅ `https://fems.dc.gov/sites/default/files/dc/sites/fems/page_content/attachments/DC%20Fire%20%20EMS%20Protocols%2003172026.pdf` | `9716f85302418672007d5113ad2433fea6a3b193b20448d500ec0487ef413622` | 9,650,303 B |
 
 ## Dev corpus (§2, exploratory only — never used in any confirmatory claim)
 

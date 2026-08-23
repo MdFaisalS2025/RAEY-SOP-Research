@@ -6903,3 +6903,37 @@ exists to test.
 This completes the "52 states" sweep the user's framing implied - 50
 states, DC, and Puerto Rico all now checked at least once in this
 study's history.
+
+## 87. Correction: New York's "V.26.0" was not a new lead - already tested as part of the original dev-corpus work
+
+Section 85 listed New York (V.26.0) as blocked on retrieval, alongside
+New Hampshire. Retrying with a browser-realistic User-Agent header
+(`curl -A "Mozilla/5.0..."`) succeeded immediately - the earlier 403s
+were ordinary bot-detection, not a wrong URL, resolved by the same
+technique that unblocked several other states' downloads across this
+session. **But the resulting file (`ny_v260.pdf`) turned out
+byte-identical to `ny_collab_v260.pdf`, already present in the corpus**
+- checked before doing any further work, per section 10's discipline
+against assuming a "new" download is actually new.
+
+New York's v25.1->v26.0 pair (both Collaborative and BLS) is not a new
+finding at all - it is this study's own DEV-CORPUS work, already fully
+tested and published in sections 15.2-15.3: NY Collaborative 44.0%
+trivially alignable / 19.1% unmatched (fails the bar, same range as
+this round's other failures); **NY BLS 90.9% trivially alignable / 4.9%
+unmatched - a number that would clear the acceptance bar cleanly if NY
+were eligible.** New York remains ineligible regardless of this number,
+per its standing status as a dev/exploratory publisher, not a parsing
+or alignment quality issue - the same distinction already established
+throughout this study's dev-vs-confirmatory discipline.
+
+**New Hampshire remains genuinely blocked** - the same User-Agent
+technique that fixed New York failed against `mm.nh.gov` (still
+returns an HTML page), suggesting a stronger or different bot-detection
+mechanism. Left as a documented open retrieval gap, not pursued
+further in this entry.
+
+This closes out New York cleanly (already-known result, correctly
+excluded on eligibility grounds, not a parsing failure) and leaves New
+Hampshire as the one genuinely unresolved retrieval gap from this
+entire corpus-expansion effort.

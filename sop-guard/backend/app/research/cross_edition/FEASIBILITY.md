@@ -6729,3 +6729,45 @@ format generally - not undertaken here, to avoid overselling a
 promising-looking but not yet properly vetted lead. Both documents
 added to `CORPUS_MANIFEST.md` with SHA-256 hashes for provenance; not
 promoted to confirmatory or even fully-vetted-candidate status.
+
+### 83.5 Follow-up: outlier content read directly - a decisive negative result, not a salvageable one
+
+Section 83.4 flagged the outlier guidelines as needing hand inspection
+before DC could be seriously considered. That inspection is now done.
+
+Directly sampled the largest outlier ("Dystonic Reactions 7.4", 325
+items - the single largest guideline in the document, roughly 20x the
+edition's median size) at regular intervals across its full range,
+rather than only its first few items. The content is topically
+unrelated across the sample: *"Provide continuous EKG monitoring,"
+"Establish IV/IO access," "Obtain 12 lead EKG and evaluate for cardiac
+causes of acute adrenal crisis," "Acquire a 12-lead EKG following
+cessation of seizure activity," "Dispense oral glucose... diabetic
+ketoacidosis," "Patients with syncope or near-syncope," "Discontinue
+cold water immersion... hyperthermia."* EKG monitoring, adrenal crisis,
+seizures, diabetic ketoacidosis, syncope, and hyperthermia are not
+Dystonic Reactions, or plausibly connected to it - this is a genuine
+garbage-bucket guideline collecting content from many unrelated real
+protocols, not a legitimately large single protocol.
+
+**This is a decisive result, not a salvageable one.** The prior
+concern (section 83.3) that this might be concentrated in a small,
+excludable subset does not hold: with 12-17 outlier guidelines per
+edition (roughly 4-6x every existing confirmatory pair's count) and the
+single largest one already shown to be a multi-protocol garbage bucket,
+this is a broad, severe manifestation of the same anchor-detection
+mechanism section 56 diagnosed at a smaller scale in Tennessee - DC's
+document format (dense numeric subsection labels like "7.4", "3.3",
+"11.5") appears to confuse the current anchor-detection heuristic more
+severely than any publisher already in this study's confirmatory set.
+
+**Conclusion, updated from section 83.4's "not yet vetted" to a
+concrete negative finding**: DC is not usable with the current parser
+without a genuine fix to guideline-boundary anchor detection for this
+document's specific format - the same class of work flagged as out of
+scope for a one-off patch in section 16.3's Connecticut precedent
+("treat it as requiring a separate extraction strategy... not
+undertaken here"). DC joins Rhode Island and Vermont as a state with
+real, substantial content that the current pipeline cannot cleanly
+extract, for a documented and specific reason rather than an
+unexplained failure.

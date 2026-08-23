@@ -5565,3 +5565,103 @@ state unchanged at `d3068ee`; only `diagnose_t2_mechanism.py` and
 `run_h3_test.py` (neither frozen) were modified. Full dated entries in
 `PREREGISTRATION.md` §11 (2026-08-22, two entries: the join-bug-gap
 correction and this recompute result).
+
+## 72. B7 (local cross-encoder reranker): worse than no reranking at all, and why
+
+Audit round 4, Phase 3. B6 (§69) found a general LLM reranker adds no
+measurable value over trusting the embedding retriever's own top-1
+ranking. Fresh literature research turned up a specific, testable
+follow-up question: purpose-built cross-encoder rerankers are reported
+in 2025-2026 benchmarks to beat LLM rerankers by up to 15% NDCG@10 while
+being far cheaper - does a reranker actually built for this task class,
+rather than a general LLM, do better?
+
+### 72.1 Design
+
+`baseline_b7_reranker.py` reuses B6's retrieval unchanged
+(`get_topk_candidates`: top-k=10 by cosine similarity, `bge-small-en-v1.5`,
+unscoped across the whole new document) so any accuracy difference
+between B6 and B7 isolates the reranking step itself. The reranker is
+`BAAI/bge-reranker-v2-m3` via `sentence_transformers.CrossEncoder`, run
+entirely locally - no API key, no rate limit, no cost, fully
+deterministic. Each of the 10 retrieved candidates is scored
+independently against the old item's text; a NONE-prediction floor is
+swept over {0.0, 0.3, 0.5, 0.7} rather than a single calibrated choice,
+matching `b5_model_floor_sweep.py`'s existing discipline. Reported
+against the naive top-1-retrieval-only shortcut (no reranking at all) -
+the same comparison that made B6's null result interpretable.
+
+### 72.2 Result: worse than no reranking, at every floor tested
+
+| Floor | B7 accuracy | vs. naive top-1 (raw) | 95% CI |
+|---|---|---|---|
+| 0.0 (always pick argmax) | 69.53% | **−0.0343** | **[−0.0644, −0.0086]** — significant |
+| 0.3 | 70.82% | −0.0215 | [−0.0558, 0.0086] |
+| 0.5 | 72.10% | −0.0086 | [−0.0472, 0.0300] |
+| 0.7 | 70.82% | −0.0215 | [−0.0601, 0.0172] |
+
+For reference: naive top-1-retrieval-only accuracy is **72.96%**
+(identical to B6's finding, as expected - same retrieval). B7 never
+exceeds the naive shortcut at any floor tested, and against the method
+itself (71.24%) none of the four floors reach significance in either
+direction.
+
+### 72.3 Investigated before trusting this (section 10)
+
+A purpose-built reranker actively hurting accuracy is a surprising
+result in the unfavourable direction, and got the same scrutiny section
+10 requires for a suspiciously favourable one. Of 233 items, the
+reranker disagreed with naive top-1 on 22 (9.4%): 2 cases where the
+reranker was right and naive was wrong, 10 where naive was right and the
+reranker was wrong, 10 where both were wrong.
+
+Direct inspection of all 10 naive-right/reranker-wrong cases found a
+consistent mechanism, not scattered noise:
+
+- "5 2 1 Bilevel Positive Airway Pressure - Adult" scored **0.9999**
+  against "New Transcutaneous Pacing - Adult and Pediatric" - an
+  unrelated intervention, not even the same organ system.
+- "Tachycardia Adult" scored **1.0** against the same transcutaneous-
+  pacing item.
+- "Ventricular Tachycardia with a Pulse" confidently matched to
+  "Torsades de Pointe" - a related but genuinely distinct arrhythmia
+  protocol requiring different management.
+
+Ruled out as explanations: truncation (item texts are short, well under
+`max_length=512`) and retrieval failure (naive top-1, using the
+identical 10-candidate list the reranker also saw, picked the correct
+item in every one of these 10 cases - the true match was always present
+and ranked first by retrieval before reranking demoted it).
+
+The pattern is consistent with `bge-reranker-v2-m3` - trained for
+general open-domain relevance, not EMS protocol documents specifically -
+weighting this corpus's own already-documented templated structure
+(section 3.1: "the structure is templated, which matters more than the
+numbering") and shared clinical-protocol boilerplate over the actual
+distinguishing semantic content. This is exactly the kind of domain-
+transfer failure the retrieve-then-rerank literature warns reranking can
+introduce when the reranker was not evaluated on template-heavy
+specialized documents during its own training/benchmarking.
+
+### 72.4 What this means for the paper
+
+A second, independently-obtained negative result on top of B6's, not a
+repeat of the same one. Neither a general LLM (B6) nor a purpose-built
+cross-encoder reranker (B7) improves on simply trusting the embedding
+retriever's own top-1 ranking for this specific task - and B7 actively
+HURTS accuracy at its most permissive floor, a stronger and more
+surprising finding than B6's mere null result. The two failures are
+mechanistically different and independently diagnosed: B6 essentially
+echoed its retriever (agreed with it 96.1% of the time, added nothing);
+B7 actively disagrees with its retriever on 9.4% of items and is wrong
+more often than right when it does, with a specific, identified cause
+(confident domain-transfer errors on templated documents). Together they
+constitute complementary evidence that this task's difficulty is not a
+reranking-capability gap generic rerankers or generic LLMs can close
+out of the box - it requires either fine-tuning on this specific
+document genre or a structurally-aware method, which is exactly the
+gap this study's own structural method was built to address (even
+though the structural method itself does not clear B2's text-only
+baseline either, per section 53).
+
+Full numbers: `annotation_packets/b7_comparison_report.json`.

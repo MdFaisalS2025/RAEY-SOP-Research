@@ -6352,3 +6352,171 @@ that is properly the user's decision to make, not something to proceed
 on without asking, since it commits real annotator time to new data.
 Both candidates are ready for that decision whenever the user wants to
 make it.
+
+## 80. Full 50-state + DC re-sweep: a genuine major-revision document found (Nebraska), but it does not parse cleanly; many newer minor editions catalogued
+
+At the user's request to search deeply across every state again, three
+parallel research passes covered all 50 states plus DC, re-checking
+every state's known status against roughly two years of publisher
+updates and searching specifically for explicit major/complete-revision
+language anywhere, not only at the three eligibility-gate-approved
+publishers.
+
+### 80.1 Nebraska: genuine "completely revised" language found, primary-source-confirmed - but the document does not parse
+
+The current Nebraska EMS Model Protocols document
+(`dhhs.ne.gov/.../EMS%20Model%20Protocols.pdf`, "Last Revised 5/2026")
+contains, on its own acknowledgements page, confirmed by direct text
+extraction: *"...pleased to provide this **completely revised and
+updated** version of EMS Protocols... **The 2024 Protocols have taken on
+a new look** utilizing the algorithm format... **This edition replaces
+all previous editions**..."* - explicit, primary-source, unambiguous
+major-revision language, exactly what §11's stopping rule and every
+subsequent search have never found. Two prior editions exist for
+comparison (`H004-2012.pdf`, `H004-2020.pdf`).
+
+**This is the strongest major-revision language found anywhere in this
+study's history, at any point in the search.** It is also, importantly,
+**not from one of the three publishers the pre-committed eligibility
+gate restricts a major-pair candidate to** (Tennessee, Pennsylvania,
+Connecticut - "both editions from a document generation already
+confirmed clean by prior blind testing," §11 2026-08-17). Nebraska was
+previously tested (§27) and was NOT a clean pass - reported then as
+"garbage anchor again." Whether to consider loosening or reinterpreting
+the eligibility gate for a finding this significant is **explicitly the
+user's decision, not made here** - the gate's own text states "no
+case-by-case leniency" specifically to prevent exactly this kind of ad
+hoc exception being decided informally in the middle of a search.
+
+**Tested anyway, since empirical testing costs little and directly
+informs that decision**: downloaded the new edition and ran the frozen
+pipeline. `corpus_probe`: WEAK (2017.7 chars/page, only 1.9% numbered
+lines). Per §12.1's standing lesson, did not trust this alone -
+`item_parser` result: 91 guidelines but only **421 items** extracted
+(compare: Tennessee's ~1,500-1,900 for a similarly-sized document), and
+**946 sections yield no items at all** - the large majority of the
+document's real content. Sample items are table-of-contents noise
+("Table of Contents Table of Contents Note regarding medication..."),
+not real recommendation-level content.
+
+**Root cause, directly stated by the document's own acknowledgements
+text**: the 2024 revision moved to an "algorithm format" - a
+flowchart/decision-tree visual layout, not the numbered-prose-list
+convention every one of this study's parseable documents (Tennessee,
+Pennsylvania, Connecticut, and the failed-but-real-content states like
+Rhode Island/Vermont) uses. This study's marker-based item extraction is
+built for numbered/lettered/bulleted prose lists; it has no mechanism
+for flowchart-box content, which is a fundamentally different visual
+structure requiring different extraction logic entirely (something
+closer to the VLM approach that succeeded at boundary detection in
+§75, not the current text-marker parser).
+
+**Conclusion: a genuine major revision exists, and is now documented
+with primary-source confirmation for the first time in this study - but
+it is not usable with the current pipeline, for a reason unrelated to
+publisher eligibility.** This is worth stating plainly in any future
+limitations discussion: the field may be moving toward algorithm-format
+protocols, which this study's whole parsing approach does not yet
+address, independent of whether Nebraska specifically becomes an
+eligible confirmatory publisher.
+
+### 80.2 Utah: a genuine second edition exists for the first time
+
+Previously confirmed to have only ever had one edition (§37, §79.2 note
+`- Utah`). A "2025 Utah EMS Protocol Guidelines" (Dec 2025) now exists -
+`ems.utah.gov`, the state's first-ever second edition. Not yet tested
+with the pipeline in this entry; a genuine first Utah pair is now
+possible where none was before, pending a parsing check.
+
+### 80.3 Every other lead found, by category
+
+**Newer editions confirmed to exist, not yet pipeline-tested** (in
+rough priority order, all from official state sources): Hawaii (2025,
+supersedes the already-tested 2023 edition), Alabama (11th edition,
+Aug 2025), Kentucky (2025-04-30, notably larger file than before),
+Maine (2025, v10.29), Maryland (2026 print edition), New Jersey
+(8/21/2025, described as a full ALS+BLS combined document, notably
+different from the previously-tested "mostly unmatched" version), New
+York (V.26.0, the study's dev publisher), New Hampshire (progressed to
+v9.2/v9.3, past the version whose "final" release previously collapsed
+to 94.4% preamble - worth re-testing whether the collapse persists),
+Ohio (a direct-from-state edition, not the third-party mirror
+previously tested), South Carolina (renamed "EMS Clinical Operating
+Guidelines," Nov 2025), West Virginia (2026 booklet, plus unconfirmed
+"significant consolidation" language that could not be verified against
+its primary source - the linked news release 404'd).
+
+**Unresolved, needs a second look with better tooling**: Massachusetts
+(live `mass.gov` now serves "Version 2026.1" and a real browser session
+confirmed a genuine downloadable file, a different outcome than the
+earlier DOCX-mislabeled-as-PDF problem - programmatic fetch is
+bot-blocked, needs a browser-based retrieval); District of Columbia (a
+file literally named/dated "03172026" exists in the same directory as
+the officially-listed Oct 2023 "most recent revision," an unresolved
+discrepancy - could not confirm whether it is a genuine newer edition, a
+draft, or a stale/mislabeled file); Wisconsin (found PDFs directly on
+`dhs.wisconsin.gov`, apparently NOT behind the login gate previously
+found - "confirmed login-gated" may have been specific to a different
+page or has changed; the Wayback CDX cross-check to determine historical
+availability could not be completed, since this session's `WebFetch`
+tool cannot reach `web.archive.org`, an environment limitation not a
+finding about Wisconsin itself).
+
+**Montana: the blocker fully diagnosed, and it is permanent, not
+transient.** The single distinct-digest 2024-07-18 capture previously
+attributed to "an Archive.org outage" is confirmed instead to be a
+**Common Crawl-sourced capture, hard-truncated at exactly 1,048,576
+bytes** (the archived headers show `x-archive-orig-x-crawler-content-
+length: 1328248` against a truncated `content-length: 1048576`) - this
+is not something that resolves by retrying later, unlike a genuine
+outage. Partial content is technically recoverable (82 raw content
+streams present) but would require a dedicated PDF-repair tool
+(`qpdf`/`mutool`/`pikepdf`) not available in this environment. Montana's
+status changes from "worth an immediate retry" to "requires different
+tooling," a real, useful correction to the prior entry's optimism.
+
+**North Carolina: still fully blocked**, a fourth consecutive round of
+failure. This round specifically checked the Google-Drive-hosted
+document folders the state's site now links to and confirmed they
+contain policy/procedure/medication documents, not the combined
+clinical-protocol PDF itself - the state may have shifted to a
+non-indexed distribution model that resists automated discovery
+entirely, a structural explanation for the persistent failure rather
+than a retrieval problem to keep retrying the same way.
+
+**No change, re-confirmed structurally ineligible** (one quick check
+each, no new evidence of a compiled statewide document): Alaska,
+Arkansas, California, Colorado, Florida, Georgia, Idaho, Illinois,
+Indiana, Iowa (one ambiguous mirror found, not elevated - see the
+research agent's own note), Kansas, Louisiana, Michigan, Minnesota,
+Mississippi, Missouri, Nevada, North Dakota, Oklahoma, Oregon, South
+Dakota, Texas, Virginia, Washington, Wyoming.
+
+**No change, re-confirmed at their known status**: Arizona (the
+single-capture dead end for edition-pairing stands, though the document
+is now directly live-hosted with visible recent incremental updates -
+worth noting for future single-edition reference use, not pairing),
+Rhode Island, Vermont (both per §78-79, no further action needed),
+Delaware (routine biennial update only, no revision-magnitude language).
+
+**No major-revision language confirmed** for Tennessee, Pennsylvania, or
+Connecticut specifically - the three eligibility-gate-approved
+publishers - despite dedicated searches through each publisher's full
+available bulletin/meeting-minutes history, not just recent years. This
+was the search's primary target and it came back negative for all
+three.
+
+### 80.4 What this changes
+
+No document from this round is added as confirmatory. The Nebraska
+finding is the most significant single result: it proves major-
+revision language exists and is findable in this document genre after
+all (contrary to this study's prior working hypothesis that it might
+not be a convention the genre uses) - just not, so far, at a publisher
+this study's pipeline can currently parse. Utah's new second edition and
+the long list of newer minor editions are real, tractable next steps if
+the user wants to keep expanding the corpus, gated on the same checks
+§79 already established. Massachusetts, DC, and Wisconsin have
+genuinely open threads worth a follow-up with different tooling
+(browser-based retrieval, and a Wayback-capable fetch tool
+respectively) rather than being closed out as dead ends.

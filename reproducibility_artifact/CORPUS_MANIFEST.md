@@ -73,6 +73,9 @@ for provenance/reproducibility only.
 | `ri_2026_02.pdf` | Rhode Island Statewide EMS, v2026.02 (rejected — boundary omission, §78) | ✅ `https://health.ri.gov/sites/g/files/xkgbur1006/files/2026-02/StatewideEmergencyMedicalServices.pdf` | `b59cce67fb7057a27060e3b8aedeff0f7389571139c30abce65e79e3d996daae` | 6,275,955 B |
 | `vt_2025_new.pdf` | Vermont Statewide EMS Protocols, 2025 (rejected — boundary omission, §78) | ✅ `https://www.healthvermont.gov/sites/default/files/document/eprip-2025-EMS-Protocols_0.pdf` | `33aa4e7abd3d5e3663b2485d5513950f8374304dca469ac3acb48ee7b9e15051` | 16,770,370 B |
 
+| `ne_2024_new.pdf` | Nebraska EMS Model Protocols, "completely revised" 2024 edition (Last Revised 5/2026) — genuine major-revision language, does NOT parse cleanly, §80.1 | ✅ `https://dhhs.ne.gov/OEHS%20Program%20Documents/EMS%20Model%20Protocols.pdf` | `8d36ea3d4a1088202504198a82ac1eac09acccf32a4f00483054b9181f5ac839` | 7,831,906 B |
+| `ne_2020_prior.pdf` | Nebraska EMS Protocols, 2020 edition (pre-revision, for comparison) | ✅ `http://govdocs.nebraska.gov/epubs/H8355/H004-2020.pdf` | `0b3b38673369d6aa40fd39349e43e7985ff287caa33c2163aa4c9021f8a703a3` | 6,033,775 B |
+
 ## Dev corpus (§2, exploratory only — never used in any confirmatory claim)
 
 | File | Publisher / edition | Retrieval | SHA-256 | Size |

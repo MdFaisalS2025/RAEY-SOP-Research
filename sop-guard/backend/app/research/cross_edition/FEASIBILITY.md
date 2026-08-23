@@ -6771,3 +6771,55 @@ undertaken here"). DC joins Rhode Island and Vermont as a state with
 real, substantial content that the current pipeline cannot cleanly
 extract, for a documented and specific reason rather than an
 unexplained failure.
+
+## 84. Five more untested newer editions checked: two too thin, three parse individually well but none align
+
+Continuing the corpus-expansion sweep with editions section 80.3
+catalogued as "newer editions confirmed to exist, not yet pipeline-
+tested."
+
+**Hawaii (2025)** and **Alabama (11th edition, 2025)**: both too thin
+to be usable. Hawaii: 15 guidelines but only 102 items, 77 sections
+empty. Alabama: 69 guidelines but only 109 items (barely more than one
+item per guideline on average), 362 sections empty. Both match this
+study's prior characterization of these publishers (Hawaii's editions
+already tested and rejected; Alabama's "~90% unusable" finding) -
+newer editions did not change the underlying structural problem.
+
+**Maine (2025), Maryland (2026), New Jersey (2025)**: all three parse
+individually well - Maine 42 guidelines/1,720 items/**0 sections
+empty**; Maryland 125 guidelines/3,958 items; New Jersey 59
+guidelines/2,198 items/only 20 sections empty. All three looked
+genuinely promising on this axis alone, better than DC's individual
+parse in some respects.
+
+**None align.** Tested against each publisher's most recent prior
+edition already in the corpus:
+
+| Pair | Trivially alignable | Unmatched |
+|---|---|---|
+| Maine 2019->2025 | 47.5% | 22.2% |
+| Maryland 2025->2026 | 44.9% | 15.8% |
+| New Jersey 2022->2025 | **0.3%** | **57.8%** |
+
+All three fall well below even DC's already-marginal 50.5%, let alone
+the 85-99% range every existing confirmatory pair and the two newly-
+added Tennessee/Connecticut pairs clear. New Jersey's result is a
+near-total collapse - old items (334) versus new items (2,198) differ
+by nearly 7x, suggesting either the 2022 edition itself parses far more
+thinly than its 2025 counterpart or the document changed format
+substantially between editions (a 3-year gap, versus every existing
+pair's 1-2 year gaps). Maryland's alignment is dominated by T5_moved
+(38.2% of all items) rather than T6_unmatched, suggesting large-scale
+item reordering/renumbering rather than content loss - a different
+mechanism from DC's garbage-bucket problem, not yet diagnosed further.
+
+**None of the five progress past this stage.** Not added to
+`CORPUS_MANIFEST.md` as candidates (their source PDFs are already
+locally present from this and prior sessions' retrieval, but the
+manifest is reserved for documents feeding an actual reported claim or
+a genuinely vetted candidate, matching its own stated scope). This
+closes out five of the eleven "newer edition, not yet tested" entries
+section 80.3 catalogued; the remaining six (New York, New Hampshire,
+Ohio, South Carolina, West Virginia, plus Kentucky's download which
+failed and needs a retry) are the next natural targets.

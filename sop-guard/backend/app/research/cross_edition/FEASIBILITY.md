@@ -5389,3 +5389,93 @@ itself part of what this section reports honestly.
 Full numbers: `annotation_packets/b6_comparison_report.json`; raw
 LLM responses cached per pair in
 `annotation_packets/*/b6_response_cache_gemini-35-flash-lite.json`.
+
+## 70. Docling as a second real structure-quality anchor: high recall, low precision, a different failure mode than our own parser
+
+Audit round 3, Phase 3. Installed `docling` 2.121.0 fresh this session
+(clean install, ~130GB free disk headroom confirmed first). Design:
+our parser's item extraction and the existing 233-item ground truth stay
+completely fixed; only guideline-boundary detection is swapped to
+Docling's own `section_header`-labelled output, scored the identical way
+§64 scored our own parser - `match_guidelines` (frozen, unchanged)
+against the same two annotators' Tennessee boundary ground truth, with
+the same collision-artifact-corrected F1 (`run_calibration.corrected_f1`,
+reused unchanged).
+
+### 70.1 A real pitfall, found and handled before scoring
+
+Docling's `section_header` label spans multiple hierarchy levels mixed
+together - verified directly on the 2017 edition before scoring
+anything: 735 raw `section_header` items, including a running
+page-header ("TENNESSEE EMERGENCY MEDICAL SERVICES PROTOCOL GUIDELINES")
+repeated dozens of times, table-of-contents entries ("Index", "Index -
+Continued"), top-level category headers ("Pediatric Cardiac Emergency",
+"Pharmacology"), and per-protocol sub-headers ("Clinical Notes -
+Airway:") all under the identical label. Rather than hand-classifying
+hierarchy levels - a new heuristic this study could not independently
+validate, and exactly the kind of ad hoc adjustment the pre-commitment
+ruled out in advance - `match_guidelines`' own token-overlap scoring was
+relied on to let noise self-penalize through the precision term, the
+same property already used for our own parser's boundary scoring. Only
+pre-scoring filter: deduplicate to distinct header strings (matching how
+our own parser's `.guidelines` is inherently deduplicated).
+
+### 70.2 Result: F1 far below our own parser's, but not because Docling misses boundaries
+
+| | Docling mean corrected F1 |
+|---|---|
+| Tennessee 2017 (annotator 1 / 2) | 0.3990 / 0.4948 |
+| Tennessee 2018 (annotator 1 / 2) | 0.3005 / 0.3778 |
+| Tennessee 2022-23 (annotator 1 / 2) | 0.3622 / 0.5151 |
+| Tennessee Sept2024 (annotator 1 / 2) | 0.3191 / 0.4866 |
+| **Mean (n=8)** | **0.4069** |
+
+Compared to our own parser's mean corrected F1 (0.8034, §64.2), this
+looks like a stark result against Docling - a large enough gap from
+Docling's own published DocLayNet benchmark (~0.864 mAP) that it
+demanded investigation before being reported, per §10's standing rule
+applied here to a surprising-in-the-unfavourable-direction result the
+same as any other.
+
+**Decomposed directly (Tennessee 2017, annotator 1) rather than
+reported as a single number**: 276 distinct Docling headers against 81
+annotator-listed real protocol titles, 71 matched. **Recall: 87.65%**
+- actually *higher* than what would be needed to beat our own parser's
+performance on this axis. **Precision: 25.72%** - this, not missed
+boundaries, is what drives the low F1. The header-count ratio is
+consistently large across all four editions (276/406/412/467 Docling
+headers against 81-97 real protocol titles per edition, roughly
+3.4x-4.8x over-generation) - strong circumstantial evidence, though only
+directly decomposed for the one point above, that the same
+precision-driven mechanism explains all eight measurements, not
+independently confirmed for each.
+
+### 70.3 What this means for the paper
+
+**Docling is not shown to be worse than our own heuristic parser at
+finding real protocol boundaries - it is shown to over-segment relative
+to the specific "one header per protocol" granularity this study's
+ground truth was built around**, a design-time-choice-driven,
+mechanistically distinct failure mode from our own parser's (§56: the
+boundary-detection bug *merges* content across a lost boundary,
+producing false negatives/under-segmentation; Docling here produces
+false positives/over-segmentation). Reporting only the F1 number without
+this decomposition would materially mislead a reader into concluding
+Docling's underlying layout detection is poor, when the evidence shows
+the opposite for the recall axis specifically.
+
+This does not become a third clean point on §61's curve in the way the
+US Code XML anchor did (§63) - F1 alone is not a fair single-number
+placement given the precision/recall asymmetry just demonstrated, and
+forcing it onto the same axis without a like-for-like granularity match
+would overstate what was actually measured. Reported as a distinct,
+important calibration-methodology finding in its own right: **boundary-
+quality metrics for this task are not interchangeable with general
+document-layout benchmarks (DocLayNet, PubLayNet) without accounting for
+label granularity** - a real, previously undocumented gap between a
+system's published general-purpose layout score and its measured
+performance on a specific downstream "one header per logical unit" task,
+found only because this study built its own independent ground truth
+rather than citing Docling's DocLayNet number directly.
+
+Full numbers: `annotation_packets/boundary_annotation/docling_calibration_report.json`.

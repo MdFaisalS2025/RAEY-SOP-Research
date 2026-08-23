@@ -6937,3 +6937,85 @@ This closes out New York cleanly (already-known result, correctly
 excluded on eligibility grounds, not a parsing failure) and leaves New
 Hampshire as the one genuinely unresolved retrieval gap from this
 entire corpus-expansion effort.
+
+## 88. Attempted DC rescue with VLM boundaries: the VLM finds correct titles, but remapping guidelines alone doesn't fix alignment
+
+Section 75 found a VLM prompted for exactly the ground-truth
+granularity outperforms the marker-based parser at boundary detection
+(F1 0.8954 vs 0.8034) on Tennessee. Section 83 diagnosed DC's
+alignment failure as specifically an anchor-detection problem
+(garbage-bucket guidelines mixing unrelated content). The natural next
+question: does the VLM's boundary-detection strength generalize to
+actually rescuing a broken cross-edition pair, not just scoring well
+against ground truth?
+
+### 88.1 The VLM does find correct DC titles
+
+Ran `vlm_boundaries.extract_vlm_titles` against both DC editions.
+Result: 194 titles (old edition), 195 (new) - a plausible count for a
+~500-page document, and a sample read by hand is clean, coherent, real
+protocol names ("Cardiac Arrest," "Pulseless Electrical Activity (PEA)
+/ Asystole," "Return of Spontaneous Circulation (ROSC)," "Newborn
+Resuscitation") - none of the garbled, multi-protocol-concatenated
+titles the marker parser produced. This confirms section 75's finding
+generalizes: the VLM correctly identifies DC's real guideline
+boundaries where the marker-based anchor heuristic could not.
+
+### 88.2 A rescue attempt built and tested, not just scored
+
+New exploratory script (`dc_vlm_remap.py`, not part of the pipeline,
+does not modify `item_parser.py`/`item_align.py`/`corpus_probe.py`/
+`edition_align.py` - operates entirely on in-memory copies of already-
+parsed editions, reusing `structure_ablation.py`'s established
+monkeypatch-`parse()` pattern for testing "what if" scenarios against
+the real, unmodified `item_align.align_items`): locates each VLM
+title's position in `canonical_text` (guarding against the known
+table-of-contents pitfall - a match is only accepted at or after the
+marker-parser's own first non-preamble item, the same discipline the
+original Phase 3 VLM-boundary plan specified), then reassigns every
+item's `.guideline` field to whichever VLM-title span its `char_start`
+falls into. 95.9%/96.9% of VLM titles were successfully located in the
+text (old/new).
+
+### 88.3 Result: modest, mixed - not a rescue
+
+| | Marker-based (section 83) | VLM-remapped |
+|---|---|---|
+| Trivially alignable | 50.5% | **48.8%** (slightly worse) |
+| T3 renumbered | 2.1% | **28.2%** (much higher) |
+| Unmatched | 18.7% | **15.4%** (improved) |
+
+Unmatched improved modestly; trivially-alignable did not improve at
+all - if anything it moved slightly the wrong way. **This does not
+rescue DC to a usable level** - 48.8% remains far below the 85-99%
+range every existing confirmatory pair clears.
+
+The T3 (renumbered) jump from 2.1% to 28.2% is the most informative
+part of this result: a large fraction of items that were previously
+resolved (correctly or not) by exact-id matching now require the
+method's own structural renumbering-recovery logic instead - because
+reassigning `.guideline` changes every affected item's `item_id`
+(constructed as `guideline/section/marker_path`), even for items whose
+underlying content match was already correct. **The remaining problem
+is not purely at the guideline-boundary level.** Correcting which
+guideline an item belongs to, without also correcting the item-level
+`section`/`marker_path` labeling the marker-based parser produces
+within each guideline, only partially helps - the bottleneck runs
+deeper into DC's specific item-extraction quality (its dense numeric
+subsection convention, "7.4," "3.3," "11.5," visible in the section 83
+outlier titles) than boundary detection alone can fix.
+
+### 88.4 Conclusion
+
+A genuine, honest test of whether section 75's VLM-boundary success
+generalizes beyond scoring against ground truth to actually repairing
+a broken cross-edition pair - it does not, at least not with this
+simple a remapping. DC's boundary detection specifically is fixable
+with VLM assistance (confirmed directly, section 88.1); DC's overall
+alignment is not, because the remaining problem sits at least partly
+in item-level extraction, a different and harder layer this exploratory
+attempt did not address. Worth stating plainly as a limitation of the
+VLM-boundary technique's generality, not oversold as confirming it
+works everywhere it was tried. `dc_vlm_remap.py` retained as a
+reusable tool for testing this same question against any other future
+candidate with a similar failure mode.

@@ -6543,3 +6543,66 @@ gated on the same checks §79 already established. Massachusetts, DC,
 and Wisconsin have genuinely open threads worth a follow-up with
 different tooling (browser-based retrieval, and a Wayback-capable fetch
 tool respectively) rather than being closed out as dead ends.
+
+## 81. Fifth and sixth confirmatory pairs added: revision-magnitude classified, sampled, and packeted
+
+The two candidates section 79 vetted (Tennessee Sept2024->09.11.2025,
+Connecticut v2024.1->v2025.1) are promoted to confirmatory status,
+completing the two checks section 79 left outstanding.
+
+### 81.1 Revision-magnitude classification
+
+Per section 3.3's method - the publisher's own front-matter language,
+not external inference - both candidates' front matter was searched
+directly for revision-magnitude keywords and compared word-for-word
+against their already-confirmatory sibling editions:
+
+- **Tennessee**: the new "09.11.2025" edition carries the identical
+  "(revision project completed July 2024)" phrase already found in the
+  existing Sept2024 sibling - the same text, not merely similar
+  wording.
+- **Connecticut**: both new editions (v2025.1, v2025.2) carry the
+  identical "living document... can be edited and updated at any time.
+  However, they are formally reviewed, edited, and released every two
+  years" boilerplate already found in the existing v2024.1 sibling.
+
+**Both classify as MINOR** - consistent with, not merely similar to,
+every one of the four existing pairs, since the classifying language is
+literally identical across old and new editions in both cases. No
+ambiguity, no judgement call required.
+
+### 81.2 Sample drawn, packets and blind workbooks generated
+
+Using `annotation.stratified_sample` and `annotation.write_annotation_packet`
+completely unchanged - the identical frozen-seed (20261017) per-tier
+draw and packet format used for all four existing pairs:
+
+| Pair | Population (T1/T2/T3/T4/T5/T6) | Drawn (T1/T2/T3/T4/T5/T6) | Total |
+|---|---|---|---|
+| Tennessee Sept2024->09.11.2025 | 1764/58/0/0/34/69 | 30/10/0/0/10/10 | 60 |
+| Connecticut v2024.1->v2025.1 | 1037/338/26/3/59/89 | 16/11/10/3/10/10 | 60 |
+
+Tennessee has no T3/T4 population to draw from in this pair, matching
+the pattern the existing Tennessee 2017->2018 pair already showed (its
+own §47 table shows the same shape).
+
+Two blind annotator workbooks generated (`build_new_pairs_workbooks.py`,
+reusing `build_annotator_workbooks.py`'s formatting completely
+unchanged), scoped to just these two new pairs rather than merged into
+the original 4-pair combined workbooks Annotators A-D already
+completed - retroactively altering an already-submitted instrument
+would be against this study's standing discipline. Two annotators, the
+next available letters after the main round's A-D and the H3' follow-
+up's E-H: **Annotator I and Annotator J**.
+
+### 81.3 What this changes
+
+The confirmatory test set now stands at **6 pairs from 3 publishers**,
+meeting the "≥6 pairs" component of the target a 2026-08-17 entry
+flagged as "not yet met" (its "≥4 publishers" component remains open).
+Once Annotator I and J complete their workbooks - the user's to
+arrange, not something further code work can do - the dataset grows
+from 240 to 360 total sampled items, and every hypothesis test (H3,
+H4, H5) would need a formal re-run against the expanded set, separately
+committed and performed at that time. No result changes from this
+entry alone; it generates the instrument, not data.

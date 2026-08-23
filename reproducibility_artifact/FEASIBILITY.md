@@ -6103,3 +6103,506 @@ established methodological tradition spanning ontology matching (OAEI's
 benchmark track, and its Euzenat et al. formalization of what makes a
 degradation benchmark informative) and document intelligence (ProSA),
 not as an isolated technique invented for this problem.
+
+## 78. Corpus expansion attempt: newer Tennessee edition, retested Rhode Island/Vermont - both negative
+
+At the user's request, checked whether the corpus could be usefully
+grown: (1) a newer Tennessee edition than the existing Sept2024
+(2024-2025), (2) whether Rhode Island and Vermont - both previously
+rejected (sections 22.3, 23.1) for a documented "boundary omission"
+failure mode - now parse cleanly given the parser has since gained
+footer-based anchoring (Maine, section 17) and ToC-table extraction
+(Connecticut, section 18).
+
+**Tennessee**: no edition newer than "Sept24" (2024-2025) found via
+direct site search or the `tn.gov` protocol-guidelines page. The
+existing 4-edition Tennessee chain remains current.
+
+**Rhode Island**: a new v2026.02 edition exists (effective 2026-06-01,
+retrieved from `health.ri.gov`), genuinely newer than what this study
+previously touched. `corpus_probe` verdict: WEAK (2067.6 chars/page,
+only 1.3% numbered lines, 22 template slots). Given `corpus_probe`'s own
+documented history of false negatives (section 12.1: it once scored a
+document WEAK at 0.2-0.3% where the real parser found 42% usable
+content), ran `item_parser` directly rather than trusting the probe
+alone. Result: 49 guidelines, 228 items across 333 pages, but every
+sampled item falls under a `preamble/routine patient care/...` guideline
+- the SAME anchor-detection failure this study already catalogued for
+Rhode Island, unchanged by the parser's newer techniques.
+
+**Vermont**: a 2025 edition exists (retrieved from
+`healthvermont.gov`). `corpus_probe` verdict: USABLE (2771.9 chars/page,
+3.1% numbered lines, 85 template slots - a better surface signal than
+Rhode Island's). `item_parser` result: 58 guidelines, 715 items across
+283 pages, but every sampled item again falls under
+`preamble/paramedic/...` or `preamble/routine patient care/...` - the
+same failure mode already catalogued for Vermont (section 23.1),
+unchanged.
+
+**Why the newer techniques didn't help**: Maine's footer-anchor
+detection and Connecticut's ToC-table extraction were both built against
+those specific publishers' own document conventions (a distinctive
+running footer; a well-formed embedded table of contents), not as
+general-purpose boundary detectors. Rhode Island's and Vermont's actual
+failure mode - real, well-titled protocol content that the anchor
+heuristic simply never locks onto - is a different mechanism neither
+technique addresses. This is a negative but useful result: it confirms
+the original rejections were durable properties of these documents'
+structure, not artifacts of an immature parser at the time they were
+first tried.
+
+**Not attempted**: building new anchor-detection logic specific to
+Rhode Island or Vermont's conventions. Section 16.3 already flagged this
+exact situation for Connecticut before it was fixed: "treat [it] as
+requiring a separate extraction strategy and either defer it or invest
+in table-aware parsing as its own task... do not add [a one-off patch]"
+- the same discipline applies here. A general, publisher-agnostic
+boundary-detection improvement remains a legitimate future direction,
+but a per-state patch for two specific documents would be exactly the
+kind of undisclosed, ad hoc special-casing this study has avoided
+throughout.
+
+## 79. Corpus expansion, continued: two new candidate pairs found (Tennessee, Connecticut), no major-revision language found for any eligible publisher
+
+Continuing section 78's search. Two searches produced genuine new leads
+this study had not previously touched.
+
+### 79.1 Major-revision search: still nothing
+
+Web-searched all three eligible publishers (Tennessee, Pennsylvania,
+Connecticut - the only three a candidate is allowed to come from under
+the pre-committed eligibility gate, section 11's 2026-08-17 entry) for
+any explicit "complete revision" / "major update" / "new edition"
+language. Found none. Connecticut's own material describes its
+protocols as reviewed and released on a regular two-year cycle, not a
+singular overhaul; Pennsylvania's most recent statewide release remains
+2023; Tennessee shows no revision-language announcement. **H1/H2 remain
+untestable** - this is consistent with section 45.2's standing
+conclusion that explicit self-described major revisions may not be a
+convention this document genre uses, not a new negative result.
+
+### 79.2 A new Tennessee edition: strong candidate
+
+Retrieved `tn.gov`'s "TN State Guidelines 2024-2025 09.11.2025.pdf" -
+confirmed via SHA-256 to be a genuinely distinct document from the
+existing `tn_sept2024.pdf` (different hash, different size: 3.56MB vs
+2.64MB), not a re-hosted copy of the same file under a new name.
+
+`item_parser` result: 77 guidelines (matching the existing Tennessee
+chain's usual count), 1,857 items, 0 duplicate ids, standard
+`preamble/notes/N` front matter - structurally clean, no red flags.
+
+`item_align` (Sept2024 -> 09.11.2025): **1,822/1,925 items (94.6%)
+trivially alignable** (T1+T2), 69 unmatched (3.6%) - comparable to or
+slightly better than the existing Tennessee 2017->2018 pair's own
+92.7%/2.7%. A genuinely strong candidate for a THIRD Tennessee
+longitudinal link.
+
+**Not yet confirmatory.** Before this could be added: (1) consecutive-
+edition verification against Tennessee's own official version-history
+page, the same check section 44.3 performed for the existing chain
+(not yet done here); (2) the same <10% combined preamble+untitled
+acceptance bar every existing pair cleared, computed directly rather
+than inferred from the alignment numbers alone; (3) revision-magnitude
+classification from the document's own front matter (section 3.3's
+method), not assumed minor by default; (4) if promoted to confirmatory,
+a dated PREREGISTRATION.md pre-commitment entry before any annotation
+sampling, per this study's standing before-not-after discipline - not
+undertaken in this exploratory entry.
+
+### 79.3 Two new Connecticut editions: also promising, one artifact investigated and cleared
+
+Retrieved v2025.1 and v2025.2 from `portal.ct.gov` (Connecticut has
+released two new editions since this study's existing v2023.1/v2024.1
+pair). Both parse structurally cleanly: 125 guidelines each (up from
+93 in v2024.1), ~2,240 items, 0 duplicate ids, 0 ambiguous markers, 0
+sections with no items.
+
+**A red flag investigated before trusting anything downstream**: both
+editions' `item_parser` offset spot-check reported ~80% mismatches
+(1,598-1,599/2,000) - far above the historical 0-4% range (Appendix B
+item 4's already-disclosed "3-4% mismatch tail, uninvestigated"). Read
+five mismatching items by hand rather than assuming either a real
+content-extraction failure or dismissing it. Finding: in every case
+inspected, the extracted item text is completely correct and meaningful
+- the "mismatch" is an artifact of `char_start` pointing to the START of
+a bullet-marker glyph (`o`, `•`) rather than the text that follows it,
+so a naive same-length slice comparison is offset by the marker's own
+character(s). **This is an escalation of the already-disclosed offset
+tail, not a new bug** - v2025.1/v2025.2 appear to be MORE heavily
+bulleted than prior Connecticut editions, which increases how often this
+specific comparison artifact fires, without indicating any actual
+content-extraction problem. Appendix B item 4 already states this tail
+is "uninvestigated" for the general case; this entry investigates it
+directly for one specific instance and finds it benign here, without
+claiming the general tail is now understood everywhere it appears.
+
+`item_align` (v2024.1 -> v2025.1): **1,375/1,552 items (88.6%) trivially
+alignable**, 89 unmatched (5.7%) - comparable to the existing
+Connecticut v2022.1->v2023.1 pair's own 85.5%/5.7%. A second promising
+candidate.
+
+**One additional caveat this pair needs before any further trust**: item
+count grew from 1,552 (old) to 2,240 (new) - a 44% increase, notably
+larger than typical edition-to-edition growth elsewhere in this corpus.
+Section 56's guideline-boundary bug produced exactly this signature
+(inflated item counts within specific guidelines) in the existing
+Tennessee data before it was diagnosed - this pair has NOT yet been
+checked for the same size-outlier pattern `run_sensitivity_analysis.py`
+already screens the confirmatory set for. Flagging this explicitly
+rather than treating the alignment numbers alone as sufficient
+clearance.
+
+**Not yet confirmatory**, for the same four reasons section 79.2 lists
+for the Tennessee candidate, plus the size-outlier check just named.
+
+### 79.4 Rhode Island and Vermont: retested, both still negative (see section 78)
+
+Already covered in section 78 - both editions' newer versions (RI
+v2026.02, VT 2025) still exhibit the same anchor-detection failure this
+study catalogued before, unchanged by the parser's newer techniques.
+Included here for completeness of this session's corpus-expansion
+summary.
+
+### 79.5 Follow-up: three of the four gating checks completed for both candidates
+
+Continuing the same session, the checks section 79.2/79.3 listed as
+outstanding were run as far as automatable (the fourth - a dated
+pre-commitment entry before any real annotation sampling - is not
+automatable and correctly was not attempted here).
+
+**(1) Consecutive-edition verification.** Connecticut's own official
+version-history page (`portal.ct.gov`) lists every release in order:
+"...v2024.1 -> v2025.1 -> v2025.2..." with nothing skipped - **cleared
+directly from the publisher's own primary source.** Tennessee has no
+public official archive/version-history page (the same situation
+section 44.3 already found - Tennessee's classification "rests on the
+thinnest evidence of the four" even for the existing chain) - **not
+cleared, and not clearable by public search**, consistent with the
+already-disclosed limitation rather than a new one specific to this
+candidate.
+
+**(2) The <10% combined preamble+untitled acceptance bar**, computed
+directly (not inferred), with the known reference editions computed
+alongside for a sanity check:
+
+| Edition | Combined preamble+untitled |
+|---|---|
+| `tn_20250911` (candidate) | **5.0%** |
+| `tn_sept2024` (existing, reference) | 5.0% (identical) |
+| `ct_v20251` (candidate) | **0.0%** |
+| `ct_v20252` (candidate) | **0.0%** |
+| `ct_v20241` (existing, reference) | 0.0% (identical) |
+
+Both candidates clear the bar comfortably, and Tennessee's rate matches
+its own already-confirmatory sibling edition to one decimal place - as
+clean a pass as this check can produce.
+
+**Size-outlier check** (the section 56 bug signature: guideline size
+&gt;4x the edition's median, floor 50, excluding `<preamble>`), run for
+both candidates and their reference siblings:
+
+- `tn_20250911`: 3 outliers - "Delirium with HyperAgitation" (533),
+  "Vascular Access" (208), "Pre-eclampsia and Eclampsia" (129). **The
+  exact same three guidelines**, at comparable magnitude, that
+  `run_sensitivity_analysis.py` already excludes from the existing
+  Tennessee data (539/228/133 there) - the SAME already-diagnosed and
+  already-handled artifact, not a new one.
+- `ct_v20251`/`ct_v20252`: 6 outliers each (Appendix 1/2/4 medication
+  references, Central Line Access, Staffing Guidelines, Adult) - the
+  same count as the existing `ct_v20241` reference's own 6 outliers,
+  with substantial overlap in which guidelines are affected (both
+  editions' medication-reference appendices and a central-line-access
+  guideline are oversized in every Connecticut edition checked). Normal
+  edition-to-edition drift in an already-known pattern, not an
+  escalation.
+
+**(3) Revision-magnitude classification** from the documents' own front
+matter (section 3.3's method) was **not** performed in this session -
+still outstanding for both candidates.
+
+### 79.6 Summary for the user
+
+Two structurally strong new candidate pairs, both now cleared on
+acceptance-bar and size-outlier grounds with numbers matching their
+already-confirmatory sibling editions closely enough to read as the
+same underlying document family, not a different risk profile:
+
+- **Tennessee Sept2024 -> 09.11.2025**: 94.6% trivially alignable, 5.0%
+  preamble (identical to the existing reference edition), same 3
+  known outliers at comparable size. Missing only consecutive-edition
+  verification (no public archive exists to check against - an
+  existing, disclosed limitation of this publisher, not new) and
+  revision-magnitude classification.
+- **Connecticut v2024.1 -> v2025.1** (and v2025.1 -> v2025.2 as a
+  further link): 88.6% trivially alignable, 0.0% preamble (identical to
+  the reference), 6 outliers matching the reference's own pattern.
+  Consecutive-edition status **confirmed directly** from Connecticut's
+  own official version page. Missing only revision-magnitude
+  classification.
+
+Rhode Island and Vermont remain unusable (section 78/79.4). No
+major-revision pair was found; H1/H2 remain untestable (section 79.1).
+
+**What remains before either candidate could become a fifth (or sixth)
+confirmatory pair**: revision-magnitude classification (quick, code-
+only) and a dated PREREGISTRATION.md pre-commitment entry before any
+real annotation sampling is drawn - the one step in this whole search
+that is properly the user's decision to make, not something to proceed
+on without asking, since it commits real annotator time to new data.
+Both candidates are ready for that decision whenever the user wants to
+make it.
+
+## 80. Full 50-state + DC re-sweep: a genuine major-revision document found (Nebraska), but it does not parse cleanly; many newer minor editions catalogued
+
+At the user's request to search deeply across every state again, three
+parallel research passes covered all 50 states plus DC, re-checking
+every state's known status against roughly two years of publisher
+updates and searching specifically for explicit major/complete-revision
+language anywhere, not only at the three eligibility-gate-approved
+publishers.
+
+### 80.1 Nebraska: genuine "completely revised" language found, primary-source-confirmed - but the document does not parse
+
+The current Nebraska EMS Model Protocols document
+(`dhhs.ne.gov/.../EMS%20Model%20Protocols.pdf`, "Last Revised 5/2026")
+contains, on its own acknowledgements page, confirmed by direct text
+extraction: *"...pleased to provide this **completely revised and
+updated** version of EMS Protocols... **The 2024 Protocols have taken on
+a new look** utilizing the algorithm format... **This edition replaces
+all previous editions**..."* - explicit, primary-source, unambiguous
+major-revision language, exactly what §11's stopping rule and every
+subsequent search have never found. Two prior editions exist for
+comparison (`H004-2012.pdf`, `H004-2020.pdf`).
+
+**This is the strongest major-revision language found anywhere in this
+study's history, at any point in the search.** It is also, importantly,
+**not from one of the three publishers the pre-committed eligibility
+gate restricts a major-pair candidate to** (Tennessee, Pennsylvania,
+Connecticut - "both editions from a document generation already
+confirmed clean by prior blind testing," §11 2026-08-17). Nebraska was
+previously tested (§27) and was NOT a clean pass - reported then as
+"garbage anchor again." Whether to consider loosening or reinterpreting
+the eligibility gate for a finding this significant is **explicitly the
+user's decision, not made here** - the gate's own text states "no
+case-by-case leniency" specifically to prevent exactly this kind of ad
+hoc exception being decided informally in the middle of a search.
+
+**Tested anyway, since empirical testing costs little and directly
+informs that decision**: downloaded the new edition and ran the frozen
+pipeline. `corpus_probe`: WEAK (2017.7 chars/page, only 1.9% numbered
+lines). Per §12.1's standing lesson, did not trust this alone -
+`item_parser` result: 91 guidelines but only **421 items** extracted
+(compare: Tennessee's ~1,500-1,900 for a similarly-sized document), and
+**946 sections yield no items at all** - the large majority of the
+document's real content. Sample items are table-of-contents noise
+("Table of Contents Table of Contents Note regarding medication..."),
+not real recommendation-level content.
+
+**Root cause, directly stated by the document's own acknowledgements
+text**: the 2024 revision moved to an "algorithm format" - a
+flowchart/decision-tree visual layout, not the numbered-prose-list
+convention every one of this study's parseable documents (Tennessee,
+Pennsylvania, Connecticut, and the failed-but-real-content states like
+Rhode Island/Vermont) uses. This study's marker-based item extraction is
+built for numbered/lettered/bulleted prose lists; it has no mechanism
+for flowchart-box content, which is a fundamentally different visual
+structure requiring different extraction logic entirely (something
+closer to the VLM approach that succeeded at boundary detection in
+§75, not the current text-marker parser).
+
+**Conclusion: a genuine major revision exists, and is now documented
+with primary-source confirmation for the first time in this study - but
+it is not usable with the current pipeline, for a reason unrelated to
+publisher eligibility.** This is worth stating plainly in any future
+limitations discussion: the field may be moving toward algorithm-format
+protocols, which this study's whole parsing approach does not yet
+address, independent of whether Nebraska specifically becomes an
+eligible confirmatory publisher.
+
+### 80.2 Utah: a genuine second edition exists for the first time, but still doesn't parse
+
+Previously confirmed to have only ever had one edition (§37), whose own
+single-edition parse already collapsed to "3 items from 106 pp." A
+"2025 Utah EMS Protocol Guidelines" (Dec 2025) now exists -
+`ems.utah.gov` - the state's first-ever second edition, a genuinely new
+opportunity where none existed before.
+
+**Tested immediately.** `item_parser` result: 42 guidelines but **only 3
+items extracted**, 163 sections with no items - an almost total
+collapse, and the item count matches the earlier single-edition
+failure's own "3 items from 106 pp" almost exactly. **The new edition
+does not fix Utah's underlying structural problem** - whatever anchor-
+detection or marker-recognition gap caused the original failure is
+still present in this document's newer edition, unchanged.
+
+**Alignment between the two editions tested directly** (the corpus
+already held the old single edition, `ut_2023.pdf` - located and
+confirmed real content, distinct from two byte-tiny files also present
+under similar names that turn out to be failed downloads/error pages
+from an earlier retrieval attempt, not genuine document variants).
+`item_align` (2023 -> 2025): old 11 items, new 3 items, **0% trivially
+alignable, 100% unmatched (11/11)**. A total collapse, not merely a weak
+result - confirming Utah is unusable as a PAIR, not only individually
+weak on each side. Utah remains unusable, now confirmed across two
+independent editions and their cross-edition alignment, rather than one
+document in isolation.
+
+### 80.3 Every other lead found, by category
+
+**Newer editions confirmed to exist, not yet pipeline-tested** (in
+rough priority order, all from official state sources): Hawaii (2025,
+supersedes the already-tested 2023 edition), Alabama (11th edition,
+Aug 2025), Kentucky (2025-04-30, notably larger file than before),
+Maine (2025, v10.29), Maryland (2026 print edition), New Jersey
+(8/21/2025, described as a full ALS+BLS combined document, notably
+different from the previously-tested "mostly unmatched" version), New
+York (V.26.0, the study's dev publisher), New Hampshire (progressed to
+v9.2/v9.3, past the version whose "final" release previously collapsed
+to 94.4% preamble - worth re-testing whether the collapse persists),
+Ohio (a direct-from-state edition, not the third-party mirror
+previously tested), South Carolina (renamed "EMS Clinical Operating
+Guidelines," Nov 2025), West Virginia (2026 booklet, plus unconfirmed
+"significant consolidation" language that could not be verified against
+its primary source - the linked news release 404'd).
+
+**Unresolved, needs a second look with better tooling**: Massachusetts
+(live `mass.gov` now serves "Version 2026.1" and a real browser session
+confirmed a genuine downloadable file, a different outcome than the
+earlier DOCX-mislabeled-as-PDF problem - programmatic fetch is
+bot-blocked, needs a browser-based retrieval); District of Columbia (a
+file literally named/dated "03172026" exists in the same directory as
+the officially-listed Oct 2023 "most recent revision," an unresolved
+discrepancy - could not confirm whether it is a genuine newer edition, a
+draft, or a stale/mislabeled file); Wisconsin (found PDFs directly on
+`dhs.wisconsin.gov`, apparently NOT behind the login gate previously
+found - "confirmed login-gated" may have been specific to a different
+page or has changed; the Wayback CDX cross-check to determine historical
+availability could not be completed, since this session's `WebFetch`
+tool cannot reach `web.archive.org`, an environment limitation not a
+finding about Wisconsin itself).
+
+**Montana: the blocker fully diagnosed, and it is permanent, not
+transient.** The single distinct-digest 2024-07-18 capture previously
+attributed to "an Archive.org outage" is confirmed instead to be a
+**Common Crawl-sourced capture, hard-truncated at exactly 1,048,576
+bytes** (the archived headers show `x-archive-orig-x-crawler-content-
+length: 1328248` against a truncated `content-length: 1048576`) - this
+is not something that resolves by retrying later, unlike a genuine
+outage. Partial content is technically recoverable (82 raw content
+streams present) but would require a dedicated PDF-repair tool
+(`qpdf`/`mutool`/`pikepdf`) not available in this environment. Montana's
+status changes from "worth an immediate retry" to "requires different
+tooling," a real, useful correction to the prior entry's optimism.
+
+**North Carolina: still fully blocked**, a fourth consecutive round of
+failure. This round specifically checked the Google-Drive-hosted
+document folders the state's site now links to and confirmed they
+contain policy/procedure/medication documents, not the combined
+clinical-protocol PDF itself - the state may have shifted to a
+non-indexed distribution model that resists automated discovery
+entirely, a structural explanation for the persistent failure rather
+than a retrieval problem to keep retrying the same way.
+
+**No change, re-confirmed structurally ineligible** (one quick check
+each, no new evidence of a compiled statewide document): Alaska,
+Arkansas, California, Colorado, Florida, Georgia, Idaho, Illinois,
+Indiana, Iowa (one ambiguous mirror found, not elevated - see the
+research agent's own note), Kansas, Louisiana, Michigan, Minnesota,
+Mississippi, Missouri, Nevada, North Dakota, Oklahoma, Oregon, South
+Dakota, Texas, Virginia, Washington, Wyoming.
+
+**No change, re-confirmed at their known status**: Arizona (the
+single-capture dead end for edition-pairing stands, though the document
+is now directly live-hosted with visible recent incremental updates -
+worth noting for future single-edition reference use, not pairing),
+Rhode Island, Vermont (both per §78-79, no further action needed),
+Delaware (routine biennial update only, no revision-magnitude language).
+
+**No major-revision language confirmed** for Tennessee, Pennsylvania, or
+Connecticut specifically - the three eligibility-gate-approved
+publishers - despite dedicated searches through each publisher's full
+available bulletin/meeting-minutes history, not just recent years. This
+was the search's primary target and it came back negative for all
+three.
+
+### 80.4 What this changes
+
+No document from this round is added as confirmatory. The Nebraska
+finding is the most significant single result: it proves major-
+revision language exists and is findable in this document genre after
+all (contrary to this study's prior working hypothesis that it might
+not be a convention the genre uses) - just not, so far, at a publisher
+this study's pipeline can currently parse. Utah's new second edition
+was also tested and confirmed to carry forward the same structural
+failure its single earlier edition already had (3 items extracted, both
+times, from a 100+ page document) - a real, useful negative result, not
+an open lead. The long list of other newer minor editions remains real,
+tractable next steps if the user wants to keep expanding the corpus,
+gated on the same checks §79 already established. Massachusetts, DC,
+and Wisconsin have genuinely open threads worth a follow-up with
+different tooling (browser-based retrieval, and a Wayback-capable fetch
+tool respectively) rather than being closed out as dead ends.
+
+## 81. Fifth and sixth confirmatory pairs added: revision-magnitude classified, sampled, and packeted
+
+The two candidates section 79 vetted (Tennessee Sept2024->09.11.2025,
+Connecticut v2024.1->v2025.1) are promoted to confirmatory status,
+completing the two checks section 79 left outstanding.
+
+### 81.1 Revision-magnitude classification
+
+Per section 3.3's method - the publisher's own front-matter language,
+not external inference - both candidates' front matter was searched
+directly for revision-magnitude keywords and compared word-for-word
+against their already-confirmatory sibling editions:
+
+- **Tennessee**: the new "09.11.2025" edition carries the identical
+  "(revision project completed July 2024)" phrase already found in the
+  existing Sept2024 sibling - the same text, not merely similar
+  wording.
+- **Connecticut**: both new editions (v2025.1, v2025.2) carry the
+  identical "living document... can be edited and updated at any time.
+  However, they are formally reviewed, edited, and released every two
+  years" boilerplate already found in the existing v2024.1 sibling.
+
+**Both classify as MINOR** - consistent with, not merely similar to,
+every one of the four existing pairs, since the classifying language is
+literally identical across old and new editions in both cases. No
+ambiguity, no judgement call required.
+
+### 81.2 Sample drawn, packets and blind workbooks generated
+
+Using `annotation.stratified_sample` and `annotation.write_annotation_packet`
+completely unchanged - the identical frozen-seed (20261017) per-tier
+draw and packet format used for all four existing pairs:
+
+| Pair | Population (T1/T2/T3/T4/T5/T6) | Drawn (T1/T2/T3/T4/T5/T6) | Total |
+|---|---|---|---|
+| Tennessee Sept2024->09.11.2025 | 1764/58/0/0/34/69 | 30/10/0/0/10/10 | 60 |
+| Connecticut v2024.1->v2025.1 | 1037/338/26/3/59/89 | 16/11/10/3/10/10 | 60 |
+
+Tennessee has no T3/T4 population to draw from in this pair, matching
+the pattern the existing Tennessee 2017->2018 pair already showed (its
+own §47 table shows the same shape).
+
+Two blind annotator workbooks generated (`build_new_pairs_workbooks.py`,
+reusing `build_annotator_workbooks.py`'s formatting completely
+unchanged), scoped to just these two new pairs rather than merged into
+the original 4-pair combined workbooks Annotators A-D already
+completed - retroactively altering an already-submitted instrument
+would be against this study's standing discipline. Two annotators, the
+next available letters after the main round's A-D and the H3' follow-
+up's E-H: **Annotator I and Annotator J**.
+
+### 81.3 What this changes
+
+The confirmatory test set now stands at **6 pairs from 3 publishers**,
+meeting the "≥6 pairs" component of the target a 2026-08-17 entry
+flagged as "not yet met" (its "≥4 publishers" component remains open).
+Once Annotator I and J complete their workbooks - the user's to
+arrange, not something further code work can do - the dataset grows
+from 240 to 360 total sampled items, and every hypothesis test (H3,
+H4, H5) would need a formal re-run against the expanded set, separately
+committed and performed at that time. No result changes from this
+entry alone; it generates the instrument, not data.

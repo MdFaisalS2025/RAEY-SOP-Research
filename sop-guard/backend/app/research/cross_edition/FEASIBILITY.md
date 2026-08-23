@@ -5972,3 +5972,79 @@ confusing surface-level similarity for genuine correspondence).
 
 Full numbers: `annotation_packets/boundary_annotation/vlm_calibration_report.json`,
 raw titles in `vlm_raw_titles.json`.
+
+## 76. Two human-labor gates: instruments built, review still outstanding
+
+Audit round 4, Phase 4. Two pre-registration commitments require actual
+human judgement, not more code - this section builds the instruments
+that make that judgement tractable and generates them for the user, but
+does not (and cannot) perform the review itself.
+
+### 76.1 Appendix B item 3: the guideline-pair audit
+
+Registered at pre-registration: "A manual audit of all accepted
+guideline pairs is required before publication." Never begun until this
+round.
+
+`build_appendix_b_audit.py` reuses `item_align.match_guidelines` and its
+internal scoring formula unchanged, exposing every candidate score the
+function itself computes but never returns, so a reviewer can see not
+just what was accepted but what it beat. Two disclosed failure modes are
+flagged and ranked to the top:
+
+- **Containment**: an accepted score of exactly 1.0 where the two titles
+  have unequal token-set length - the exact mechanism behind the
+  documented "Hypothermia" -> "Induced Hypothermia Following ROSC"
+  collision.
+- **Ties**: one or more other candidates scored at or above the accepted
+  one - the mechanism `tiebreak_sensitivity.py` (audit round 3) measured
+  affecting 34-35% of Connecticut's old guidelines.
+
+**Result: 294 total accepted pairs across the 4 confirmatory edition
+pairs, 73 flagged (24.8%)** - Tennessee 68 pairs/1 flagged; Pennsylvania
+48/5; Connecticut #1 85/34; Connecticut #2 93/33. The Connecticut tie
+rates (34/85 = 40%, 33/93 = 35%) land almost exactly on
+`tiebreak_sensitivity.py`'s independently-measured 34%/35% - a
+consistency check this script passed without being designed around it,
+evidence the flagging logic is measuring the same real phenomenon two
+different ways.
+
+Written to `annotation_packets/Appendix_B_guideline_pair_audit.xlsx`,
+ranked flagged-first with Verdict and Notes columns, so a reviewer faces
+73 prioritized rows rather than all 294. **The review itself has not
+been performed** - this closes the "the audit never started" gap, not
+the audit.
+
+### 76.2 H3' second annotator
+
+The 2026-08-18 CRITICAL CORRECTION left this explicitly open: "A
+genuinely independent second annotator for the same 92-item H3' packet
+is needed before H3''s reliability can be stated."
+
+Investigating the H3' directory found `Annotator_G_ANNOTATION.xlsx`
+present with no generating script referencing it anywhere in the tree -
+its provenance is not confirmed by any code. Direct inspection: **0 of
+92 correspondence cells are filled in.** It is a blank template, not
+collected data, despite its presence potentially suggesting otherwise.
+
+A fresh blind workbook, `Annotator_H_ANNOTATION.xlsx`, was generated
+reusing `build_annotator_workbooks.py`'s instructions, column layout,
+and blind-design formatting unchanged - the same helpers already used
+for the now-retired E/F pair (retired for the same duplication failure
+that hit the main round's A/B annotators).
+
+`run_h3prime_second_annotator.py` mirrors `run_boundary_scoring.py`'s
+`verify_independence` exactly - byte-hash AND cell-level answer
+comparison, raising rather than silently proceeding on a suspicious
+match - built in from the start this time rather than added after a
+collection failure was already discovered. A completion-count guard was
+added and verified: a naive `.exists()` check would have treated G's
+blank template as a completed file; `_n_filled()` correctly reports
+"0/92 filled (G), 0/92 filled (H)" instead.
+
+**No H3' number changes.** Once both files are genuinely completed by
+two independent people, the script verifies independence and computes
+Cohen's kappa automatically. Until then, section 57's H3' results
+continue to rest on the single unverified judgment already disclosed
+there - an open, disclosed limitation, now with the tooling in place to
+close it the moment real data exists.

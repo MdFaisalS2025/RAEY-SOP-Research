@@ -57,6 +57,22 @@ confirming Connecticut and Pennsylvania had no untouched editions
 available (both confirmed exhausted — see the H3′ pre-commitment entry
 in `PREREGISTRATION.md`).
 
+## Candidate corpus (§79, exploratory — NOT yet used in any confirmatory claim)
+
+Retrieved during a corpus-expansion search (FEASIBILITY.md §78-79).
+Both new pairs are structurally promising (Tennessee 94.6% trivially
+alignable, Connecticut 88.6%) but have NOT cleared the checks §79.2/§79.3
+list as required before promotion to confirmatory status — listed here
+for provenance/reproducibility only.
+
+| File | Publisher / edition | Retrieval | SHA-256 | Size |
+|---|---|---|---|---|
+| `tn_20250911.pdf` | Tennessee EMS, "2024-2025, 09.11.2025" | ✅ `https://www.tn.gov/content/dam/tn/health/events/TN%20State%20Guidelines%202024-2025%2009.11.2025.pdf` | `05d1fd871daa557d3630c50ed67284a45d6ee324074523af20efe4a36cc6a8c5` | 3,563,269 B |
+| `ct_v20251.pdf` | Connecticut Statewide EMS Protocols v2025.1 | ✅ `https://portal.ct.gov/dph/-/media/departments-and-agencies/dph/dph/ems/pdf/statewide_protocols/2025/v20251_ctemsstatewideprotocolsfinal.pdf` | `a84b9b305124618d1ea1ac1e9d401063d57ba62fdffd75b3b1cc85b34007099b` | 16,723,878 B |
+| `ct_v20252.pdf` | Connecticut Statewide EMS Protocols v2025.2 | ✅ `https://portal.ct.gov/dph/-/media/departments-and-agencies/dph/dph/ems/pdf/statewide_protocols/2025/v2025-2_ctemsstatewideprotocolsfinalver1.pdf` | `06bb46ac6fd6a425da4a52165c9b950c75908b47e20c1b3a9c72a471852af10e` | 16,698,858 B |
+| `ri_2026_02.pdf` | Rhode Island Statewide EMS, v2026.02 (rejected — boundary omission, §78) | ✅ `https://health.ri.gov/sites/g/files/xkgbur1006/files/2026-02/StatewideEmergencyMedicalServices.pdf` | `b59cce67fb7057a27060e3b8aedeff0f7389571139c30abce65e79e3d996daae` | 6,275,955 B |
+| `vt_2025_new.pdf` | Vermont Statewide EMS Protocols, 2025 (rejected — boundary omission, §78) | ✅ `https://www.healthvermont.gov/sites/default/files/document/eprip-2025-EMS-Protocols_0.pdf` | `33aa4e7abd3d5e3663b2485d5513950f8374304dca469ac3acb48ee7b9e15051` | 16,770,370 B |
+
 ## Dev corpus (§2, exploratory only — never used in any confirmatory claim)
 
 | File | Publisher / edition | Retrieval | SHA-256 | Size |

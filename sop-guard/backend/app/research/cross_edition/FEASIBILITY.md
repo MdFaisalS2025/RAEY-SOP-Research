@@ -6103,3 +6103,176 @@ established methodological tradition spanning ontology matching (OAEI's
 benchmark track, and its Euzenat et al. formalization of what makes a
 degradation benchmark informative) and document intelligence (ProSA),
 not as an isolated technique invented for this problem.
+
+## 78. Corpus expansion attempt: newer Tennessee edition, retested Rhode Island/Vermont - both negative
+
+At the user's request, checked whether the corpus could be usefully
+grown: (1) a newer Tennessee edition than the existing Sept2024
+(2024-2025), (2) whether Rhode Island and Vermont - both previously
+rejected (sections 22.3, 23.1) for a documented "boundary omission"
+failure mode - now parse cleanly given the parser has since gained
+footer-based anchoring (Maine, section 17) and ToC-table extraction
+(Connecticut, section 18).
+
+**Tennessee**: no edition newer than "Sept24" (2024-2025) found via
+direct site search or the `tn.gov` protocol-guidelines page. The
+existing 4-edition Tennessee chain remains current.
+
+**Rhode Island**: a new v2026.02 edition exists (effective 2026-06-01,
+retrieved from `health.ri.gov`), genuinely newer than what this study
+previously touched. `corpus_probe` verdict: WEAK (2067.6 chars/page,
+only 1.3% numbered lines, 22 template slots). Given `corpus_probe`'s own
+documented history of false negatives (section 12.1: it once scored a
+document WEAK at 0.2-0.3% where the real parser found 42% usable
+content), ran `item_parser` directly rather than trusting the probe
+alone. Result: 49 guidelines, 228 items across 333 pages, but every
+sampled item falls under a `preamble/routine patient care/...` guideline
+- the SAME anchor-detection failure this study already catalogued for
+Rhode Island, unchanged by the parser's newer techniques.
+
+**Vermont**: a 2025 edition exists (retrieved from
+`healthvermont.gov`). `corpus_probe` verdict: USABLE (2771.9 chars/page,
+3.1% numbered lines, 85 template slots - a better surface signal than
+Rhode Island's). `item_parser` result: 58 guidelines, 715 items across
+283 pages, but every sampled item again falls under
+`preamble/paramedic/...` or `preamble/routine patient care/...` - the
+same failure mode already catalogued for Vermont (section 23.1),
+unchanged.
+
+**Why the newer techniques didn't help**: Maine's footer-anchor
+detection and Connecticut's ToC-table extraction were both built against
+those specific publishers' own document conventions (a distinctive
+running footer; a well-formed embedded table of contents), not as
+general-purpose boundary detectors. Rhode Island's and Vermont's actual
+failure mode - real, well-titled protocol content that the anchor
+heuristic simply never locks onto - is a different mechanism neither
+technique addresses. This is a negative but useful result: it confirms
+the original rejections were durable properties of these documents'
+structure, not artifacts of an immature parser at the time they were
+first tried.
+
+**Not attempted**: building new anchor-detection logic specific to
+Rhode Island or Vermont's conventions. Section 16.3 already flagged this
+exact situation for Connecticut before it was fixed: "treat [it] as
+requiring a separate extraction strategy and either defer it or invest
+in table-aware parsing as its own task... do not add [a one-off patch]"
+- the same discipline applies here. A general, publisher-agnostic
+boundary-detection improvement remains a legitimate future direction,
+but a per-state patch for two specific documents would be exactly the
+kind of undisclosed, ad hoc special-casing this study has avoided
+throughout.
+
+## 79. Corpus expansion, continued: two new candidate pairs found (Tennessee, Connecticut), no major-revision language found for any eligible publisher
+
+Continuing section 78's search. Two searches produced genuine new leads
+this study had not previously touched.
+
+### 79.1 Major-revision search: still nothing
+
+Web-searched all three eligible publishers (Tennessee, Pennsylvania,
+Connecticut - the only three a candidate is allowed to come from under
+the pre-committed eligibility gate, section 11's 2026-08-17 entry) for
+any explicit "complete revision" / "major update" / "new edition"
+language. Found none. Connecticut's own material describes its
+protocols as reviewed and released on a regular two-year cycle, not a
+singular overhaul; Pennsylvania's most recent statewide release remains
+2023; Tennessee shows no revision-language announcement. **H1/H2 remain
+untestable** - this is consistent with section 45.2's standing
+conclusion that explicit self-described major revisions may not be a
+convention this document genre uses, not a new negative result.
+
+### 79.2 A new Tennessee edition: strong candidate
+
+Retrieved `tn.gov`'s "TN State Guidelines 2024-2025 09.11.2025.pdf" -
+confirmed via SHA-256 to be a genuinely distinct document from the
+existing `tn_sept2024.pdf` (different hash, different size: 3.56MB vs
+2.64MB), not a re-hosted copy of the same file under a new name.
+
+`item_parser` result: 77 guidelines (matching the existing Tennessee
+chain's usual count), 1,857 items, 0 duplicate ids, standard
+`preamble/notes/N` front matter - structurally clean, no red flags.
+
+`item_align` (Sept2024 -> 09.11.2025): **1,822/1,925 items (94.6%)
+trivially alignable** (T1+T2), 69 unmatched (3.6%) - comparable to or
+slightly better than the existing Tennessee 2017->2018 pair's own
+92.7%/2.7%. A genuinely strong candidate for a THIRD Tennessee
+longitudinal link.
+
+**Not yet confirmatory.** Before this could be added: (1) consecutive-
+edition verification against Tennessee's own official version-history
+page, the same check section 44.3 performed for the existing chain
+(not yet done here); (2) the same <10% combined preamble+untitled
+acceptance bar every existing pair cleared, computed directly rather
+than inferred from the alignment numbers alone; (3) revision-magnitude
+classification from the document's own front matter (section 3.3's
+method), not assumed minor by default; (4) if promoted to confirmatory,
+a dated PREREGISTRATION.md pre-commitment entry before any annotation
+sampling, per this study's standing before-not-after discipline - not
+undertaken in this exploratory entry.
+
+### 79.3 Two new Connecticut editions: also promising, one artifact investigated and cleared
+
+Retrieved v2025.1 and v2025.2 from `portal.ct.gov` (Connecticut has
+released two new editions since this study's existing v2023.1/v2024.1
+pair). Both parse structurally cleanly: 125 guidelines each (up from
+93 in v2024.1), ~2,240 items, 0 duplicate ids, 0 ambiguous markers, 0
+sections with no items.
+
+**A red flag investigated before trusting anything downstream**: both
+editions' `item_parser` offset spot-check reported ~80% mismatches
+(1,598-1,599/2,000) - far above the historical 0-4% range (Appendix B
+item 4's already-disclosed "3-4% mismatch tail, uninvestigated"). Read
+five mismatching items by hand rather than assuming either a real
+content-extraction failure or dismissing it. Finding: in every case
+inspected, the extracted item text is completely correct and meaningful
+- the "mismatch" is an artifact of `char_start` pointing to the START of
+a bullet-marker glyph (`o`, `•`) rather than the text that follows it,
+so a naive same-length slice comparison is offset by the marker's own
+character(s). **This is an escalation of the already-disclosed offset
+tail, not a new bug** - v2025.1/v2025.2 appear to be MORE heavily
+bulleted than prior Connecticut editions, which increases how often this
+specific comparison artifact fires, without indicating any actual
+content-extraction problem. Appendix B item 4 already states this tail
+is "uninvestigated" for the general case; this entry investigates it
+directly for one specific instance and finds it benign here, without
+claiming the general tail is now understood everywhere it appears.
+
+`item_align` (v2024.1 -> v2025.1): **1,375/1,552 items (88.6%) trivially
+alignable**, 89 unmatched (5.7%) - comparable to the existing
+Connecticut v2022.1->v2023.1 pair's own 85.5%/5.7%. A second promising
+candidate.
+
+**One additional caveat this pair needs before any further trust**: item
+count grew from 1,552 (old) to 2,240 (new) - a 44% increase, notably
+larger than typical edition-to-edition growth elsewhere in this corpus.
+Section 56's guideline-boundary bug produced exactly this signature
+(inflated item counts within specific guidelines) in the existing
+Tennessee data before it was diagnosed - this pair has NOT yet been
+checked for the same size-outlier pattern `run_sensitivity_analysis.py`
+already screens the confirmatory set for. Flagging this explicitly
+rather than treating the alignment numbers alone as sufficient
+clearance.
+
+**Not yet confirmatory**, for the same four reasons section 79.2 lists
+for the Tennessee candidate, plus the size-outlier check just named.
+
+### 79.4 Rhode Island and Vermont: retested, both still negative (see section 78)
+
+Already covered in section 78 - both editions' newer versions (RI
+v2026.02, VT 2025) still exhibit the same anchor-detection failure this
+study catalogued before, unchanged by the parser's newer techniques.
+Included here for completeness of this session's corpus-expansion
+summary.
+
+### 79.5 Summary for the user
+
+Two genuine, structurally promising new candidate pairs were found
+(Tennessee Sept2024->09.11.2025 at 94.6% trivially alignable; Connecticut
+v2024.1->v2025.1 at 88.6%) - both comparable in quality to the existing
+confirmatory pairs, neither yet promoted to confirmatory status. Rhode
+Island and Vermont remain unusable for the reasons already catalogued.
+No major-revision pair was found; H1/H2 remain untestable. Promoting
+either new candidate to confirmatory status - and thereby actually
+growing the study's n beyond 4 pairs/3 publishers - is a real,
+tractable next step, gated on the four checks listed in sections 79.2
+and 79.3, none of which were performed in this exploratory session.

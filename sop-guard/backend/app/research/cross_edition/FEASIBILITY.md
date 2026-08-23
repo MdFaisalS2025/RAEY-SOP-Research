@@ -6434,9 +6434,19 @@ collapse, and the item count matches the earlier single-edition
 failure's own "3 items from 106 pp" almost exactly. **The new edition
 does not fix Utah's underlying structural problem** - whatever anchor-
 detection or marker-recognition gap caused the original failure is
-still present in this document's newer edition, unchanged. Utah remains
-unusable, now confirmed across two independent editions rather than
-one.
+still present in this document's newer edition, unchanged.
+
+**Alignment between the two editions tested directly** (the corpus
+already held the old single edition, `ut_2023.pdf` - located and
+confirmed real content, distinct from two byte-tiny files also present
+under similar names that turn out to be failed downloads/error pages
+from an earlier retrieval attempt, not genuine document variants).
+`item_align` (2023 -> 2025): old 11 items, new 3 items, **0% trivially
+alignable, 100% unmatched (11/11)**. A total collapse, not merely a weak
+result - confirming Utah is unusable as a PAIR, not only individually
+weak on each side. Utah remains unusable, now confirmed across two
+independent editions and their cross-edition alignment, rather than one
+document in isolation.
 
 ### 80.3 Every other lead found, by category
 

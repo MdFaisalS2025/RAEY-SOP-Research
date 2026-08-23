@@ -6823,3 +6823,83 @@ closes out five of the eleven "newer edition, not yet tested" entries
 section 80.3 catalogued; the remaining six (New York, New Hampshire,
 Ohio, South Carolina, West Virginia, plus Kentucky's download which
 failed and needs a retry) are the next natural targets.
+
+## 85. Remaining newer-edition leads closed out: Ohio also fails to align, West Virginia/South Carolina too thin, New York/New Hampshire blocked on retrieval only
+
+Closes out the rest of section 80.3's "newer edition, not yet
+pipeline-tested" catalogue.
+
+**A duplicate-file discovery, corrected before testing anything**: the
+freshly-downloaded `ems.ohio.gov` document (`oh_2026.pdf`) turned out
+byte-identical (same SHA-256) to `oh_current.pdf`, an Ohio file already
+in the corpus from an earlier session - not a genuinely new edition,
+despite being retrieved from what looked like a fresh, direct-from-
+state URL. The alignment test against it accordingly showed a
+suspicious 100% match with identical old/new item counts (973=973) -
+investigated rather than reported, per section 10, and traced to the
+duplicate rather than a real finding. Corrected by testing against the
+genuinely older `oh_2021_amerimed.pdf` (the third-party mirror
+already flagged in this study's history as Ohio's prior tested
+edition) instead.
+
+**Ohio (2021 mirror -> 2026 direct-from-state)**: 31.0% trivially
+alignable, 38.9% unmatched - fails to clear the bar, in the same range
+as Maine/Maryland/DC. Many matched items remain under `preamble/...`
+pseudo-guidelines rather than real named protocols even where the
+identifier survives, consistent with this study's prior characterization
+of Ohio ("garbage anchors").
+
+**West Virginia (2026 booklet) and South Carolina (Nov 2025)**: both
+too thin to be worth an alignment test - West Virginia 322 items across
+41 guidelines (726 sections empty); South Carolina 318 items across 72
+guidelines (983 sections empty). Both match this study's prior
+characterization of these publishers; the newer editions did not
+change the underlying structural problem.
+
+**New York (V.26.0) and New Hampshire (v9.2/v9.3)**: retrieval
+attempts failed on both - New York's guessed URL pattern
+(`ny_collaborative_protocols_v26.0.pdf`, following the exact naming
+convention of every prior version) returned a 404 HTML page rather
+than the real file, meaning the actual v26.0 URL uses a different
+pattern not yet found; New Hampshire's bulletin-announcement URL
+returned an HTML page, not the protocol document itself (the
+announcement page, not the PDF). **This is a retrieval gap, not a
+negative finding about either state** - unlike Ohio/WV/SC, nothing was
+learned here about parsing or alignment quality, only that the correct
+download URL has not yet been located. Worth a dedicated retry with a
+direct site crawl rather than a guessed URL pattern.
+
+### What this closes
+
+All eleven "newer edition, not yet tested" leads from section 80.3 are
+now accounted for: two too thin from the start (Hawaii, Alabama),
+three parsing well individually but failing alignment (Maine, Maryland,
+New Jersey), one already covered in depth (Ohio, now confirmed failing
+alignment too), two too thin (West Virginia, South Carolina), and two
+still blocked on retrieval alone (New York, New Hampshire) rather than
+resolved either way. Kentucky's earlier download failure (section 80,
+K-N sweep) also remains unretried. None of the eleven produced a
+viable new confirmatory candidate - the only two that did, Tennessee
+and Connecticut (section 79, added to the confirmatory set in section
+81), remain the sole results of this entire multi-session corpus-
+expansion effort.
+
+## 86. Puerto Rico: no compiled statewide clinical protocol document found
+
+Checked per the user's "52 states" framing (50 states + DC + Puerto
+Rico, a common shorthand this study had not previously covered - DC was
+added in section 80, Puerto Rico was not).
+
+No statewide compiled EMS clinical treatment-protocol PDF was found
+under Puerto Rico's Negociado del Cuerpo de Emergencias Médicas
+(NCEM) or the Department of Health's EMS-related pages. What exists
+publicly is regulatory/organizational material (technician licensure
+law, an operational emergency-preparedness plan) - the same pattern
+this study found for the 24 mainland states confirmed structurally
+ineligible (protocols set at a more local level, or not compiled into
+one public document). Not elevated to a tested candidate; no PDF
+exists to test.
+
+This completes the "52 states" sweep the user's framing implied - 50
+states, DC, and Puerto Rico all now checked at least once in this
+study's history.

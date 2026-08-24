@@ -1,16 +1,8 @@
 {
-  "_preliminary_note": "6 of 120 new-pair items are still pending human adjudication (NewPairs_Adjudication_6_items.xlsx) and are excluded from every number below, not estimated. Re-run once resolved.",
+  "_preliminary_note": "0 of 120 new-pair items are still pending human adjudication (NewPairs_Adjudication_6_items.xlsx) and are excluded from every number below, not estimated. Re-run once resolved.",
   "pending_adjudication": {
-    "Tennessee Sept2024→09.11.2025 (": [
-      "S026",
-      "S031",
-      "S034"
-    ],
-    "Connecticut v2024.1→v2025.1 (ne": [
-      "S018",
-      "S026",
-      "S055"
-    ]
+    "Tennessee Sept2024→09.11.2025 (": [],
+    "Connecticut v2024.1→v2025.1 (ne": []
   },
   "original_4pairs": {
     "label": "ORIGINAL 4 PAIRS (240 sampled, recomputed here)",
@@ -166,33 +158,33 @@
   },
   "new_2pairs": {
     "label": "NEW 2 PAIRS ONLY (120 sampled)",
-    "n_items": 110,
+    "n_items": 116,
     "H5_false_correspondence_method_minus_B1": {
       "raw": {
         "item": {
-          "point_estimate": 0.0775,
-          "ci95_low": 0.011,
-          "ci95_high": 0.1508,
+          "point_estimate": 0.0665,
+          "ci95_low": 0.0021,
+          "ci95_high": 0.1363,
           "n_valid": 10000
         },
         "pair": {
-          "point_estimate": 0.0775,
-          "ci95_low": -0.1461,
-          "ci95_high": 0.2099,
+          "point_estimate": 0.0665,
+          "ci95_low": -0.1406,
+          "ci95_high": 0.195,
           "n_valid": 10000
         }
       },
       "weighted": {
         "item": {
-          "point_estimate": 0.0054,
-          "ci95_low": -0.0078,
-          "ci95_high": 0.0175,
+          "point_estimate": 0.0031,
+          "ci95_low": -0.0116,
+          "ci95_high": 0.0156,
           "n_valid": 10000
         },
         "pair": {
-          "point_estimate": 0.0054,
-          "ci95_low": -0.0238,
-          "ci95_high": 0.0192,
+          "point_estimate": 0.0031,
+          "ci95_low": -0.0257,
+          "ci95_high": 0.0185,
           "n_valid": 10000
         }
       }
@@ -204,36 +196,36 @@
     "H3_method_minus_B2_accuracy": {
       "raw": {
         "item": {
-          "point_estimate": 0.0364,
-          "ci95_low": -0.0364,
-          "ci95_high": 0.1091,
+          "point_estimate": 0.0431,
+          "ci95_low": -0.0259,
+          "ci95_high": 0.1207,
           "n_valid": 10000
         },
         "pair": {
-          "point_estimate": 0.0364,
-          "ci95_low": 0.0,
-          "ci95_high": 0.0702,
+          "point_estimate": 0.0431,
+          "ci95_low": 0.0179,
+          "ci95_high": 0.0667,
           "n_valid": 10000
         }
       },
       "weighted": {
         "item": {
-          "point_estimate": -0.0068,
-          "ci95_low": -0.0497,
-          "ci95_high": 0.0315,
+          "point_estimate": 0.0026,
+          "ci95_low": -0.0406,
+          "ci95_high": 0.045,
           "n_valid": 10000
         },
         "pair": {
-          "point_estimate": -0.0068,
-          "ci95_low": -0.036,
-          "ci95_high": 0.0151,
+          "point_estimate": 0.0026,
+          "ci95_low": -0.0132,
+          "ci95_high": 0.0145,
           "n_valid": 10000
         }
       }
     },
     "H3_confirmed": {
       "item_raw": false,
-      "pair_raw": false
+      "pair_raw": true
     },
     "H4_T3_precision": {
       "point_estimate": 1.0
@@ -243,29 +235,29 @@
       "method_minus_b3_accuracy": {
         "raw": {
           "item": {
-            "point_estimate": -0.0727,
-            "ci95_low": -0.1545,
-            "ci95_high": 0.0091,
+            "point_estimate": -0.069,
+            "ci95_low": -0.1552,
+            "ci95_high": 0.0086,
             "n_valid": 10000
           },
           "pair": {
-            "point_estimate": -0.0727,
-            "ci95_low": -0.1404,
-            "ci95_high": 0.0,
+            "point_estimate": -0.069,
+            "ci95_low": -0.15,
+            "ci95_high": 0.0179,
             "n_valid": 10000
           }
         },
         "weighted": {
           "item": {
-            "point_estimate": -0.0411,
-            "ci95_low": -0.0819,
-            "ci95_high": -0.0096,
+            "point_estimate": -0.032,
+            "ci95_low": -0.0748,
+            "ci95_high": 0.004,
             "n_valid": 10000
           },
           "pair": {
-            "point_estimate": -0.0411,
-            "ci95_low": -0.0689,
-            "ci95_high": -0.0203,
+            "point_estimate": -0.032,
+            "ci95_low": -0.0445,
+            "ci95_high": -0.0226,
             "n_valid": 10000
           }
         }
@@ -273,29 +265,29 @@
       "method_minus_b4_accuracy": {
         "raw": {
           "item": {
-            "point_estimate": -0.0636,
-            "ci95_low": -0.1273,
+            "point_estimate": -0.0603,
+            "ci95_low": -0.1207,
             "ci95_high": 0.0,
             "n_valid": 10000
           },
           "pair": {
-            "point_estimate": -0.0636,
-            "ci95_low": -0.1404,
-            "ci95_high": 0.0189,
+            "point_estimate": -0.0603,
+            "ci95_low": -0.1333,
+            "ci95_high": 0.0179,
             "n_valid": 10000
           }
         },
         "weighted": {
           "item": {
-            "point_estimate": -0.0153,
-            "ci95_low": -0.0286,
-            "ci95_high": -0.0056,
+            "point_estimate": -0.0146,
+            "ci95_low": -0.0274,
+            "ci95_high": -0.0051,
             "n_valid": 10000
           },
           "pair": {
-            "point_estimate": -0.0153,
-            "ci95_low": -0.0203,
-            "ci95_high": -0.0085,
+            "point_estimate": -0.0146,
+            "ci95_low": -0.0196,
+            "ci95_high": -0.0081,
             "n_valid": 10000
           }
         }
@@ -303,48 +295,48 @@
     },
     "benjamini_hochberg": {
       "H3": {
-        "p_raw": 0.2056,
-        "p_adjusted": 0.3084
+        "p_raw": 0.1531,
+        "p_adjusted": 0.2297
       },
       "H4": {
         "p_raw": 0.0,
         "p_adjusted": 0.0
       },
       "H5": {
-        "p_raw": 0.7765,
-        "p_adjusted": 0.7765
+        "p_raw": 0.6856,
+        "p_adjusted": 0.6856
       }
     }
   },
   "pooled_6pairs": {
     "label": "POOLED 6 PAIRS (360 sampled)",
-    "n_items": 343,
+    "n_items": 349,
     "H5_false_correspondence_method_minus_B1": {
       "raw": {
         "item": {
-          "point_estimate": 0.0568,
-          "ci95_low": 0.0079,
-          "ci95_high": 0.1045,
+          "point_estimate": 0.0506,
+          "ci95_low": 0.0031,
+          "ci95_high": 0.0976,
           "n_valid": 10000
         },
         "pair": {
-          "point_estimate": 0.0568,
-          "ci95_low": -0.058,
-          "ci95_high": 0.1621,
+          "point_estimate": 0.0506,
+          "ci95_low": -0.0585,
+          "ci95_high": 0.1479,
           "n_valid": 10000
         }
       },
       "weighted": {
         "item": {
-          "point_estimate": 0.0216,
-          "ci95_low": 0.0094,
-          "ci95_high": 0.0353,
+          "point_estimate": 0.0203,
+          "ci95_low": 0.0086,
+          "ci95_high": 0.0336,
           "n_valid": 10000
         },
         "pair": {
-          "point_estimate": 0.0216,
-          "ci95_low": -0.0037,
-          "ci95_high": 0.0566,
+          "point_estimate": 0.0203,
+          "ci95_low": -0.0045,
+          "ci95_high": 0.0535,
           "n_valid": 10000
         }
       }
@@ -356,29 +348,29 @@
     "H3_method_minus_B2_accuracy": {
       "raw": {
         "item": {
-          "point_estimate": -0.0204,
-          "ci95_low": -0.0641,
-          "ci95_high": 0.0233,
+          "point_estimate": -0.0172,
+          "ci95_low": -0.0602,
+          "ci95_high": 0.0258,
           "n_valid": 10000
         },
         "pair": {
-          "point_estimate": -0.0204,
-          "ci95_low": -0.1178,
-          "ci95_high": 0.0588,
+          "point_estimate": -0.0172,
+          "ci95_low": -0.113,
+          "ci95_high": 0.0603,
           "n_valid": 10000
         }
       },
       "weighted": {
         "item": {
-          "point_estimate": -0.0219,
-          "ci95_low": -0.0492,
-          "ci95_high": 0.0048,
+          "point_estimate": -0.0182,
+          "ci95_low": -0.0462,
+          "ci95_high": 0.0083,
           "n_valid": 10000
         },
         "pair": {
-          "point_estimate": -0.0219,
-          "ci95_low": -0.0775,
-          "ci95_high": 0.0223,
+          "point_estimate": -0.0182,
+          "ci95_low": -0.0754,
+          "ci95_high": 0.0249,
           "n_valid": 10000
         }
       }
@@ -395,29 +387,29 @@
       "method_minus_b3_accuracy": {
         "raw": {
           "item": {
-            "point_estimate": -0.0729,
-            "ci95_low": -0.1195,
-            "ci95_high": -0.0262,
+            "point_estimate": -0.0716,
+            "ci95_low": -0.1175,
+            "ci95_high": -0.0258,
             "n_valid": 10000
           },
           "pair": {
-            "point_estimate": -0.0729,
-            "ci95_low": -0.1552,
-            "ci95_high": 0.0058,
+            "point_estimate": -0.0716,
+            "ci95_low": -0.1567,
+            "ci95_high": 0.0087,
             "n_valid": 10000
           }
         },
         "weighted": {
           "item": {
-            "point_estimate": -0.0464,
-            "ci95_low": -0.0727,
-            "ci95_high": -0.0221,
+            "point_estimate": -0.0429,
+            "ci95_low": -0.07,
+            "ci95_high": -0.0178,
             "n_valid": 10000
           },
           "pair": {
-            "point_estimate": -0.0464,
-            "ci95_low": -0.0973,
-            "ci95_high": -0.0039,
+            "point_estimate": -0.0429,
+            "ci95_low": -0.0924,
+            "ci95_high": -0.0025,
             "n_valid": 10000
           }
         }
@@ -425,29 +417,29 @@
       "method_minus_b4_accuracy": {
         "raw": {
           "item": {
-            "point_estimate": -0.0641,
-            "ci95_low": -0.1079,
-            "ci95_high": -0.0204,
+            "point_estimate": -0.063,
+            "ci95_low": -0.106,
+            "ci95_high": -0.0201,
             "n_valid": 10000
           },
           "pair": {
-            "point_estimate": -0.0641,
-            "ci95_low": -0.1268,
+            "point_estimate": -0.063,
+            "ci95_low": -0.1246,
             "ci95_high": 0.0,
             "n_valid": 10000
           }
         },
         "weighted": {
           "item": {
-            "point_estimate": -0.0281,
-            "ci95_low": -0.0425,
-            "ci95_high": -0.0157,
+            "point_estimate": -0.0276,
+            "ci95_low": -0.0416,
+            "ci95_high": -0.0153,
             "n_valid": 10000
           },
           "pair": {
-            "point_estimate": -0.0281,
-            "ci95_low": -0.0669,
-            "ci95_high": -0.003,
+            "point_estimate": -0.0276,
+            "ci95_low": -0.0663,
+            "ci95_high": -0.0029,
             "n_valid": 10000
           }
         }
@@ -455,16 +447,16 @@
     },
     "benjamini_hochberg": {
       "H3": {
-        "p_raw": 0.8369,
-        "p_adjusted": 0.8369
+        "p_raw": 0.8041,
+        "p_adjusted": 0.8041
       },
       "H4": {
         "p_raw": 0.0,
         "p_adjusted": 0.0
       },
       "H5": {
-        "p_raw": 0.601,
-        "p_adjusted": 0.8369
+        "p_raw": 0.5086,
+        "p_adjusted": 0.7629
       }
     }
   }

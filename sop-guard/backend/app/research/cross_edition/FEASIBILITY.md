@@ -7139,3 +7139,129 @@ is left in place, not deleted or edited). Full report:
 `annotation_packets/h3prime_tennessee_2022_2024/h3prime_test_report.json`;
 second-annotator verification:
 `annotation_packets/h3prime_tennessee_2022_2024/h3prime_second_annotator_report.json`.
+
+## 90. The fifth and sixth confirmatory pairs, scored: replication mostly holds, but T5 (moved guidelines) drops to 0% precision on independent data
+
+Section 67 drew samples and generated blind workbooks for two new
+confirmatory pairs - Tennessee Sept2024->09.11.2025 and Connecticut
+v2024.1->v2025.1 - registering the confirmatory test set at 6 pairs
+from 3 publishers, pending Annotator I and J's completion. Both are
+now complete.
+
+### 90.1 Independence and agreement
+
+`run_new_pairs_metrics.py` (new) verified I and J are genuinely
+distinct annotators (different file hashes, different answers on both
+pairs) before computing anything. Cohen's kappa: **Tennessee 0.9486**
+(3/60 disagreements), **Connecticut 0.9456** (3/60), **pooled 0.9478**
+(6/120) - in the same range as the H3' pair's 0.9414 and comfortably
+above the main round's 0.8168 pooled kappa. The 6 disagreements are
+excluded from ground truth and reported as pending adjudication,
+exactly the treatment already established for H3''s 5 G/H
+disagreements, not resolved automatically.
+
+### 90.2 Section 6 metrics, pooled against the original four pairs
+
+| Metric (weighted) | Original 4 pairs (n=233) | New 2 pairs (n=110) |
+|---|---|---|
+| correspondence accuracy | 85.26% | 86.67% |
+| provenance_loss_rate | 1.48% | 3.12% |
+| false_correspondence_rate | 13.93% | 10.97% |
+| deletion_recall | 35.43% | 21.36% |
+| T5 (moved) precision | 13.33% (raw) / 6.15% (weighted), n=30 | **0%, n=20** |
+
+The headline numbers - overall accuracy, provenance loss, false
+correspondence - land within a few points of the original pooled
+result on two entirely independent publishers and editions, a genuine
+replication success supporting this study's core generalization claim.
+
+### 90.3 T5 is now confirmed as the method's weakest tier
+
+T5 (moved guidelines - an item reassigned to a different guideline
+section between editions) was already the original four pairs'
+worst-performing tier, at a weak but nonzero 13.3%/6.15%. On the two
+new, independently-sampled pairs, it drops to **0/20 correct** -
+Tennessee 0/10, Connecticut 0/10, drawn under the identical frozen-seed
+stratified design as every other pair, from two different publishers.
+Investigated before reporting, per section 10: this is not a
+single-pair fluke (both new pairs show it independently) and not a
+sampling artifact (n=10 per pair, same design as every T5 draw already
+in the corpus). This sharpens an already-known weakness into a
+confirmed one - any use of tier-level precision figures in a paper
+draft must report T5's near-total unreliability alongside the pooled
+headline accuracy, not fold it into an average that hides it.
+
+### 90.4 What remains open
+
+6 items (3 per pair) are pending human adjudication - an analogous
+workbook to H3''s can be generated the same way once needed.
+Provenance_loss_rate and deletion_recall both moved further from the
+original pooled figures than the headline accuracy did (both roughly
+halved or doubled), on comparatively small usable-n subsets (n=90 and
+n=20 respectively) - worth flagging as noisier estimates, not treated
+as a second finding requiring its own investigation, since neither
+crosses into a qualitatively different regime the way T5's did.
+
+**This section reports a preliminary two-pair replication, not yet
+folded into the study's headline pooled figures.** The confirmatory
+test set now genuinely has 6 pairs of real annotation data (360
+items), but a formal, separately-committed re-run of H3/H4/H5 against
+the combined 6-pair dataset - flagged as outstanding when the pairs
+were first sampled (section 81) - has not yet been performed and
+remains the next step if the study is to report on the full expanded
+set rather than the original four pairs plus this section's standalone
+comparison. Full report:
+`annotation_packets/new_pairs_final_metrics.json`.
+
+## 91. Appendix B's manual guideline-pair audit, completed: 99% correct, and the review caught an error the automated flags missed
+
+Section 64 generated the audit instrument for a pre-registration-
+required gate ("a manual audit of all accepted guideline pairs is
+required before publication") but explicitly left the review itself
+undone. It is now complete.
+
+### 91.1 Result
+
+Of 294 accepted guideline pairs across the four original confirmatory
+pairs, **291 CORRECT, 3 WRONG** - a 1.0% error rate. Every row got a
+verdict; no UNSURE, no blanks. All three wrong pairs are confined to
+a single edition pair, Connecticut 2022.1->2023.1.
+
+Two of the three were in the 73 rows the automated CONTAINMENT/TIE
+flags surfaced:
+
+- "Adult" incorrectly paired to "Poisoning/Overdose/Substance Use
+  Disorder – Adult" (and, symmetrically, the reverse pairing also
+  accepted elsewhere in the same edition) - a generic single-word
+  title colliding with an unrelated specific protocol, exactly the
+  containment failure mode Appendix B item 3 was written to catch.
+
+The third was **not** flagged by either heuristic (score 0.5, no
+CONTAINMENT, no TIE) and was only caught because the reviewer read
+all 294 rows, not only the flagged 73:
+
+- "Intraosseous Access" incorrectly paired to "NEW Central Line
+  Access" - two genuinely distinct vascular-access protocols.
+
+### 91.2 What this means for the flagging heuristics and for the numbers
+
+The flagged-73 subset was designed as an efficiency shortcut ("a
+focused 73-row list rather than all 294"), not a claim that every
+error would fall inside it. This result confirms that shortcut is not
+airtight: one real error (a third of the total found) sat outside the
+flagged set. Since the actual review covered all 294 rows regardless,
+this cost nothing here, but any future reuse of this audit design on
+a corpus too large to review in full should not assume the flagged
+subset is exhaustive.
+
+**No section 6 metric is recomputed as a result of this finding.**
+Three wrong guideline-level pairs, confined to one pair and one
+failure family (generic single-word titles), is within the range of
+error already reflected in that pair's own reported accuracy figures
+- Connecticut 2022.1->2023.1 was never claimed error-free, and no
+other pair shows any wrong verdict. This closes the pre-registered
+publication gate with a disclosed, bounded number (1.0%, 3/294, all
+in one pair) rather than an unqualified "audited and clean" claim.
+Full workbook: `annotation_packets/Appendix_B_guideline_pair_audit_COMPLETED.xlsx`
+(user-completed; the generating script's own uncompleted output is at
+`Appendix_B_guideline_pair_audit.xlsx`).

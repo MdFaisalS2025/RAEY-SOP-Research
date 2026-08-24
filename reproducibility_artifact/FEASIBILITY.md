@@ -7791,3 +7791,92 @@ support. It is also, at this point, the single most consistently
 reproduced finding in the entire study: three independent
 publisher-groups, three near-total T5 failures, no exceptions found
 anywhere it has been tested.
+
+## 96. Final formal H3/H4/H5 result: the full 8-pair, 4-publisher, 480-item confirmatory dataset
+
+The last formal re-run this study will report, pending only the 2
+Massachusetts items still awaiting adjudication (unlikely to move
+either finding given the CIs' current width, but to be checked once
+resolved, not assumed).
+
+### 96.1 Method
+
+`run_full_comparison_8pairs.py` extends the 6-pair script's exact
+method to the Massachusetts pairs, which - unlike every prior new-pair
+round - require `item_parser_ma.py` instead of the frozen parser. This
+surfaced a real wrinkle in the monkeypatch-injection technique this
+study has used since `vlm_rescue_attempt.py`: `baseline_b1_b3_b4.py`
+and `baseline_b2.py` each do their own `from item_parser import parse`
+at import time, binding their own module-level name - patching only
+`item_parser.parse` would silently leave every baseline computing
+against the frozen (wrong, garbage-title) parse for Massachusetts.
+All four affected modules' `parse` attributes were patched together
+and restored immediately after, verified by checking the frozen
+pipeline's own diff against `d3068ee` remained empty both before and
+after the run.
+
+### 96.2 Result
+
+| | 4-pair (n=233) | 6-pair (n=349) | 8-pair (n=467) |
+|---|---|---|---|
+| H3 point estimate | −0.0472 | −0.0172 | **−0.0064** |
+| H3 95% CI | [−0.0987, 0.0043] | [−0.0602, 0.0258] | **[−0.0407, 0.0278]** |
+| H3 confirmed? | No | No | No |
+| H4 (T3 precision) | 97.06% | 97.67% | **98.18%** |
+| H4 confirmed? | Yes | Yes | Yes |
+| H5 point estimate | +0.0501 | +0.0506 | +0.0696 |
+| H5 95% CI | [−0.0159, 0.1149] | [0.0031, 0.0976] | [0.0311, 0.1074] |
+| H5 confirmed? | No | No | No |
+
+**No confirmation status changes anywhere in this progression.** Two
+patterns are worth stating plainly, in opposite directions:
+
+- **H3's point estimate has moved steadily toward zero as more,
+  independent data accumulated** (−0.0472 → −0.0204 → −0.0172 →
+  −0.0064) - the honest signature of a true effect near zero, not a
+  real negative effect being diluted away by chance. This is a
+  reassuring pattern for the method, even though it does not cross
+  into formal confirmation.
+- **H4 has strengthened monotonically with every expansion** (97.06%
+  → 97.67% → 98.18%) - T3 (renumbered items) is the one hypothesis
+  this study's confirmatory data supports without qualification,
+  strengthening as replication accumulates rather than merely holding.
+- **H5's CI has moved further from its equivalence bound**, not
+  closer - the false-correspondence rate relative to B1 is not
+  trending toward the pre-registered +0.05 ceiling; if anything the
+  opposite.
+
+### 96.3 The MA-only pair-level "confirmation" artifact, again
+
+The Massachusetts-only breakout again shows H3 pair-raw CONFIRMED:
+True (point +0.0254, CI [0.0167, 0.0345]) - checked before reporting,
+exactly as the identical pattern was checked two entries above for the
+fifth/sixth pairs. v2025.1→v2026.1's own diff is +0.0167 (n=60);
+v2026.1→v2026.2's own diff is +0.0345 (n=58) - both positive, so with
+only 2 pair-units to resample from, no possible bootstrap draw can be
+negative. **This is the same bootstrap-support artifact already
+disclosed once in this study, not independent evidence for H3.** It
+recurs because the underlying statistical fact (n=2 pair-units gives a
+bootstrap no real distribution to sample from) is a property of the
+resampling unit count, not of Massachusetts specifically - any future
+2-pair-only breakout in this study would show the same pattern
+whenever both individual pairs happen to share a sign.
+
+### 96.4 Closing
+
+This is the final, complete formal test of H3, H4, and H5 this study
+performs: 8 pairs, 4 publishers, 480 sampled items, 467 usable. H4 is
+confirmed and strengthens with scale. H3 and H5 are not confirmed, but
+neither is dismissed with a weak or shrinking evidence base - H3's
+point estimate converges toward zero with more data (a null result
+becoming more credible, not less, as power increases) and H5's CI
+moves further from its bar, not closer. Combined with H6 (section 95.3,
+T5's confirmed unreliability across three independent publisher-
+groups), this study's honest final picture is: the method reliably
+handles renumbered items (H4), shows no reliable overall accuracy
+advantage over a text-only baseline at the pre-registered significance
+bar (H3, though the trend is favorable), does not meet the equivalence
+bar for false-correspondence rate relative to a naive baseline (H5),
+and has one specific, well-replicated, disclosed failure mode (T5,
+moved guidelines, H6). Full report:
+`annotation_packets/full_comparison_8pairs_report.json`.

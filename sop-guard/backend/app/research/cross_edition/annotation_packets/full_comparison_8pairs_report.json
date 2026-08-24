@@ -1,0 +1,466 @@
+{
+  "_preliminary_note": "2 of 120 Massachusetts items are still pending human adjudication (MAPairs_Adjudication_2_items.xlsx) and are excluded from every number below, not estimated. Re-run once resolved.",
+  "pending_adjudication_ma": {
+    "Massachusetts v2025.1→v2026.1 (": [],
+    "Massachusetts v2026.1→v2026.2 (": [
+      "S038",
+      "S054"
+    ]
+  },
+  "six_pairs_recomputed": {
+    "label": "6 PAIRS (360 sampled, recomputed here)",
+    "n_items": 349,
+    "H5_false_correspondence_method_minus_B1": {
+      "raw": {
+        "item": {
+          "point_estimate": 0.0506,
+          "ci95_low": 0.0031,
+          "ci95_high": 0.0976,
+          "n_valid": 10000
+        },
+        "pair": {
+          "point_estimate": 0.0506,
+          "ci95_low": -0.0585,
+          "ci95_high": 0.1479,
+          "n_valid": 10000
+        }
+      },
+      "weighted": {
+        "item": {
+          "point_estimate": 0.0203,
+          "ci95_low": 0.0086,
+          "ci95_high": 0.0336,
+          "n_valid": 10000
+        },
+        "pair": {
+          "point_estimate": 0.0203,
+          "ci95_low": -0.0045,
+          "ci95_high": 0.0535,
+          "n_valid": 10000
+        }
+      }
+    },
+    "H5_confirmed": {
+      "item_raw": false,
+      "pair_raw": false
+    },
+    "H3_method_minus_B2_accuracy": {
+      "raw": {
+        "item": {
+          "point_estimate": -0.0172,
+          "ci95_low": -0.0602,
+          "ci95_high": 0.0258,
+          "n_valid": 10000
+        },
+        "pair": {
+          "point_estimate": -0.0172,
+          "ci95_low": -0.113,
+          "ci95_high": 0.0603,
+          "n_valid": 10000
+        }
+      },
+      "weighted": {
+        "item": {
+          "point_estimate": -0.0182,
+          "ci95_low": -0.0462,
+          "ci95_high": 0.0083,
+          "n_valid": 10000
+        },
+        "pair": {
+          "point_estimate": -0.0182,
+          "ci95_low": -0.0754,
+          "ci95_high": 0.0249,
+          "n_valid": 10000
+        }
+      }
+    },
+    "H3_confirmed": {
+      "item_raw": false,
+      "pair_raw": false
+    },
+    "H4_T3_precision": {
+      "point_estimate": 0.9767
+    },
+    "H4_confirmed": true,
+    "descriptive": {
+      "method_minus_b3_accuracy": {
+        "raw": {
+          "item": {
+            "point_estimate": -0.0716,
+            "ci95_low": -0.1175,
+            "ci95_high": -0.0258,
+            "n_valid": 10000
+          },
+          "pair": {
+            "point_estimate": -0.0716,
+            "ci95_low": -0.1567,
+            "ci95_high": 0.0087,
+            "n_valid": 10000
+          }
+        },
+        "weighted": {
+          "item": {
+            "point_estimate": -0.0429,
+            "ci95_low": -0.07,
+            "ci95_high": -0.0178,
+            "n_valid": 10000
+          },
+          "pair": {
+            "point_estimate": -0.0429,
+            "ci95_low": -0.0924,
+            "ci95_high": -0.0025,
+            "n_valid": 10000
+          }
+        }
+      },
+      "method_minus_b4_accuracy": {
+        "raw": {
+          "item": {
+            "point_estimate": -0.063,
+            "ci95_low": -0.106,
+            "ci95_high": -0.0201,
+            "n_valid": 10000
+          },
+          "pair": {
+            "point_estimate": -0.063,
+            "ci95_low": -0.1246,
+            "ci95_high": 0.0,
+            "n_valid": 10000
+          }
+        },
+        "weighted": {
+          "item": {
+            "point_estimate": -0.0276,
+            "ci95_low": -0.0416,
+            "ci95_high": -0.0153,
+            "n_valid": 10000
+          },
+          "pair": {
+            "point_estimate": -0.0276,
+            "ci95_low": -0.0663,
+            "ci95_high": -0.0029,
+            "n_valid": 10000
+          }
+        }
+      }
+    },
+    "benjamini_hochberg": {
+      "H3": {
+        "p_raw": 0.8041,
+        "p_adjusted": 0.8041
+      },
+      "H4": {
+        "p_raw": 0.0,
+        "p_adjusted": 0.0
+      },
+      "H5": {
+        "p_raw": 0.5086,
+        "p_adjusted": 0.7629
+      }
+    }
+  },
+  "ma_2pairs_only": {
+    "label": "MASSACHUSETTS 2 PAIRS ONLY (120 sampled)",
+    "n_items": 118,
+    "H5_false_correspondence_method_minus_B1": {
+      "raw": {
+        "item": {
+          "point_estimate": 0.0981,
+          "ci95_low": 0.042,
+          "ci95_high": 0.1613,
+          "n_valid": 10000
+        },
+        "pair": {
+          "point_estimate": 0.0981,
+          "ci95_low": -0.0062,
+          "ci95_high": 0.2,
+          "n_valid": 10000
+        }
+      },
+      "weighted": {
+        "item": {
+          "point_estimate": 0.014,
+          "ci95_low": 0.006,
+          "ci95_high": 0.0246,
+          "n_valid": 10000
+        },
+        "pair": {
+          "point_estimate": 0.014,
+          "ci95_low": -0.0003,
+          "ci95_high": 0.0309,
+          "n_valid": 10000
+        }
+      }
+    },
+    "H5_confirmed": {
+      "item_raw": false,
+      "pair_raw": false
+    },
+    "H3_method_minus_B2_accuracy": {
+      "raw": {
+        "item": {
+          "point_estimate": 0.0254,
+          "ci95_low": -0.0169,
+          "ci95_high": 0.0678,
+          "n_valid": 10000
+        },
+        "pair": {
+          "point_estimate": 0.0254,
+          "ci95_low": 0.0167,
+          "ci95_high": 0.0345,
+          "n_valid": 10000
+        }
+      },
+      "weighted": {
+        "item": {
+          "point_estimate": 0.0121,
+          "ci95_low": -0.0099,
+          "ci95_high": 0.0365,
+          "n_valid": 10000
+        },
+        "pair": {
+          "point_estimate": 0.0121,
+          "ci95_low": 0.008,
+          "ci95_high": 0.0155,
+          "n_valid": 10000
+        }
+      }
+    },
+    "H3_confirmed": {
+      "item_raw": false,
+      "pair_raw": true
+    },
+    "H4_T3_precision": {
+      "point_estimate": 1.0
+    },
+    "H4_confirmed": true,
+    "descriptive": {
+      "method_minus_b3_accuracy": {
+        "raw": {
+          "item": {
+            "point_estimate": 0.7881,
+            "ci95_low": 0.7119,
+            "ci95_high": 0.8644,
+            "n_valid": 10000
+          },
+          "pair": {
+            "point_estimate": 0.7881,
+            "ci95_low": 0.7333,
+            "ci95_high": 0.8448,
+            "n_valid": 10000
+          }
+        },
+        "weighted": {
+          "item": {
+            "point_estimate": 0.9224,
+            "ci95_low": 0.8814,
+            "ci95_high": 0.9544,
+            "n_valid": 10000
+          },
+          "pair": {
+            "point_estimate": 0.9224,
+            "ci95_low": 0.9215,
+            "ci95_high": 0.9235,
+            "n_valid": 10000
+          }
+        }
+      },
+      "method_minus_b4_accuracy": {
+        "raw": {
+          "item": {
+            "point_estimate": -0.1017,
+            "ci95_low": -0.1695,
+            "ci95_high": -0.0339,
+            "n_valid": 10000
+          },
+          "pair": {
+            "point_estimate": -0.1017,
+            "ci95_low": -0.2167,
+            "ci95_high": 0.0172,
+            "n_valid": 10000
+          }
+        },
+        "weighted": {
+          "item": {
+            "point_estimate": -0.0275,
+            "ci95_low": -0.049,
+            "ci95_high": -0.0108,
+            "n_valid": 10000
+          },
+          "pair": {
+            "point_estimate": -0.0275,
+            "ci95_low": -0.0633,
+            "ci95_high": 0.0021,
+            "n_valid": 10000
+          }
+        }
+      }
+    },
+    "benjamini_hochberg": {
+      "H3": {
+        "p_raw": 0.1625,
+        "p_adjusted": 0.2438
+      },
+      "H4": {
+        "p_raw": 0.0,
+        "p_adjusted": 0.0
+      },
+      "H5": {
+        "p_raw": 0.9527,
+        "p_adjusted": 0.9527
+      }
+    }
+  },
+  "pooled_8pairs": {
+    "label": "POOLED 8 PAIRS (480 sampled)",
+    "n_items": 467,
+    "H5_false_correspondence_method_minus_B1": {
+      "raw": {
+        "item": {
+          "point_estimate": 0.0696,
+          "ci95_low": 0.0311,
+          "ci95_high": 0.1074,
+          "n_valid": 10000
+        },
+        "pair": {
+          "point_estimate": 0.0696,
+          "ci95_low": -0.0195,
+          "ci95_high": 0.1511,
+          "n_valid": 10000
+        }
+      },
+      "weighted": {
+        "item": {
+          "point_estimate": 0.0204,
+          "ci95_low": 0.0096,
+          "ci95_high": 0.0328,
+          "n_valid": 10000
+        },
+        "pair": {
+          "point_estimate": 0.0204,
+          "ci95_low": -0.0022,
+          "ci95_high": 0.0518,
+          "n_valid": 10000
+        }
+      }
+    },
+    "H5_confirmed": {
+      "item_raw": false,
+      "pair_raw": false
+    },
+    "H3_method_minus_B2_accuracy": {
+      "raw": {
+        "item": {
+          "point_estimate": -0.0064,
+          "ci95_low": -0.0407,
+          "ci95_high": 0.0278,
+          "n_valid": 10000
+        },
+        "pair": {
+          "point_estimate": -0.0064,
+          "ci95_low": -0.0837,
+          "ci95_high": 0.053,
+          "n_valid": 10000
+        }
+      },
+      "weighted": {
+        "item": {
+          "point_estimate": -0.0156,
+          "ci95_low": -0.0408,
+          "ci95_high": 0.0088,
+          "n_valid": 10000
+        },
+        "pair": {
+          "point_estimate": -0.0156,
+          "ci95_low": -0.067,
+          "ci95_high": 0.0246,
+          "n_valid": 10000
+        }
+      }
+    },
+    "H3_confirmed": {
+      "item_raw": false,
+      "pair_raw": false
+    },
+    "H4_T3_precision": {
+      "point_estimate": 0.9818
+    },
+    "H4_confirmed": true,
+    "descriptive": {
+      "method_minus_b3_accuracy": {
+        "raw": {
+          "item": {
+            "point_estimate": 0.1456,
+            "ci95_low": 0.0942,
+            "ci95_high": 0.1991,
+            "n_valid": 10000
+          },
+          "pair": {
+            "point_estimate": 0.1456,
+            "ci95_low": -0.0989,
+            "ci95_high": 0.447,
+            "n_valid": 10000
+          }
+        },
+        "weighted": {
+          "item": {
+            "point_estimate": 0.0399,
+            "ci95_low": 0.0099,
+            "ci95_high": 0.0714,
+            "n_valid": 10000
+          },
+          "pair": {
+            "point_estimate": 0.0399,
+            "ci95_low": -0.0579,
+            "ci95_high": 0.2482,
+            "n_valid": 10000
+          }
+        }
+      },
+      "method_minus_b4_accuracy": {
+        "raw": {
+          "item": {
+            "point_estimate": -0.0728,
+            "ci95_low": -0.1092,
+            "ci95_high": -0.0364,
+            "n_valid": 10000
+          },
+          "pair": {
+            "point_estimate": -0.0728,
+            "ci95_low": -0.1353,
+            "ci95_high": -0.0108,
+            "n_valid": 10000
+          }
+        },
+        "weighted": {
+          "item": {
+            "point_estimate": -0.0276,
+            "ci95_low": -0.0404,
+            "ci95_high": -0.0162,
+            "n_valid": 10000
+          },
+          "pair": {
+            "point_estimate": -0.0276,
+            "ci95_low": -0.0626,
+            "ci95_high": -0.0049,
+            "n_valid": 10000
+          }
+        }
+      }
+    },
+    "benjamini_hochberg": {
+      "H3": {
+        "p_raw": 0.6679,
+        "p_adjusted": 0.8388
+      },
+      "H4": {
+        "p_raw": 0.0,
+        "p_adjusted": 0.0
+      },
+      "H5": {
+        "p_raw": 0.8388,
+        "p_adjusted": 0.8388
+      }
+    }
+  }
+}

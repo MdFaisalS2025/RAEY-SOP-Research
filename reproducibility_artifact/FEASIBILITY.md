@@ -7920,3 +7920,39 @@ a consistency check that passed without being designed to.
 **This is the number this study's abstract and results section should
 lead with.** Full report:
 `annotation_packets/final_pooled_section6_metrics.json`.
+
+## 98. Correction and a further New Hampshire v9.3 attempt: a Table of Contents does exist in v9.3 (unlike v8.0), but the boundary signal is too weak to trust without more work
+
+Section 94.2 stated "New Hampshire has no Table of Contents anywhere
+in the document (confirmed by direct search)." That search was run
+against `nh_2024.pdf` (v8.0) specifically. Checking `nh_v93_20251107.pdf`
+(v9.3) directly, following up on the v9.3 extraction gap section 94.2
+also disclosed: **v9.3 does have a genuine, multi-page Table of
+Contents** ("Title..........id" rows, same shape as Massachusetts's).
+Correcting the record here rather than editing section 94.2, per
+append-only discipline - the original statement was accurate for the
+document it was checked against, just not generalizable to both
+editions as its phrasing could be read.
+
+This looked like a promising path to a genuine New Hampshire
+confirmatory pair (v8.0's already-fixed extraction paired with a
+now-fixable v9.3). Investigated further: v9.3's page-level running
+header id (the anchor `item_parser_ma.py`'s technique and v8.0's own
+extraction both depend on) is **far sparser** than v8.0's - roughly
+0.575 occurrences per page across a 40-page sample, versus v8.0's
+near-one-per-page rate - and several of the occurrences found are
+false positives: a "PEARLS" cross-reference block on one page listed
+three unrelated protocols' names and numbers together
+("Bradycardia Protocol 3.1", "Cardiac Arrest Protocol 3.2", "Crush
+Injuries Protocol 4.1", all on the same page, none of them that page's
+own protocol), not real page-start headers.
+
+**Not pursued further tonight.** Building a reliable v9.3 boundary
+detector would need a genuinely different signal (or a way to
+distinguish a true page-start header from an embedded cross-reference
+mention) - a real, scoped follow-up task, not attempted here in order
+to avoid forcing a low-confidence extraction into the confirmatory
+pipeline without the validation time it would need. No code changed;
+`item_align.py`/`item_parser.py`/`edition_align.py`/`corpus_probe.py`
+remain unchanged at `d3068ee`. New Hampshire's status is unchanged from
+section 94.2: v8.0 usable, no confirmatory pair possible yet.

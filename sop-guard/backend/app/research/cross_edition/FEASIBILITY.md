@@ -7249,6 +7249,28 @@ set rather than the original four pairs plus this section's standalone
 comparison. Full report:
 `annotation_packets/new_pairs_final_metrics.json`.
 
+## 90.5. Final recompute: all 6 pending I/J items adjudicated, full 120-item ground truth
+
+`NewPairs_Adjudication_6_items_COMPLETED.xlsx` came back with all 6
+disputed items resolved. Unlike H3''s 5 disputes and the D6 pattern
+seen throughout this study, Connecticut's 3 disagreements resolved to
+real item-ids (a split, a moved, and a reworded correspondence) rather
+than collapsing to NONE/CANNOT_DETERMINE - a more informative
+adjudication outcome than most others in this study. Tennessee's 3
+resolved to NONE, matching the G/H pattern.
+
+Full 120-item ground truth is now complete (116 usable, 4 genuinely
+CANNOT_DETERMINE), with nothing pending. Recomputed pooled section 6
+metrics: cannot_determine_rate 3.33%, correspondence accuracy raw
+62.07%/weighted 83.97%, provenance_loss_rate weighted 3.34%,
+false_correspondence_rate weighted 13.66% - all within about 2 points
+of the 110-item interim numbers reported above, confirming the interim
+reading held up once the remaining items resolved.
+
+**T5 (moved guidelines) remains exactly 0% precision on the complete
+n=20** - the finding reported above is not an artifact of partial
+data. Full report: `annotation_packets/new_pairs_final_metrics.json`.
+
 ## 91. Appendix B's manual guideline-pair audit, completed: 99% correct, and the review caught an error the automated flags missed
 
 Section 64 generated the audit instrument for a pre-registration-

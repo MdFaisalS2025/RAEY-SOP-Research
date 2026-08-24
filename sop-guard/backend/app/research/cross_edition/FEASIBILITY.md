@@ -7880,3 +7880,43 @@ bar for false-correspondence rate relative to a naive baseline (H5),
 and has one specific, well-replicated, disclosed failure mode (T5,
 moved guidelines, H6). Full report:
 `annotation_packets/full_comparison_8pairs_report.json`.
+
+## 97. Section 6's primary outcome, pooled across the complete confirmatory dataset for the first time: provenance loss rate 2.45% (weighted)
+
+Section 6 names **provenance loss rate as this study's primary
+outcome** - "everything else is secondary." Every prior report computed
+this per-round (the original four pairs, then the fifth/sixth pairs,
+then the seventh/eighth), but it had never been pooled across the full,
+final 8-pair dataset in one number until now.
+`run_final_section6_metrics.py` (new) does exactly that, reusing each
+round's own already-established ground-truth function unchanged (no
+ground-truth logic reimplemented, only pooled).
+
+**478 total sampled items, 467 usable (11 genuinely CANNOT_DETERMINE,
+2.3%), 2 still pending Massachusetts adjudication and excluded, not
+guessed at:**
+
+- **Provenance loss rate (PRIMARY): 11.87% raw / 2.45% weighted**
+  (n=379) - the harm this study exists to measure. Read alongside
+  section 9's abort conditions: this is well under the 25%
+  CANNOT_DETERMINE abort threshold and the annotation task was
+  answerable from the documents alone in the overwhelming majority of
+  cases.
+- Correspondence accuracy: 71.09% raw / 85.45% weighted (n=467).
+- False-correspondence rate: 23.14% raw / 12.90% weighted (n=389).
+- Deletion recall 37.5% raw/29.87% weighted (n=88); deletion precision
+  42.31% raw/51.66% weighted (n=78).
+- Tier precision, pooled across all 8 pairs for the first time: T1
+  96.53%/94.68% (n=173), T2 67.9%/59.52% (n=81), **T3 98.18%/96.26%
+  (n=55) - directly supporting H4's confirmation**, T4 95%/95% (n=20),
+  **T5 6.67%/3.92% (n=60) - the full-dataset figure behind H6**, T6
+  42.31%/51.66% (n=78).
+
+T5's full-dataset pooled figure (6.67%) sits between the original
+four-pair figure (13.3%) and the two all-zero new-pair rounds (0%),
+exactly as expected from a weighted pool of those three sub-results -
+a consistency check that passed without being designed to.
+
+**This is the number this study's abstract and results section should
+lead with.** Full report:
+`annotation_packets/final_pooled_section6_metrics.json`.

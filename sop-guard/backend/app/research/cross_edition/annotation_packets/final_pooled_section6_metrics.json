@@ -1,0 +1,66 @@
+{
+  "n_total_items": 478,
+  "n_cannot_determine": 11,
+  "cannot_determine_rate": 0.023,
+  "n_usable": 467,
+  "correspondence_accuracy": {
+    "raw": 0.7109,
+    "weighted": 0.8545,
+    "n": 467
+  },
+  "provenance_loss_rate_PRIMARY": {
+    "raw": 0.1187,
+    "weighted": 0.0245,
+    "n": 379
+  },
+  "false_correspondence_rate": {
+    "raw": 0.2314,
+    "weighted": 0.129,
+    "n": 389
+  },
+  "deletion_recall": {
+    "raw": 0.375,
+    "weighted": 0.2987,
+    "n": 88
+  },
+  "deletion_precision": {
+    "raw": 0.4231,
+    "weighted": 0.5166,
+    "n": 78
+  },
+  "tier_precision": {
+    "T1_id_exact": {
+      "raw": 0.9653,
+      "weighted": 0.9468,
+      "n": 173
+    },
+    "T2_id_text_changed": {
+      "raw": 0.679,
+      "weighted": 0.5952,
+      "n": 81
+    },
+    "T3_renumbered": {
+      "raw": 0.9818,
+      "weighted": 0.9626,
+      "n": 55
+    },
+    "T4_reworded": {
+      "raw": 0.95,
+      "weighted": 0.95,
+      "n": 20
+    },
+    "T5_moved": {
+      "raw": 0.0667,
+      "weighted": 0.0392,
+      "n": 60
+    },
+    "T6_unmatched_old": {
+      "raw": 0.4231,
+      "weighted": 0.5166,
+      "n": 78
+    }
+  },
+  "_pooled_pending_adjudication": 2,
+  "_n_pairs": 8,
+  "_n_publishers": 4
+}

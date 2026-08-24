@@ -64,34 +64,34 @@
       }
     },
     "Massachusetts v2026.1→v2026.2 (": {
-      "n_total_items": 58,
+      "n_total_items": 60,
       "n_cannot_determine": 0,
       "cannot_determine_rate": 0.0,
-      "n_usable": 58,
+      "n_usable": 60,
       "correspondence_accuracy": {
-        "raw": 0.8448,
-        "weighted": 0.9215,
-        "n": 58
+        "raw": 0.8167,
+        "weighted": 0.9061,
+        "n": 60
       },
       "provenance_loss_rate_PRIMARY": {
-        "raw": 0.1296,
-        "weighted": 0.0645,
-        "n": 54
+        "raw": 0.1455,
+        "weighted": 0.073,
+        "n": 55
       },
       "false_correspondence_rate": {
-        "raw": 0.0426,
-        "weighted": 0.018,
-        "n": 47
+        "raw": 0.0625,
+        "weighted": 0.0268,
+        "n": 48
       },
       "deletion_recall": {
-        "raw": 1.0,
-        "weighted": 1.0,
-        "n": 4
+        "raw": 0.8,
+        "weighted": 0.8136,
+        "n": 5
       },
       "deletion_precision": {
-        "raw": 0.3636,
-        "weighted": 0.3636,
-        "n": 11
+        "raw": 0.3333,
+        "weighted": 0.3333,
+        "n": 12
       },
       "tier_precision": {
         "T1_id_exact": {
@@ -100,9 +100,9 @@
           "n": 31
         },
         "T2_id_text_changed": {
-          "raw": 0.8,
-          "weighted": 0.8,
-          "n": 10
+          "raw": 0.7273,
+          "weighted": 0.7273,
+          "n": 11
         },
         "T3_renumbered": {
           "raw": 1.0,
@@ -115,42 +115,42 @@
           "n": 1
         },
         "T6_unmatched_old": {
-          "raw": 0.3636,
-          "weighted": 0.3636,
-          "n": 11
+          "raw": 0.3333,
+          "weighted": 0.3333,
+          "n": 12
         }
       }
     }
   },
   "pooled": {
-    "n_total_items": 118,
+    "n_total_items": 120,
     "n_cannot_determine": 0,
     "cannot_determine_rate": 0.0,
-    "n_usable": 118,
+    "n_usable": 120,
     "correspondence_accuracy": {
-      "raw": 0.7966,
-      "weighted": 0.926,
-      "n": 118
+      "raw": 0.7833,
+      "weighted": 0.9175,
+      "n": 120
     },
     "provenance_loss_rate_PRIMARY": {
-      "raw": 0.12,
-      "weighted": 0.0549,
-      "n": 100
+      "raw": 0.1287,
+      "weighted": 0.0597,
+      "n": 101
     },
     "false_correspondence_rate": {
-      "raw": 0.1237,
-      "weighted": 0.0239,
-      "n": 97
+      "raw": 0.1327,
+      "weighted": 0.0287,
+      "n": 98
     },
     "deletion_recall": {
-      "raw": 0.5,
-      "weighted": 0.7647,
-      "n": 18
+      "raw": 0.4737,
+      "weighted": 0.701,
+      "n": 19
     },
     "deletion_precision": {
-      "raw": 0.4286,
-      "weighted": 0.4187,
-      "n": 21
+      "raw": 0.4091,
+      "weighted": 0.3971,
+      "n": 22
     },
     "tier_precision": {
       "T1_id_exact": {
@@ -159,9 +159,9 @@
         "n": 52
       },
       "T2_id_text_changed": {
-        "raw": 0.9,
-        "weighted": 0.8896,
-        "n": 20
+        "raw": 0.8571,
+        "weighted": 0.8431,
+        "n": 21
       },
       "T3_renumbered": {
         "raw": 1.0,
@@ -179,9 +179,9 @@
         "n": 10
       },
       "T6_unmatched_old": {
-        "raw": 0.4286,
-        "weighted": 0.4187,
-        "n": 21
+        "raw": 0.4091,
+        "weighted": 0.3971,
+        "n": 22
       }
     }
   },
@@ -232,9 +232,6 @@
   },
   "pending_adjudication": {
     "Massachusetts v2025.1→v2026.1 (": [],
-    "Massachusetts v2026.1→v2026.2 (": [
-      "S038",
-      "S054"
-    ]
+    "Massachusetts v2026.1→v2026.2 (": []
   }
 }

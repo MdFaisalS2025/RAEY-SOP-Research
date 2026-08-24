@@ -1,32 +1,32 @@
 {
-  "n_total_items": 478,
+  "n_total_items": 480,
   "n_cannot_determine": 11,
-  "cannot_determine_rate": 0.023,
-  "n_usable": 467,
+  "cannot_determine_rate": 0.0229,
+  "n_usable": 469,
   "correspondence_accuracy": {
-    "raw": 0.7109,
-    "weighted": 0.8545,
-    "n": 467
+    "raw": 0.7079,
+    "weighted": 0.8538,
+    "n": 469
   },
   "provenance_loss_rate_PRIMARY": {
-    "raw": 0.1187,
-    "weighted": 0.0245,
-    "n": 379
+    "raw": 0.1211,
+    "weighted": 0.025,
+    "n": 380
   },
   "false_correspondence_rate": {
-    "raw": 0.2314,
-    "weighted": 0.129,
-    "n": 389
+    "raw": 0.2333,
+    "weighted": 0.1293,
+    "n": 390
   },
   "deletion_recall": {
-    "raw": 0.375,
-    "weighted": 0.2987,
-    "n": 88
+    "raw": 0.3708,
+    "weighted": 0.2973,
+    "n": 89
   },
   "deletion_precision": {
-    "raw": 0.4231,
-    "weighted": 0.5166,
-    "n": 78
+    "raw": 0.4177,
+    "weighted": 0.5121,
+    "n": 79
   },
   "tier_precision": {
     "T1_id_exact": {
@@ -35,9 +35,9 @@
       "n": 173
     },
     "T2_id_text_changed": {
-      "raw": 0.679,
-      "weighted": 0.5952,
-      "n": 81
+      "raw": 0.6707,
+      "weighted": 0.5934,
+      "n": 82
     },
     "T3_renumbered": {
       "raw": 0.9818,
@@ -55,12 +55,12 @@
       "n": 60
     },
     "T6_unmatched_old": {
-      "raw": 0.4231,
-      "weighted": 0.5166,
-      "n": 78
+      "raw": 0.4177,
+      "weighted": 0.5121,
+      "n": 79
     }
   },
-  "_pooled_pending_adjudication": 2,
+  "_pooled_pending_adjudication": 0,
   "_n_pairs": 8,
   "_n_publishers": 4
 }

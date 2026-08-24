@@ -1,11 +1,8 @@
 {
-  "_preliminary_note": "2 of 120 Massachusetts items are still pending human adjudication (MAPairs_Adjudication_2_items.xlsx) and are excluded from every number below, not estimated. Re-run once resolved.",
+  "_preliminary_note": "0 of 120 Massachusetts items are still pending human adjudication (MAPairs_Adjudication_2_items.xlsx) and are excluded from every number below, not estimated. Re-run once resolved.",
   "pending_adjudication_ma": {
     "Massachusetts v2025.1→v2026.1 (": [],
-    "Massachusetts v2026.1→v2026.2 (": [
-      "S038",
-      "S054"
-    ]
+    "Massachusetts v2026.1→v2026.2 (": []
   },
   "six_pairs_recomputed": {
     "label": "6 PAIRS (360 sampled, recomputed here)",
@@ -161,32 +158,32 @@
   },
   "ma_2pairs_only": {
     "label": "MASSACHUSETTS 2 PAIRS ONLY (120 sampled)",
-    "n_items": 118,
+    "n_items": 120,
     "H5_false_correspondence_method_minus_B1": {
       "raw": {
         "item": {
-          "point_estimate": 0.0981,
-          "ci95_low": 0.042,
-          "ci95_high": 0.1613,
+          "point_estimate": 0.0947,
+          "ci95_low": 0.0402,
+          "ci95_high": 0.1585,
           "n_valid": 10000
         },
         "pair": {
-          "point_estimate": 0.0981,
-          "ci95_low": -0.0062,
+          "point_estimate": 0.0947,
+          "ci95_low": -0.0089,
           "ci95_high": 0.2,
           "n_valid": 10000
         }
       },
       "weighted": {
         "item": {
-          "point_estimate": 0.014,
+          "point_estimate": 0.0139,
           "ci95_low": 0.006,
-          "ci95_high": 0.0246,
+          "ci95_high": 0.0245,
           "n_valid": 10000
         },
         "pair": {
-          "point_estimate": 0.014,
-          "ci95_low": -0.0003,
+          "point_estimate": 0.0139,
+          "ci95_low": -0.0004,
           "ci95_high": 0.0309,
           "n_valid": 10000
         }
@@ -199,29 +196,29 @@
     "H3_method_minus_B2_accuracy": {
       "raw": {
         "item": {
-          "point_estimate": 0.0254,
-          "ci95_low": -0.0169,
-          "ci95_high": 0.0678,
+          "point_estimate": 0.025,
+          "ci95_low": -0.0167,
+          "ci95_high": 0.0667,
           "n_valid": 10000
         },
         "pair": {
-          "point_estimate": 0.0254,
+          "point_estimate": 0.025,
           "ci95_low": 0.0167,
-          "ci95_high": 0.0345,
+          "ci95_high": 0.0333,
           "n_valid": 10000
         }
       },
       "weighted": {
         "item": {
-          "point_estimate": 0.0121,
-          "ci95_low": -0.0099,
-          "ci95_high": 0.0365,
+          "point_estimate": 0.012,
+          "ci95_low": -0.0101,
+          "ci95_high": 0.0363,
           "n_valid": 10000
         },
         "pair": {
-          "point_estimate": 0.0121,
+          "point_estimate": 0.012,
           "ci95_low": 0.008,
-          "ci95_high": 0.0155,
+          "ci95_high": 0.0153,
           "n_valid": 10000
         }
       }
@@ -238,28 +235,28 @@
       "method_minus_b3_accuracy": {
         "raw": {
           "item": {
-            "point_estimate": 0.7881,
-            "ci95_low": 0.7119,
-            "ci95_high": 0.8644,
+            "point_estimate": 0.7667,
+            "ci95_low": 0.6833,
+            "ci95_high": 0.8417,
             "n_valid": 10000
           },
           "pair": {
-            "point_estimate": 0.7881,
+            "point_estimate": 0.7667,
             "ci95_low": 0.7333,
-            "ci95_high": 0.8448,
+            "ci95_high": 0.8,
             "n_valid": 10000
           }
         },
         "weighted": {
           "item": {
-            "point_estimate": 0.9224,
-            "ci95_low": 0.8814,
-            "ci95_high": 0.9544,
+            "point_estimate": 0.9095,
+            "ci95_low": 0.8624,
+            "ci95_high": 0.9464,
             "n_valid": 10000
           },
           "pair": {
-            "point_estimate": 0.9224,
-            "ci95_low": 0.9215,
+            "point_estimate": 0.9095,
+            "ci95_low": 0.8981,
             "ci95_high": 0.9235,
             "n_valid": 10000
           }
@@ -268,27 +265,27 @@
       "method_minus_b4_accuracy": {
         "raw": {
           "item": {
-            "point_estimate": -0.1017,
-            "ci95_low": -0.1695,
-            "ci95_high": -0.0339,
+            "point_estimate": -0.1,
+            "ci95_low": -0.1667,
+            "ci95_high": -0.0333,
             "n_valid": 10000
           },
           "pair": {
-            "point_estimate": -0.1017,
+            "point_estimate": -0.1,
             "ci95_low": -0.2167,
-            "ci95_high": 0.0172,
+            "ci95_high": 0.0167,
             "n_valid": 10000
           }
         },
         "weighted": {
           "item": {
-            "point_estimate": -0.0275,
-            "ci95_low": -0.049,
-            "ci95_high": -0.0108,
+            "point_estimate": -0.0272,
+            "ci95_low": -0.0482,
+            "ci95_high": -0.0106,
             "n_valid": 10000
           },
           "pair": {
-            "point_estimate": -0.0275,
+            "point_estimate": -0.0272,
             "ci95_low": -0.0633,
             "ci95_high": 0.0021,
             "n_valid": 10000
@@ -298,48 +295,48 @@
     },
     "benjamini_hochberg": {
       "H3": {
-        "p_raw": 0.1625,
-        "p_adjusted": 0.2438
+        "p_raw": 0.1637,
+        "p_adjusted": 0.2456
       },
       "H4": {
         "p_raw": 0.0,
         "p_adjusted": 0.0
       },
       "H5": {
-        "p_raw": 0.9527,
-        "p_adjusted": 0.9527
+        "p_raw": 0.9429,
+        "p_adjusted": 0.9429
       }
     }
   },
   "pooled_8pairs": {
     "label": "POOLED 8 PAIRS (480 sampled)",
-    "n_items": 467,
+    "n_items": 469,
     "H5_false_correspondence_method_minus_B1": {
       "raw": {
         "item": {
-          "point_estimate": 0.0696,
-          "ci95_low": 0.0311,
-          "ci95_high": 0.1074,
+          "point_estimate": 0.0685,
+          "ci95_low": 0.0302,
+          "ci95_high": 0.1063,
           "n_valid": 10000
         },
         "pair": {
-          "point_estimate": 0.0696,
-          "ci95_low": -0.0195,
-          "ci95_high": 0.1511,
+          "point_estimate": 0.0685,
+          "ci95_low": -0.0203,
+          "ci95_high": 0.151,
           "n_valid": 10000
         }
       },
       "weighted": {
         "item": {
           "point_estimate": 0.0204,
-          "ci95_low": 0.0096,
-          "ci95_high": 0.0328,
+          "ci95_low": 0.0093,
+          "ci95_high": 0.0326,
           "n_valid": 10000
         },
         "pair": {
           "point_estimate": 0.0204,
           "ci95_low": -0.0022,
-          "ci95_high": 0.0518,
+          "ci95_high": 0.0516,
           "n_valid": 10000
         }
       }
@@ -352,27 +349,27 @@
       "raw": {
         "item": {
           "point_estimate": -0.0064,
-          "ci95_low": -0.0407,
-          "ci95_high": 0.0278,
+          "ci95_low": -0.0384,
+          "ci95_high": 0.0277,
           "n_valid": 10000
         },
         "pair": {
           "point_estimate": -0.0064,
-          "ci95_low": -0.0837,
-          "ci95_high": 0.053,
+          "ci95_low": -0.0835,
+          "ci95_high": 0.0525,
           "n_valid": 10000
         }
       },
       "weighted": {
         "item": {
           "point_estimate": -0.0156,
-          "ci95_low": -0.0408,
-          "ci95_high": 0.0088,
+          "ci95_low": -0.0409,
+          "ci95_high": 0.0094,
           "n_valid": 10000
         },
         "pair": {
           "point_estimate": -0.0156,
-          "ci95_low": -0.067,
+          "ci95_low": -0.0669,
           "ci95_high": 0.0246,
           "n_valid": 10000
         }
@@ -390,29 +387,29 @@
       "method_minus_b3_accuracy": {
         "raw": {
           "item": {
-            "point_estimate": 0.1456,
-            "ci95_low": 0.0942,
-            "ci95_high": 0.1991,
+            "point_estimate": 0.1429,
+            "ci95_low": 0.0917,
+            "ci95_high": 0.1962,
             "n_valid": 10000
           },
           "pair": {
-            "point_estimate": 0.1456,
+            "point_estimate": 0.1429,
             "ci95_low": -0.0989,
-            "ci95_high": 0.447,
+            "ci95_high": 0.4376,
             "n_valid": 10000
           }
         },
         "weighted": {
           "item": {
-            "point_estimate": 0.0399,
-            "ci95_low": 0.0099,
-            "ci95_high": 0.0714,
+            "point_estimate": 0.0394,
+            "ci95_low": 0.009,
+            "ci95_high": 0.0713,
             "n_valid": 10000
           },
           "pair": {
-            "point_estimate": 0.0399,
+            "point_estimate": 0.0394,
             "ci95_low": -0.0579,
-            "ci95_high": 0.2482,
+            "ci95_high": 0.2473,
             "n_valid": 10000
           }
         }
@@ -420,28 +417,28 @@
       "method_minus_b4_accuracy": {
         "raw": {
           "item": {
-            "point_estimate": -0.0728,
-            "ci95_low": -0.1092,
-            "ci95_high": -0.0364,
+            "point_estimate": -0.0725,
+            "ci95_low": -0.1087,
+            "ci95_high": -0.0362,
             "n_valid": 10000
           },
           "pair": {
-            "point_estimate": -0.0728,
+            "point_estimate": -0.0725,
             "ci95_low": -0.1353,
-            "ci95_high": -0.0108,
+            "ci95_high": -0.0107,
             "n_valid": 10000
           }
         },
         "weighted": {
           "item": {
             "point_estimate": -0.0276,
-            "ci95_low": -0.0404,
-            "ci95_high": -0.0162,
+            "ci95_low": -0.0405,
+            "ci95_high": -0.016,
             "n_valid": 10000
           },
           "pair": {
             "point_estimate": -0.0276,
-            "ci95_low": -0.0626,
+            "ci95_low": -0.0625,
             "ci95_high": -0.0049,
             "n_valid": 10000
           }
@@ -450,16 +447,16 @@
     },
     "benjamini_hochberg": {
       "H3": {
-        "p_raw": 0.6679,
-        "p_adjusted": 0.8388
+        "p_raw": 0.6681,
+        "p_adjusted": 0.8254
       },
       "H4": {
         "p_raw": 0.0,
         "p_adjusted": 0.0
       },
       "H5": {
-        "p_raw": 0.8388,
-        "p_adjusted": 0.8388
+        "p_raw": 0.8254,
+        "p_adjusted": 0.8254
       }
     }
   }

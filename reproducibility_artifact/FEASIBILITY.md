@@ -7140,6 +7140,42 @@ is left in place, not deleted or edited). Full report:
 second-annotator verification:
 `annotation_packets/h3prime_tennessee_2022_2024/h3prime_second_annotator_report.json`.
 
+### 89.5 Final recompute: all 5 pending items adjudicated, full 92-item ground truth
+
+`H3prime_Adjudication_5_items_COMPLETED.xlsx` came back with all 5
+disputed items resolved to NONE. `run_h3prime_test.py`'s adjudication
+hook picked it up with no code change, and the full 92-item packet is
+now completely resolved - no pending items remain.
+
+**H3′a/H3′b are unchanged**: n=21, a=1.0000, b=1.0000, diff=0, p=1.0,
+CONFIRMED False - none of the 5 newly-resolved items fall in the
+clean-bullet subpopulation, so this result was never going to move.
+
+**H3′c is now scored on the full 60 ordinal items** (was 57 in the
+interim result above): a=0.7167, b=0.7167 - exactly identical - paired
+difference 0.0, 95% CI [-0.1, 0.1], p=0.5641. CONFIRMED False.
+
+The point estimate moved from a nominal +0.0175 favoring v1 (interim,
+n=57) to exactly 0 (final, n=60) - checked before reporting, per
+section 10: this is not a scoring artifact (bootstrap seed, BH
+adjustment, and scoring logic are byte-identical between the two runs;
+only the ground-truth dict's contents changed, exactly as the pending-
+adjudication hook is designed to do) but a real consequence of the 3
+newly-resolved ordinal items' truth value (NONE) being one both v1's
+and B2's predictions already happened to agree on - a coincidence of
+which specific items were pending, not a systematic effect favoring
+either arm.
+
+**Both readings support the identical conclusion**: H3′c does not
+independently replicate H3's original ordinal finding (section 54.1)
+at the pre-registered significance bar on this smaller, fresh
+Tennessee sample. The full n=60 number, not the interim n=57 one, is
+the one that should be quoted going forward - this is now the final,
+complete H3′ result, with nothing left pending. Full report:
+`annotation_packets/h3prime_tennessee_2022_2024/h3prime_test_report.json`
+(overwritten; the interim 87-item numbers are preserved above and in
+`PREREGISTRATION.md`'s table, per append-only discipline).
+
 ## 90. The fifth and sixth confirmatory pairs, scored: replication mostly holds, but T5 (moved guidelines) drops to 0% precision on independent data
 
 Section 67 drew samples and generated blind workbooks for two new

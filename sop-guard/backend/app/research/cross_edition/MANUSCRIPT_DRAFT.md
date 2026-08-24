@@ -1,8 +1,10 @@
 # Tracking Clinical Protocol Recommendations Across Editions: A Pre-Registered Cross-Edition Provenance Study
 
 **Status: first full draft, synthesized from the study's research log
-(`FEASIBILITY.md`, 97 sections) and pre-registration
-(`PREREGISTRATION.md`). Not camera-ready.** Every number below is
+(`FEASIBILITY.md`, 99 sections) and pre-registration
+(`PREREGISTRATION.md`). Numbers current as of the study's final,
+fully-resolved dataset (zero items pending anywhere). Not
+camera-ready.** Every number below is
 pulled directly from a committed, reproducible report file, cited
 inline. Sections marked `[NEEDS: ...]` require the author's input
 (citations, venue formatting, author list, framing decisions) that
@@ -24,8 +26,8 @@ given a recommendation in edition *N*, where did it go in edition
 *N+1*? We present a structure-aware alignment method and evaluate it
 against four baselines on a pre-registered, annotated confirmatory
 test set spanning 8 edition pairs from 4 independent U.S. state EMS
-protocol publishers (480 sampled items, 467 usable after annotation).
-The method achieves a pooled provenance loss rate of 2.45%
+protocol publishers (480 sampled items, 469 usable after annotation).
+The method achieves a pooled provenance loss rate of 2.50%
 (population-weighted; the study's pre-registered primary outcome) and
 reliably resolves renumbered items (T3 tier precision 98.18%,
 confirmed). It shows no statistically reliable overall accuracy
@@ -217,28 +219,29 @@ any test data was examined.
 
 ### 4.1 Primary outcome: provenance loss rate
 
-Pooled across the complete, final confirmatory dataset (478 sampled
-items, 467 usable — 11 genuinely CANNOT_DETERMINE, 2.3%; 2 items
-pending final adjudication and excluded rather than estimated):
+Pooled across the complete, final confirmatory dataset (480 sampled
+items, 469 usable — 11 genuinely CANNOT_DETERMINE, 2.29%; zero items
+pending — every annotation round in this study, including all
+adjudications, is fully resolved):
 
-**Provenance loss rate (primary outcome, pre-registered): 11.87% raw,
-2.45% population-weighted (n=379).**
+**Provenance loss rate (primary outcome, pre-registered): 12.11% raw,
+2.50% population-weighted (n=380).**
 
-Secondary metrics, pooled: correspondence accuracy 71.09% raw / 85.45%
-weighted (n=467); false-correspondence rate 23.14% raw / 12.90%
-weighted (n=389); deletion recall 37.5% raw / 29.87% weighted (n=88);
-deletion precision 42.31% raw / 51.66% weighted (n=78).
+Secondary metrics, pooled: correspondence accuracy 70.79% raw / 85.38%
+weighted (n=469); false-correspondence rate 23.33% raw / 12.93%
+weighted (n=390); deletion recall 37.08% raw / 29.73% weighted (n=89);
+deletion precision 41.77% raw / 51.21% weighted (n=79).
 
 Per-tier precision, pooled across all 8 pairs:
 
 | Tier | n | Raw precision | Weighted precision |
 |---|---|---|---|
 | T1 (id exact) | 173 | 96.53% | 94.68% |
-| T2 (id, text changed) | 81 | 67.9% | 59.52% |
+| T2 (id, text changed) | 82 | 67.07% | 59.34% |
 | T3 (renumbered) | 55 | 98.18% | 96.26% |
 | T4 (reworded) | 20 | 95% | 95% |
 | T5 (moved) | 60 | 6.67% | 3.92% |
-| T6 (unmatched) | 78 | 42.31% | 51.66% |
+| T6 (unmatched) | 79 | 41.77% | 51.21% |
 
 ### 4.2 H1/H2: not tested
 
@@ -259,12 +262,14 @@ pre-registered abort condition anticipates**, not as silently dropped.
 Confirmed if the paired difference is positive with a 95% CI excluding
 zero.*
 
-**Not confirmed.** Pooled 8-pair item-level paired difference:
-point estimate −0.0064, 95% CI [−0.0407, 0.0278].
+**Not confirmed.** Pooled 8-pair item-level paired difference (final,
+469 usable items, zero pending anywhere in the dataset):
+point estimate −0.0064, 95% CI [−0.0384, 0.0277].
 
-The point estimate's trajectory across four successive, independent
+The point estimate's trajectory across five successive, independent
 data expansions is notable: −0.0472 (4 pairs) → −0.0204 (6 pairs,
-interim) → −0.0172 (6 pairs, final) → **−0.0064 (8 pairs, final)** —
+interim) → −0.0172 (6 pairs, final) → −0.0064 (8 pairs, interim) →
+**−0.0064 (8 pairs, final)** —
 converging steadily toward zero as more independent data accumulated,
 rather than moving further from it. This is the signature expected of
 a true near-zero effect becoming more precisely estimated, not of a
@@ -285,11 +290,11 @@ increasing as independent replications accumulated.
 than 5 percentage points. Confirmed if the CI upper bound is below
 +0.05.*
 
-**Not confirmed.** Pooled 8-pair item-level: point estimate +0.0696,
-95% CI [0.0311, 0.1074] — the CI's lower bound has moved above zero as
-data accumulated (was [−0.0159, 0.1149] on the original 4 pairs), and
-its position relative to the +0.05 equivalence bound has moved further
-away, not closer.
+**Not confirmed.** Pooled 8-pair item-level (final): point estimate
++0.0685, 95% CI [0.0302, 0.1063] — the CI's lower bound has moved
+above zero as data accumulated (was [−0.0159, 0.1149] on the original
+4 pairs), and its position relative to the +0.05 equivalence bound has
+moved further away, not closer.
 
 ### 4.6 H6 (new) — moved-guideline items are unreliably detected
 

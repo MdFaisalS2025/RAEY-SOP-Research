@@ -7956,3 +7956,43 @@ pipeline without the validation time it would need. No code changed;
 `item_align.py`/`item_parser.py`/`edition_align.py`/`corpus_probe.py`
 remain unchanged at `d3068ee`. New Hampshire's status is unchanged from
 section 94.2: v8.0 usable, no confirmatory pair possible yet.
+
+## 99. Study closed out: every pending item resolved, definitive final numbers
+
+The last 2 outstanding items in this study's entire annotation
+effort - S038 and S054 from the seventh/eighth (Massachusetts) pairs -
+are now adjudicated. Nothing remains pending anywhere: not in H3′, not
+in the fifth/sixth pairs, not in the seventh/eighth pairs.
+
+Recomputed with the complete, fully-resolved 480-item confirmatory
+dataset:
+
+- **H3/H4/H5, pooled 8 pairs (n=469 of 480)**: H3 point −0.0064, 95%
+  CI [−0.0384, 0.0277], NOT CONFIRMED. H4 (T3 precision) 98.18%,
+  CONFIRMED. H5 point 0.0685, 95% CI [0.0302, 0.1063], NOT CONFIRMED.
+  No status changes from the prior 467-item reading - the 2 resolved
+  items moved every figure by less than a rounding error.
+- **Primary outcome, pooled 8 pairs (n=380 of 480)**: provenance loss
+  rate 12.11% raw / **2.50% weighted** - within 0.05 points of the
+  prior interim figure, confirming that number was never sensitive to
+  the 2 pending items.
+- **H6** is unaffected - its test population (the v2025.1→v2026.1
+  pair's T5 items) had zero pending items even before this resolution.
+
+The MA-only pair-level H3 "confirmation" artifact reappears a third
+time (point +0.025, CI [0.0167, 0.0333]) for the identical reason
+already diagnosed twice: 2 pair-units, both positive, no possible
+negative bootstrap draw. Not evidence for H3, disclosed again for
+completeness.
+
+**This closes the study.** Every one of H1 through H6 has a final,
+complete, properly-powered result: H1/H2 untested per the pre-
+registered abort condition (no major-revision pair survived parsing);
+H3 not confirmed, converging toward zero across four independent data
+expansions; H4 confirmed and monotonically strengthening; H5 not
+confirmed; H6 (post-hoc, properly pre-registered) confirmed. The
+confirmatory dataset stands at 8 pairs, 4 publishers, 480 sampled
+items, 469 usable, 11 CANNOT_DETERMINE, zero pending. Full reports:
+`annotation_packets/full_comparison_8pairs_report.json`,
+`annotation_packets/final_pooled_section6_metrics.json` (both
+overwritten with the final numbers).

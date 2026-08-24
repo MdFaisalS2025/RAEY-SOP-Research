@@ -26,7 +26,7 @@
 
 Clinical protocol sets — the documents that tell a paramedic what dose to give, in what order, and when to stop — are republished as whole documents. Edition *N+1* arrives as a fresh PDF. Recommendations inside it have been renumbered, reworded, merged, split, promoted between sections, added, and silently removed. There is no amendment instruction, no guaranteed change log, and no identifier that is stable by construction.
 
-This distinguishes the problem from legislative amendment tracking, where bills carry explicit machine-readable amendatory instructions ("strike X, insert Y") and the correspondence between versions is *given* rather than inferred. In clinical protocols the correspondence must be recovered from content and structure alone.
+This distinguishes the problem from legislative amendment tracking, where bills carry machine-readable amendatory instructions ("strike X, insert Y") and correspondence between versions is *given* rather than inferred. In clinical protocols it must be recovered from content and structure alone.
 
 The consequence is operational, not merely bibliographic. An institution that cannot trace a recommendation across its own editions cannot answer *when did we change this, and why*; cannot distinguish a stale local protocol from a deliberate, documented deviation; and cannot audit which staff attested to which version of a rule — an explicit requirement in accredited quality-management and electronic-signature regimes.
 
@@ -63,7 +63,7 @@ Given two editions, the method first matches *guidelines* (protocol-level units)
 - **T5** moved — matched across a section or guideline boundary
 - **T6** unmatched — candidate deletion
 
-Recommendations are addressed by a composite identifier (`guideline/section/marker_path`) recovered from each PDF by inferring nesting depth from marker-type sequence, since PDF extraction does not preserve reliable indentation.
+Recommendations are addressed by a composite identifier (`guideline/section/marker_path`), with nesting depth inferred from marker-type sequence since PDF extraction does not preserve indentation.
 
 ### Baselines
 
@@ -85,7 +85,7 @@ The confirmatory corpus was assembled from U.S. state EMS protocol sets meeting 
 
 Assembling it required screening every U.S. state, the District of Columbia, and Puerto Rico (Figure 2). Of 52 jurisdictions, most publish no compiled statewide protocol document at all; several were retrieval-blocked; several parsed but failed alignment quality. **Four publishers, contributing 8 edition pairs, entered the confirmatory set (Table 1).** Three of the four required a bespoke, publisher-specific boundary-detection strategy before their item-level output was trustworthy — a finding we return to in the Discussion.
 
-Every pair classified as a **minor** revision under a rule fixed before retrieval (publisher's own front-matter language, never measured change). Two candidate pairs whose publishers explicitly self-described a complete revision were retrieved but failed to parse and were excluded rather than repaired. Consequently **H1 and H2, which require major-revision pairs, were not tested** — the outcome the pre-registered abort conditions anticipate for this case.
+Every pair classified as a **minor** revision under a rule fixed before retrieval (publisher's own front-matter language, never measured change). The search for a major-revision pair was governed by a separately registered stopping rule — eligibility gate, acceptance bar, five-candidate cap, terminal condition — committed before any candidate was evaluated, and is reported in Results rather than here, because its outcome is a finding about the document genre rather than a methods detail.
 
 ### Ground truth
 
@@ -154,14 +154,24 @@ The primary outcome — the fraction of recommendations that genuinely have a su
 
 | | Claim | Pre-registered confirmation criterion | Result (pooled, 8 pairs) | Outcome |
 |---|---|---|---|---|
-| H1 | Identifier lookup loses provenance on major revisions | Point est. >0.10, CI lower bound >0.10 | — | **Not tested** (no major pair) |
-| H2 | Loss is revision-magnitude dependent | Difference >0, CI excludes 0 | — | **Not tested** (no major pair) |
+| H1 | Identifier lookup loses provenance on major revisions | Point est. >0.10, CI lower bound >0.10 | *Exploratory (dev): 22.6%* | **Stratum absent** — no eligible publisher self-describes a major revision |
+| H2 | Loss is revision-magnitude dependent | Difference >0, CI excludes 0 | *Exploratory (dev): 22.6% vs 3.6%* | **Stratum absent** — same cause |
 | H3 | Structure contributes beyond text similarity | Method−B2 >0, CI excludes 0 | raw −0.0064 (−0.0384, 0.0277); wtd −0.0156 (−0.0409, 0.0094) | **Not confirmed** |
 | H4 | Renumbered items are recovered precisely | T3 precision ≥0.80 | 98.18% | **Confirmed** |
 | H5 | No accuracy bought with confident errors | Method−B1 false-corr. CI upper <+0.05 | raw +0.0685 (0.0302, **0.1063**); wtd +0.0204 (0.0093, **0.0326**) | **Split** — see below |
 | H6 | Moved items are unreliably recovered (<50%) | T5 precision CI upper <0.50 | 0/10; CI (0.000, 0.000) | **Confirmed** |
 
 Benjamini–Hochberg adjusted p-values across {H3, H4, H5}: H3 0.825, H4 <0.001, H5 0.825.
+
+**H1 and H2 — the required stratum does not exist in this document genre.** Both hypotheses require major-revision pairs; none entered the confirmatory set. This is not an artefact of insufficient search, and the reason is itself a finding.
+
+*The search was bounded in advance.* Before any candidate was evaluated we registered a stopping rule: an eligibility gate (documented major-revision evidence from the publisher's own material *before* retrieval, plus both editions from a document generation already confirmed clean), an acceptance bar identical to the one every accepted pair clears, with "no case-by-case leniency", a five-candidate cap, and a terminal condition. It was written to prevent endless searching and post-hoc relaxation.
+
+*No eligible publisher self-describes a major revision.* Direct examination of every edition's front matter across Tennessee, Pennsylvania, and Connecticut found zero instances of full-review or complete-revision language; all describe themselves as continuously-updated living documents, as do Rhode Island and Vermont. The search terminated with **zero of five candidate slots used**: the eligible population was exhausted, not the attempts.
+
+*Screening 52 jurisdictions produced exactly one document with unambiguous major-revision language*, and it fails the gate twice over. Nebraska's 2024 edition calls itself "completely revised and updated" and states it "replaces all previous editions." It is not from a previously-clean publisher — the exact failure mode the gate exists to exclude. And it fails the acceptance bar: the same page explains the revision adopted an "algorithm format," and the document is laid out as flowchart boxes rather than numbered prose. Extraction yields 421 items where roughly 1,500 would be expected, with 946 sections producing none. Utah's 2025 edition likewise failed to parse. Admitting either would have required retroactively loosening a gate whose own text forbids that.
+
+*Exploratory evidence exists and we report it as exploratory.* The development corpus — which generated these hypotheses and so cannot confirm them — contains both a minor (v2.0→v2.2) and a major (v2.2→v3.0) transition of one national guideline set. Recommendations requiring more than an identifier to recover, the quantity H1 targets, run at **22.6% under major revision against 3.6% under minor** — above H1's 10% threshold, in the direction H2 predicts. Two caveats: these are method tier assignments, not adjudicated truth, and T5 assignments later proved unreliable (6.67% precision), making 22.6% an upper bound. Excluding T5 entirely gives 16.9% versus 1.0% — still clearing H1's threshold, so the conclusion survives the most pessimistic available correction. **This confirms nothing**, but withholding the only relevant evidence we hold would be less transparent.
 
 **H3 — not confirmed, and informatively so.** The point estimate did not merely fail to reach significance; it *converged toward zero* as the confirmatory set grew across three successive expansions: −0.0472 (4 pairs, 2 publishers) → −0.0172 (6 pairs, 3 publishers) → **−0.0064 (8 pairs, 4 publishers)**, with the interval tightening monotonically at each step (Figure 3). This is the signature of a true effect near zero being estimated more precisely, not of a real effect being diluted by noise. A sensitivity analysis on the original 4-pair set, excluding items affected by a documented guideline-boundary extraction defect (41/209 items, 19.6%), reverses the sign to +0.0179 — still not confirming, since its interval also crosses zero. We report it alongside rather than in place of the full-sample result: it shows that part of the early apparent deficit was an extraction artefact rather than a property of structural scoping.
 
@@ -219,28 +229,34 @@ Three of four confirmatory publishers required a bespoke boundary-detection stra
 
 We report the corpus search in full (Figure 2) because it bears on an implicit claim every automated-alignment paper makes. Of 52 U.S. jurisdictions screened, most publish no compiled statewide protocol document at all; a system deployed against an unseen publisher's format should expect to need comparable extraction investment before its output is meaningful. This is a finding about the state of public clinical-document engineering, not merely a methods inconvenience.
 
+### State EMS protocols do not self-describe major revisions
+
+Our pre-registration assumed, from the national-model corpus used in development, that protocol sets mark substantial rewrites through a version-scheme reset or explicit full-review language. Screening 52 jurisdictions found this does not hold at state level. The genre frames itself as continuously-updated living documents: Connecticut carries identical "living document… reviewed every two years" boilerplate across every transition, Tennessee uses no version scheme at all. The one document in 52 claiming a complete revision announced it by *changing format* to flowcharts — which is precisely why it cannot be parsed.
+
+The consequence extends beyond our own untested hypotheses: **revision magnitude in this genre is not recoverable from publisher metadata**, which is what a pre-registration must rely on to classify magnitude without peeking at measured change. Testing magnitude-dependent effects here would require either a different genre or a magnitude definition grounded elsewhere, with the circularity that invites. We flag this as a design constraint for anyone extending this work, not a limitation peculiar to us.
+
 ### On pre-registration in document-engineering evaluation
 
-Pre-registration changed what this paper reports. Three results in this line of work were initially wrong *in the study's favour*, each traced to a parser artefact rather than a finding; each was caught by disbelieving a convenient number, and the standing rule that made this systematic is itself registered. During manuscript preparation the same rule caught a contaminated baseline comparison (Table 4, †) before it reached a draft. An earlier annotation round was retracted for duplicated files.
+Pre-registration changed what this paper reports. Three results in this line of work were initially wrong *in the study's favour*, each traced to a parser artefact; each was caught by disbelieving a convenient number, and the standing rule making this systematic is itself registered. That rule caught a contaminated baseline comparison during manuscript preparation (Table 4, †), and an earlier annotation round was retracted for duplicated files.
 
 We note two registration lessons. First, **designate a single primary metric**: declining to choose between raw and population-weighted readings left H5 genuinely ambiguous, and no post-hoc resolution can be neutral. Second, **register the reframing criteria for a hypothesis, not just its threshold**: H4 passes its registered bar while being close to tautological on this corpus, which we could only establish by quantifying its failure-mode exposure after the fact.
 
 ### What follows for an institution that wants this capability now
 
-Our results support four concrete recommendations, each traceable to a specific finding rather than to the method's overall performance.
+Four recommendations follow, each traceable to a specific finding.
 
-**Do not rely on identifiers alone.** This is the strongest positive result in the study: identifier lookup loses provenance on 38.17% of recommendations (raw) even across *minor* revisions, where correspondence should be easiest. Version-control practices that assume a stable numbering scheme will silently mis-attribute a substantial fraction of changes.
+**Do not rely on identifiers alone.** The study's strongest positive result: identifier lookup loses provenance on 38.17% of recommendations even across *minor* revisions, where correspondence should be easiest. Practices assuming a stable numbering scheme will silently mis-attribute a substantial fraction of changes.
 
-**Report per-tier, not aggregate, reliability.** A single accuracy figure conceals a tier that is essentially never correct (T5, 6.67%) alongside tiers that are near-perfect (T1 96.5%, T3 98.2%). Any interface presenting cross-edition provenance should expose which tier produced each link, so a reviewer can calibrate trust per item rather than per system.
+**Report per-tier, not aggregate, reliability.** A single accuracy figure conceals a tier that is essentially never correct (T5, 6.67%) beside tiers that are near-perfect (T1 96.5%, T3 98.2%). Interfaces should expose which tier produced each link, so trust is calibrated per item rather than per system.
 
-**Route cross-guideline moves to humans.** Given a 2.78% population share and near-total automated failure, exhaustive human review of this tier is both necessary and affordable.
+**Route cross-guideline moves to humans.** At a 2.78% population share and near-total automated failure, exhaustive review of this tier is both necessary and affordable.
 
-**Budget for extraction, not just matching.** Three of four publishers required bespoke boundary detection. An institution adopting this approach for its own document family should expect that cost to precede any alignment benefit, and should validate extraction by inspecting recovered protocol titles by hand — the check that caught extraction failure in every case where we found it.
+**Budget for extraction, not just matching.** Three of four publishers required bespoke boundary detection, a cost that precedes any alignment benefit. Validate extraction by inspecting recovered protocol titles by hand — the check that caught every extraction failure we found.
 
 ### Limitations
 
 - **Single domain.** All confirmatory data are U.S. state EMS protocol documents; generalisation to hospital policy manuals, formularies, or surgical checklists is untested.
-- **H1 and H2 untested.** No major-revision pair survived parsing despite targeted attempts at two publishers whose front matter explicitly claims complete revision. The identifier-loses-provenance claim under major revision rests on exploratory development data only.
+- **H1 and H2 were not testable on this genre.** No eligible publisher self-describes a major revision, and the one screened document that does (Nebraska) fails the registered eligibility gate and is laid out as flowcharts. The identifier-loses-provenance claim under major revision therefore rests on exploratory development data (22.6% vs 3.6%) that cannot confirm it. Testing these hypotheses requires a document genre that marks its own major revisions.
 - **All confirmatory pairs are minor revisions**, the regime in which correspondence is easiest; the reported 2.50% provenance loss should not be extrapolated to major revisions.
 - **T5 is a substantial, confirmed weakness**, not a caveat.
 - **H6 is post-hoc**, registered before its confirmatory test and evaluated on data not used to motivate it, but a reader should weight it below the prospective H1–H5 design.

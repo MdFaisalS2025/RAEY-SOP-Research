@@ -7433,3 +7433,266 @@ This is the final, complete result for this study's entire annotation
 effort - nothing remains pending anywhere, across H3′, the new pairs'
 own section 6 metrics, and this formal hypothesis-test re-run. Full
 report: `annotation_packets/full_comparison_6pairs_report.json`.
+
+## 93. Massachusetts and New Hampshire: real documents in hand at last, but item-level extraction fails the title-inspection bar - a parser problem, not a retrieval one
+
+The user downloaded five files directly via their own browser, routing
+around the retrieval blocks (browser sandbox for Massachusetts, Akamai
+WAF for New Hampshire) documented in sections 82 and 41. This closes
+the retrieval gap for both states for the first time in this study.
+
+### 93.1 What was received
+
+- `patient-care-protocols.pdf` - **New Hampshire Patient Care
+  Protocols, Version 9.3, effective 2025-11-07** (261 pages, 35.6 MB) -
+  a genuinely new second edition beyond the existing `nh_2024.pdf`
+  (Version 8.0 draft, already in the corpus per section 41).
+- `statewide-treatment-protocols-2026-1-v2.pdf` - **Massachusetts
+  Statewide Treatment Protocols, Official Version 2026.1, June 1 2026**
+  (175 pages, 9.6 MB).
+- `statewide-treatment-protocols-2026-2.pdf` - **Massachusetts
+  Statewide Treatment Protocols, Official Version 2026.2, September 1
+  2026** (176 pages, 10.1 MB) - a third Massachusetts edition,
+  alongside the existing `ma_2023.pdf` (v2023.2) and a previously
+  unlabeled-in-this-log `ma_2025_fresh.pdf`, confirmed by direct text
+  extraction here to be **Version 2025.1, June 16 2025**.
+- `stp-2026-change-memo-final-1-21-26.pdf` - the Department's own
+  official change memo for v2026.1, dated 2026-01-21 - kept as
+  supporting documentation (`corpus/supporting_docs/`), not fed to the
+  parser.
+- `trauma-plan.pdf` - New Hampshire's **Trauma System Plan, Version
+  5.0** - a different document category (a system/policy plan, not a
+  clinical treatment-protocol manual matching this study's unit of
+  analysis) - out of scope, not vetted further.
+
+Massachusetts now has four real, dated editions in hand for the first
+time (v2023.2, v2025.1, v2026.1, v2026.2), and New Hampshire has two
+(v8.0, v9.3) - genuinely enough editions to form new confirmatory
+pairs, pending the same quality checks every other candidate in this
+study has been held to.
+
+### 93.2 corpus_probe: USABLE, all six editions
+
+All six editions (new and previously-in-corpus) score `USABLE - some
+structural markers; check the sample before committing` - the same
+verdict tier already logged for New Hampshire in section 41 and
+consistent with every prior MA/NH check. `corpus_probe`'s own verdict
+explicitly instructs a hand check before trusting it, per this study's
+standing section 13.1 rule - not skipped here.
+
+### 93.3 Title inspection: fails the bar for both states, same known failure mode
+
+Read by hand, per section 13.1, before any of this was trusted:
+
+**New Hampshire**, both editions: item counts look plausible (803 and
+734 items) but guideline-title quality is poor. v8.0 resolves to only
+26 distinct guideline titles for 803 items, several of them clearly
+not protocol names at all - `"Flynn's intern"`, `"Establish IV (if
+feasible, avoid right wrist)"`, `"maximum dose 2 mcg/kg/min, via pump,
+see appendix 4 OR"`. v9.3 is worse: 8.3% outright untitled, and its 29
+"titles" are dominated by medication-name fragments and OCR-adjacent
+noise - `"Albuterol Anaphylaxis/Allergic Reaction Beta-Agonist"`,
+`"lsopropyl Alcohol"`. This is the same anchor-detection failure this
+study has already documented extensively for other states (Delaware,
+South Carolina, the original Nebraska attempt, sections 21-27): the
+fallback heuristic locks onto the wrong recurring text pattern instead
+of real protocol headers.
+
+**Massachusetts**, all three new/confirmed editions: 0% preamble and
+0% untitled for v2023.2 and v2025.1 look clean by the numeric
+acceptance bar alone - but the guideline COUNT is implausibly low for
+a 175-page, dozens-of-protocols clinical manual: **8 distinct
+guidelines for 381 items (v2023.2), 6 for 387 items (v2025.1)**. This
+is the size-outlier failure mode already documented for DC (section
+83): the parser is compressing many genuinely distinct protocols under
+a handful of over-broad anchors, a garbage-bucket pattern that inflates
+apparent cleanliness on the two numeric checks while actually being
+unusable. v2026.1 fails even the numeric bar outright (49.1%
+untitled); v2026.2 partially recovers (17 guidelines, 10.8% untitled)
+but is still far too few guidelines for the document's real content.
+
+### 93.4 Conclusion: a retrieval success, but not (yet) an extraction success
+
+**This is a genuine, disclosed negative finding, not a retrieval
+failure being reported as an extraction failure to save face**: both
+documents are now confirmed real, complete, and in hand - the
+retrieval blocker documented in sections 41/82 is fully closed. What
+remains broken is item-level extraction, specifically anchor/title
+detection, for both states - the same category of failure this study
+has already hit and, in a few cases (Maine's footer detection,
+Connecticut's ToC-row detection, sections 17-18), successfully solved
+with a custom, publisher-specific detection strategy built during the
+dev phase.
+
+Building an equivalent custom strategy for Massachusetts and/or New
+Hampshire is possible in principle (the general pattern - identify a
+document-specific structural anchor as reliable as Maine's per-protocol
+footer counter or Connecticut's ToC row alignment - has worked three
+times before in this study) but is real parser-engineering work, not
+a quick fix, and neither state has ever been used for a confirmatory
+pair or annotation sample, so this remains legitimate dev-phase work
+rather than a quarantine violation if pursued. Not attempted here
+without a separate decision to invest that time, given the user's
+standing instruction to prioritize paper-relevant work and this being
+a genuinely open-ended engineering task rather than a short one.
+
+No `.py` file was modified for this check; `item_align.py`/
+`item_parser.py`/`edition_align.py`/`corpus_probe.py` remain unchanged
+at `d3068ee`. Files added to the corpus (not yet used for any
+confirmatory or dev claim): `nh_v93_20251107.pdf`, `ma_v20261.pdf`,
+`ma_v20262.pdf`, `corpus/supporting_docs/ma_v20261_change_memo.pdf`.
+
+## 94. Massachusetts solved: a custom, publisher-specific extraction module recovers real guideline structure, matching this study's existing pairs' alignment quality. New Hampshire partially solved (one edition, not the pair)
+
+Following the user's explicit decision to invest the engineering time
+(section 93 offered two options; the user chose to build custom
+extraction), two new NON-FROZEN modules were built:
+`item_parser_ma.py` and `item_parser_nh.py`, both under
+`app/research/cross_edition/`. Neither modifies `item_parser.py`,
+`item_align.py`, `edition_align.py`, or `corpus_probe.py` - all four
+remain unchanged at `d3068ee`, verified before and after this work.
+Both new modules reuse `item_parser.py`'s own marker-classification
+machinery (`_classify`, `_strip_marker`, roman/alpha disambiguation)
+and title-quality heuristics (`_looks_like_title`, `detect_boilerplate`)
+unchanged, imported rather than reimplemented - the same "swap what
+feeds the frozen aligner, never the aligner itself" discipline already
+established by `structure_ablation.py`/`vlm_rescue_attempt.py`, and the
+same "build a new, publisher-specific anchor detector as a genuinely
+new module" pattern Maine and Connecticut's own custom detectors
+(`detect_footer_anchors`, `detect_ct_toc_anchors`) already set inside
+the frozen file back when it was still open for that kind of addition.
+
+### 94.1 Massachusetts: solved cleanly
+
+Every Massachusetts page carries a running header ("Category Name
+<protocol id>", e.g. `"Medical Protocol  2.16P"`) with the same id
+repeated standalone elsewhere on the page - a page-level structural
+anchor, found by taking the modal id match per page and forward-
+filling continuation pages. The document ALSO carries a genuine,
+clean, multi-page Table of Contents (`"<title>..........<id>"` per
+row) - read directly as the authoritative source of titles, since
+body-page text near a boundary is frequently clinical prose rather
+than the protocol's own name (a 2-column layout artifact in linear
+text extraction).
+
+Result, all four editions, before/after:
+
+| Edition | Frozen parser | `item_parser_ma.py` |
+|---|---|---|
+| v2023.2 | 8 guidelines, 381 items | **90 guidelines**, 381 items, 0% preamble, 1.6% untitled |
+| v2025.1 | 6 guidelines, 387 items | **92 guidelines**, 387 items, 0% preamble/untitled |
+| v2026.1 | 9 guidelines, 477 items, 49.1% untitled | **86 guidelines**, 477 items, 0% preamble/untitled |
+| v2026.2 | 17 guidelines, 446 items, 10.8% untitled | **86 guidelines**, 446 items, 0% preamble, 0.2% untitled |
+
+Titles read by hand (section 13.1) match the ToC exactly - real,
+recognizable EMS protocol names throughout ("Shock – Pediatric",
+"Upper Airway Obstruction – Adult", "Acute Coronary Syndrome – Adult"),
+not the category-boilerplate/garbage-bucket titles the frozen parser
+produced. One size outlier surfaced (v2023.2: "Urban Search and Rescue
+(USAR) Medical Specialist," 57 items against a 50-item threshold) -
+investigated per section 10 rather than assumed benign: its item text
+is genuinely on-topic multi-part USAR content (confined-space rescue,
+crush injury, procedural sedation), a real long protocol, not a
+boundary-detection bug.
+
+**Cross-edition alignment, using the frozen, unmodified `item_align.py`
+via the same monkeypatch-injection pattern `vlm_rescue_attempt.py`
+established (never touching the frozen file itself):**
+
+| Pair | Trivially alignable | Unmatched |
+|---|---|---|
+| v2023.2 → v2025.1 | 54.3% | 19.7% |
+| v2025.1 → v2026.1 | **86.8%** | **8.0%** |
+| v2026.1 → v2026.2 | **88.3%** | **10.5%** |
+
+The two most recent pairs land squarely in the range this study's
+existing six confirmatory pairs already occupy (roughly 85-99%
+trivially alignable). The oldest pair (a genuine 2-year gap) is
+weaker but not badly so, and is comparable to this study's own "clean
+parse, high genuine revision" category already established for New
+York/Maine in earlier sections - a real revision signal, not an
+extraction failure.
+
+**Revision-magnitude classification (§3.3 method - the publisher's own
+front-matter language, not external inference) for v2025.1→v2026.1**:
+the user separately obtained the Department's own official change
+memo for v2026.1 (`corpus/supporting_docs/ma_v20261_change_memo.pdf`,
+dated 2026-01-21) - a detailed, itemized change chart covering
+specific protocol-level edits (renumbering Section 6, moving USAR from
+6.3 to 8.4, adding new protocol 6.13, deleting 7.9, dozens of smaller
+per-protocol wording changes). No "completely revised"/"full review"
+self-description appears anywhere in the memo - itemized, protocol-by-
+protocol changes, the same shape of language every other pair in this
+study classified MINOR. **v2025.1→v2026.1 classifies MINOR**, on
+primary-source evidence stronger than most other pairs in this study
+have (an actual official change log, not just front-matter boilerplate
+comparison).
+
+**Massachusetts is genuinely usable as a fourth confirmatory
+publisher.** This is not yet a confirmatory pair - drawing the actual
+annotation sample is, per this study's standing practice, the user's
+decision to make (the same point every prior candidate-to-confirmatory
+transition in this study has paused at), not something this entry
+commits to. Both v2025.1→v2026.1 and v2026.1→v2026.2 are ready
+candidates whenever that decision is made.
+
+### 94.2 New Hampshire: one edition fixed, the pair still blocked
+
+New Hampshire has no Table of Contents anywhere in the document
+(confirmed by direct search) - Massachusetts's stronger anchor. What
+it does have: the same page-header id convention as Massachusetts
+(reused directly), and a real protocol title sitting 1-2 lines above a
+recurring department-footer line
+("New Hampshire Department of Safety, Division of Fire Standards and
+Training & Emergency Medical Services") that appears on every content
+page, not just guideline-start pages - found via `_looks_like_title`
+and `detect_boilerplate` (both imported unchanged) filtering the
+lines directly above that footer.
+
+**v8.0 (2024, the already-in-corpus edition): fixed.** 92 guidelines
+(was 26, with several outright non-title fragments), 814 items, 0%
+preamble/untitled, 0 size outliers. A handful of consecutive protocol
+ids collapse onto the same title (e.g. 5.2/5.3/5.4 all "Analgesia and
+Sedation for Invasive Airway Device") - hand-checked and found to be
+genuine certification-level sub-splits of one named procedure, not a
+detection bug, but disclosed as a real limitation: item_align's
+title-based guideline matching will treat these as one guideline,
+risking collisions the same way Maine's flat-sectioning limitation
+already does.
+
+**v9.3 (2025-11-07, the user-downloaded new edition): NOT fixed.**
+This edition removed the department-footer line entirely (confirmed
+by direct search - it does not appear anywhere in v9.3's text), so the
+title-anchor this module relies on for New Hampshire simply does not
+exist in the newer document. Running the module against it produces
+25 guidelines for 734 items with garbage titles (a name and credential
+line: `"Joey Scollan, DO, FACEP, FAAP Medical Director NH Bureau
+EMS"`) - worse than doing nothing, since it would silently misattribute
+items rather than flag them as unresolved. **Not used**; v9.3 needs
+its own, different anchor strategy (the redesigned document's actual
+title convention was not identified within this session's scope).
+
+**No New Hampshire confirmatory pair is possible yet** - v8.0 alone,
+with no clean second edition, cannot form a pair. This is a smaller,
+distinct engineering task from what solved Massachusetts (a genuinely
+different document layout, not a variant of the same problem), left
+open rather than forced.
+
+### 94.3 What this changes
+
+Massachusetts closes the pre-registered `PREREGISTRATION.md` §3.2
+target's publisher-count component in substance (real, hand-inspected,
+alignment-quality-checked data), not merely in document count - the
+same standard §18.5 already applied when Connecticut's table extraction
+was fixed. New Hampshire remains an open, disclosed lead (one edition
+usable, the newer one blocked by a format change) rather than a closed
+door.
+
+**Nothing about this entry commits Massachusetts to confirmatory
+status** - per this study's standing practice, that requires a
+separate, explicit pre-commitment entry in `PREREGISTRATION.md` before
+any sample is drawn, and the decision of whether/which pair(s) to draw
+is the user's, not something this entry decides. Code added:
+`item_parser_ma.py`, `item_parser_nh.py` (both new, not frozen);
+`item_align.py`/`item_parser.py`/`edition_align.py`/`corpus_probe.py`
+unchanged at `d3068ee`, verified before and after.

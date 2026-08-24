@@ -1,0 +1,43 @@
+{
+  "independence_check": {
+    "hash_g": "66beee55c298e6ef99ccdd8770364a08",
+    "hash_h": "6fff3f79bc38078100b4953541dfa36b",
+    "identical_bytes": false,
+    "n_answers_g": 92,
+    "n_answers_h": 92,
+    "identical_answers": false
+  },
+  "cohens_kappa": {
+    "n": 92,
+    "observed_agreement": 0.9457,
+    "expected_agreement": 0.0723,
+    "cohens_kappa": 0.9414,
+    "disagreements": [
+      {
+        "sample_id": "S026",
+        "a": "none",
+        "b": "cannot_determine"
+      },
+      {
+        "sample_id": "S027",
+        "a": "none",
+        "b": "cannot_determine"
+      },
+      {
+        "sample_id": "S043",
+        "a": "none",
+        "b": "cannot_determine"
+      },
+      {
+        "sample_id": "S049",
+        "a": "none",
+        "b": "cannot_determine"
+      },
+      {
+        "sample_id": "S074",
+        "a": "none",
+        "b": "cannot_determine"
+      }
+    ]
+  }
+}

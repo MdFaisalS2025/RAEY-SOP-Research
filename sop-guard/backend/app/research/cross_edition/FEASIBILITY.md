@@ -7019,3 +7019,123 @@ VLM-boundary technique's generality, not oversold as confirming it
 works everywhere it was tried. `dc_vlm_remap.py` retained as a
 reusable tool for testing this same question against any other future
 candidate with a similar failure mode.
+
+## 89. H3′ recomputed against genuine second-annotator ground truth, superseding every H3′a/H3′b/H3′c number in section 57
+
+Section 65's second-annotator gap is now closed with real data, and in
+closing it a second, more serious bug was found and fixed: the script
+that actually scores H3′a/H3′b/H3′c had never been updated after the
+E/F retraction and was silently still using the fabricated E/F "ground
+truth" for every H3′ number published so far.
+
+### 89.1 The bug
+
+The 2026-08-18 CRITICAL CORRECTION retracted the main round's A/B
+annotator pair after finding it was a file agreeing with a copy of
+itself, not two independent judgments. Section 65 disclosed, honestly,
+that H3′'s own annotator pair (E/F) rested on the same kind of
+unverified footing and registered a genuinely independent G/H pair as
+an open follow-up.
+
+What section 65 did not catch - because nobody had gone back to look
+at `run_h3prime_test.py` itself, only at whether E/F needed replacing
+- is that E/F was not merely "unverified," it was the *exact same
+duplication artifact* as the retracted A/B pair: `Annotator_F_ANNOTATION.xlsx`
+was byte-identical to `Annotator_E_ANNOTATION.xlsx`. The script's own
+docstring even recorded the tell ("kappa=1.0000, 0/92 disagreements")
+without anyone recognizing it as the same signature already retracted
+elsewhere in this study. Every H3′a/H3′b/H3′c number in section 57 was
+therefore computed against a file matching itself, not against a real
+second opinion - a strictly worse situation than the "single
+unverified annotator" section 57 disclosed at the time.
+
+This was found only incidentally, while wiring the newly-completed
+G/H files into the scoring script - a direct instance of section 10's
+standing rule catching a problem nobody was specifically looking for.
+
+### 89.2 The fix
+
+`run_h3prime_test.py` repointed at the genuine `Annotator_G_ANNOTATION.xlsx`
+/ `Annotator_H_ANNOTATION.xlsx` pair. Independence verified first
+(`run_h3prime_second_annotator.py`, mirroring `run_boundary_scoring.py`'s
+`verify_independence`): different file hashes, different cell-level
+answers - **Cohen's kappa 0.9414, 94.57% observed agreement (87/92)**,
+comfortably above every threshold this study uses.
+
+The 5 genuine disagreements (S026, S027, S043, S049, S074) all follow
+one pattern: one annotator marked the item's correspondence NONE
+(confidently deleted), the other marked CANNOT_DETERMINE (genuinely
+unsure) - a real interpretive question, not annotator error. Rather
+than resolve these silently (majority-of-one, or picking one
+annotator's answer), `build_ground_truth()` now excludes them from
+ground truth and reports them explicitly as pending. A 2-rater
+adjudication workbook (`build_h3prime_adjudication.py`,
+`H3prime_Adjudication_5_items.xlsx`) was generated for a human to
+resolve, following the same discipline as the main round's 43-item
+adjudication.
+
+The retracted `Annotator_E_ANNOTATION.xlsx`/`Annotator_F_ANNOTATION.xlsx`
+were deleted from the repository - superseded, no longer referenced
+by any script, and their retention risked exactly this kind of silent
+reuse happening again.
+
+### 89.3 The recomputed result
+
+Of the 92-item packet: 11 are the already-disclosed section 56-pattern
+contamination (bullet-census items whose boundary bled into "Delirium
+with HyperAgitation" in the fresh pair) and remain excluded from
+scoring, unchanged by this fix. Of the remaining 81, 21 are clean
+bullet items and 60 are ordinal items; 5 of those 81 fall among the
+pending-adjudication items (3 ordinal, 2 bullet), leaving 21 scored
+bullet items and 57 scored ordinal items.
+
+**H3′a (v2-fixed vs v1-original, clean bullet, n=21):** a=1.0000,
+b=1.0000, diff=0, 95% CI [0, 0], p=1.0. **CONFIRMED: False.**
+
+**H3′b (v2-fixed vs B2, same 21 items):** identical - a=1.0000,
+b=1.0000, diff=0, p=1.0. **CONFIRMED: False.**
+
+Both reproduce section 57's already-published characterization exactly:
+this subpopulation is degenerate by construction (20 of 21 items are
+T1-tier, where the fix is a no-op), so p=1.0 is the expected
+UNTESTABLE result, not evidence against the fix. The genuine G/H
+ground truth changes nothing about this conclusion - it was never
+about the annotator pair's reliability.
+
+**H3′c (v1 vs B2, ordinal, n=57 of 60 - an independent replication of
+H3's original ordinal finding, section 54.1, on fresh Tennessee data):**
+a=0.7544, b=0.7368. Paired difference (a-b): point estimate 0.0175,
+95% CI [-0.0877, 0.1228], p=0.441. **CONFIRMED: False.**
+
+Benjamini-Hochberg applied across the {H3′a, H3′b, H3′c} family, as
+pre-registered but never actually applied until this run - all three
+p-values remain 1.0/1.0/1.0 after adjustment (H3′c's raw 0.441 also
+survives at 1.0 given the other two).
+
+### 89.4 Reading H3′c honestly
+
+The direction matches H3's original finding - fixed-population
+accuracy nominally exceeds B2's baseline-only accuracy, 75.44% vs
+73.68% - but on this smaller, fresh 57-item sample the confidence
+interval crosses zero. This is reported as a **non-replication at the
+pre-registered significance bar**, not softened into "directionally
+consistent." It does not retract H3's original finding, which has its
+own, separately-powered dataset (section 54.1) - H3′c was always
+framed as an independent replication attempt on a different, smaller
+sample, and that attempt did not reach significance.
+
+Five items remain genuinely undecided pending human adjudication. If
+resolved, the ordinal arm's n could rise from 57 to as high as 60 (3
+of the 5 pending items are ordinal) - unlikely to flip a confidence
+interval this wide, but the recompute should be re-run once
+`H3prime_Adjudication_5_items.xlsx` is completed, per the same
+discipline applied throughout this study: report the number that
+exists, update it when better data arrives, never estimate around a
+gap that a human can close.
+
+**Every H3′a/H3′b/H3′c number in section 57 is superseded by this
+section**, per the standing append-only discipline (section 57's text
+is left in place, not deleted or edited). Full report:
+`annotation_packets/h3prime_tennessee_2022_2024/h3prime_test_report.json`;
+second-annotator verification:
+`annotation_packets/h3prime_tennessee_2022_2024/h3prime_second_annotator_report.json`.

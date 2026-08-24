@@ -1,8 +1,21 @@
 """
 One-off driver: scores H3'a/H3'b/H3'c (PREREGISTRATION.md's H3' entries)
-against the completed, blind H3' annotation (E.xlsx, F.xlsx - perfect
-agreement, kappa=1.0000, 0/92 disagreements, so no adjudication step is
-needed; ground truth is simply the shared answer).
+against the completed, blind H3' annotation.
+
+AUDIT FIX (2026-08-23): previously pointed at E.xlsx/F.xlsx, the H3'
+annotator pair later found to be the same duplication failure that hit
+the main round's A/B pair (PREREGISTRATION.md's 2026-08-18 CRITICAL
+CORRECTION) - their claimed "kappa=1.0000, 0/92 disagreements" was a
+file agreeing with a copy of itself, not real ground truth. Now points
+at Annotator_G_ANNOTATION.xlsx / Annotator_H_ANNOTATION.xlsx, a
+genuinely independent pair (verified via run_h3prime_second_annotator.py:
+different file hashes, different answers - Cohen's kappa 0.9414, 87/92
+agree). The 5 genuine disagreements (all the same pattern: one annotator
+said NONE, the other CANNOT_DETERMINE - a real interpretive question, not
+noise) are excluded from ground truth pending real adjudication
+(build_h3prime_adjudication.py generates the workbook) rather than
+silently resolved - this script no longer raises on disagreement, it
+scores the 87 resolved items and reports the 5 pending ones explicitly.
 
 Per the user's explicit decision (PREREGISTRATION.md, the guideline-
 boundary-bug entry): the 11 bullet-census items caught in the fresh
@@ -39,27 +52,65 @@ from app.research.cross_edition.annotation_packets.run_full_comparison import ( 
 )
 
 BASE = Path(__file__).parent / "h3prime_tennessee_2022_2024"
-ANNOTATOR_E = r"C:\Users\Faisal\Desktop\research paper\E.xlsx"
-ANNOTATOR_F = r"C:\Users\Faisal\Desktop\research paper\F.xlsx"
+ANNOTATOR_G = BASE / "Annotator_G_ANNOTATION.xlsx"
+ANNOTATOR_H = BASE / "Annotator_H_ANNOTATION.xlsx"
+ADJUDICATION_FILE = BASE / "H3prime_Adjudication_5_items_COMPLETED.xlsx"  # optional
 
 CONTAMINATED_GUIDELINE = "Delirium with HyperAgitation"
 
 
-def build_ground_truth() -> dict[str, str]:
-    e = load_completed_xlsx(ANNOTATOR_E)
-    f = load_completed_xlsx(ANNOTATOR_F)
-    sheet_e = list(e.keys())[0]
-    sheet_f = list(f.keys())[0]
-    ea = {sid: _norm_answer(v["correspondence"]) for sid, v in e[sheet_e].items()}
-    fa = {sid: _norm_answer(v["correspondence"]) for sid, v in f[sheet_f].items()}
-    common = set(ea) & set(fa)
-    disagreements = [sid for sid in common if ea[sid] != fa[sid]]
-    if disagreements:
-        raise RuntimeError(
-            f"{len(disagreements)} unresolved disagreements - adjudication "
-            f"required before scoring: {disagreements}"
-        )
-    return {sid: ea[sid] for sid in common}
+def build_ground_truth() -> tuple[dict[str, str], list[str]]:
+    """Returns (ground_truth, pending_sids). pending_sids lists items
+    excluded from ground_truth because G/H disagreed and no completed
+    adjudication file was found - reported explicitly, not silently
+    dropped."""
+    g = load_completed_xlsx(str(ANNOTATOR_G))
+    h = load_completed_xlsx(str(ANNOTATOR_H))
+    sheet_g = list(g.keys())[0]
+    sheet_h = list(h.keys())[0]
+    ga = {sid: _norm_answer(v["correspondence"]) for sid, v in g[sheet_g].items()}
+    ha = {sid: _norm_answer(v["correspondence"]) for sid, v in h[sheet_h].items()}
+    common = set(ga) & set(ha)
+
+    gt = {}
+    pending = []
+    for sid in common:
+        if ga[sid] == ha[sid]:
+            gt[sid] = ga[sid]
+        else:
+            pending.append(sid)
+
+    if pending and ADJUDICATION_FILE.exists():
+        adj_answers = _load_h3prime_adjudication(ADJUDICATION_FILE)
+        still_pending = []
+        for sid in pending:
+            if sid in adj_answers:
+                gt[sid] = adj_answers[sid]
+            else:
+                still_pending.append(sid)
+        pending = still_pending
+
+    return gt, sorted(pending)
+
+
+def _load_h3prime_adjudication(path: Path) -> dict[str, str]:
+    """Reads build_h3prime_adjudication.py's own column layout directly
+    (sample_id=col1, final_correspondence=col6) - NOT load_completed_xlsx,
+    whose column layout (correspondence=col7) matches the original blind
+    annotation packets, not this adjudication sheet's different layout.
+    Matches run_h3_test.py's load_adjudicated(), which reads its own
+    43-item adjudication sheet's actual columns the same way rather than
+    reusing the blind-packet reader."""
+    from openpyxl import load_workbook
+    wb = load_workbook(path, data_only=True)
+    ws = wb["Adjudicate these 5"]
+    out = {}
+    for r in range(2, ws.max_row + 1):
+        sid = ws.cell(row=r, column=1).value
+        final_corr = ws.cell(row=r, column=6).value
+        if sid and final_corr:
+            out[sid] = _norm_answer(final_corr)
+    return out
 
 
 def bootstrap_ci(pairs: list[tuple[int, int]], n_boot: int = 10000, seed: int = 20260818):
@@ -90,8 +141,13 @@ def bootstrap_ci(pairs: list[tuple[int, int]], n_boot: int = 10000, seed: int = 
 
 
 def main():
-    gt = build_ground_truth()
+    gt, pending = build_ground_truth()
     print(f"ground truth items: {len(gt)}")
+    if pending:
+        print(f"PENDING ADJUDICATION (excluded from ground truth, not scored): "
+              f"{len(pending)} items - {pending}")
+        print(f"  -> generate/fill build_h3prime_adjudication.py's workbook, "
+              f"save as {ADJUDICATION_FILE.name}, and re-run to include them.")
 
     with open(BASE / "annotation_packet.csv", encoding="utf-8") as fh:
         packet = {r["sample_id"]: r for r in csv.DictReader(fh)}
@@ -157,6 +213,13 @@ def main():
     pvals = {name: report[name]["bootstrap"]["p_value"] for name in report}
     bh = benjamini_hochberg(pvals)
     report["benjamini_hochberg"] = bh
+    report["_pending_adjudication"] = pending
+    report["_ground_truth_source"] = (
+        "Annotator_G_ANNOTATION.xlsx / Annotator_H_ANNOTATION.xlsx "
+        "(genuinely independent, Cohen's kappa 0.9414 - see "
+        "h3prime_second_annotator_report.json). Replaces the retracted "
+        "E/F pair (2026-08-18 duplication finding)."
+    )
     print(f"\nBH-adjusted p-values (H3'a/b/c): {bh}")
     print("Note: H3'a/H3'b's p=1.0 reflects the already-established UNTESTABLE "
           "finding (degenerate population, 20/21 items T1-tier where the fix "

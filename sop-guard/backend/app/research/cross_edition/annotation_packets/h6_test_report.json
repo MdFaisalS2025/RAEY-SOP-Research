@@ -1,0 +1,18 @@
+{
+  "hypothesis": "H6: T5 tier precision is below 50% (a 'problem exists' claim - confirmed iff CI upper bound < 0.50)",
+  "test_population": "massachusetts_v20251_v20261 T5_moved tier",
+  "n_scored": 10,
+  "n_cannot_determine_excluded": 0,
+  "point_estimate": 0.0,
+  "ci95_low": 0.0,
+  "ci95_high": 0.0,
+  "confirm_threshold": 0.5,
+  "H6_confirmed": true,
+  "prior_disclosed_evidence_not_part_of_this_test": {
+    "original_4pair_T5_raw": 0.1333,
+    "original_4pair_T5_weighted": 0.0615,
+    "original_4pair_n": 30,
+    "fifth_sixth_pair_T5": 0.0,
+    "fifth_sixth_pair_n": 20
+  }
+}

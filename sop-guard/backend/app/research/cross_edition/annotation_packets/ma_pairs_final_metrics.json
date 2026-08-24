@@ -1,0 +1,240 @@
+{
+  "pairs": {
+    "Massachusetts v2025.1→v2026.1 (": {
+      "n_total_items": 60,
+      "n_cannot_determine": 0,
+      "cannot_determine_rate": 0.0,
+      "n_usable": 60,
+      "correspondence_accuracy": {
+        "raw": 0.75,
+        "weighted": 0.9315,
+        "n": 60
+      },
+      "provenance_loss_rate_PRIMARY": {
+        "raw": 0.1087,
+        "weighted": 0.0429,
+        "n": 46
+      },
+      "false_correspondence_rate": {
+        "raw": 0.2,
+        "weighted": 0.0309,
+        "n": 50
+      },
+      "deletion_recall": {
+        "raw": 0.3571,
+        "weighted": 0.6102,
+        "n": 14
+      },
+      "deletion_precision": {
+        "raw": 0.5,
+        "weighted": 0.5,
+        "n": 10
+      },
+      "tier_precision": {
+        "T1_id_exact": {
+          "raw": 1.0,
+          "weighted": 1.0,
+          "n": 21
+        },
+        "T2_id_text_changed": {
+          "raw": 1.0,
+          "weighted": 1.0,
+          "n": 10
+        },
+        "T3_renumbered": {
+          "raw": 1.0,
+          "weighted": 1.0,
+          "n": 7
+        },
+        "T4_reworded": {
+          "raw": 1.0,
+          "weighted": 1.0,
+          "n": 2
+        },
+        "T5_moved": {
+          "raw": 0.0,
+          "weighted": 0.0,
+          "n": 10
+        },
+        "T6_unmatched_old": {
+          "raw": 0.5,
+          "weighted": 0.5,
+          "n": 10
+        }
+      }
+    },
+    "Massachusetts v2026.1→v2026.2 (": {
+      "n_total_items": 58,
+      "n_cannot_determine": 0,
+      "cannot_determine_rate": 0.0,
+      "n_usable": 58,
+      "correspondence_accuracy": {
+        "raw": 0.8448,
+        "weighted": 0.9215,
+        "n": 58
+      },
+      "provenance_loss_rate_PRIMARY": {
+        "raw": 0.1296,
+        "weighted": 0.0645,
+        "n": 54
+      },
+      "false_correspondence_rate": {
+        "raw": 0.0426,
+        "weighted": 0.018,
+        "n": 47
+      },
+      "deletion_recall": {
+        "raw": 1.0,
+        "weighted": 1.0,
+        "n": 4
+      },
+      "deletion_precision": {
+        "raw": 0.3636,
+        "weighted": 0.3636,
+        "n": 11
+      },
+      "tier_precision": {
+        "T1_id_exact": {
+          "raw": 1.0,
+          "weighted": 1.0,
+          "n": 31
+        },
+        "T2_id_text_changed": {
+          "raw": 0.8,
+          "weighted": 0.8,
+          "n": 10
+        },
+        "T3_renumbered": {
+          "raw": 1.0,
+          "weighted": 1.0,
+          "n": 5
+        },
+        "T4_reworded": {
+          "raw": 1.0,
+          "weighted": 1.0,
+          "n": 1
+        },
+        "T6_unmatched_old": {
+          "raw": 0.3636,
+          "weighted": 0.3636,
+          "n": 11
+        }
+      }
+    }
+  },
+  "pooled": {
+    "n_total_items": 118,
+    "n_cannot_determine": 0,
+    "cannot_determine_rate": 0.0,
+    "n_usable": 118,
+    "correspondence_accuracy": {
+      "raw": 0.7966,
+      "weighted": 0.926,
+      "n": 118
+    },
+    "provenance_loss_rate_PRIMARY": {
+      "raw": 0.12,
+      "weighted": 0.0549,
+      "n": 100
+    },
+    "false_correspondence_rate": {
+      "raw": 0.1237,
+      "weighted": 0.0239,
+      "n": 97
+    },
+    "deletion_recall": {
+      "raw": 0.5,
+      "weighted": 0.7647,
+      "n": 18
+    },
+    "deletion_precision": {
+      "raw": 0.4286,
+      "weighted": 0.4187,
+      "n": 21
+    },
+    "tier_precision": {
+      "T1_id_exact": {
+        "raw": 1.0,
+        "weighted": 1.0,
+        "n": 52
+      },
+      "T2_id_text_changed": {
+        "raw": 0.9,
+        "weighted": 0.8896,
+        "n": 20
+      },
+      "T3_renumbered": {
+        "raw": 1.0,
+        "weighted": 1.0,
+        "n": 12
+      },
+      "T4_reworded": {
+        "raw": 1.0,
+        "weighted": 1.0,
+        "n": 3
+      },
+      "T5_moved": {
+        "raw": 0.0,
+        "weighted": 0.0,
+        "n": 10
+      },
+      "T6_unmatched_old": {
+        "raw": 0.4286,
+        "weighted": 0.4187,
+        "n": 21
+      }
+    }
+  },
+  "kappa": {
+    "Massachusetts v2025.1→v2026.1 (": {
+      "n": 60,
+      "observed_agreement": 1.0,
+      "expected_agreement": 0.0672,
+      "cohens_kappa": 1.0,
+      "disagreements": []
+    },
+    "Massachusetts v2026.1→v2026.2 (": {
+      "n": 60,
+      "observed_agreement": 0.9667,
+      "expected_agreement": 0.0236,
+      "cohens_kappa": 0.9659,
+      "disagreements": [
+        {
+          "sample_id": "S038",
+          "a": "none",
+          "b": "cannot_determine"
+        },
+        {
+          "sample_id": "S054",
+          "a": "altered mental/neurological status/diabetic emergencies/coma adult/protocol/•",
+          "b": "cannot_determine"
+        }
+      ]
+    },
+    "pooled": {
+      "n": 120,
+      "observed_agreement": 0.9833,
+      "expected_agreement": 0.0327,
+      "cohens_kappa": 0.9828,
+      "disagreements": [
+        {
+          "sample_id": "Massachusetts v2026.1→v2026.2 (::S038",
+          "a": "none",
+          "b": "cannot_determine"
+        },
+        {
+          "sample_id": "Massachusetts v2026.1→v2026.2 (::S054",
+          "a": "altered mental/neurological status/diabetic emergencies/coma adult/protocol/•",
+          "b": "cannot_determine"
+        }
+      ]
+    }
+  },
+  "pending_adjudication": {
+    "Massachusetts v2025.1→v2026.1 (": [],
+    "Massachusetts v2026.1→v2026.2 (": [
+      "S038",
+      "S054"
+    ]
+  }
+}

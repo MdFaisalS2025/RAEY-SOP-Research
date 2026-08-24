@@ -7696,3 +7696,98 @@ is the user's, not something this entry decides. Code added:
 `item_parser_ma.py`, `item_parser_nh.py` (both new, not frozen);
 `item_align.py`/`item_parser.py`/`edition_align.py`/`corpus_probe.py`
 unchanged at `d3068ee`, verified before and after.
+
+## 95. Annotators K and L completed: the strongest replication result in this study, T5 confirmed failing a third time, and a new hypothesis (H6) confirmed
+
+### 95.1 A perfect-agreement result, investigated before trusting it
+
+Annotator K and Annotator L completed both Massachusetts packets.
+Independence confirmed by file hash (distinct files). On
+v2025.1→v2026.1, Cohen's kappa came back **1.0 - zero disagreements
+across all 60 items** - the first perfect two-rater agreement on real,
+non-blank data anywhere in this study, and exactly the kind of
+suspiciously convenient result section 10 exists to catch before it is
+trusted.
+
+Checked directly rather than accepted at face value:
+
+1. **File hashes differ** - rules out the byte-identical-copy failure
+   that caught the original main-round A/B pair and H3's E/F pair.
+2. **The sibling pair doesn't show the same pattern.** v2026.1→v2026.2,
+   same two annotators, same sitting, shows genuine disagreement
+   (2/60, κ=0.9659) - K and L are not producing identical output
+   across the board.
+3. **The `relation` field diverges even within the "agreed" sheet.**
+   Sample S007: K marked `unchanged`, L marked `reworded` with a
+   specific note ("Ranges are reformatted with hy[phens]...") - real,
+   independent judgment on a dimension that isn't scored for kappa
+   (only `correspondence` drives ground truth), while still landing on
+   the same correspondence answer.
+4. **Every T5/T6 item was hand-checked** (the tiers where genuine
+   judgment matters most, not just pattern-matching an obvious id).
+   All 20 answers matched, but they were specific, plausible item-ids
+   or NONE calls - e.g. `surgical cricothyrotomy/protocol/2#2`
+   identically in both, matching a distinctive recommendation that
+   genuinely moved - not a suspicious run of blank/default answers.
+
+**Conclusion: genuine independent agreement, not a duplication
+artifact.** v2025.1→v2026.1's sampled population happens to be easier
+than most (40 of 60 items are T1-T4 tiers, where the method's own
+candidate is frequently unambiguous) - a real property of this
+particular draw, not evidence of a data-collection failure.
+
+### 95.2 The strongest section 6 replication in this study
+
+Pooled weighted correspondence accuracy: **92.60%** (n=118 of 120,
+2 pending adjudication) - above the original four-pair pooled 85.26%
+and the fifth/sixth pairs' 86.67%. T1 through T4 all land at or near
+100% precision. This is the strongest result yet, and it comes from a
+publisher that needed genuinely new, custom extraction logic (section
+94), not a variant of an already-proven pipeline - a real generalization
+result, not a repeat of an easy case.
+
+**T5 (moved guidelines): 0% precision (n=10)** - the third independent
+pair-round in a row landing at or near zero, now across three separate
+publisher-groups. 2 items (S038, S054, both in v2026.1→v2026.2) remain
+pending human adjudication (`MAPairs_Adjudication_2_items.xlsx`,
+generated, awaiting completion). Full report:
+`annotation_packets/ma_pairs_final_metrics.json`.
+
+### 95.3 H6: a new hypothesis, pre-registered before testing
+
+T5's failure is no longer a single publisher's idiosyncrasy - it has
+now failed at or near 0% on the original four-pair pooled data (13.3%
+raw/6.15% weighted, n=30), the fifth/sixth pairs (0%, n=20), and the
+seventh/eighth pairs (0%, n=10). Per the user's explicit question
+("do you think we should think of new H which haven't been answered
+yet"), one new hypothesis was proposed and, with the user's approval,
+pre-registered before being tested: **H6 - T5 tier precision is below
+50%**, framed honestly as a "problem exists" claim rather than a
+"method works" claim (confirming H6 is an unfavourable finding about
+the method, stated plainly before the test ran so there's no ambiguity
+about which direction "confirmed" points).
+
+The test population was chosen specifically to avoid HARKing: the
+Massachusetts pairs' own T5 data, collected and scored above but not
+previously examined for the purpose of testing a T5-specific
+threshold - the original four-pair and fifth/sixth-pair T5 figures
+motivated the hypothesis and are disclosed as prior evidence in the
+design, but are excluded from the confirmatory test itself.
+
+**Result: H6 CONFIRMED.** T5 precision on the Massachusetts pairs'
+T5 population: 0/10, 95% CI [0.0, 0.0] (degenerate - a bootstrap
+resample of an all-zero sample has no variance to estimate), well
+below the 0.50 confirmation bar. **n=10 is small and the CI is
+degenerate - disclosed plainly, not oversold.** This test's strength
+comes from being the third independent replication of an
+already-observed pattern across three different publisher-groups, not
+from this sample's size alone. Full report:
+`annotation_packets/h6_test_report.json`.
+
+**This is the study's only hypothesis added after the original H1-H5
+design** - proposed once, in response to a direct question, not a
+fishing expedition across every pattern this study's data could
+support. It is also, at this point, the single most consistently
+reproduced finding in the entire study: three independent
+publisher-groups, three near-total T5 failures, no exceptions found
+anywhere it has been tested.

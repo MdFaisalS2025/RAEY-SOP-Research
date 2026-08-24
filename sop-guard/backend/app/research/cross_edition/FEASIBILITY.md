@@ -7301,3 +7301,75 @@ in one pair) rather than an unqualified "audited and clean" claim.
 Full workbook: `annotation_packets/Appendix_B_guideline_pair_audit_COMPLETED.xlsx`
 (user-completed; the generating script's own uncompleted output is at
 `Appendix_B_guideline_pair_audit.xlsx`).
+
+## 92. Formal H3/H4/H5 re-run against the expanded 6-pair dataset: mixed result, no confirmation status changes, but the pooled point estimates shift
+
+Every entry touching the fifth/sixth pairs since section 67 carried the
+same disclaimer: H3/H4/H5 stand on the original 4-pair, 240-item
+dataset until a formal re-run against the expanded 6-pair, 360-item
+set is separately committed and performed. That re-run is done.
+
+### 92.1 Method
+
+`run_full_comparison_6pairs.py` extends `run_full_comparison.py`
+exactly - same bootstrap machinery, same stat functions, same
+Benjamini-Hochberg correction, same index-join fix - to the two new
+pairs, with ground truth from Annotator I/J (2 raters) in place of the
+original round's A/B/C/D (4 raters). Before trusting any pooled
+number, the script recomputes the original 4-pair result through the
+identical code path and checks it reproduces the already-published
+`full_comparison_report.json` exactly - it does, to 4 decimal places
+on both H3 and H5's point estimates, confirming the extension didn't
+silently change anything about the original computation.
+
+**This is a preliminary result**: 6 of 120 new-pair items (3 per pair)
+remain pending human adjudication and are excluded here, not
+estimated - the same treatment already applied to H3' and to the new
+pairs' own section 6 metrics (section 90).
+
+### 92.2 Result
+
+| | Original 4 pairs (n=233) | New 2 pairs only (n=110) | Pooled 6 pairs (n=343) |
+|---|---|---|---|
+| H3 (method−B2 accuracy) | −0.0472, CI [−0.0987, 0.0043] | +0.0364, CI [−0.0364, 0.1091] | −0.0204, CI [−0.0641, 0.0233] |
+| H3 confirmed? | No | No | No |
+| H4 (T3 precision) | 97.06% | 100% (n=10) | 97.67% |
+| H4 confirmed? | Yes | Yes | Yes |
+| H5 (method−B1 false-corr) | +0.0501, CI [−0.0159, 0.1149] | +0.0775, CI [0.011, 0.1508] | +0.0568, CI [0.0079, 0.1045] |
+| H5 confirmed? | No | No | No |
+
+**No confirmation status changes**: H3 and H5 remain NOT CONFIRMED,
+H4 remains CONFIRMED, exactly as on the original 4 pairs. What moves
+is the pooled point estimates: H3's point shifts from a nominal
+disadvantage (−0.0472) toward roughly half that (−0.0204), driven by
+the new pairs independently showing the opposite sign (+0.0364) in
+isolation - checked, not assumed, via the new-pairs-only breakout
+showing the same reversal on its own. H5's confidence interval now
+sits entirely above zero (was straddling it) - a less favorable
+reading for the method's false-correspondence rate relative to B1,
+even though the upper bound (0.1045) still fails the pre-registered
+equivalence bar of below +0.05.
+
+### 92.3 Reading this honestly
+
+This is a genuine mixed result, not smoothed into either "the method
+generalizes" or "it doesn't." H3 moving toward (but not past) zero on
+independent data is a modestly encouraging sign for the method's
+correspondence-accuracy claim; H5's CI fully clearing zero is a
+modestly discouraging one for its false-correspondence claim,
+independent of whether either crosses the pre-registered significance
+bar. H4 (T3 precision) is unambiguously confirmed at both scales and
+gets stronger, not weaker, on the expanded set.
+
+**Section 90's T5 finding is not visible in this table** - H4 tests
+T3 (renumbered items), not T5 (moved guidelines), and T5's drop to 0%
+precision on the new pairs is a real, separately-disclosed weakness
+this pooled H3/H4/H5 result does not surface or contradict. Any use of
+this section's pooled numbers in a paper draft must still carry
+section 90's T5 caveat alongside them.
+
+**This remains preliminary** pending the 6 outstanding adjudication
+items; a shift of 6 items is unlikely to flip either CI's zero-crossing
+given their current width, but that should be verified by re-running
+once resolved, not assumed. Full report:
+`annotation_packets/full_comparison_6pairs_report.json`.

@@ -7996,3 +7996,84 @@ items, 469 usable, 11 CANNOT_DETERMINE, zero pending. Full reports:
 `annotation_packets/full_comparison_8pairs_report.json`,
 `annotation_packets/final_pooled_section6_metrics.json` (both
 overwritten with the final numbers).
+
+## 100. A contaminated baseline comparison caught before it reached the paper draft: B3's pooled 8-pair number is invalid
+
+Found while assembling the manuscript's baseline-comparison table, by
+applying section 10's standing rule to a number that had changed sign
+in the method's favour.
+
+### 100.1 The signal
+
+The descriptive method-vs-B3 (`difflib` document diff) comparison
+flipped sign between datasets: **−0.0716** on the 6-pair set (B3 ahead
+of the method, consistent with every prior report since section 55) but
+**+0.1429** on the pooled 8-pair set (method ahead). A sign flip that
+large, in the method's favour, on the addition of two pairs, is exactly
+the shape of result this study's section 10 rule exists to distrust.
+
+### 100.2 The cause: my own new parser's placeholder offsets
+
+`item_parser_ma.py` (section 94, written for the Massachusetts pairs)
+assigns **`char_start = char_end = 0` to every item** - its own
+docstring discloses this ("Offsets are approximate... acceptable for
+this study's alignment method, which keys on item_id/guideline/
+marker_path, not on exact citation-quality offsets"). That reasoning
+was correct for the *method*, and for B1/B2/B4/B5, none of which read
+offsets.
+
+It is **not** correct for B3. B3 is the only baseline that maps items
+through character offsets (`baseline_b1_b3_b4.py:193,214,
+`char_to_line(x.char_start, ...)`) - it sequence-aligns the two
+editions' `canonical_text` and resolves each old item's position by its
+`char_start`. With every Massachusetts offset identically zero, B3
+collapses to mapping every item to the document's first line, and fails
+almost totally.
+
+Direct confirmation: the Massachusetts-only breakout reports
+method−B3 = **+0.7667** (95% CI [0.6833, 0.8417]) - a 77-point margin
+no genuine baseline comparison in this study has ever produced, and
+prima facie implausible. Verified at source: `parse_ma` on
+`ma_v20261.pdf` yields 477 items with exactly **one distinct
+`char_start` value (0) and one distinct `char_end` value (0)**.
+
+### 100.3 Blast radius: contained to B3 only
+
+Checked directly rather than assumed - `grep` for
+`char_start`/`char_end`/`canonical_text` across all baseline modules
+returns hits in `baseline_b1_b3_b4.py`'s B3 function only:
+
+| Result | Offset-dependent? | Status |
+|---|---|---|
+| H3 (method vs B2) | No - B2 keys on item text via `_sim` | **Unaffected** |
+| H4 (T3 tier precision) | No - method-internal | **Unaffected** |
+| H5 (method vs B1) | No - B1 keys on `item_id` | **Unaffected** |
+| H6 (T5 tier precision) | No - method-internal | **Unaffected** |
+| Section 6 metrics | No - ground truth vs `method_predicted_item_id` | **Unaffected** |
+| Descriptive method vs B4 | No - id + exact text | **Unaffected** |
+| **Descriptive method vs B3** | **Yes** | **INVALID on any set including Massachusetts** |
+
+Every confirmatory result in this study is therefore untouched. One
+descriptive, no-hypothesis-attached comparison is invalid.
+
+### 100.4 Disposition
+
+**The pooled 8-pair method-vs-B3 figure (+0.1429) is withdrawn and must
+not be reported anywhere.** The valid B3 comparison is the 6-pair
+figure, **−0.0716, 95% CI [−0.1175, −0.0258]** (B3 ahead of the
+method), which is computed entirely on editions parsed by the frozen
+`item_parser.py` with genuine offsets, and which is consistent with
+every prior B3 report in this study (section 55's original 4-pair
+−0.073).
+
+Not fixed by adding real offsets to `item_parser_ma.py`: doing so now,
+after seeing that it changes a comparison in the method's favour, would
+be precisely the post-hoc tuning section 3.4's quarantine discipline
+forbids. The honest disposition is to report B3 on the subset where it
+is validly computed and disclose why the fuller set is unusable for
+that one comparison - which is what the manuscript does.
+
+**Caught before publication, not after** - the number never appeared in
+any committed report read as final, and appears in
+`full_comparison_8pairs_report.json` only as a stored intermediate now
+annotated by this section.

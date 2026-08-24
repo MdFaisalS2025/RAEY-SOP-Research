@@ -7433,3 +7433,111 @@ This is the final, complete result for this study's entire annotation
 effort - nothing remains pending anywhere, across H3′, the new pairs'
 own section 6 metrics, and this formal hypothesis-test re-run. Full
 report: `annotation_packets/full_comparison_6pairs_report.json`.
+
+## 93. Massachusetts and New Hampshire: real documents in hand at last, but item-level extraction fails the title-inspection bar - a parser problem, not a retrieval one
+
+The user downloaded five files directly via their own browser, routing
+around the retrieval blocks (browser sandbox for Massachusetts, Akamai
+WAF for New Hampshire) documented in sections 82 and 41. This closes
+the retrieval gap for both states for the first time in this study.
+
+### 93.1 What was received
+
+- `patient-care-protocols.pdf` - **New Hampshire Patient Care
+  Protocols, Version 9.3, effective 2025-11-07** (261 pages, 35.6 MB) -
+  a genuinely new second edition beyond the existing `nh_2024.pdf`
+  (Version 8.0 draft, already in the corpus per section 41).
+- `statewide-treatment-protocols-2026-1-v2.pdf` - **Massachusetts
+  Statewide Treatment Protocols, Official Version 2026.1, June 1 2026**
+  (175 pages, 9.6 MB).
+- `statewide-treatment-protocols-2026-2.pdf` - **Massachusetts
+  Statewide Treatment Protocols, Official Version 2026.2, September 1
+  2026** (176 pages, 10.1 MB) - a third Massachusetts edition,
+  alongside the existing `ma_2023.pdf` (v2023.2) and a previously
+  unlabeled-in-this-log `ma_2025_fresh.pdf`, confirmed by direct text
+  extraction here to be **Version 2025.1, June 16 2025**.
+- `stp-2026-change-memo-final-1-21-26.pdf` - the Department's own
+  official change memo for v2026.1, dated 2026-01-21 - kept as
+  supporting documentation (`corpus/supporting_docs/`), not fed to the
+  parser.
+- `trauma-plan.pdf` - New Hampshire's **Trauma System Plan, Version
+  5.0** - a different document category (a system/policy plan, not a
+  clinical treatment-protocol manual matching this study's unit of
+  analysis) - out of scope, not vetted further.
+
+Massachusetts now has four real, dated editions in hand for the first
+time (v2023.2, v2025.1, v2026.1, v2026.2), and New Hampshire has two
+(v8.0, v9.3) - genuinely enough editions to form new confirmatory
+pairs, pending the same quality checks every other candidate in this
+study has been held to.
+
+### 93.2 corpus_probe: USABLE, all six editions
+
+All six editions (new and previously-in-corpus) score `USABLE - some
+structural markers; check the sample before committing` - the same
+verdict tier already logged for New Hampshire in section 41 and
+consistent with every prior MA/NH check. `corpus_probe`'s own verdict
+explicitly instructs a hand check before trusting it, per this study's
+standing section 13.1 rule - not skipped here.
+
+### 93.3 Title inspection: fails the bar for both states, same known failure mode
+
+Read by hand, per section 13.1, before any of this was trusted:
+
+**New Hampshire**, both editions: item counts look plausible (803 and
+734 items) but guideline-title quality is poor. v8.0 resolves to only
+26 distinct guideline titles for 803 items, several of them clearly
+not protocol names at all - `"Flynn's intern"`, `"Establish IV (if
+feasible, avoid right wrist)"`, `"maximum dose 2 mcg/kg/min, via pump,
+see appendix 4 OR"`. v9.3 is worse: 8.3% outright untitled, and its 29
+"titles" are dominated by medication-name fragments and OCR-adjacent
+noise - `"Albuterol Anaphylaxis/Allergic Reaction Beta-Agonist"`,
+`"lsopropyl Alcohol"`. This is the same anchor-detection failure this
+study has already documented extensively for other states (Delaware,
+South Carolina, the original Nebraska attempt, sections 21-27): the
+fallback heuristic locks onto the wrong recurring text pattern instead
+of real protocol headers.
+
+**Massachusetts**, all three new/confirmed editions: 0% preamble and
+0% untitled for v2023.2 and v2025.1 look clean by the numeric
+acceptance bar alone - but the guideline COUNT is implausibly low for
+a 175-page, dozens-of-protocols clinical manual: **8 distinct
+guidelines for 381 items (v2023.2), 6 for 387 items (v2025.1)**. This
+is the size-outlier failure mode already documented for DC (section
+83): the parser is compressing many genuinely distinct protocols under
+a handful of over-broad anchors, a garbage-bucket pattern that inflates
+apparent cleanliness on the two numeric checks while actually being
+unusable. v2026.1 fails even the numeric bar outright (49.1%
+untitled); v2026.2 partially recovers (17 guidelines, 10.8% untitled)
+but is still far too few guidelines for the document's real content.
+
+### 93.4 Conclusion: a retrieval success, but not (yet) an extraction success
+
+**This is a genuine, disclosed negative finding, not a retrieval
+failure being reported as an extraction failure to save face**: both
+documents are now confirmed real, complete, and in hand - the
+retrieval blocker documented in sections 41/82 is fully closed. What
+remains broken is item-level extraction, specifically anchor/title
+detection, for both states - the same category of failure this study
+has already hit and, in a few cases (Maine's footer detection,
+Connecticut's ToC-row detection, sections 17-18), successfully solved
+with a custom, publisher-specific detection strategy built during the
+dev phase.
+
+Building an equivalent custom strategy for Massachusetts and/or New
+Hampshire is possible in principle (the general pattern - identify a
+document-specific structural anchor as reliable as Maine's per-protocol
+footer counter or Connecticut's ToC row alignment - has worked three
+times before in this study) but is real parser-engineering work, not
+a quick fix, and neither state has ever been used for a confirmatory
+pair or annotation sample, so this remains legitimate dev-phase work
+rather than a quarantine violation if pursued. Not attempted here
+without a separate decision to invest that time, given the user's
+standing instruction to prioritize paper-relevant work and this being
+a genuinely open-ended engineering task rather than a short one.
+
+No `.py` file was modified for this check; `item_align.py`/
+`item_parser.py`/`edition_align.py`/`corpus_probe.py` remain unchanged
+at `d3068ee`. Files added to the corpus (not yet used for any
+confirmatory or dev claim): `nh_v93_20251107.pdf`, `ma_v20261.pdf`,
+`ma_v20262.pdf`, `corpus/supporting_docs/ma_v20261_change_memo.pdf`.

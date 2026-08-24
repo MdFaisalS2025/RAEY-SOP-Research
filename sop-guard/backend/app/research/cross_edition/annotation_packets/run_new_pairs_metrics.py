@@ -44,7 +44,7 @@ BASE = Path(__file__).parent
 
 ANNOTATOR_I = BASE / "Annotator_I_ANNOTATION.xlsx"
 ANNOTATOR_J = BASE / "Annotator_J_ANNOTATION.xlsx"
-ADJUDICATION_FILE = BASE / "NewPairs_Adjudication_COMPLETED.xlsx"  # optional, generated on demand
+ADJUDICATION_FILE = BASE / "NewPairs_Adjudication_6_items_COMPLETED.xlsx"  # optional, generated on demand
 
 PAIR_SLUGS = {
     "Tennessee Sept2024→09.11.2025 (": "tennessee_sept2024_20250911",

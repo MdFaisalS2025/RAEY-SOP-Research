@@ -1,0 +1,281 @@
+{
+  "pairs": {
+    "Tennessee Sept2024→09.11.2025 (": {
+      "n_total_items": 57,
+      "n_cannot_determine": 0,
+      "cannot_determine_rate": 0.0,
+      "n_usable": 57,
+      "correspondence_accuracy": {
+        "raw": 0.6491,
+        "weighted": 0.8891,
+        "n": 57
+      },
+      "provenance_loss_rate_PRIMARY": {
+        "raw": 0.1346,
+        "weighted": 0.0281,
+        "n": 52
+      },
+      "false_correspondence_rate": {
+        "raw": 0.2766,
+        "weighted": 0.0881,
+        "n": 47
+      },
+      "deletion_recall": {
+        "raw": 0.6,
+        "weighted": 0.1497,
+        "n": 5
+      },
+      "deletion_precision": {
+        "raw": 0.3,
+        "weighted": 0.3,
+        "n": 10
+      },
+      "tier_precision": {
+        "T1_id_exact": {
+          "raw": 0.931,
+          "weighted": 0.931,
+          "n": 29
+        },
+        "T2_id_text_changed": {
+          "raw": 0.875,
+          "weighted": 0.875,
+          "n": 8
+        },
+        "T5_moved": {
+          "raw": 0.0,
+          "weighted": 0.0,
+          "n": 10
+        },
+        "T6_unmatched_old": {
+          "raw": 0.3,
+          "weighted": 0.3,
+          "n": 10
+        }
+      }
+    },
+    "Connecticut v2024.1→v2025.1 (ne": {
+      "n_total_items": 57,
+      "n_cannot_determine": 4,
+      "cannot_determine_rate": 0.0702,
+      "n_usable": 53,
+      "correspondence_accuracy": {
+        "raw": 0.6415,
+        "weighted": 0.8367,
+        "n": 53
+      },
+      "provenance_loss_rate_PRIMARY": {
+        "raw": 0.1316,
+        "weighted": 0.0353,
+        "n": 38
+      },
+      "false_correspondence_rate": {
+        "raw": 0.3182,
+        "weighted": 0.1392,
+        "n": 44
+      },
+      "deletion_recall": {
+        "raw": 0.2667,
+        "weighted": 0.2841,
+        "n": 15
+      },
+      "deletion_precision": {
+        "raw": 0.4444,
+        "weighted": 0.4444,
+        "n": 9
+      },
+      "tier_precision": {
+        "T1_id_exact": {
+          "raw": 1.0,
+          "weighted": 1.0,
+          "n": 16
+        },
+        "T2_id_text_changed": {
+          "raw": 0.3333,
+          "weighted": 0.3333,
+          "n": 6
+        },
+        "T3_renumbered": {
+          "raw": 1.0,
+          "weighted": 1.0,
+          "n": 9
+        },
+        "T4_reworded": {
+          "raw": 1.0,
+          "weighted": 1.0,
+          "n": 3
+        },
+        "T5_moved": {
+          "raw": 0.0,
+          "weighted": 0.0,
+          "n": 10
+        },
+        "T6_unmatched_old": {
+          "raw": 0.4444,
+          "weighted": 0.4444,
+          "n": 9
+        }
+      }
+    }
+  },
+  "pooled": {
+    "n_total_items": 114,
+    "n_cannot_determine": 4,
+    "cannot_determine_rate": 0.0351,
+    "n_usable": 110,
+    "correspondence_accuracy": {
+      "raw": 0.6455,
+      "weighted": 0.8667,
+      "n": 110
+    },
+    "provenance_loss_rate_PRIMARY": {
+      "raw": 0.1333,
+      "weighted": 0.0312,
+      "n": 90
+    },
+    "false_correspondence_rate": {
+      "raw": 0.2967,
+      "weighted": 0.1097,
+      "n": 91
+    },
+    "deletion_recall": {
+      "raw": 0.35,
+      "weighted": 0.2136,
+      "n": 20
+    },
+    "deletion_precision": {
+      "raw": 0.3684,
+      "weighted": 0.3776,
+      "n": 19
+    },
+    "tier_precision": {
+      "T1_id_exact": {
+        "raw": 0.9556,
+        "weighted": 0.9571,
+        "n": 45
+      },
+      "T2_id_text_changed": {
+        "raw": 0.6429,
+        "weighted": 0.4422,
+        "n": 14
+      },
+      "T3_renumbered": {
+        "raw": 1.0,
+        "weighted": 1.0,
+        "n": 9
+      },
+      "T4_reworded": {
+        "raw": 1.0,
+        "weighted": 1.0,
+        "n": 3
+      },
+      "T5_moved": {
+        "raw": 0.0,
+        "weighted": 0.0,
+        "n": 20
+      },
+      "T6_unmatched_old": {
+        "raw": 0.3684,
+        "weighted": 0.3776,
+        "n": 19
+      }
+    }
+  },
+  "kappa": {
+    "Tennessee Sept2024→09.11.2025 (": {
+      "n": 60,
+      "observed_agreement": 0.95,
+      "expected_agreement": 0.0267,
+      "cohens_kappa": 0.9486,
+      "disagreements": [
+        {
+          "sample_id": "S026",
+          "a": "none",
+          "b": "cannot_determine"
+        },
+        {
+          "sample_id": "S031",
+          "a": "none",
+          "b": "cannot_determine"
+        },
+        {
+          "sample_id": "S034",
+          "a": "none",
+          "b": "cannot_determine"
+        }
+      ]
+    },
+    "Connecticut v2024.1→v2025.1 (ne": {
+      "n": 60,
+      "observed_agreement": 0.95,
+      "expected_agreement": 0.0814,
+      "cohens_kappa": 0.9456,
+      "disagreements": [
+        {
+          "sample_id": "S018",
+          "a": "cannot_determine",
+          "b": "appendix 2 ct pediatric color coded medication reference/protocol/-#21"
+        },
+        {
+          "sample_id": "S026",
+          "a": "appendix 1 ct adult medication reference/protocol/•#66",
+          "b": "cannot_determine"
+        },
+        {
+          "sample_id": "S055",
+          "a": "routine emr patient care/protocol/•#6",
+          "b": "cannot_determine"
+        }
+      ]
+    },
+    "pooled": {
+      "n": 120,
+      "observed_agreement": 0.95,
+      "expected_agreement": 0.0416,
+      "cohens_kappa": 0.9478,
+      "disagreements": [
+        {
+          "sample_id": "Connecticut v2024.1→v2025.1 (ne::S018",
+          "a": "cannot_determine",
+          "b": "appendix 2 ct pediatric color coded medication reference/protocol/-#21"
+        },
+        {
+          "sample_id": "Connecticut v2024.1→v2025.1 (ne::S026",
+          "a": "appendix 1 ct adult medication reference/protocol/•#66",
+          "b": "cannot_determine"
+        },
+        {
+          "sample_id": "Connecticut v2024.1→v2025.1 (ne::S055",
+          "a": "routine emr patient care/protocol/•#6",
+          "b": "cannot_determine"
+        },
+        {
+          "sample_id": "Tennessee Sept2024→09.11.2025 (::S026",
+          "a": "none",
+          "b": "cannot_determine"
+        },
+        {
+          "sample_id": "Tennessee Sept2024→09.11.2025 (::S031",
+          "a": "none",
+          "b": "cannot_determine"
+        },
+        {
+          "sample_id": "Tennessee Sept2024→09.11.2025 (::S034",
+          "a": "none",
+          "b": "cannot_determine"
+        }
+      ]
+    }
+  },
+  "pending_adjudication": {
+    "Tennessee Sept2024→09.11.2025 (": [
+      "S026",
+      "S031",
+      "S034"
+    ],
+    "Connecticut v2024.1→v2025.1 (ne": [
+      "S018",
+      "S026",
+      "S055"
+    ]
+  }
+}

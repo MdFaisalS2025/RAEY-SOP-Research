@@ -9,7 +9,8 @@
       "n": 21,
       "point_estimate": 0.0,
       "ci95_low": 0.0,
-      "ci95_high": 0.0
+      "ci95_high": 0.0,
+      "p_value": 1.0
     },
     "confirmed": false
   },
@@ -23,22 +24,46 @@
       "n": 21,
       "point_estimate": 0.0,
       "ci95_low": 0.0,
-      "ci95_high": 0.0
+      "ci95_high": 0.0,
+      "p_value": 1.0
     },
     "confirmed": false
   },
   "H3c_v1_vs_B2_ordinal": {
-    "n_scored": 60,
+    "n_scored": 57,
     "n_cannot_determine_excluded": 0,
     "n_total_population": 60,
-    "a_accuracy": 0.7167,
-    "b_accuracy": 0.7167,
+    "a_accuracy": 0.7544,
+    "b_accuracy": 0.7368,
     "bootstrap": {
-      "n": 60,
-      "point_estimate": 0.0,
-      "ci95_low": -0.1,
-      "ci95_high": 0.1
+      "n": 57,
+      "point_estimate": 0.0175,
+      "ci95_low": -0.0877,
+      "ci95_high": 0.1228,
+      "p_value": 0.441
     },
     "confirmed": false
-  }
+  },
+  "benjamini_hochberg": {
+    "H3a_v2_vs_v1_bullet": {
+      "p_raw": 1.0,
+      "p_adjusted": 1.0
+    },
+    "H3b_v2_vs_B2_bullet": {
+      "p_raw": 1.0,
+      "p_adjusted": 1.0
+    },
+    "H3c_v1_vs_B2_ordinal": {
+      "p_raw": 0.441,
+      "p_adjusted": 1.0
+    }
+  },
+  "_pending_adjudication": [
+    "S026",
+    "S027",
+    "S043",
+    "S049",
+    "S074"
+  ],
+  "_ground_truth_source": "Annotator_G_ANNOTATION.xlsx / Annotator_H_ANNOTATION.xlsx (genuinely independent, Cohen's kappa 0.9414 - see h3prime_second_annotator_report.json). Replaces the retracted E/F pair (2026-08-18 duplication finding)."
 }

@@ -7249,6 +7249,28 @@ set rather than the original four pairs plus this section's standalone
 comparison. Full report:
 `annotation_packets/new_pairs_final_metrics.json`.
 
+## 90.5. Final recompute: all 6 pending I/J items adjudicated, full 120-item ground truth
+
+`NewPairs_Adjudication_6_items_COMPLETED.xlsx` came back with all 6
+disputed items resolved. Unlike H3''s 5 disputes and the D6 pattern
+seen throughout this study, Connecticut's 3 disagreements resolved to
+real item-ids (a split, a moved, and a reworded correspondence) rather
+than collapsing to NONE/CANNOT_DETERMINE - a more informative
+adjudication outcome than most others in this study. Tennessee's 3
+resolved to NONE, matching the G/H pattern.
+
+Full 120-item ground truth is now complete (116 usable, 4 genuinely
+CANNOT_DETERMINE), with nothing pending. Recomputed pooled section 6
+metrics: cannot_determine_rate 3.33%, correspondence accuracy raw
+62.07%/weighted 83.97%, provenance_loss_rate weighted 3.34%,
+false_correspondence_rate weighted 13.66% - all within about 2 points
+of the 110-item interim numbers reported above, confirming the interim
+reading held up once the remaining items resolved.
+
+**T5 (moved guidelines) remains exactly 0% precision on the complete
+n=20** - the finding reported above is not an artifact of partial
+data. Full report: `annotation_packets/new_pairs_final_metrics.json`.
+
 ## 91. Appendix B's manual guideline-pair audit, completed: 99% correct, and the review caught an error the automated flags missed
 
 Section 64 generated the audit instrument for a pre-registration-
@@ -7368,8 +7390,46 @@ this pooled H3/H4/H5 result does not surface or contradict. Any use of
 this section's pooled numbers in a paper draft must still carry
 section 90's T5 caveat alongside them.
 
-**This remains preliminary** pending the 6 outstanding adjudication
-items; a shift of 6 items is unlikely to flip either CI's zero-crossing
-given their current width, but that should be verified by re-running
-once resolved, not assumed. Full report:
-`annotation_packets/full_comparison_6pairs_report.json`.
+### 92.5 Final recompute: all pending items resolved, and one apparent "confirmation" investigated and explained away
+
+All 6 new-pair items pending adjudication (section 90.5) are now
+resolved. Re-running against the complete, 349-item ground truth
+changes nothing about confirmation status anywhere: **H3 and H5
+remain NOT CONFIRMED, H4 remains CONFIRMED**, matching both the
+original 4-pair result and the preliminary 6-pair reading above. The
+pooled point estimates move only slightly closer to the preliminary
+numbers - H3 item-raw −0.0172 (was −0.0204), H5 item-raw point 0.0506
+with CI [0.0031, 0.0976] (was 0.0568/[0.0079, 0.1045]), still clearing
+zero but still failing the +0.05 equivalence bound H5 requires.
+
+One number in this final run needed a closer look before reporting,
+per section 10's standing rule for surprising favorable results: the
+new-pairs-only breakout's H3 **pair-level** bootstrap reports
+CONFIRMED: True (point +0.0431, 95% CI [0.0179, 0.0667]) - the first
+"confirmed" reading H3 has had anywhere in this entire study.
+
+Checked directly rather than reported at face value: Tennessee's own
+diff is +0.0667 (n=60), Connecticut's own diff is +0.0179 (n=56) -
+both individually positive. With only 2 pair-level units to resample
+from, the pair-level bootstrap has exactly three possible outcomes
+(Tennessee alone, the pooled pair, Connecticut alone), and all three
+are already positive before any resampling happens. The "95%
+confidence interval" excluding zero here is a direct, unavoidable
+consequence of having only two units where both happen to be positive
+- not evidence accumulated from a meaningfully large resampling
+distribution. This is exactly the risk `run_full_comparison_6pairs.py`'s
+own docstring flagged before this number was ever computed ("pair-level
+CI with only 2 pair-units, too few for a meaningful pair-level
+bootstrap, reported for consistency only").
+
+**This number must not be cited as evidence for H3.** It is reported
+here specifically so it cannot be mistakenly pulled into a paper draft
+as "H3 confirmed on the new pairs" - the item-level result for the
+same population (the statistically meaningful one, n=116) still
+crosses zero and remains not confirmed, and the pooled 6-pair result
+across all data remains not confirmed at either level.
+
+This is the final, complete result for this study's entire annotation
+effort - nothing remains pending anywhere, across H3′, the new pairs'
+own section 6 metrics, and this formal hypothesis-test re-run. Full
+report: `annotation_packets/full_comparison_6pairs_report.json`.

@@ -1,14 +1,14 @@
 {
   "pairs": {
     "Tennessee Sept2024→09.11.2025 (": {
-      "n_total_items": 57,
+      "n_total_items": 60,
       "n_cannot_determine": 0,
       "cannot_determine_rate": 0.0,
-      "n_usable": 57,
+      "n_usable": 60,
       "correspondence_accuracy": {
-        "raw": 0.6491,
-        "weighted": 0.8891,
-        "n": 57
+        "raw": 0.6167,
+        "weighted": 0.8566,
+        "n": 60
       },
       "provenance_loss_rate_PRIMARY": {
         "raw": 0.1346,
@@ -16,14 +16,14 @@
         "n": 52
       },
       "false_correspondence_rate": {
-        "raw": 0.2766,
-        "weighted": 0.0881,
-        "n": 47
+        "raw": 0.32,
+        "weighted": 0.1227,
+        "n": 50
       },
       "deletion_recall": {
-        "raw": 0.6,
-        "weighted": 0.1497,
-        "n": 5
+        "raw": 0.375,
+        "weighted": 0.0992,
+        "n": 8
       },
       "deletion_precision": {
         "raw": 0.3,
@@ -32,14 +32,14 @@
       },
       "tier_precision": {
         "T1_id_exact": {
-          "raw": 0.931,
-          "weighted": 0.931,
-          "n": 29
+          "raw": 0.9,
+          "weighted": 0.9,
+          "n": 30
         },
         "T2_id_text_changed": {
-          "raw": 0.875,
-          "weighted": 0.875,
-          "n": 8
+          "raw": 0.7,
+          "weighted": 0.7,
+          "n": 10
         },
         "T5_moved": {
           "raw": 0.0,
@@ -54,24 +54,24 @@
       }
     },
     "Connecticut v2024.1→v2025.1 (ne": {
-      "n_total_items": 57,
+      "n_total_items": 60,
       "n_cannot_determine": 4,
-      "cannot_determine_rate": 0.0702,
-      "n_usable": 53,
+      "cannot_determine_rate": 0.0667,
+      "n_usable": 56,
       "correspondence_accuracy": {
-        "raw": 0.6415,
-        "weighted": 0.8367,
-        "n": 53
+        "raw": 0.625,
+        "weighted": 0.8174,
+        "n": 56
       },
       "provenance_loss_rate_PRIMARY": {
-        "raw": 0.1316,
-        "weighted": 0.0353,
-        "n": 38
+        "raw": 0.1463,
+        "weighted": 0.0401,
+        "n": 41
       },
       "false_correspondence_rate": {
-        "raw": 0.3182,
-        "weighted": 0.1392,
-        "n": 44
+        "raw": 0.3261,
+        "weighted": 0.1554,
+        "n": 46
       },
       "deletion_recall": {
         "raw": 0.2667,
@@ -79,9 +79,9 @@
         "n": 15
       },
       "deletion_precision": {
-        "raw": 0.4444,
-        "weighted": 0.4444,
-        "n": 9
+        "raw": 0.4,
+        "weighted": 0.4,
+        "n": 10
       },
       "tier_precision": {
         "T1_id_exact": {
@@ -90,9 +90,9 @@
           "n": 16
         },
         "T2_id_text_changed": {
-          "raw": 0.3333,
-          "weighted": 0.3333,
-          "n": 6
+          "raw": 0.375,
+          "weighted": 0.375,
+          "n": 8
         },
         "T3_renumbered": {
           "raw": 1.0,
@@ -110,53 +110,53 @@
           "n": 10
         },
         "T6_unmatched_old": {
-          "raw": 0.4444,
-          "weighted": 0.4444,
-          "n": 9
+          "raw": 0.4,
+          "weighted": 0.4,
+          "n": 10
         }
       }
     }
   },
   "pooled": {
-    "n_total_items": 114,
+    "n_total_items": 120,
     "n_cannot_determine": 4,
-    "cannot_determine_rate": 0.0351,
-    "n_usable": 110,
+    "cannot_determine_rate": 0.0333,
+    "n_usable": 116,
     "correspondence_accuracy": {
-      "raw": 0.6455,
-      "weighted": 0.8667,
-      "n": 110
+      "raw": 0.6207,
+      "weighted": 0.8397,
+      "n": 116
     },
     "provenance_loss_rate_PRIMARY": {
-      "raw": 0.1333,
-      "weighted": 0.0312,
-      "n": 90
+      "raw": 0.1398,
+      "weighted": 0.0334,
+      "n": 93
     },
     "false_correspondence_rate": {
-      "raw": 0.2967,
-      "weighted": 0.1097,
-      "n": 91
+      "raw": 0.3229,
+      "weighted": 0.1366,
+      "n": 96
     },
     "deletion_recall": {
-      "raw": 0.35,
-      "weighted": 0.2136,
-      "n": 20
+      "raw": 0.3043,
+      "weighted": 0.1685,
+      "n": 23
     },
     "deletion_precision": {
-      "raw": 0.3684,
-      "weighted": 0.3776,
-      "n": 19
+      "raw": 0.35,
+      "weighted": 0.3563,
+      "n": 20
     },
     "tier_precision": {
       "T1_id_exact": {
-        "raw": 0.9556,
-        "weighted": 0.9571,
-        "n": 45
+        "raw": 0.9348,
+        "weighted": 0.937,
+        "n": 46
       },
       "T2_id_text_changed": {
-        "raw": 0.6429,
-        "weighted": 0.4422,
-        "n": 14
+        "raw": 0.5556,
+        "weighted": 0.437,
+        "n": 18
       },
       "T3_renumbered": {
         "raw": 1.0,
@@ -174,9 +174,9 @@
         "n": 20
       },
       "T6_unmatched_old": {
-        "raw": 0.3684,
-        "weighted": 0.3776,
-        "n": 19
+        "raw": 0.35,
+        "weighted": 0.3563,
+        "n": 20
       }
     }
   },
@@ -267,15 +267,7 @@
     }
   },
   "pending_adjudication": {
-    "Tennessee Sept2024→09.11.2025 (": [
-      "S026",
-      "S031",
-      "S034"
-    ],
-    "Connecticut v2024.1→v2025.1 (ne": [
-      "S018",
-      "S026",
-      "S055"
-    ]
+    "Tennessee Sept2024→09.11.2025 (": [],
+    "Connecticut v2024.1→v2025.1 (ne": []
   }
 }
